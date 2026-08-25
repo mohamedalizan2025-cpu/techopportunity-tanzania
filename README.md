@@ -1,5 +1,7 @@
 # TechOpportunity Tanzania
 
+> _"A web platform for discovering opportunities all across Tanzania."_
+
 Discover hackathons, scholarships, competitions, conferences, workshops,
 internships, fellowships, grants, and tech/AI events across Tanzania.
 
