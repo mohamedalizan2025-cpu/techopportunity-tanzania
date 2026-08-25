@@ -3,6 +3,11 @@
 Discover hackathons, scholarships, competitions, conferences, workshops,
 internships, fellowships, grants, and tech/AI events across Tanzania.
 
+**This is a responsive website** (desktop, laptop, tablet, mobile browsers)
+built with Next.js — not a native Android/iOS app. A future native client
+could reuse the same Supabase backend unchanged; see
+`docs/architecture.md` §10.
+
 ## Stack
 
 - [Next.js](https://nextjs.org) 16 — App Router, TypeScript, React Server Components
@@ -21,6 +26,7 @@ internships, fellowships, grants, and tech/AI events across Tanzania.
 ├── lib/
 │   ├── types.ts       # Domain types (single source of truth)
 │   └── data/          # DATA-ACCESS LAYER - all DB queries live here
+│       └── mock-opportunities.ts  # clearly-marked temporary samples
 ├── docs/
 │   └── architecture.md# Architecture decisions - start here
 ├── public/            # Static assets
@@ -43,8 +49,11 @@ npm run dev
 
 Open http://localhost:3000.
 
-Until Supabase credentials exist in `.env.local`, the home page renders with
-an empty opportunity list — that is expected.
+Until Supabase credentials exist in `.env.local`, the home page lists three
+clearly marked `[MOCK]` records from `lib/data/mock-opportunities.ts` so the
+UI can be verified. When the real database connects, only the internals of
+`lib/data/opportunities.ts` change — the mocks disappear and real data flows
+through the same functions.
 
 ## Scripts
 
@@ -74,3 +83,5 @@ requirements would justify adding a separate backend service.
 3. **Users** — accounts, saved searches, deadline digests
 4. **Intelligence** — recommendations via offline embedding jobs
 5. **Platform** — independent API service only if a concrete trigger appears
+6. **Native mobile apps** *(optional, undecided)* — would attach to the same
+   Supabase backend via official mobile SDKs; nothing to build now

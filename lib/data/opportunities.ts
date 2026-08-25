@@ -1,12 +1,14 @@
+import { MOCK_OPPORTUNITIES } from "./mock-opportunities";
 import type { Opportunity } from "../types";
 
-const EMPTY_RESULT: Opportunity[] = [];
-
 export async function listPublishedOpportunities(): Promise<Opportunity[]> {
-  return EMPTY_RESULT;
+  return MOCK_OPPORTUNITIES.filter((opportunity) => opportunity.status === "published");
 }
 
 export async function getOpportunityBySlug(slug: string): Promise<Opportunity | null> {
-  void slug;
-  return null;
+  return (
+    MOCK_OPPORTUNITIES.find(
+      (opportunity) => opportunity.slug === slug && opportunity.status === "published"
+    ) ?? null
+  );
 }

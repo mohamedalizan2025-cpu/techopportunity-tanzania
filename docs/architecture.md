@@ -18,6 +18,11 @@ The MVP is a **curated, read-heavy listing site**: an admin publishes
 opportunities, everyone else browses and searches them. Later phases add
 automated discovery and AI-assisted processing.
 
+This product is a **responsive web platform** — one codebase serving
+desktop, laptop, tablet, and mobile *browsers*. It is not a native
+Android/iOS application; §10 explains how a future native client could
+reuse this exact backend without rebuilding anything.
+
 ---
 
 ## 2. The approved MVP architecture
@@ -25,7 +30,7 @@ automated discovery and AI-assisted processing.
 ```
    GitHub  ──────────►  Vercel (hosts Next.js)
                             │
-                        Next.js app
+                       Next.js website
                        ┌─────┴─────┐
                  UI components   server logic
                  (app/,          (Server Components,
@@ -66,6 +71,7 @@ automated discovery and AI-assisted processing.
 | How do environment variables work? | Locally: `.env.local` (git-ignored, you create it). In the cloud: Vercel project settings. See §7. |
 | How do staging and production differ? | Same code, different data and URLs — see §6. |
 | When would we need another backend service? | Only when a trigger from §8 fires. |
+| What about a future mobile app? | It would connect to the *same* Supabase database, auth, and storage via official Supabase mobile SDKs — no backend rebuild needed. See §10. |
 
 ---
 
@@ -214,7 +220,44 @@ Future pipeline code will live in a top-level `pipeline/` directory
 
 ---
 
-## 10. Decision log
+## 10. Web-first today; mobile-ready tomorrow
+
+TechOpportunity Tanzania is built as a **responsive website**, not a native
+mobile application. One Next.js codebase serves every screen size through
+CSS-based responsiveness (Tailwind breakpoints). No React Native, Expo,
+Flutter, or mobile build tooling belongs in this project, and none should be
+added unless a dedicated native app is actually decided on later.
+
+If that decision ever happens, the architecture already supports it:
+
+```
+Next.js Website ──────┐
+                      ├── Supabase PostgreSQL (+ Auth, Storage, RLS)
+Future Mobile App ────┘
+```
+
+A future mobile app would **not** talk to the Next.js pages at all. It
+would use the official Supabase client libraries (Android / iOS /
+React Native) to reach the same PostgreSQL database, the same
+authentication, and the same file storage — with exactly the same
+Row Level Security rules deciding what it may read or write.
+The "backend" is Supabase itself, so new clients attach to it without
+rebuilding it.
+
+Three habits keep this door open:
+
+1. **Permissions live in the database (RLS)**, not in website code — every
+   future client inherits them automatically.
+2. **Domain types (`lib/types.ts`) stay framework-free** — they describe
+   data, not UI, so they can be mirrored in any language or platform.
+3. **All data access flows through `lib/data/`** — if a mobile client one
+   day needs aggregated endpoints Postgres cannot express efficiently,
+   that is precisely FastAPI trigger #4 (§8), and §5 makes the migration
+   incremental.
+
+---
+
+## 11. Decision log
 
 | Date | Decision | Reason |
 |---|---|---|
@@ -223,3 +266,5 @@ Future pipeline code will live in a top-level `pipeline/` directory
 | 2026-08-25 | Data access restricted to `lib/data/` | Enables future FastAPI swap without frontend rewrite |
 | 2026-08-25 | Tailwind CSS v4 included from starter | Styling foundation ships with create-next-app; avoids ad-hoc CSS decisions later |
 | 2026-08-25 | No Supabase SDK installed yet | Dependency added only when the staging project exists |
+| 2026-08-25 | Web-first confirmed: responsive website only; no native-mobile frameworks | Owner direction; responsive Tailwind UI covers all devices; a future mobile app would reuse Supabase directly (§10) |
+| 2026-08-25 | Temporary sample records isolated in `lib/data/mock-opportunities.ts` | Verifies list rendering before the DB exists; mocks never mix with the real data layer and vanish when Supabase connects |
