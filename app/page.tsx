@@ -34,6 +34,9 @@ export default async function HomePage() {
                 </p>
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">
                   {opportunity.organization} · {opportunity.category}
+                  {opportunity.location?.city
+                    ? ` · ${opportunity.location.city}`
+                    : " · Remote"}
                 </p>
               </li>
             ))}

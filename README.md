@@ -79,6 +79,9 @@ requirements would justify adding a separate backend service.
 ## Roadmap
 
 1. **MVP** — curated listings + admin moderation (current phase)
+   - within MVP+: interactive location maps, "Get Directions", city/region
+     filters, near-me search — data model already ready
+     (`docs/architecture.md` §11); no map SDK chosen yet
 2. **Aggregation** — scheduled Python discovery/extraction/classification
 3. **Users** — accounts, saved searches, deadline digests
 4. **Intelligence** — recommendations via offline embedding jobs

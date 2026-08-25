@@ -257,7 +257,62 @@ Three habits keep this door open:
 
 ---
 
-## 11. Decision log
+## 11. Planned feature: locations & maps
+
+Status: **designed, not implemented.** No map SDK, no API keys, no browser
+geolocation permission requests exist yet — and none should be added until
+this feature is actually built.
+
+### Data model (already reflected in `lib/types.ts`)
+
+Every opportunity carries one structured, fully optional location:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `venueName` | string \| null | Display name, e.g. "Costech Building" |
+| `address` | string \| null | Street-level address |
+| `city` | string \| null | Filter target |
+| `region` | string \| null | Tanzanian region; filter target |
+| `country` | string | Defaults to Tanzania for this platform |
+| `latitude` | number \| null | WGS84 decimal degrees |
+| `longitude` | number \| null | Paired with latitude |
+
+`location` itself is `null` for online events or records that have not been
+geocoded yet. Coordinates are stored as plain WGS84 decimal degrees:
+every mapping provider consumes them, and none of them owns them.
+
+### How each future capability will be served
+
+1. **Map on an opportunity's detail page** → render its lat/lng through a
+   map adapter (candidate providers: Leaflet/OpenStreetMap, Mapbox, Google
+   Maps — decided at build time).
+2. **"Get Directions"** → build a universal deep link from the coordinates
+   (Google Maps / Apple Maps / OSM direction URLs). Works with zero API
+   keys and zero SDKs.
+3. **Filter by location** → plain indexed `city`/`region` columns queried
+   through `lib/data/`.
+4. **"Near me"** → Supabase's PostGIS extension on PostgreSQL (included in
+   the platform ⚠️ verify availability when we connect): a geography point
+   plus radius queries (`ST_DWithin`). The browser geolocation prompt and
+   its privacy notice get added only then.
+5. **Multiple opportunities on one map** → same single listing query;
+   pins rendered client-side.
+
+### Abstraction rule (anti-lock-in)
+
+Store only neutral primitives — never provider IDs, embed codes, or
+provider-specific formats. When map UI is built, all provider-specific code
+lives behind a single adapter module (future `components/maps/`) exposing
+exactly two operations: *render coordinates* and *build a directions URL*.
+Swapping providers later touches one file.
+
+Geocoding (turning venue/address text into coordinates) will happen
+**offline** in the Phase-2 Python pipeline during ingestion — never inside
+page requests.
+
+---
+
+## 12. Decision log
 
 | Date | Decision | Reason |
 |---|---|---|
@@ -268,3 +323,5 @@ Three habits keep this door open:
 | 2026-08-25 | No Supabase SDK installed yet | Dependency added only when the staging project exists |
 | 2026-08-25 | Web-first confirmed: responsive website only; no native-mobile frameworks | Owner direction; responsive Tailwind UI covers all devices; a future mobile app would reuse Supabase directly (§10) |
 | 2026-08-25 | Temporary sample records isolated in `lib/data/mock-opportunities.ts` | Verifies list rendering before the DB exists; mocks never mix with the real data layer and vanish when Supabase connects |
+| 2026-08-25 | Location modeled as structured nullable `OpportunityLocation` (venue/address/city/region/country/lat/lng), replacing a flat string | Supports maps, directions, filtering and near-me without schema churn once the database exists; online events simply have `location: null` |
+| 2026-08-25 | Mapping provider abstracted away: only raw coordinates + address parts are stored; rendering deferred behind a single future adapter | Avoids lock-in to Google Maps/Mapbox/etc.; no SDKs or API keys until the feature is built |

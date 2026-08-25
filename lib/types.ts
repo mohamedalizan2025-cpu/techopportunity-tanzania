@@ -15,6 +15,16 @@ export type OpportunityCategory = (typeof OPPORTUNITY_CATEGORIES)[number];
 
 export type OpportunityStatus = "pending" | "published" | "rejected" | "expired";
 
+export interface OpportunityLocation {
+  venueName: string | null;
+  address: string | null;
+  city: string | null;
+  region: string | null;
+  country: string;
+  latitude: number | null;
+  longitude: number | null;
+}
+
 export interface Opportunity {
   id: string;
   slug: string;
@@ -24,7 +34,7 @@ export interface Opportunity {
   description: string;
   url: string;
   deadline: string | null;
-  location: string;
+  location: OpportunityLocation | null;
   imageUrl: string | null;
   status: OpportunityStatus;
   createdAt: string;
