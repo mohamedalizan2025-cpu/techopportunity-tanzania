@@ -169,48 +169,70 @@ alter table public.profiles      enable row level security;
 alter table public.opportunities enable row level security;
 
 create policy "categories are world readable"
-  on public.categories for select
+  on public.categories
+  for select
+  to anon, authenticated
   using (true);
 
 create policy "organizations are world readable"
-  on public.organizations for select
+  on public.organizations
+  for select
+  to anon, authenticated
   using (true);
 
 create policy "staff manage organizations"
-  on public.organizations for all
-  using (public.is_staff()) with check (public.is_staff());
+  on public.organizations
+  for all
+  to authenticated
+  using ((select public.is_staff())) with check ((select public.is_staff()));
 
 create policy "users read own profile"
-  on public.profiles for select
+  on public.profiles
+  for select
+  to authenticated
   using (id = auth.uid());
 
 create policy "staff read profiles"
-  on public.profiles for select
-  using (public.is_staff());
+  on public.profiles
+  for select
+  to authenticated
+  using ((select public.is_staff()));
 
 create policy "everyone reads published opportunities"
-  on public.opportunities for select
+  on public.opportunities
+  for select
+  to anon, authenticated
   using (status = 'published');
 
 create policy "submitters read own submissions"
-  on public.opportunities for select
+  on public.opportunities
+  for select
+  to authenticated
   using (submitted_by = auth.uid());
 
 create policy "staff read all opportunities"
-  on public.opportunities for select
-  using (public.is_staff());
+  on public.opportunities
+  for select
+  to authenticated
+  using ((select public.is_staff()));
 
 create policy "anyone submits pending opportunities"
-  on public.opportunities for insert
+  on public.opportunities
+  for insert
+  to anon, authenticated
   with check (
     status = 'pending'
     and (submitted_by is null or submitted_by = auth.uid())
   );
 
 create policy "staff update opportunities"
-  on public.opportunities for update
-  using (public.is_staff()) with check (public.is_staff());
+  on public.opportunities
+  for update
+  to authenticated
+  using ((select public.is_staff())) with check ((select public.is_staff()));
 
 create policy "staff delete opportunities"
-  on public.opportunities for delete
-  using (public.is_staff());
+  on public.opportunities
+  for delete
+  to authenticated
+  using ((select public.is_staff()));
