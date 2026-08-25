@@ -51,11 +51,11 @@ npm run dev
 
 Open http://localhost:3000.
 
-Until Supabase credentials exist in `.env.local`, the home page lists three
-clearly marked `[MOCK]` records from `lib/data/mock-opportunities.ts` so the
-UI can be verified. When the real database connects, only the internals of
-`lib/data/opportunities.ts` change — the mocks disappear and real data flows
-through the same functions.
+With `.env.local` configured (staging credentials you enter yourself), the
+home page lists **published opportunities from the staging database**.
+Without configuration it renders empty with a console warning — builds still
+pass. `lib/data/mock-opportunities.ts` remains available as an offline
+fixture and is never mixed into real results.
 
 ## Scripts
 

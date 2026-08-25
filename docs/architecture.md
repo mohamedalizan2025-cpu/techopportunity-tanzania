@@ -122,8 +122,11 @@ Why this rule matters:
 4. **Testability** — data functions can be tested or mocked independently
    of UI.
 
-Current state: `lib/data/opportunities.ts` returns empty results. When
-Supabase is connected, only this file's internals change.
+Current state: connected to the `tto-staging` Supabase project. The
+Supabase client factory lives beside the queries in `lib/data/supabase-client.ts`,
+so even the SDK import stays inside the data layer. Reads use the anon key,
+which means Row Level Security is always in force. `mock-opportunities.ts`
+remains as an offline fixture file and is not part of the real data path.
 
 ---
 
@@ -325,3 +328,6 @@ page requests.
 | 2026-08-25 | Temporary sample records isolated in `lib/data/mock-opportunities.ts` | Verifies list rendering before the DB exists; mocks never mix with the real data layer and vanish when Supabase connects |
 | 2026-08-25 | Location modeled as structured nullable `OpportunityLocation` (venue/address/city/region/country/lat/lng), replacing a flat string | Supports maps, directions, filtering and near-me without schema churn once the database exists; online events simply have `location: null` |
 | 2026-08-25 | Mapping provider abstracted away: only raw coordinates + address parts are stored; rendering deferred behind a single future adapter | Avoids lock-in to Google Maps/Mapbox/etc.; no SDKs or API keys until the feature is built |
+| 2026-08-25 | RLS hardening: `(select is_staff())` initplan wrapping and explicit `to anon/authenticated` role targets | Standard Postgres performance practice; makes each policy's audience explicit without changing logic |
+| 2026-08-26 | Connected to `tto-staging`; reads use ONLY the anon key through `lib/data/` | RLS stays authoritative for public reads; service-role key remains unwired until a trusted server-side need exists |
+| 2026-08-26 | Home page uses ISR (`revalidate = 60`) | Discovered during verification: Next reused the cached prerender, serving listings that ignored new database rows; revalidation keeps public pages fresh within 60s without per-request DB load |

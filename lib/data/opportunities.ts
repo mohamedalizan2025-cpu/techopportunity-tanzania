@@ -1,14 +1,118 @@
-import { MOCK_OPPORTUNITIES } from "./mock-opportunities";
-import type { Opportunity } from "../types";
+import type { Opportunity, OpportunityCategory } from "../types";
+import { createSupabaseServerClient } from "./supabase-client";
 
-export async function listPublishedOpportunities(): Promise<Opportunity[]> {
-  return MOCK_OPPORTUNITIES.filter((opportunity) => opportunity.status === "published");
+interface OpportunityRow {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  url: string;
+  deadline: string | null;
+  venue_name: string | null;
+  address: string | null;
+  city: string | null;
+  region: string | null;
+  country: string;
+  latitude: number | null;
+  longitude: number | null;
+  image_url: string | null;
+  created_at: string;
+  category: { slug: string } | null;
+  organization: { name: string } | null;
 }
 
-export async function getOpportunityBySlug(slug: string): Promise<Opportunity | null> {
-  return (
-    MOCK_OPPORTUNITIES.find(
-      (opportunity) => opportunity.slug === slug && opportunity.status === "published"
-    ) ?? null
-  );
+const OPPORTUNITY_SELECT = `
+  id,
+  slug,
+  title,
+  description,
+  url,
+  deadline,
+  venue_name,
+  address,
+  city,
+  region,
+  country,
+  latitude,
+  longitude,
+  image_url,
+  created_at,
+  category:categories ( slug ),
+  organization:organizations ( name )
+`;
+
+function mapRowToOpportunity(row: OpportunityRow): Opportunity {
+  const hasLocation =
+    row.venue_name !== null ||
+    row.address !== null ||
+    row.city !== null ||
+    row.region !== null ||
+    row.latitude !== null;
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    category: (row.category?.slug ?? "other") as OpportunityCategory,
+    organization: row.organization?.name ?? "Unknown organization",
+    description: row.description,
+    url: row.url,
+    deadline: row.deadline,
+    location: hasLocation
+      ? {
+          venueName: row.venue_name,
+          address: row.address,
+          city: row.city,
+          region: row.region,
+          country: row.country,
+          latitude: row.latitude,
+          longitude: row.longitude,
+        }
+      : null,
+    imageUrl: row.image_url,
+    status: "published",
+    createdAt: row.created_at,
+  };
+}
+
+export async function listPublishedOpportunities(): Promise<Opportunity[]> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select(OPPORTUNITY_SELECT)
+    .eq("status", "published")
+    .order("deadline", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[lib/data] Failed to list opportunities:", error.message);
+    return [];
+  }
+
+  return ((data ?? []) as unknown as OpportunityRow[]).map(mapRowToOpportunity);
+}
+
+export async function getOpportunityBySlug(
+  slug: string
+): Promise<Opportunity | null> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select(OPPORTUNITY_SELECT)
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[lib/data] Failed to fetch opportunity:", error.message);
+    return null;
+  }
+
+  return data
+    ? mapRowToOpportunity(data as unknown as OpportunityRow)
+    : null;
 }
