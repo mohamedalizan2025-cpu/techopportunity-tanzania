@@ -202,14 +202,66 @@ endpoint by endpoint.
 
 ---
 
-## 9. Future evolution
+## 9. Automatic opportunity discovery (Phase 2)
+
+The product keeps the same moderation-first flow:
+
+```
+approved external sources  →  discovery worker  →  normalize
+                                  ↓
+                               deduplicate
+                                  ↓
+                              insert as pending
+                                  ↓
+                          existing moderation queue
+                                  ↓
+                        moderator approves/rejects
+                                  ↓
+                           published opportunities
+```
+
+Important constraints:
+
+- The discovery worker never publishes directly.
+- Every discovered row enters `status = 'pending'` until a moderator reviews it.
+- The source registry is an allow-list. The workflow only fetches `active = true` sources.
+- A minimal relational provenance model is used instead of embedding metadata into the description.
+- The current database design already rewards this pattern because published reads are restricted via RLS and moderation remains staff-only.
+
+### Source registry
+
+The first discovery implementation adds an allow-list registry and provenance fields:
+
+- `public.opportunity_sources`
+- `opportunities.source_id`
+- `opportunities.discovered_at`
+- `opportunities.discovery_method`
+
+This lets the moderator answer: where did this come from and when was it discovered?
+
+### Scheduler
+
+The free, lowest-complexity scheduler is GitHub Actions. A daily cron job runs a Node-based discovery worker that fetches approved sources, normalizes candidates, deduplicates them, and inserts only pending records.
+
+### Security model
+
+- fetched HTML is treated as untrusted input
+- no service-role key is used in browser code or Next.js public env
+- any privileged workflow credential lives only in GitHub Actions secrets
+- discovered rows cannot become published without a moderator decision
+
+### Cost
+
+This MVP stays at $0/month if we avoid paid APIs, paid scrapers, and paid LLM services. The system is intentionally bounded to small approved public sources and deterministic parsing.
+
+---
+
+## 10. Future evolution
 
 ```
 Phase 1  MVP            curated listings, admin moderation        ← now
-Phase 2  Aggregation    nightly Python scrapers (GitHub Actions)
-                        extraction → cleaning → classification
-                        (LLM/local model) → pgvector dedup
-                        → rows land as "pending" for human review
+Phase 2  Aggregation    nightly discovery jobs (GitHub Actions)
+                        extraction → dedup → pending review
 Phase 3  Users          auth, saved searches, deadline digests
                         (Supabase Auth + Edge Functions/pg_cron)
 Phase 4  Intelligence   recommendation embeddings computed offline,
