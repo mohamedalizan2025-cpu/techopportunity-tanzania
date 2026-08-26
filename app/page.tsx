@@ -35,17 +35,22 @@ function formatCardDeadline(iso: string | null): string {
 
 function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
   return (
-    <li className="rounded-lg border border-black/[.08] bg-white p-4 text-left dark:border-white/[.145] dark:bg-zinc-950">
-      <p className="font-medium text-black dark:text-zinc-50">
-        {opportunity.title}
-      </p>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        {opportunity.organization} · {categoryLabel(opportunity.category)}
-        {opportunity.location?.city ? ` · ${opportunity.location.city}` : " · Remote"}
-      </p>
-      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
-        {formatCardDeadline(opportunity.deadline)}
-      </p>
+    <li>
+      <Link
+        href={`/opportunities/${opportunity.slug}`}
+        className="block rounded-lg border border-black/[.08] bg-white p-4 text-left transition-colors hover:border-black/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 dark:border-white/[.145] dark:bg-zinc-950 dark:hover:border-white/40 dark:focus-visible:ring-white/60"
+      >
+        <p className="font-medium text-black dark:text-zinc-50">
+          {opportunity.title}
+        </p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {opportunity.organization} · {categoryLabel(opportunity.category)}
+          {opportunity.location?.city ? ` · ${opportunity.location.city}` : " · Remote"}
+        </p>
+        <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+          {formatCardDeadline(opportunity.deadline)}
+        </p>
+      </Link>
     </li>
   );
 }
