@@ -137,6 +137,25 @@ export async function listPublishedOpportunities(
   return ((data ?? []) as unknown as OpportunityRow[]).map(mapRowToOpportunity);
 }
 
+export async function listOrganizationOptions(): Promise<
+  { id: string; name: string }[]
+> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("id,name")
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("[lib/data] Failed to list organizations:", error.message);
+    return [];
+  }
+
+  return (data ?? []) as unknown as { id: string; name: string }[];
+}
+
 export async function getOpportunityBySlug(
   slug: string
 ): Promise<Opportunity | null> {

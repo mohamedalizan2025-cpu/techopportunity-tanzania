@@ -7,6 +7,7 @@ import {
   type Opportunity,
   type OpportunityCategory,
 } from "@/lib/types";
+import Link from "next/link";
 
 interface HomePageProps {
   searchParams: Promise<{ category?: string; sort?: string }>;
@@ -71,6 +72,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
 
         <OpportunityFilters activeCategory={category} activeSort={sort} />
+
+        <p className="text-sm text-zinc-500 dark:text-zinc-500">
+          Know something missing?{" "}
+          <Link
+            href="/submit"
+            className="font-medium underline underline-offset-4 transition-colors hover:text-black dark:hover:text-zinc-50"
+          >
+            Submit an opportunity
+          </Link>
+        </p>
 
         {opportunities.length === 0 ? (
           <EmptyState
