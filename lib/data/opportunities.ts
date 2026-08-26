@@ -1,4 +1,8 @@
-import type { Opportunity, OpportunityCategory } from "../types";
+import type {
+  Opportunity,
+  OpportunityCategory,
+  OpportunityStatus,
+} from "../types";
 import { createSupabaseServerClient } from "./supabase-client";
 
 export type OpportunitySort = "deadline" | "newest";
@@ -8,7 +12,7 @@ export interface OpportunityQuery {
   sort?: OpportunitySort;
 }
 
-interface OpportunityRow {
+export interface OpportunityRow {
   id: string;
   slug: string;
   title: string;
@@ -48,6 +52,8 @@ const OPPORTUNITY_SELECT = `
   organization:organizations ( name )
 `;
 
+export { OPPORTUNITY_SELECT };
+
 const OPPORTUNITY_SELECT_CATEGORY_INNER = `
   id,
   slug,
@@ -68,7 +74,10 @@ const OPPORTUNITY_SELECT_CATEGORY_INNER = `
   organization:organizations ( name )
 `;
 
-function mapRowToOpportunity(row: OpportunityRow): Opportunity {
+export function mapOpportunityRow(
+  row: OpportunityRow,
+  status: OpportunityStatus
+): Opportunity {
   const hasLocation =
     row.venue_name !== null ||
     row.address !== null ||
@@ -97,9 +106,13 @@ function mapRowToOpportunity(row: OpportunityRow): Opportunity {
         }
       : null,
     imageUrl: row.image_url,
-    status: "published",
+    status,
     createdAt: row.created_at,
   };
+}
+
+function mapRowToOpportunity(row: OpportunityRow): Opportunity {
+  return mapOpportunityRow(row, "published");
 }
 
 export async function listPublishedOpportunities(
