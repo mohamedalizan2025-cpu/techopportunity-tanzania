@@ -1,22 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { categoryLabel } from "@/lib/category-labels";
 import { getOpportunityBySlug } from "@/lib/data/opportunities";
 
 export const revalidate = 60;
-
-const CATEGORY_LABELS: Record<string, string> = {
-  hackathon: "Hackathon",
-  competition: "Competition",
-  scholarship: "Scholarship",
-  conference: "Conference",
-  workshop: "Workshop",
-  internship: "Internship",
-  fellowship: "Fellowship",
-  grant: "Grant",
-  "tech-event": "Tech Event",
-  other: "Other",
-};
 
 function formatDeadline(iso: string | null): string {
   if (!iso) return "Rolling — no fixed deadline";
@@ -68,7 +56,6 @@ export default async function OpportunityDetailPage({ params }: PageProps) {
 
   if (!opportunity) notFound();
 
-  const categoryLabel = CATEGORY_LABELS[opportunity.category] ?? "Opportunity";
   const deadlineText = formatDeadline(opportunity.deadline);
   const locationLines =
     opportunity.location === null
@@ -87,7 +74,7 @@ export default async function OpportunityDetailPage({ params }: PageProps) {
 
         <header className="mt-6 flex flex-col gap-3">
           <span className="w-fit rounded-full border border-black/[.08] bg-white px-3 py-1 text-xs font-medium uppercase tracking-wide text-zinc-600 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400">
-            {categoryLabel}
+            {categoryLabel(opportunity.category)}
           </span>
           <h1 className="text-3xl font-semibold leading-tight tracking-tight text-black sm:text-4xl dark:text-zinc-50">
             {opportunity.title}

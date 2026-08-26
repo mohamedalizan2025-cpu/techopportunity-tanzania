@@ -1,6 +1,13 @@
 import type { Opportunity, OpportunityCategory } from "../types";
 import { createSupabaseServerClient } from "./supabase-client";
 
+export type OpportunitySort = "deadline" | "newest";
+
+export interface OpportunityQuery {
+  category?: OpportunityCategory | null;
+  sort?: OpportunitySort;
+}
+
 interface OpportunityRow {
   id: string;
   slug: string;
@@ -41,6 +48,26 @@ const OPPORTUNITY_SELECT = `
   organization:organizations ( name )
 `;
 
+const OPPORTUNITY_SELECT_CATEGORY_INNER = `
+  id,
+  slug,
+  title,
+  description,
+  url,
+  deadline,
+  venue_name,
+  address,
+  city,
+  region,
+  country,
+  latitude,
+  longitude,
+  image_url,
+  created_at,
+  category:categories!inner ( slug ),
+  organization:organizations ( name )
+`;
+
 function mapRowToOpportunity(row: OpportunityRow): Opportunity {
   const hasLocation =
     row.venue_name !== null ||
@@ -75,16 +102,32 @@ function mapRowToOpportunity(row: OpportunityRow): Opportunity {
   };
 }
 
-export async function listPublishedOpportunities(): Promise<Opportunity[]> {
+export async function listPublishedOpportunities(
+  query?: OpportunityQuery
+): Promise<Opportunity[]> {
   const supabase = createSupabaseServerClient();
   if (!supabase) return [];
 
-  const { data, error } = await supabase
+  let request = supabase
     .from("opportunities")
-    .select(OPPORTUNITY_SELECT)
-    .eq("status", "published")
-    .order("deadline", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: false });
+    .select(
+      query?.category ? OPPORTUNITY_SELECT_CATEGORY_INNER : OPPORTUNITY_SELECT
+    )
+    .eq("status", "published");
+
+  if (query?.category) {
+    request = request.eq("category.slug", query.category);
+  }
+
+  if (query?.sort === "newest") {
+    request = request.order("created_at", { ascending: false });
+  } else {
+    request = request
+      .order("deadline", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false });
+  }
+
+  const { data, error } = await request;
 
   if (error) {
     console.error("[lib/data] Failed to list opportunities:", error.message);
