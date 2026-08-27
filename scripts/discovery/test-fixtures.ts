@@ -194,5 +194,29 @@ if (relativeCandidates.length === 1) {
   assert("category inference: tech-event for meetup", inferCategory([relativeCandidates[0].title]) === "tech-event");
 }
 
+// 7. section-label / navigation noise gate (exact-title match only)
+const mkTitleCandidate = (title: string): CandidateOpportunity => ({
+  title,
+  description: "A description long enough to pass every other validation check.",
+  category: "other",
+  organization: null,
+  url: "https://example.com/page",
+  deadline: null,
+  venueName: null,
+  address: null,
+  city: null,
+  region: null,
+  country: "Tanzania",
+  sourceId: SOURCE_ID,
+  sourceUrl: SOURCE_URL,
+  discoveryMethod: "html",
+});
+for (const noise of ["ANNOUNCEMENTS", "Latest News", "View our events", "Publications", "Financial Markets", "QUICK LINKS", "Main navigation", "Welcome Note"]) {
+  assert(`noise gate rejects: ${noise}`, !validateCandidate(mkTitleCandidate(noise)));
+}
+for (const legit of ["ANNOUNCEMENTS: New Scholarship 2026", "Call for Applications-WISE Scholarship-Cohort 4", "TANGAZO LA UDAHILI WA STASHAHADA 2026/2027"]) {
+  assert(`noise gate preserves: ${legit.slice(0, 34)}`, validateCandidate(mkTitleCandidate(legit)));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;
