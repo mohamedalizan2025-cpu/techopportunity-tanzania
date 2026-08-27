@@ -6,6 +6,7 @@ import {
   extractCandidatesFromHtml,
   extractCandidatesFromJsonLd,
   extractCandidatesFromRss,
+  extractOpportunityLinks,
 } from "./extract";
 import { normalizeCandidate } from "./normalize";
 import { isDuplicate, sameUrl } from "./dedupe";
@@ -80,9 +81,48 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
 
       summary.candidatesFound += rawCandidates.length;
 
+      // One-hop roundup expansion: candidates whose title advertises multiple
+      // opportunities get their page fetched ONCE; explicit opportunity-text
+      // links become individual candidates (one row = one opportunity). The
+      // roundup parent is suppressed only when at least one inner candidate
+      // survives; otherwise the parent is kept, so nothing is ever lost.
+      // Bounded: max 5 roundup fetches per source, failure-isolated.
+      const expanded: typeof rawCandidates = [];
+      let roundupFetches = 0;
+      for (const cand of rawCandidates) {
+        if (cand.roundup !== "true" || typeof cand.url !== "string" || roundupFetches >= 5) {
+          expanded.push(cand);
+          continue;
+        }
+        try {
+          roundupFetches += 1;
+          const pageHtml = await fetchPage(cand.url);
+          const inner = extractOpportunityLinks(pageHtml, cand.url);
+          if (inner.length > 0) {
+            for (const link of inner) {
+              expanded.push({
+                title: link.title,
+                url: link.url,
+                description: `Listed in: ${cand.title}`,
+                sourceId: cand.sourceId,
+                sourceUrl: cand.url,
+                discoveryMethod: cand.discoveryMethod,
+              });
+            }
+            console.log(`[${source.name}] roundup expanded: ${inner.length} opportunities from ${cand.url}`);
+          } else {
+            expanded.push(cand);
+          }
+        } catch (roundupError) {
+          const message = roundupError instanceof Error ? roundupError.message : "roundup fetch failed";
+          console.error(`[${source.name}] roundup fetch failed ${cand.url}: ${message}`);
+          expanded.push(cand);
+        }
+      }
+
       const rowsToInsert: Record<string, unknown>[] = [];
 
-      for (const raw of rawCandidates) {
+      for (const raw of expanded) {
         const candidate = normalizeCandidate(raw, source.id);
         if (!candidate || !validateCandidate(candidate)) continue;
 

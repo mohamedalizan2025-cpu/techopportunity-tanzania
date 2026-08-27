@@ -1,3 +1,5 @@
+import { isObviousSectionLabel } from "./validate";
+
 export function extractCandidatesFromRss(html: string, sourceId: string, sourceUrl: string): Array<Record<string, string | null>> {
   const candidates: Array<Record<string, string | null>> = [];
   const itemRegex = /<item[\s\S]*?<title>([\s\S]*?)<\/title>[\s\S]*?<link>([\s\S]*?)<\/link>[\s\S]*?<description>([\s\S]*?)<\/description>/gi;
@@ -16,6 +18,7 @@ export function extractCandidatesFromRss(html: string, sourceId: string, sourceU
       sourceId,
       sourceUrl,
       discoveryMethod: "rss",
+      roundup: isRoundupTitle(title) ? "true" : null,
     });
   }
 
@@ -91,6 +94,73 @@ export function discoverFeedUrls(html: string, baseUrl: string): string[] {
 }
 
 /**
+ * Roundup detection: titles that advertise MULTIPLE opportunities
+ * ("30 Hot Job Opportunities", "10 Scholarships", "20 Grants").
+ * Conservative: requires an explicit count + plural opportunity noun.
+ */
+export function isRoundupTitle(title: string): boolean {
+  return /\b\d{1,4}\+?\s+[\w&\s\-']{0,40}?(jobs?|opportunities?|scholarships?|internships?|fellowships?|grants?|positions?|vacancies?|calls?)\b/i.test(
+    title
+  );
+}
+
+/**
+ * One-hop roundup expansion: extract explicit opportunity links from a
+ * fetched roundup page. An anchor qualifies ONLY when its visible text
+ * (a) is descriptive (>= 12 chars), (b) is not navigation/section noise,
+ * and (c) contains an actionable-opportunity signal word. Duplicate URLs,
+ * in-page fragments, mailto/javascript schemes and non-http links are
+ * rejected. Capped by the caller. This is NOT a crawler: exactly one page
+ * is analyzed, exactly once.
+ */
+export function extractOpportunityLinks(html: string, baseUrl: string): Array<{ title: string; url: string }> {
+  const ACTION = /\b(apply|application|deadline|scholarship|fellowship|internship|job|vacanc|position|programme|program|grant|fund|training|call|opportunit|fellowship|hackathon|competition|admission|bootcamp|course)\b/i;
+  const GENERIC_TEXT = /^(click here|apply here|apply now|apply online|read more|learn more|details|more info|more information|view|website|link|see more|full details)\b/i;
+  const out: Array<{ title: string; url: string }> = [];
+  const seen = new Set<string>();
+  for (const m of html.matchAll(/<a\s[^>]*href=["']([^"']+)["'][^>]*>([\s\S]{0,300}?)<\/a>/gi)) {
+    const rawText = m[2].replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
+    if (rawText.length < 12 || rawText.length > 200) continue;
+    if (isObviousSectionLabel(rawText)) continue;
+    // Actionable signal OR a long descriptive title (≥25 chars). Short
+    // non-action anchors are almost always navigation.
+    if (!ACTION.test(rawText) && rawText.length < 25) continue;
+    let abs: string;
+    let u: URL;
+    try {
+      u = new URL(m[1], baseUrl);
+      if (!["http:", "https:"].includes(u.protocol)) continue;
+      if (u.hash !== "" && u.pathname === new URL(baseUrl).pathname) continue;
+      abs = u.toString();
+    } catch {
+      continue;
+    }
+    if (seen.has(abs)) continue;
+    seen.add(abs);
+
+    // Title: prefer the descriptive anchor text; otherwise humanize the URL
+    // slug. Anchors like "Click here to apply" carry no information, and a
+    // slug that humanizes to garbage is skipped rather than fabricated.
+    let title: string | null = GENERIC_TEXT.test(rawText) ? null : rawText;
+    if (!title) {
+      const segment = u.pathname.split("/").filter(Boolean).pop() ?? "";
+      const humanized = decodeURIComponent(segment)
+        .replace(/\.(html?|php|aspx?)$/i, "")
+        .replace(/[-_]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const letters = humanized.replace(/[^a-zA-Z]/g, "").length;
+      title = humanized.length >= 10 && letters / humanized.length >= 0.5 ? humanized : null;
+    }
+    if (!title) continue;
+
+    out.push({ title, url: abs });
+    if (out.length >= 15) break;
+  }
+  return out;
+}
+
+/**
  * Atom entry extraction. Evidence is the entry itself: its alternate link is
  * the opportunity URL, its title/summary the text. Atom entries carry no
  * location or application-deadline fields in practice, so none are set —
@@ -120,6 +190,7 @@ export function extractCandidatesFromAtom(body: string, sourceId: string, source
       sourceId,
       sourceUrl,
       discoveryMethod: "rss",
+      roundup: isRoundupTitle(title) ? "true" : null,
       venueName: null,
       address: null,
       city: null,

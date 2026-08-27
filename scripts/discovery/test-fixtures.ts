@@ -9,6 +9,7 @@ import {
 import { normalizeCandidate, inferCategory } from "./normalize";
 import { isDuplicate } from "./dedupe";
 import { isValidOpportunityUrl, validateCandidate } from "./validate";
+import { isRoundupTitle, extractOpportunityLinks } from "./extract";
 import type { CandidateOpportunity } from "./types";
 
 const SOURCE_ID = "00000000-0000-0000-0000-000000000001";
@@ -250,6 +251,28 @@ const honestOther: Array<[string, string]> = [
 for (const [title, expected] of honestOther) {
   assert(`category honesty: ${expected} — ${title.slice(0, 38)}`, inferCategory([title]) === expected, `got ${inferCategory([title])}`);
 }
+
+// 0b. roundup inner-link extraction (one-hop, deterministic)
+const roundupHtml = `
+  <a href="https://example.org/team">Our Secretariat Team</a>
+  <a href="/announcements">Announcements</a>
+  <a href="https://example.org/jobs/unicef-partnerships-officer">UNICEF Partnerships Officer (Dar es Salaam)</a>
+  <a href="https://example.org/jobs/unicef-partnerships-officer">UNICEF Partnerships Officer (Dar es Salaam)</a>
+  <a href="https://example.org/grant/global-fund-wd1">Click here to apply</a>
+  <a href="https://example.org/scholar/wise-scholarship-cohort-4">WISE Scholarship Cohort 4 for African Women</a>
+  <a href="javascript:void(0)">Danger link</a>
+  <a href="#section">In-page section</a>
+`;
+const innerLinks = extractOpportunityLinks(roundupHtml, "https://example.org/roundup/30-hot-jobs");
+assert("roundup: duplicate + junk anchors removed", innerLinks.length === 3, String(innerLinks.length));
+assert("roundup: descriptive anchor title used", innerLinks.some((l) => l.title.startsWith("UNICEF Partnerships Officer")));
+assert("roundup: generic anchor humanized from slug", innerLinks.some((l) => l.title === "global fund wd1"), JSON.stringify(innerLinks.map((l) => l.title)));
+assert("roundup: short non-action anchor rejected", !innerLinks.some((l) => l.title === "Our Secretariat Team"));
+
+// roundup title detection
+assert("roundup title: 30 Hot Job Opportunities detected", isRoundupTitle("30 Hot Job Opportunities Accross Various Sectors Currently Open"));
+assert("roundup title: 10 Scholarships detected", isRoundupTitle("10 Scholarships for African Students"));
+assert("roundup title: single opportunity NOT detected", !isRoundupTitle("WISE Scholarship-Cohort 4 Application"));
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;
