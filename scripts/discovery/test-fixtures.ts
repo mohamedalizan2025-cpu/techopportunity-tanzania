@@ -260,13 +260,15 @@ const roundupHtml = `
   <a href="https://example.org/jobs/unicef-partnerships-officer">UNICEF Partnerships Officer (Dar es Salaam)</a>
   <a href="https://example.org/grant/global-fund-wd1">Click here to apply</a>
   <a href="https://example.org/scholar/wise-scholarship-cohort-4">WISE Scholarship Cohort 4 for African Women</a>
+  <a href="https://other.example.org/apply/2026-young-innovators-programme/">https://other.example.org/apply/2026-young-innovators-programme/</a>
   <a href="javascript:void(0)">Danger link</a>
   <a href="#section">In-page section</a>
 `;
 const innerLinks = extractOpportunityLinks(roundupHtml, "https://example.org/roundup/30-hot-jobs");
-assert("roundup: duplicate + junk anchors removed", innerLinks.length === 3, String(innerLinks.length));
+assert("roundup: duplicate + junk anchors removed", innerLinks.length === 4, String(innerLinks.length));
 assert("roundup: descriptive anchor title used", innerLinks.some((l) => l.title.startsWith("UNICEF Partnerships Officer")));
 assert("roundup: generic anchor humanized from slug", innerLinks.some((l) => l.title === "global fund wd1"), JSON.stringify(innerLinks.map((l) => l.title)));
+assert("roundup: URL-as-text anchor gets humanized title", innerLinks.some((l) => l.title === "2026 young innovators programme"), JSON.stringify(innerLinks.map((l) => l.title)));
 assert("roundup: short non-action anchor rejected", !innerLinks.some((l) => l.title === "Our Secretariat Team"));
 
 // roundup title detection

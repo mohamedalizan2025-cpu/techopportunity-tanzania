@@ -138,10 +138,10 @@ export function extractOpportunityLinks(html: string, baseUrl: string): Array<{ 
     if (seen.has(abs)) continue;
     seen.add(abs);
 
-    // Title: prefer the descriptive anchor text; otherwise humanize the URL
-    // slug. Anchors like "Click here to apply" carry no information, and a
-    // slug that humanizes to garbage is skipped rather than fabricated.
-    let title: string | null = GENERIC_TEXT.test(rawText) ? null : rawText;
+    // Title: prefer the descriptive anchor text; if the anchor text is a
+    // bare URL (common on copy-pasted posts) or a generic call-to-action,
+    // humanize the URL slug. Skip when neither yields a meaningful title.
+    let title: string | null = GENERIC_TEXT.test(rawText) || /^https?:\/\//i.test(rawText) ? null : rawText;
     if (!title) {
       const segment = u.pathname.split("/").filter(Boolean).pop() ?? "";
       const humanized = decodeURIComponent(segment)
