@@ -71,6 +71,32 @@ export async function getModerationAccess(): Promise<ModerationAccessResult> {
   };
 }
 
+export interface EnrichmentAuditStatus {
+  active: boolean;
+  reason: string | null;
+}
+
+/**
+ * Probes whether the enrichment audit trail (migration 0003) is live, so the
+ * moderation UI can tell operators the truth instead of silently dropping
+ * audit rows. Read-only; safe to call on every review render.
+ */
+export async function getEnrichmentAuditStatus(): Promise<EnrichmentAuditStatus> {
+  const access = await getModerationAccess();
+  if (!access.ok) return { active: false, reason: "unauthenticated" };
+
+  const { error } = await access.staff.client
+    .from("opportunity_enrichments")
+    .select("id")
+    .limit(1);
+
+  if (!error) return { active: true, reason: null };
+  if (error.code === "PGRST205" || error.message.includes("does not exist")) {
+    return { active: false, reason: "migration 0003 not applied" };
+  }
+  return { active: false, reason: error.message };
+}
+
 function toOpportunityRows(data: unknown): OpportunityRow[] {
   return (data ?? []) as unknown as OpportunityRow[];
 }

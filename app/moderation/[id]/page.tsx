@@ -5,6 +5,7 @@ import { OpportunityDetail } from "@/components/opportunity-detail";
 import { logOutAction } from "@/lib/data/auth-actions";
 import { listOrganizationOptions } from "@/lib/data/opportunities";
 import {
+  getEnrichmentAuditStatus,
   getModerationAccess,
   getPendingOpportunityById,
   isValidOpportunityId,
@@ -66,6 +67,7 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
 
   const opportunity = await getPendingOpportunityById(id);
   const organizations = await listOrganizationOptions();
+  const auditStatus = await getEnrichmentAuditStatus();
 
   if (!opportunity) {
     return (
@@ -150,6 +152,16 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
           <h2 className="text-lg font-semibold text-black dark:text-zinc-50">
             Decision
           </h2>
+          {!auditStatus.active ? (
+            <p
+              role="status"
+              className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs leading-5 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              Enrichment audit trail is inactive ({auditStatus.reason}). Review
+              edits will still be saved, but field-level changes will not be
+              recorded. Apply migration 0003 to activate the audit trail.
+            </p>
+          ) : null}
           <div className="mt-4">
             <DecisionForm opportunity={opportunity} organizations={organizations} />
           </div>
