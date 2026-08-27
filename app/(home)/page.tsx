@@ -1,4 +1,5 @@
 import { EmptyState } from "@/components/empty-state";
+import { AssistantPanel } from "@/components/assistant-panel";
 import { OpportunityFilters } from "@/components/opportunity-filters";
 import { categoryLabel } from "@/lib/category-labels";
 import {
@@ -108,6 +109,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             young innovators.
           </p>
         </div>
+
+        <AssistantPanel />
 
         <OpportunityFilters
           activeCategory={category}

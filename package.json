@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:fixtures": "tsx scripts/discovery/test-fixtures.ts",
-    "test:review": "tsx tests/moderation-review.test.ts"
+    "test:review": "tsx tests/moderation-review.test.ts",
+    "test:assistant": "tsx tests/assistant.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

@@ -145,7 +145,7 @@ export function sanitizeSearchQuery(raw: string | null | undefined): string | nu
   const cleaned = raw
     .normalize("NFKC")
     .replace(/[\u0000-\u001f\u007f]/g, " ")
-    .replace(/[,%()'"*\\]/g, " ")
+    .replace(/[,%()'"*\\;]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 120);
