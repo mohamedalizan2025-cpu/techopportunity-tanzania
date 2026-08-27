@@ -21,7 +21,10 @@ export function isProviderConfigured(): boolean {
   return Boolean(key && key.trim().length > 0);
 }
 
-export async function interpretQuestion(_question: string): Promise<never> {
+export async function interpretQuestion(question: string): Promise<never> {
+  // The question is intentionally unused until a provider is approved; the
+  // parameter is kept so the activation diff only adds the provider call.
+  void question;
   if (!isProviderConfigured()) throw new ProviderNotConfiguredError();
   // Provider selection is an explicit future decision (design doc §B3).
   // Intentionally unreachable until the owner approves one and this module

@@ -77,6 +77,7 @@ function resolveCategory(value: string | null | undefined, hintTexts: string[]):
 }
 
 const CATEGORY_PATTERNS: Array<[string, RegExp]> = [
+  ["admissions", /\budahili\b|admission|fomu ya maombi|application for|application window/i],
   ["hackathon", /\bhack(?:athon|fest)\b/i],
   ["scholarship", /\bscholarship\b|bursary|\budhamini\b/i],
   ["fellowship", /\bfellowship\b/i],
@@ -91,10 +92,12 @@ const CATEGORY_PATTERNS: Array<[string, RegExp]> = [
 /**
  * Unambiguous Swahili opportunity terms now covered: mafunzo (training),
  * mashindano/shindano (competition), kongamano (conference), udhamini
- * (scholarship). Terms WITHOUT a clear category equivalent — udahili
- * (admission), maombi (application), ajira (employment), tuzo (awards),
- * maonesho (exhibition), miradi (projects) — are deliberately NOT mapped:
- * they stay "other" for the human moderator instead of being guessed.
+ * (scholarship), udahili/fomu ya maombi (admissions/application — backed by
+ * the dedicated 'admissions' category). Terms WITHOUT a clear category
+ * equivalent — ajira (employment), tuzo (awards), maonesho (exhibition),
+ * miradi (projects), orodha ya waliochaguliwa (selection lists) — are
+ * deliberately NOT mapped: they stay "other" for the human moderator
+ * instead of being guessed.
  */
 
 export function inferCategory(texts: string[]): string {

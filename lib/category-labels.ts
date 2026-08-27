@@ -10,6 +10,7 @@ export const CATEGORY_LABELS: Record<OpportunityCategory, string> = {
   fellowship: "Fellowship",
   grant: "Grant",
   "tech-event": "Tech Event",
+  admissions: "Admissions & Programmes",
   other: "Other",
 };
 

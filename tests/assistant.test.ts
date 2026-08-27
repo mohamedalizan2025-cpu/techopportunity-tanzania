@@ -3,7 +3,7 @@
  * kill-switch/rate-limit primitives. Provider HTTP behaviour is
  * intentionally out of scope until a provider is approved (Phase A gate).
  */
-import { fallbackPlan, parseAssistantPlan, appliedFilters } from "../lib/assistant/plan";
+import { fallbackPlan, parseAssistantPlan, appliedFilters, isNonOpportunityQuery } from "../lib/assistant/plan";
 import { checkRateLimit } from "../lib/assistant/rate-limit";
 import { buildGroundedAnswerFromResults } from "../lib/data/assistant-queries";
 
@@ -92,6 +92,11 @@ assert("14 rate limiter blocks after max", lastAllowed === false);
 // 15. kill switch semantics live in the route (documented); here verify
 //     provider configuration is absent so runtime stays non-functional
 assert("15 provider module exists and is not silently operational", typeof fallbackPlan === "function");
+
+assert("16 boundary: graduation question detected", isNonOpportunityQuery("What happened at the graduation ceremony?"));
+assert("16 boundary: news summarize detected", isNonOpportunityQuery("Summarize the latest university news"));
+assert("16 opportunity: hackathon question NOT boundary", !isNonOpportunityQuery("Find hackathons in Dar es Salaam"));
+assert("16 opportunity: scholarship question NOT boundary", !isNonOpportunityQuery("Which scholarships are open?"));
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;

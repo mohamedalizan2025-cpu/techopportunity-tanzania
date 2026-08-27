@@ -232,7 +232,9 @@ const catCases: Array<[string, string]> = [
   ["Web Development Workshop for Beginners", "workshop"],
   ["East Africa Cyber Security Challenge", "competition"],
   ["Fintech Leaders Conference 2026", "conference"],
-  ["Fomu ya Maombi ya Kujiunga na VETA cha Mafunzo ya Hoteli", "workshop"],
+  ["Fomu ya Maombi ya Kujiunga na VETA cha Mafunzo ya Hoteli", "admissions"],
+  ["APPLICATION FOR BACHELOR OF ENGINEERING AND TECHNOLOGY", "admissions"],
+  ["TANGAZO LA UDAHILI WA STASHAHADA YA UHANDISI 2026/2027", "admissions"],
   ["Mashindano ya Ubunifu wa Teknolojia kwa Vijana", "competition"],
   ["Udhamini wa Masomo kwa Wanafunzi Bora 2026", "scholarship"],
   ["Kongamano la Teknolojia Tanzania 2026", "conference"],
@@ -241,7 +243,6 @@ for (const [title, expected] of catCases) {
   assert(`category: ${expected} — ${title.slice(0, 38)}`, inferCategory([title]) === expected, `got ${inferCategory([title])}`);
 }
 const honestOther: Array<[string, string]> = [
-  ["TANGAZO LA UDAHILI WA STASHAHADA YA UHANDISI 2026/2027", "other"],
   ["WAZIRI WA ELIMU AKAGUA MIRADI YA HEET SUZA", "other"],
   ["ORODHA YA WALIOCHAGULIWA VETA NGAZI YA TATU", "other"],
   ["ASANTE KWA KUUNGANA NASI KATIKA MAONESHO YA SABASABA 2026", "other"],

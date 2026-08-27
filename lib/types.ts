@@ -8,6 +8,7 @@ export const OPPORTUNITY_CATEGORIES = [
   "fellowship",
   "grant",
   "tech-event",
+  "admissions",
   "other",
 ] as const;
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/assistant/rate-limit";
-import { fallbackPlan, parseAssistantPlan, appliedFilters } from "@/lib/assistant/plan";
+import { fallbackPlan, parseAssistantPlan, appliedFilters, isNonOpportunityQuery } from "@/lib/assistant/plan";
 import { interpretQuestion, isProviderConfigured, ProviderNotConfiguredError } from "@/lib/assistant/provider";
 import { executeAssistantPlan } from "@/lib/data/assistant-queries";
 
@@ -47,6 +47,20 @@ export async function POST(request: Request) {
       { mode: "rate-limited", summary: `Too many requests. Try again in ${limit.retryAfterSeconds} seconds.`, results: [] },
       { status: 429 }
     );
+  }
+
+  // Opportunity-first boundary: clearly non-opportunity informational
+  // questions get a polite product-boundary response — no search, no
+  // provider call, no news retrieval. Narrow pattern; uncertain questions
+  // are treated as opportunity queries.
+  if (isNonOpportunityQuery(question)) {
+    return NextResponse.json({
+      mode: "out-of-scope",
+      summary:
+        "TechOpportunity Tanzania focuses on actionable opportunities — hackathons, scholarships, internships, grants, trainings, competitions and more. Try the category, region or deadline filters to browse what is published.",
+      appliedFilters: null,
+      results: [],
+    });
   }
 
   // Interpretation: provider only when configured AND enabled; otherwise the

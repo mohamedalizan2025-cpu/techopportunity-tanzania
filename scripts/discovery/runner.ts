@@ -99,7 +99,13 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
 
         const categoryId = resolveCategoryId(candidate.category, categoryIdMap);
         if (categoryId === null) {
-          throw new Error(`No category id resolved for '${candidate.category}' during source ${source.name}`);
+          // Unknown category slug (e.g. a newly added category whose seed row
+          // has not been applied yet). Skip the candidate instead of failing
+          // the source; the next run after the seed row exists will capture it.
+          console.warn(
+            `[${source.name}] Skipping candidate '${candidate.title.slice(0, 50)}' — unknown category '${candidate.category}' (missing category seed?)`
+          );
+          continue;
         }
 
         const row = buildPendingRow(candidate, categoryId);

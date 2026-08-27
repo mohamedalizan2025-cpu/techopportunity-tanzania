@@ -110,3 +110,16 @@ export function appliedFilters(plan: AssistantPlan) {
     sort: plan.sort,
   };
 }
+
+/**
+ * Narrow, deterministic detector for clearly NON-opportunity informational
+ * questions (institutional news, ceremonies, announcements). Deliberately
+ * narrow: an uncertain question is treated as an opportunity query and
+ * answered with real results (or an honest zero). This is a product-
+ * boundary guard, not a classifier — unknown stays unknown.
+ */
+export function isNonOpportunityQuery(question: string): boolean {
+  return /(graduation ceremony|latest news|university news|institution (announced|news)|what happened (at|with|to) the|summarize (the |recent |latest )?news|press release|speech by|courtesy visit)/i.test(
+    question
+  );
+}
