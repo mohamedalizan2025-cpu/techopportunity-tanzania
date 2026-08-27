@@ -55,9 +55,14 @@ function normalizeUrl(value: string): string | null {
 
 function normalizeDeadline(value: string | null): string | null {
   if (!value) return null;
-  const date = new Date(value);
+  const trimmed = value.trim();
+  // Date-only values are calendar dates: parse as UTC midnight so the stored
+  // instant is identical regardless of the machine's timezone.
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+    ? new Date(`${trimmed}T00:00:00Z`)
+    : new Date(trimmed);
   if (Number.isNaN(date.getTime())) return null;
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
+  return date.toISOString();
 }
 
 function resolveCategory(value: string | null | undefined, hintTexts: string[]): string | null {

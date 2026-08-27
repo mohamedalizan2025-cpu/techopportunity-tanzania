@@ -43,6 +43,7 @@ export function extractCandidatesFromJsonLd(html: string, sourceId: string, sour
           sourceId,
           sourceUrl,
           discoveryMethod: "json-ld",
+          deadline: extractJsonLdDeadline(event),
           ...extractJsonLdLocation(event?.location),
         });
       }
@@ -52,6 +53,24 @@ export function extractCandidatesFromJsonLd(html: string, sourceId: string, sour
   }
 
   return candidates;
+}
+
+/**
+ * Conservative deadline extraction. ONLY explicit closing-date fields are
+ * accepted, in evidence-strength order:
+ *   applicationDeadline → registrationDeadline → validThrough
+ * (validThrough is schema.org's structured "not active after" date).
+ * startDate/endDate/pubDate are event or publication dates and are NEVER
+ * treated as application deadlines. Unparseable values fall through to the
+ * normalizer, which stores null.
+ */
+function extractJsonLdDeadline(event: Record<string, unknown> | undefined): string | null {
+  if (!event) return null;
+  return (
+    stringify(event.applicationDeadline) ??
+    stringify(event.registrationDeadline) ??
+    stringify(event.validThrough)
+  );
 }
 
 /**

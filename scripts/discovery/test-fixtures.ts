@@ -89,6 +89,23 @@ if (validCandidates.length === 1) {
   assert("category inference: hackathon", validCandidates[0].category === "hackathon", `got ${validCandidates[0].category}`);
 }
 
+// 1d. explicit application/registration deadline fields → deadline
+const explicitDeadline = pipeline(loadFixture("deadline-explicit.html"));
+assert(
+  "explicit deadline: applicationDeadline wins",
+  explicitDeadline.length === 1 &&
+    explicitDeadline[0].deadline === "2026-10-01T00:00:00.000Z",
+  JSON.stringify(explicitDeadline[0]?.deadline)
+);
+
+// 1e. event startDate/endDate are NOT deadlines; malformed dates stay null
+const eventDatesOnly = pipeline(loadFixture("event-start-only.html"));
+assert(
+  "event dates: startDate/endDate never become deadline; malformed ignored",
+  eventDatesOnly.length === 1 && eventDatesOnly[0].deadline === null,
+  JSON.stringify(eventDatesOnly[0]?.deadline)
+);
+
 // 3. duplicate page against existing rows and within batch
 const duplicateAccepted = pipeline(loadFixture("duplicate-page.html"));
 assert("duplicate within batch: collapsed to one candidate", duplicateAccepted.length <= 1);
