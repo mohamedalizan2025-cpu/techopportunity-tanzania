@@ -78,15 +78,24 @@ function resolveCategory(value: string | null | undefined, hintTexts: string[]):
 
 const CATEGORY_PATTERNS: Array<[string, RegExp]> = [
   ["hackathon", /\bhack(?:athon|fest)\b/i],
-  ["scholarship", /\bscholarship\b|bursary/i],
+  ["scholarship", /\bscholarship\b|bursary|\budhamini\b/i],
   ["fellowship", /\bfellowship\b/i],
   ["grant", /\bgrants?\b|call for proposals|\bfunding\b/i],
   ["internship", /\binternship(s)?\b|\bintern(s)?\b/i],
-  ["competition", /competiti|\bchallenge\b|\bpitch\b|\baward(s)?\b|\bprize\b/i],
-  ["workshop", /\bworkshop\b|\bbootcamp\b|\btraining\b/i],
-  ["conference", /conference|\bsummit\b|\bforum\b/i],
+  ["competition", /competiti|\bchallenge\b|\bpitch\b|\baward(s)?\b|\bprize\b|\bmashindano\b|\bshindano\b/i],
+  ["workshop", /\bworkshop\b|\bbootcamp\b|\btraining\b|\bmafunzo\b/i],
+  ["conference", /conference|\bsummit\b|\bforum\b|\bkongamano\b/i],
   ["tech-event", /\bmeetup\b|tech\s+week|tech\s+talk|\bdevfest\b|\bmakerspace\b/i],
 ];
+
+/**
+ * Unambiguous Swahili opportunity terms now covered: mafunzo (training),
+ * mashindano/shindano (competition), kongamano (conference), udhamini
+ * (scholarship). Terms WITHOUT a clear category equivalent — udahili
+ * (admission), maombi (application), ajira (employment), tuzo (awards),
+ * maonesho (exhibition), miradi (projects) — are deliberately NOT mapped:
+ * they stay "other" for the human moderator instead of being guessed.
+ */
 
 export function inferCategory(texts: string[]): string {
   const haystack = texts.filter(Boolean).join(" ");

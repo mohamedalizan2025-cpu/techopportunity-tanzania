@@ -218,5 +218,37 @@ for (const legit of ["ANNOUNCEMENTS: New Scholarship 2026", "Call for Applicatio
   assert(`noise gate preserves: ${legit.slice(0, 34)}`, validateCandidate(mkTitleCandidate(legit)));
 }
 
+if (relativeCandidates.length === 1) {
+  assert("category inference: tech-event for meetup", inferCategory([relativeCandidates[0].title]) === "tech-event");
+}
+
+// 8. category inference: English + unambiguous Swahili + honest "other"
+const catCases: Array<[string, string]> = [
+  ["WISE Scholarship-Cohort 4 Application", "scholarship"],
+  ["Graduate Fellowship in Public Health", "fellowship"],
+  ["Data Innovation Grant for Youth Groups", "grant"],
+  ["Software Engineering Internship Programme", "internship"],
+  ["AI for Africa Hackathon", "hackathon"],
+  ["Web Development Workshop for Beginners", "workshop"],
+  ["East Africa Cyber Security Challenge", "competition"],
+  ["Fintech Leaders Conference 2026", "conference"],
+  ["Fomu ya Maombi ya Kujiunga na VETA cha Mafunzo ya Hoteli", "workshop"],
+  ["Mashindano ya Ubunifu wa Teknolojia kwa Vijana", "competition"],
+  ["Udhamini wa Masomo kwa Wanafunzi Bora 2026", "scholarship"],
+  ["Kongamano la Teknolojia Tanzania 2026", "conference"],
+];
+for (const [title, expected] of catCases) {
+  assert(`category: ${expected} — ${title.slice(0, 38)}`, inferCategory([title]) === expected, `got ${inferCategory([title])}`);
+}
+const honestOther: Array<[string, string]> = [
+  ["TANGAZO LA UDAHILI WA STASHAHADA YA UHANDISI 2026/2027", "other"],
+  ["WAZIRI WA ELIMU AKAGUA MIRADI YA HEET SUZA", "other"],
+  ["ORODHA YA WALIOCHAGULIWA VETA NGAZI YA TATU", "other"],
+  ["ASANTE KWA KUUNGANA NASI KATIKA MAONESHO YA SABASABA 2026", "other"],
+];
+for (const [title, expected] of honestOther) {
+  assert(`category honesty: ${expected} — ${title.slice(0, 38)}`, inferCategory([title]) === expected, `got ${inferCategory([title])}`);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;
