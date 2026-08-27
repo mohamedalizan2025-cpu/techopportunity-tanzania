@@ -8,7 +8,7 @@ import {
 } from "./extract";
 import { normalizeCandidate, inferCategory } from "./normalize";
 import { isDuplicate } from "./dedupe";
-import { validateCandidate } from "./validate";
+import { isValidOpportunityUrl, validateCandidate } from "./validate";
 import type { CandidateOpportunity } from "./types";
 
 const SOURCE_ID = "00000000-0000-0000-0000-000000000001";
@@ -26,6 +26,16 @@ function assert(name: string, condition: boolean, detail = ""): void {
     console.error(`FAIL  ${name}${detail ? ` — ${detail}` : ""}`);
   }
 }
+
+// 0. deterministic URL-quality guards
+assert("url guard: malformed www.www hostname rejected", !isValidOpportunityUrl("http://www.www.veta.go.tz/news/x"));
+assert("url guard: ordinary www hostname preserved", isValidOpportunityUrl("https://www.veta.go.tz/news/x"));
+assert("url guard: image file rejected", !isValidOpportunityUrl("https://www.veta.go.tz/media/images/gl-1.jpeg"));
+assert("url guard: PDF document preserved (legitimate application form)", isValidOpportunityUrl("https://www.veta.go.tz/publication/doc/abc123"));
+assert("url guard: comment permalink rejected", !isValidOpportunityUrl("https://www.fsdt.or.tz/2023/10/27/agriculture-financing/#comment-11"));
+assert("url guard: query-string page preserved", isValidOpportunityUrl("https://suza.ac.tz/?p=19686"));
+assert("url guard: deep path preserved", isValidOpportunityUrl("https://www.udsm.ac.tz/announcement/eac-scholarship"));
+assert("url guard: non-http scheme rejected", !isValidOpportunityUrl("ftp://files.example.com/x"));
 
 function loadFixture(file: string): string {
   return readFileSync(resolve("scripts/discovery/fixtures", file), "utf8");
