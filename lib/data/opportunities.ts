@@ -7,10 +7,15 @@ import { createSupabaseServerClient } from "./supabase-client";
 
 export type OpportunitySort = "deadline" | "newest";
 
+export type DeadlineFilter = "soon" | "upcoming" | "rolling";
+
 export interface OpportunityQuery {
   category?: OpportunityCategory | null;
   sort?: OpportunitySort;
   q?: string | null;
+  city?: string | null;
+  region?: string | null;
+  deadline?: DeadlineFilter | null;
 }
 
 export interface OpportunityRow {
@@ -155,6 +160,25 @@ function buildSearchFilter(q: string): string {
   ].join(",");
 }
 
+/** Frees filter values of PostgREST grammar characters; used for city/region. */
+export function sanitizeFilterValue(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const cleaned = raw
+    .normalize("NFKC")
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/[,%()'"*\\]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+  return cleaned.length >= 2 ? cleaned : null;
+}
+
+export function parseDeadlineFilter(raw: string | null | undefined): DeadlineFilter | null {
+  return raw === "soon" || raw === "upcoming" || raw === "rolling"
+    ? (raw as DeadlineFilter)
+    : null;
+}
+
 export async function listPublishedOpportunities(
   query?: OpportunityQuery
 ): Promise<Opportunity[]> {
@@ -175,6 +199,29 @@ export async function listPublishedOpportunities(
   const q = sanitizeSearchQuery(query?.q);
   if (q) {
     request = request.or(buildSearchFilter(q));
+  }
+
+  const city = sanitizeFilterValue(query?.city);
+  if (city) {
+    request = request.eq("city", city);
+  }
+
+  const region = sanitizeFilterValue(query?.region);
+  if (region) {
+    request = request.eq("region", region);
+  }
+
+  if (query?.deadline) {
+    const now = new Date();
+    if (query.deadline === "rolling") {
+      request = request.is("deadline", null);
+    } else {
+      request = request.gt("deadline", now.toISOString());
+      if (query.deadline === "soon") {
+        const soon = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+        request = request.lte("deadline", soon.toISOString());
+      }
+    }
   }
 
   if (query?.sort === "newest") {
@@ -214,10 +261,46 @@ export async function listOrganizationOptions(): Promise<
   return (data ?? []) as unknown as { id: string; name: string }[];
 }
 
+export interface PublishedLocations {
+  cities: string[];
+  regions: string[];
+}
+
+/**
+ * Distinct, non-null locations across published opportunities.
+ * Deduplicated in memory — appropriate at current scale, no extra
+ * database features required.
+ */
+export async function listPublishedLocations(): Promise<PublishedLocations> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return { cities: [], regions: [] };
+
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select("city,region")
+    .eq("status", "published")
+    .limit(1000);
+
+  if (error) {
+    console.error("[lib/data] Failed to list locations:", error.message);
+    return { cities: [], regions: [] };
+  }
+
+  const cities = new Set<string>();
+  const regions = new Set<string>();
+  for (const row of (data ?? []) as unknown as Array<{ city: string | null; region: string | null }>) {
+    if (row.city && row.city.trim() !== "") cities.add(row.city.trim());
+    if (row.region && row.region.trim() !== "") regions.add(row.region.trim());
+  }
+  return {
+    cities: [...cities].sort((a, b) => a.localeCompare(b)).slice(0, 50),
+    regions: [...regions].sort((a, b) => a.localeCompare(b)).slice(0, 50),
+  };
+}
+
 export async function getOpportunityBySlug(
   slug: string
-): Promise<Opportunity | null> {
-  const supabase = createSupabaseServerClient();
+): Promise<Opportunity | null> {  const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
   const { data, error } = await supabase

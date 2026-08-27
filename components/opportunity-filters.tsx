@@ -1,25 +1,44 @@
 import Link from "next/link";
 import { categoryLabel } from "@/lib/category-labels";
-import { OPPORTUNITY_CATEGORIES, type OpportunityCategory } from "@/lib/types";
+import {
+  OPPORTUNITY_CATEGORIES,
+  type OpportunityCategory,
+} from "@/lib/types";
+import type { DeadlineFilter, PublishedLocations } from "@/lib/data/opportunities";
 
 interface OpportunityFiltersProps {
   activeCategory: OpportunityCategory | null;
   activeSort: "deadline" | "newest";
   activeQuery?: string | null;
+  activeCity?: string | null;
+  activeRegion?: string | null;
+  activeDeadline?: DeadlineFilter | null;
+  locations?: PublishedLocations;
 }
 
 function buildHref(
   category: OpportunityCategory | null,
   sort: "deadline" | "newest",
-  q?: string | null
+  filters: {
+    q?: string | null;
+    city?: string | null;
+    region?: string | null;
+    deadline?: DeadlineFilter | null;
+  }
 ): string {
   const params = new URLSearchParams();
   if (category) params.set("category", category);
   if (sort !== "deadline") params.set("sort", sort);
-  if (q) params.set("q", q);
+  if (filters.q) params.set("q", filters.q);
+  if (filters.city) params.set("city", filters.city);
+  if (filters.region) params.set("region", filters.region);
+  if (filters.deadline) params.set("deadline", filters.deadline);
   const queryString = params.toString();
   return queryString ? `/?${queryString}` : "/";
 }
+
+const selectClasses =
+  "h-10 rounded-full border border-black/[.10] bg-white px-4 text-sm text-zinc-700 outline-none transition-colors focus:border-black/40 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-300 dark:focus:border-white/40";
 
 function FilterLink({
   href,
@@ -51,7 +70,12 @@ export function OpportunityFilters({
   activeCategory,
   activeSort,
   activeQuery = null,
+  activeCity = null,
+  activeRegion = null,
+  activeDeadline = null,
+  locations = { cities: [], regions: [] },
 }: OpportunityFiltersProps) {
+  const hasLocations = locations.cities.length > 0 || locations.regions.length > 0;
   return (
     <nav
       aria-label="Filter opportunities"
@@ -68,6 +92,13 @@ export function OpportunityFilters({
         ) : null}
         {activeSort !== "deadline" ? (
           <input type="hidden" name="sort" value={activeSort} />
+        ) : null}
+        {activeCity ? <input type="hidden" name="city" value={activeCity} /> : null}
+        {activeRegion ? (
+          <input type="hidden" name="region" value={activeRegion} />
+        ) : null}
+        {activeDeadline ? (
+          <input type="hidden" name="deadline" value={activeDeadline} />
         ) : null}
         <input
           type="search"
@@ -86,16 +117,94 @@ export function OpportunityFilters({
         </button>
       </form>
 
+      <form
+        action="/"
+        method="get"
+        aria-label="Structured filters"
+        className="flex w-full max-w-xl flex-wrap items-center justify-center gap-2"
+      >
+        {activeQuery ? <input type="hidden" name="q" value={activeQuery} /> : null}
+        {activeCategory ? (
+          <input type="hidden" name="category" value={activeCategory} />
+        ) : null}
+        {activeSort !== "deadline" ? (
+          <input type="hidden" name="sort" value={activeSort} />
+        ) : null}
+
+        <select
+          name="deadline"
+          defaultValue={activeDeadline ?? ""}
+          aria-label="Filter by deadline"
+          className={selectClasses}
+        >
+          <option value="">Any deadline</option>
+          <option value="soon">Closing soon (14 days)</option>
+          <option value="upcoming">Upcoming deadlines</option>
+          <option value="rolling">Rolling / no deadline</option>
+        </select>
+
+        {hasLocations ? (
+          <select
+            name="city"
+            defaultValue={activeCity ?? ""}
+            aria-label="Filter by city"
+            className={selectClasses}
+          >
+            <option value="">Any city</option>
+            {locations.cities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
+        ) : null}
+
+        {hasLocations ? (
+          <select
+            name="region"
+            defaultValue={activeRegion ?? ""}
+            aria-label="Filter by region"
+            className={selectClasses}
+          >
+            <option value="">Any region</option>
+            {locations.regions.map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
+          </select>
+        ) : null}
+
+        {activeDeadline || activeCity || activeRegion ? (
+          <Link
+            href={buildHref(activeCategory, activeSort, { q: activeQuery })}
+            className="inline-flex h-10 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+          >
+            Clear
+          </Link>
+        ) : null}
+
+        <button
+          type="submit"
+          className="inline-flex h-10 items-center justify-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+        >
+          Apply
+        </button>
+      </form>
+
       <ul className="flex flex-wrap justify-center gap-2">
         <li>
-          <FilterLink href={buildHref(null, activeSort, activeQuery)} active={activeCategory === null}>
+          <FilterLink
+            href={buildHref(null, activeSort, { q: activeQuery, city: activeCity, region: activeRegion, deadline: activeDeadline })}
+            active={activeCategory === null}
+          >
             All
           </FilterLink>
         </li>
         {OPPORTUNITY_CATEGORIES.map((category) => (
           <li key={category}>
             <FilterLink
-              href={buildHref(category, activeSort, activeQuery)}
+              href={buildHref(category, activeSort, { q: activeQuery, city: activeCity, region: activeRegion, deadline: activeDeadline })}
               active={activeCategory === category}
             >
               {categoryLabel(category)}
@@ -107,7 +216,7 @@ export function OpportunityFilters({
       <ul className="flex flex-wrap justify-center gap-2">
         <li>
           <FilterLink
-            href={buildHref(activeCategory, "deadline", activeQuery)}
+            href={buildHref(activeCategory, "deadline", { q: activeQuery, city: activeCity, region: activeRegion, deadline: activeDeadline })}
             active={activeSort === "deadline"}
           >
             Deadline
@@ -115,7 +224,7 @@ export function OpportunityFilters({
         </li>
         <li>
           <FilterLink
-            href={buildHref(activeCategory, "newest", activeQuery)}
+            href={buildHref(activeCategory, "newest", { q: activeQuery, city: activeCity, region: activeRegion, deadline: activeDeadline })}
             active={activeSort === "newest"}
           >
             Newest

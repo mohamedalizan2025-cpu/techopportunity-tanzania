@@ -2,7 +2,10 @@ import { EmptyState } from "@/components/empty-state";
 import { OpportunityFilters } from "@/components/opportunity-filters";
 import { categoryLabel } from "@/lib/category-labels";
 import {
+  listPublishedLocations,
   listPublishedOpportunities,
+  parseDeadlineFilter,
+  sanitizeFilterValue,
   sanitizeSearchQuery,
 } from "@/lib/data/opportunities";
 import {
@@ -13,7 +16,14 @@ import {
 import Link from "next/link";
 
 interface HomePageProps {
-  searchParams: Promise<{ category?: string; sort?: string; q?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    sort?: string;
+    q?: string;
+    city?: string;
+    region?: string;
+    deadline?: string;
+  }>;
 }
 
 function parseCategory(value?: string): OpportunityCategory | null {
@@ -70,8 +80,20 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const category = parseCategory(params.category);
   const sort = parseSort(params.sort);
   const q = sanitizeSearchQuery(params.q);
-  const opportunities = await listPublishedOpportunities({ category, sort, q });
-  const isFiltered = category !== null || q !== null;
+  const city = sanitizeFilterValue(params.city);
+  const region = sanitizeFilterValue(params.region);
+  const deadline = parseDeadlineFilter(params.deadline);
+  const opportunities = await listPublishedOpportunities({
+    category,
+    sort,
+    q,
+    city,
+    region,
+    deadline,
+  });
+  const locations = await listPublishedLocations();
+  const isFiltered =
+    category !== null || q !== null || city !== null || region !== null || deadline !== null;
 
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-50 px-6 font-sans dark:bg-black">
@@ -87,7 +109,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </p>
         </div>
 
-        <OpportunityFilters activeCategory={category} activeSort={sort} activeQuery={q} />
+        <OpportunityFilters
+          activeCategory={category}
+          activeSort={sort}
+          activeQuery={q}
+          activeCity={city}
+          activeRegion={region}
+          activeDeadline={deadline}
+          locations={locations}
+        />
 
         <p className="text-sm text-zinc-500 dark:text-zinc-500">
           Know something missing?{" "}
@@ -103,10 +133,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <EmptyState
             title={isFiltered ? "Nothing found" : "No opportunities yet"}
             message={
-              q !== null && category === null
+              q !== null
                 ? `No published opportunities match “${q}”. Try different keywords or clear the search.`
                 : isFiltered
-                  ? "No published opportunities match this filter. Try another category or select All."
+                  ? "No published opportunities match these filters. Try widening your search."
                   : "Approved opportunities will appear here as soon as they are published."
             }
           />
