@@ -94,7 +94,7 @@ export default async function ModerationPage() {
                   href={`/moderation/${opportunity.id}`}
                   className="block rounded-lg border border-black/[.08] bg-white p-4 transition-colors hover:border-black/30 dark:border-white/[.145] dark:bg-zinc-950 dark:hover:border-white/40"
                 >
-                  <p className="font-medium text-black dark:text-zinc-50">
+                  <p className="break-words font-medium text-black dark:text-zinc-50">
                     {opportunity.title}
                   </p>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">

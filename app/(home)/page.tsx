@@ -49,7 +49,7 @@ function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
         href={`/opportunities/${opportunity.slug}`}
         className="block rounded-lg border border-black/[.08] bg-white p-4 text-left transition-colors hover:border-black/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 dark:border-white/[.145] dark:bg-zinc-950 dark:hover:border-white/40 dark:focus-visible:ring-white/60"
       >
-        <p className="font-medium text-black dark:text-zinc-50">
+        <p className="break-words font-medium text-black dark:text-zinc-50">
           {opportunity.title}
         </p>
         {metaSegments.length > 0 ? (

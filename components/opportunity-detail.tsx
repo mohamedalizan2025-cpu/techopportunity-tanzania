@@ -42,7 +42,7 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
         <span className="w-fit rounded-full border border-black/[.08] bg-white px-3 py-1 text-xs font-medium uppercase tracking-wide text-zinc-600 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400">
           {categoryLabel(opportunity.category)}
         </span>
-        <h1 className="text-3xl font-semibold leading-tight tracking-tight text-black sm:text-4xl dark:text-zinc-50">
+        <h1 className="break-words text-3xl font-semibold leading-tight tracking-tight text-black sm:text-4xl dark:text-zinc-50">
           {opportunity.title}
         </h1>
         <p className="text-base text-zinc-600 dark:text-zinc-400">
