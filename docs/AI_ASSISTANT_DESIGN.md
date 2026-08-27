@@ -125,3 +125,51 @@ No provider account, no API key, no SDK dependency, no route handler, no
 vector store, no paid tier. Implementation requires: (1) this design's
 acceptance, (2) a chosen free provider + key custody plan, (3) owner sign-off
 on the §3 boundary audit.
+
+## 11. Provider research & recommendation (researched 2026-02, cited)
+
+Evidence gathered from current official documentation reachable from the
+project environment (fetch-verified this date):
+
+| Provider | Free tier (current docs) | Structured output | Integration | Notes |
+|---|---|---|---|---|
+| **Groq** | YES — per-model RPM/RPD/TPM/TPD tables published at console.groq.com/docs/rate-limits (e.g. openai/gpt-oss-20b: 30 RPM / 1,000 RPD / 8K TPM / 200K TPD) | YES — dedicated Structured Outputs docs | OpenAI-compatible `/chat/completions` via plain `fetch` — no SDK | Fastest latency class; server-side key; trivial kill switch |
+| Google Gemini API | free tier documented, but ai.google.dev pages TIMED OUT from this environment during research — unverified here | yes (responseSchema) | google-genai SDK or REST | viable alternative; needs separate verification |
+| OpenAI | pay-as-you-go; no maintained free tier for API | yes (json_schema) | SDK or fetch | cost fails the $0 target for MVP |
+
+**Recommendation: Groq**, model `openai/gpt-oss-20b` class, via plain
+`fetch` to its OpenAI-compatible endpoint with JSON-mode structured output.
+Rationale: only provider whose free-tier terms were verifiable from this
+environment; no SDK dependency; response shape maps 1:1 onto
+`parseAssistantPlan`; 1,000 requests/day comfortably exceeds MVP traffic.
+
+## 12. Opportunity-first behaviour (system-prompt policy, v1)
+
+The assistant is an OPPORTUNITY discovery tool, not a general information
+assistant. The fixed system prompt must state:
+
+1. Answer ONLY from published opportunity results returned by the query.
+2. If the question is about news, ceremonies, announcements, reports,
+   speeches, or institutional information: reply that TechOpportunity
+   Tanzania focuses on actionable opportunities and point the user to the
+   available category/region/deadline filters. Never summarize news.
+3. Never fabricate, complete, or generalize opportunities. Zero results are
+   stated as zero.
+4. Never mention pending/rejected/registry/audit concepts or any internal
+   system detail.
+
+## 13. Provider-specific implementation plan (Groq, activation-gated)
+
+1. Env: `ASSISTANT_PROVIDER_API_KEY` (server-only) +
+   `ASSISTANT_PROVIDER_MODEL` (default `openai/gpt-oss-20b`).
+2. `lib/assistant/provider.ts` `interpretQuestion()`: single `fetch` POST to
+   `https://api.groq.com/openai/v1/chat/completions` with the fixed system
+   prompt + field dictionary, `response_format: { type: "json_object" }`.
+3. Parse → `parseAssistantPlan` (existing strict validator) → existing
+   execution path. Any parse failure → deterministic fallback (already
+   implemented).
+4. Provider-gated tests to add at activation: malformed provider JSON,
+   hallucinated plan fields (dropped by validator), provider 429/5xx/timeout
+   → fallback, overlong responses, injection via question echoing.
+5. Cost control: 1 call/question, ≤120-char question, fixed prompt, existing
+   rate limiter, kill switch unchanged.
