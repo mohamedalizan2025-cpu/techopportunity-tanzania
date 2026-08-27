@@ -5,7 +5,21 @@ import Link from "next/link";
 import { decideOpportunityAction } from "@/lib/data/moderation-actions";
 import { initialDecisionState } from "@/lib/staff-form-state";
 
-export function DecisionForm({ opportunityId }: { opportunityId: string }) {
+const inputSelectClasses =
+  "w-full rounded-lg border border-black/[.10] bg-white px-3 py-2 text-sm text-black outline-none transition-colors focus:border-black/40 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-white/40";
+
+interface OrganizationOption {
+  id: string;
+  name: string;
+}
+
+export function DecisionForm({
+  opportunityId,
+  organizations,
+}: {
+  opportunityId: string;
+  organizations: OrganizationOption[];
+}) {
   const [state, formAction, isPending] = useActionState(
     decideOpportunityAction,
     initialDecisionState
@@ -52,6 +66,23 @@ export function DecisionForm({ opportunityId }: { opportunityId: string }) {
       ) : null}
 
       <input type="hidden" name="opportunityId" value={opportunityId} />
+
+      <label className="block text-sm font-medium text-black dark:text-zinc-50">
+        Attach organization{" "}
+        <span className="font-normal text-zinc-500">(optional — approval only)</span>
+        <select
+          name="organizationId"
+          defaultValue=""
+          className={`${inputSelectClasses} mt-1.5`}
+        >
+          <option value="">No organization (organizer stays unknown)</option>
+          {organizations.map((org) => (
+            <option key={org.id} value={org.id}>
+              {org.name}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <div className="flex flex-wrap gap-3">
         <button

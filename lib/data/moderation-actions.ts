@@ -9,6 +9,12 @@ interface DecidedRow {
   title: string;
 }
 
+function readOrganizationId(formData: FormData): string | null {
+  const raw = formData.get("organizationId");
+  const value = typeof raw === "string" ? raw.trim() : "";
+  return value.length > 0 ? value : null;
+}
+
 export async function decideOpportunityAction(
   _previousState: DecisionState,
   formData: FormData
@@ -51,9 +57,32 @@ export async function decideOpportunityAction(
 
   const nextStatus = rawDecision === "approve" ? "published" : "rejected";
 
+  const organizationId = readOrganizationId(formData);
+  let attachOrganizationId: string | null = null;
+  if (rawDecision === "approve" && organizationId !== null) {
+    if (!isValidOpportunityId(organizationId)) {
+      return { ...initial, status: "error", message: "Invalid organization reference." };
+    }
+    const { data: org, error: orgError } = await access.staff.client
+      .from("organizations")
+      .select("id")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (orgError || !org) {
+      console.error(
+        "[lib/data] Organization attachment lookup failed:",
+        orgError?.message ?? "not found"
+      );
+      return { ...initial, status: "error", message: "Selected organization could not be verified." };
+    }
+    attachOrganizationId = organizationId;
+  }
+
+  const update = { status: nextStatus, ...(rawDecision === "approve" ? { organization_id: attachOrganizationId } : {}) };
+
   const { data, error } = await access.staff.client
     .from("opportunities")
-    .update({ status: nextStatus })
+    .update(update)
     .eq("id", rawId)
     .eq("status", "pending")
     .select("slug,title");

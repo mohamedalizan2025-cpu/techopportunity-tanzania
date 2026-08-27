@@ -62,7 +62,7 @@ export default async function ModerationPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 font-sans dark:bg-black">
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight text-black sm:text-4xl dark:text-zinc-50">

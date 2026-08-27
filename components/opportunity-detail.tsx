@@ -33,7 +33,7 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
   const deadlineText = formatDeadline(opportunity.deadline);
   const locationLines =
     opportunity.location === null
-      ? ["Remote or online — no physical venue"]
+      ? ["Location not specified — see the official page for venue details."]
       : formatLocationLines(opportunity.location);
 
   return (
@@ -46,7 +46,7 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
           {opportunity.title}
         </h1>
         <p className="text-base text-zinc-600 dark:text-zinc-400">
-          {opportunity.organization}
+          {opportunity.organization ?? "Organizer — see the official page"}
         </p>
       </header>
 

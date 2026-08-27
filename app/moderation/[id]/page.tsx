@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { OpportunityDetail } from "@/components/opportunity-detail";
 import { logOutAction } from "@/lib/data/auth-actions";
+import { listOrganizationOptions } from "@/lib/data/opportunities";
 import {
   getModerationAccess,
   getPendingOpportunityById,
@@ -64,6 +65,7 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
   }
 
   const opportunity = await getPendingOpportunityById(id);
+  const organizations = await listOrganizationOptions();
 
   if (!opportunity) {
     return (
@@ -87,7 +89,7 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 font-sans dark:bg-black">
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <div className="flex items-start justify-between gap-4">
           <Link
             href="/moderation"
@@ -119,12 +121,37 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
           <OpportunityDetail opportunity={opportunity} />
         </div>
 
+        {opportunity.sourceName ? (
+          <dl className="mt-6 rounded-lg border border-dashed border-black/[.15] p-4 text-sm dark:border-white/[.2]">
+            <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+              <dt className="w-32 shrink-0 font-medium text-black dark:text-zinc-50">
+                Discovery source
+              </dt>
+              <dd className="text-zinc-600 dark:text-zinc-400">{opportunity.sourceName}</dd>
+            </div>
+            <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:gap-3">
+              <dt className="w-32 shrink-0 font-medium text-black dark:text-zinc-50">
+                Discovered
+              </dt>
+              <dd className="text-zinc-600 dark:text-zinc-400">
+                {new Intl.DateTimeFormat("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                  timeZone: "UTC",
+                }).format(new Date(opportunity.discoveredAt ?? opportunity.createdAt))}
+                {opportunity.discoveryMethod ? ` · ${opportunity.discoveryMethod}` : ""}
+              </dd>
+            </div>
+          </dl>
+        ) : null}
+
         <section className="mt-10 border-t border-black/[.08] pt-8 dark:border-white/[.145]">
           <h2 className="text-lg font-semibold text-black dark:text-zinc-50">
             Decision
           </h2>
           <div className="mt-4">
-            <DecisionForm opportunityId={opportunity.id} />
+            <DecisionForm opportunityId={opportunity.id} organizations={organizations} />
           </div>
         </section>
       </main>

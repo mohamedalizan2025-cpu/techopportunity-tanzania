@@ -10,6 +10,7 @@ export type OpportunitySort = "deadline" | "newest";
 export interface OpportunityQuery {
   category?: OpportunityCategory | null;
   sort?: OpportunitySort;
+  q?: string | null;
 }
 
 export interface OpportunityRow {
@@ -30,6 +31,9 @@ export interface OpportunityRow {
   created_at: string;
   category: { slug: string } | null;
   organization: { name: string } | null;
+  discovered_at: string | null;
+  discovery_method: string | null;
+  source: { name: string } | null;
 }
 
 const OPPORTUNITY_SELECT = `
@@ -49,7 +53,10 @@ const OPPORTUNITY_SELECT = `
   image_url,
   created_at,
   category:categories ( slug ),
-  organization:organizations ( name )
+  organization:organizations ( name ),
+  discovered_at,
+  discovery_method,
+  source:opportunity_sources ( name )
 `;
 
 export { OPPORTUNITY_SELECT };
@@ -71,7 +78,10 @@ const OPPORTUNITY_SELECT_CATEGORY_INNER = `
   image_url,
   created_at,
   category:categories!inner ( slug ),
-  organization:organizations ( name )
+  organization:organizations ( name ),
+  discovered_at,
+  discovery_method,
+  source:opportunity_sources ( name )
 `;
 
 export function mapOpportunityRow(
@@ -90,7 +100,10 @@ export function mapOpportunityRow(
     slug: row.slug,
     title: row.title,
     category: (row.category?.slug ?? "other") as OpportunityCategory,
-    organization: row.organization?.name ?? "Unknown organization",
+    organization: row.organization?.name ?? null,
+    sourceName: row.source?.name ?? null,
+    discoveredAt: row.discovered_at,
+    discoveryMethod: row.discovery_method,
     description: row.description,
     url: row.url,
     deadline: row.deadline,
@@ -111,8 +124,35 @@ export function mapOpportunityRow(
   };
 }
 
-function mapRowToOpportunity(row: OpportunityRow): Opportunity {
+export function mapRowToOpportunity(row: OpportunityRow): Opportunity {
   return mapOpportunityRow(row, "published");
+}
+
+/**
+ * Normalizes free-text search input into a safe ilike fragment.
+ * Strips control characters and every character that participates in
+ * PostgREST `or=` grammar, so the composed predicate can never escape
+ * its column=value slots.
+ */
+export function sanitizeSearchQuery(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const cleaned = raw
+    .normalize("NFKC")
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/[,%()'"*\\]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+  return cleaned.length >= 2 ? cleaned : null;
+}
+
+function buildSearchFilter(q: string): string {
+  return [
+    `title.ilike.%${q}%`,
+    `description.ilike.%${q}%`,
+    `city.ilike.%${q}%`,
+    `region.ilike.%${q}%`,
+  ].join(",");
 }
 
 export async function listPublishedOpportunities(
@@ -130,6 +170,11 @@ export async function listPublishedOpportunities(
 
   if (query?.category) {
     request = request.eq("category.slug", query.category);
+  }
+
+  const q = sanitizeSearchQuery(query?.q);
+  if (q) {
+    request = request.or(buildSearchFilter(q));
   }
 
   if (query?.sort === "newest") {
