@@ -52,3 +52,29 @@ but has NO category in the current taxonomy (`hackathon…other`). Affected
 rows today: several VETA/DIT/HESLB admission and recruitment items. Adding a
 `vacancies` (or `jobs`) category requires a categories-table seed migration —
 an OWNER STOP GATE per the current rules. Not implemented.
+
+## IMPLEMENTED (2026-02): Africa-wide aggregator feeds
+
+Two aggregator sources were adopted after live feed probing (HTTP 200,
+item-level titles/links/descriptions, Africa-wide scope including Tanzanian
+eligibility) and a controlled live discovery run:
+
+| Source | Feed | Measured result |
+|---|---|---|
+| OpportunityDesk | https://opportunitydesk.org/feed/ | actionable calls (jobs, fellowships, research programmes) |
+| OpportunitiesForAfricans | https://www.opportunitiesforafricans.com/feed/ | fellowships/scholarships/accelerators; per-item eligibility varies (some country-specific) — moderator verifies eligibility |
+
+Live run: +20 pending rows; auto-category distribution fellowship=2,
+scholarship=1, competition=1, conference=1, grant=1, other=14; all invariants
+(pending-only, submitted_by null, organization_id null, method=rss) verified.
+The exact-label noise gate filtered section/nav junk from these feeds
+pre-moderation as designed.
+
+## Excluded during feed probing (2026-02)
+
+| Feed | Reason |
+|---|---|
+| afterschoolafrica.com/feed/ | returns 200 but 0 items (broken/empty feed) |
+| scholarship-positions.com/feed | Cloudflare bot-challenge (never bypassed) |
+| youthop.com/feed | connection timeout |
+| weworkremotely.com RSS | works (25 items) but jobs fall outside the current category taxonomy and per-item Tanzania eligibility is unstated — deferred pending the vacancies/taxonomy owner decision |
