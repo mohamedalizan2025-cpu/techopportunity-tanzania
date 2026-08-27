@@ -8,8 +8,7 @@ import {
   extractCandidatesFromRss,
 } from "./extract";
 import { normalizeCandidate } from "./normalize";
-import { validateCandidate } from "./validate";
-import type { CandidateOpportunity, SourceRecord } from "./types";
+import { isObviousSectionLabel, isValidOpportunityUrl, validateCandidate } from "./validate";import type { CandidateOpportunity, SourceRecord } from "./types";
 
 /**
  * Read-only dry-run: exercises the full discovery extraction pipeline
@@ -36,7 +35,7 @@ const { data: sources } = await client
 
 const activeSources = (sources ?? []) as unknown as SourceRecord[];
 
-const totals = { sources: 0, fetched: 0, failures: 0, candidates: 0, valid: 0, withLocation: 0, withDeadline: 0, withBoth: 0, withNeither: 0 };
+const totals = { sources: 0, fetched: 0, failures: 0, candidates: 0, valid: 0, withLocation: 0, withDeadline: 0, withBoth: 0, withNeither: 0, noiseFiltered: 0 };
 
 
 
@@ -65,9 +64,16 @@ for (const source of activeSources) {
       }
     }
 
-    const valid = raw
-      .map((c) => normalizeCandidate(c, source.id))
-      .filter((c): c is CandidateOpportunity => c !== null && validateCandidate(c));
+    const normalized = raw
+      .map((c) => ({ c, n: normalizeCandidate(c, source.id) }))
+      .filter((x): x is { c: Parameters<typeof normalizeCandidate>[0]; n: CandidateOpportunity } => x.n !== null);
+    const valid = normalized.filter((x) => validateCandidate(x.n)).map((x) => x.n);
+    const labelNoise = normalized.filter((x) => !validateCandidate(x.n) && isObviousSectionLabel(x.n.title) && x.c.url && isValidOpportunityUrl(x.c.url));
+    totals.noiseFiltered += labelNoise.length;
+    if (labelNoise.length > 0) {
+      const titles = labelNoise.map((x) => x.n.title.slice(0, 40)).join(" | ");
+      console.log("    noise-filtered: " + titles);
+    }
 
     totals.candidates += valid.length;
     const withLoc = valid.filter(hasLocation);
