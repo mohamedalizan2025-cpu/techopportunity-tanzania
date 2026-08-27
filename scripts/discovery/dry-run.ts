@@ -80,6 +80,8 @@ for (const source of activeSources) {
     const withDl = valid.filter((c) => c.deadline !== null);
     const withBoth = valid.filter((c) => hasLocation(c) && c.deadline !== null);
     totals.valid += valid.length;
+    const catDist = valid.reduce((acc, v) => { acc[v.category] = (acc[v.category] || 0) + 1; return acc; }, {} as Record<string, number>);
+    console.log('    categories: ' + JSON.stringify(catDist));
     totals.withLocation += withLoc.length;
     totals.withDeadline += withDl.length;
     totals.withBoth += withBoth.length;
