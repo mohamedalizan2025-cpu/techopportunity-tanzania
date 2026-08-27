@@ -76,8 +76,10 @@ function extractJsonLdDeadline(event: Record<string, unknown> | undefined): stri
 /**
  * Maps schema.org Event.location into the candidate location keys the
  * normalizer already accepts. Only explicit, structured values are used —
- * a bare string is treated as a venue name; address parts are taken from
- * the structured PostalAddress fields. Nothing is inferred.
+ * a bare string is treated as a venue name unless it is a national
+ * reference ("Tanzania"), which names a country, not a venue or city, and
+ * is therefore rejected outright. Address parts are taken from the
+ * structured PostalAddress fields. Nothing is inferred.
  */
 function extractJsonLdLocation(
   location: unknown
@@ -90,7 +92,8 @@ function extractJsonLdLocation(
 
   if (typeof first === "string") {
     const venue = stringify(first);
-    return venue ? { ...empty, venueName: venue } : empty;
+    if (!venue || /^tanzania$/i.test(venue.trim())) return empty;
+    return { ...empty, venueName: venue };
   }
 
   if (typeof first !== "object") return empty;
@@ -100,7 +103,11 @@ function extractJsonLdLocation(
   const street = stringify(address ? address.streetAddress : obj.address);
   const city = stringify(address ? address.addressLocality : obj.addressLocality);
   const region = stringify(address ? address.addressRegion : obj.addressRegion);
-  return { venueName, address: street, city, region };
+  const nationalOnly =
+    city !== null && /^tanzania$/i.test(city.trim()) && region === null;
+  return nationalOnly
+    ? { venueName, address: street, city: null, region: null }
+    : { venueName, address: street, city, region };
 }
 
 export function extractCandidatesFromHtml(html: string, sourceId: string, sourceUrl: string): Array<Record<string, string | null>> {

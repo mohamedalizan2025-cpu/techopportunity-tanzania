@@ -203,12 +203,14 @@ export async function listPublishedOpportunities(
 
   const city = sanitizeFilterValue(query?.city);
   if (city) {
-    request = request.eq("city", city);
+    // Case-insensitive exact match: stored values may differ in casing from
+    // the canonical taxonomy while naming the same real location.
+    request = request.ilike("city", city);
   }
 
   const region = sanitizeFilterValue(query?.region);
   if (region) {
-    request = request.eq("region", region);
+    request = request.ilike("region", region);
   }
 
   if (query?.deadline) {

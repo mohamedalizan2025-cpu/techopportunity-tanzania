@@ -71,12 +71,12 @@ assert(
   JSON.stringify(validCandidates[0])
 );
 
-// 1c. ambiguous bare-string location stays traceable but unstructured
+// 1c. national reference ("Tanzania") is rejected as venue AND as city/region
 const ambiguous = pipeline(loadFixture("ambiguous-location.html"));
 assert(
-  "ambiguous location: venue kept, city/region stay null",
+  "national reference: rejected entirely — nothing fabricated",
   ambiguous.length === 1 &&
-    ambiguous[0].venueName === "Tanzania" &&
+    ambiguous[0].venueName === null &&
     ambiguous[0].city === null &&
     ambiguous[0].region === null &&
     ambiguous[0].address === null,

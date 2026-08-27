@@ -4,6 +4,11 @@ import {
   OPPORTUNITY_CATEGORIES,
   type OpportunityCategory,
 } from "@/lib/types";
+import {
+  TANZANIA_MAINLAND_REGIONS,
+  TANZANIA_ZANZIBAR_REGIONS,
+  extraRegionValues,
+} from "@/lib/tanzania-regions";
 import type { DeadlineFilter, PublishedLocations } from "@/lib/data/opportunities";
 
 interface OpportunityFiltersProps {
@@ -76,6 +81,7 @@ export function OpportunityFilters({
   locations = { cities: [], regions: [] },
 }: OpportunityFiltersProps) {
   const hasLocations = locations.cities.length > 0 || locations.regions.length > 0;
+  const storedRegionExtras = extraRegionValues(locations.regions);
   return (
     <nav
       aria-label="Filter opportunities"
@@ -159,21 +165,37 @@ export function OpportunityFilters({
           </select>
         ) : null}
 
-        {hasLocations ? (
-          <select
-            name="region"
-            defaultValue={activeRegion ?? ""}
-            aria-label="Filter by region"
-            className={selectClasses}
-          >
-            <option value="">Any region</option>
-            {locations.regions.map((region) => (
+        <select
+          name="region"
+          defaultValue={activeRegion ?? ""}
+          aria-label="Filter by region"
+          className={selectClasses}
+        >
+          <option value="">Any region</option>
+          <optgroup label="Mainland Tanzania">
+            {TANZANIA_MAINLAND_REGIONS.map((region) => (
               <option key={region} value={region}>
                 {region}
               </option>
             ))}
-          </select>
-        ) : null}
+          </optgroup>
+          <optgroup label="Zanzibar">
+            {TANZANIA_ZANZIBAR_REGIONS.map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
+          </optgroup>
+          {storedRegionExtras.length > 0 ? (
+            <optgroup label="Other recorded regions">
+              {storedRegionExtras.map((region) => (
+                <option key={region} value={region}>
+                  {region}
+                </option>
+              ))}
+            </optgroup>
+          ) : null}
+        </select>
 
         {activeDeadline || activeCity || activeRegion ? (
           <Link
