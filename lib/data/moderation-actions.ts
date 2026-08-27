@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getModerationAccess, isValidOpportunityId } from "./moderation";
+import { getModerationAccess, getPendingOpportunityById, isValidOpportunityId } from "./moderation";
+import { parseReviewInput, type ReviewInput } from "./moderation-review";
 import type { DecisionState } from "../staff-form-state";
 
 interface DecidedRow {
@@ -9,11 +10,13 @@ interface DecidedRow {
   title: string;
 }
 
-function readOrganizationId(formData: FormData): string | null {
-  const raw = formData.get("organizationId");
-  const value = typeof raw === "string" ? raw.trim() : "";
-  return value.length > 0 ? value : null;
-}
+const AUDITABLE_FIELDS: Array<{ field: string; previous: keyof ReviewInput; next: keyof ReviewInput }> = [
+  { field: "venue_name", previous: "venueName", next: "venueName" },
+  { field: "address", previous: "address", next: "address" },
+  { field: "city", previous: "city", next: "city" },
+  { field: "region", previous: "region", next: "region" },
+  { field: "deadline", previous: "deadline", next: "deadline" },
+];
 
 export async function decideOpportunityAction(
   _previousState: DecisionState,
@@ -57,12 +60,31 @@ export async function decideOpportunityAction(
 
   const nextStatus = rawDecision === "approve" ? "published" : "rejected";
 
-  const organizationId = readOrganizationId(formData);
-  let attachOrganizationId: string | null = null;
-  if (rawDecision === "approve" && organizationId !== null) {
-    if (!isValidOpportunityId(organizationId)) {
-      return { ...initial, status: "error", message: "Invalid organization reference." };
+  // Explicit double-decision protection: fetch the pending row first.
+  const current = await getPendingOpportunityById(rawId);
+  if (!current) {
+    return {
+      ...initial,
+      status: "error",
+      message:
+        "This submission is no longer pending — it may already have been reviewed.",
+    };
+  }
+
+  // Review corrections apply ONLY on approval. A rejection keeps the record
+  // exactly as discovered (no organizer/location/deadline wipes).
+  let review: ReviewInput | null = null;
+  if (rawDecision === "approve") {
+    const parsed = parseReviewInput(formData);
+    if (!parsed.ok) {
+      return { ...initial, status: "error", message: parsed.message };
     }
+    review = parsed.review;
+  }
+
+  const organizationId = review?.organizationId ?? null;
+
+  if (organizationId !== null) {
     const { data: org, error: orgError } = await access.staff.client
       .from("organizations")
       .select("id")
@@ -75,10 +97,31 @@ export async function decideOpportunityAction(
       );
       return { ...initial, status: "error", message: "Selected organization could not be verified." };
     }
-    attachOrganizationId = organizationId;
   }
 
-  const update = { status: nextStatus, ...(rawDecision === "approve" ? { organization_id: attachOrganizationId } : {}) };
+  const update: Record<string, unknown> = { status: nextStatus };
+  if (rawDecision === "approve" && review !== null) {
+    update.title = review.title;
+    update.description = review.description;
+    update.url = review.url;
+    update.venue_name = review.venueName;
+    update.address = review.address;
+    update.city = review.city;
+    update.region = review.region;
+    update.deadline = review.deadline;
+    update.organization_id = review.organizationId;
+
+    const { data: categoryRow, error: categoryError } = await access.staff.client
+      .from("categories")
+      .select("id")
+      .eq("slug", review.category)
+      .maybeSingle();
+    if (categoryError || !categoryRow) {
+      console.error("[lib/data] Category lookup failed:", categoryError?.message ?? "not found");
+      return { ...initial, status: "error", message: "Selected category could not be verified." };
+    }
+    update.category_id = (categoryRow as unknown as { id: number }).id;
+  }
 
   const { data, error } = await access.staff.client
     .from("opportunities")
@@ -107,6 +150,35 @@ export async function decideOpportunityAction(
   }
 
   const { slug, title } = rows[0];
+
+  // Field-level audit for moderator enrichment (best-effort; the audit table
+  // exists only after migration 0003 — its absence never blocks moderation).
+  if (rawDecision === "approve" && review !== null) {
+    const auditRows = AUDITABLE_FIELDS.map(({ field, previous, next }) => {
+      const before = (current as unknown as Record<string, unknown>)[previous];
+      const after = review[next];
+      if ((before ?? null) === (after ?? null)) return null;
+      return {
+        opportunity_id: rawId,
+        field,
+        previous_value: before ?? null,
+        new_value: after ?? "",
+        evidence_url: current.url,
+        method: "moderator-review",
+      };
+    }).filter((row): row is NonNullable<typeof row> => row !== null);
+    if (auditRows.length > 0) {
+      const { error: auditError } = await access.staff.client
+        .from("opportunity_enrichments")
+        .insert(auditRows);
+      if (auditError) {
+        console.info(
+          "[lib/data] Enrichment audit not recorded:",
+          auditError.message
+        );
+      }
+    }
+  }
 
   revalidatePath("/moderation");
   revalidatePath("/");

@@ -35,7 +35,7 @@ export interface OpportunityRow {
   image_url: string | null;
   created_at: string;
   category: { slug: string } | null;
-  organization: { name: string } | null;
+  organization: { id: string; name: string } | null;
   discovered_at: string | null;
   discovery_method: string | null;
   source: { name: string } | null;
@@ -58,7 +58,7 @@ const OPPORTUNITY_SELECT = `
   image_url,
   created_at,
   category:categories ( slug ),
-  organization:organizations ( name ),
+  organization:organizations ( id, name ),
   discovered_at,
   discovery_method,
   source:opportunity_sources ( name )
@@ -83,7 +83,7 @@ const OPPORTUNITY_SELECT_CATEGORY_INNER = `
   image_url,
   created_at,
   category:categories!inner ( slug ),
-  organization:organizations ( name ),
+  organization:organizations ( id, name ),
   discovered_at,
   discovery_method,
   source:opportunity_sources ( name )
@@ -106,6 +106,7 @@ export function mapOpportunityRow(
     title: row.title,
     category: (row.category?.slug ?? "other") as OpportunityCategory,
     organization: row.organization?.name ?? null,
+    organizationId: row.organization?.id ?? null,
     sourceName: row.source?.name ?? null,
     discoveredAt: row.discovered_at,
     discoveryMethod: row.discovery_method,
@@ -270,7 +271,7 @@ export interface PublishedLocations {
 
 /**
  * Distinct, non-null locations across published opportunities.
- * Deduplicated in memory — appropriate at current scale, no extra
+ * Deduplicated in memory â€” appropriate at current scale, no extra
  * database features required.
  */
 export async function listPublishedLocations(): Promise<PublishedLocations> {

@@ -32,6 +32,8 @@ export interface Opportunity {
   category: OpportunityCategory;
   /** Organizer name when a real organization is attached; never inferred. */
   organization: string | null;
+  /** Attached organizer id (null = unknown/none). Moderator-controlled. */
+  organizationId?: string | null;
   /** Discovery provenance (relational model); null unless moderator-visible context populates them. */
   sourceName?: string | null;
   discoveredAt?: string | null;

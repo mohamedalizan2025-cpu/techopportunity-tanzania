@@ -151,7 +151,7 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
             Decision
           </h2>
           <div className="mt-4">
-            <DecisionForm opportunityId={opportunity.id} organizations={organizations} />
+            <DecisionForm opportunity={opportunity} organizations={organizations} />
           </div>
         </section>
       </main>
