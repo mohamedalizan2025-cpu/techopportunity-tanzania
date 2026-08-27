@@ -1,6 +1,11 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { extractCandidatesFromRss, extractCandidatesFromJsonLd, extractCandidatesFromHtml } from "./extract";
+import {
+  extractCandidatesFromAtom,
+  extractCandidatesFromHtml,
+  extractCandidatesFromJsonLd,
+  extractCandidatesFromRss,
+} from "./extract";
 import { normalizeCandidate, inferCategory } from "./normalize";
 import { isDuplicate } from "./dedupe";
 import { validateCandidate } from "./validate";
@@ -104,6 +109,36 @@ assert(
   "event dates: startDate/endDate never become deadline; malformed ignored",
   eventDatesOnly.length === 1 && eventDatesOnly[0].deadline === null,
   JSON.stringify(eventDatesOnly[0]?.deadline)
+);
+
+// 1f. advertised-feed items: RSS item URL/title survive; pubDate is NOT a deadline
+const rssFeed = loadFixture("feed-rss.xml");
+const rssCandidatesRaw = extractCandidatesFromRss(rssFeed, SOURCE_ID, SOURCE_URL);
+assert("rss feed: both items extracted", rssCandidatesRaw.length === 2, String(rssCandidatesRaw.length));
+const rssNormalized = rssCandidatesRaw
+  .map((c) => normalizeCandidate(c, SOURCE_ID))
+  .filter((c): c is CandidateOpportunity => Boolean(c) && validateCandidate(c as CandidateOpportunity));
+assert(
+  "rss feed: item link/title preserved, pubDate rejected as deadline",
+  rssNormalized.length === 2 &&
+    rssNormalized.every((c) => c.deadline === null) &&
+    rssNormalized.some((c) => c.url === "https://suza.ac.tz/?p=20100"),
+  JSON.stringify(rssNormalized.map((c) => ({ u: c.url, d: c.deadline })))
+);
+
+// 1g. Atom entries: alternate link preferred, summary used, no location/deadline invented
+const atomFeed = loadFixture("feed-atom.xml");
+const atomRaw = extractCandidatesFromAtom(atomFeed, SOURCE_ID, "https://www.fsdt.or.tz/");
+assert("atom feed: both entries extracted", atomRaw.length === 2, String(atomRaw.length));
+const atomNormalized = atomRaw
+  .map((c) => normalizeCandidate(c, SOURCE_ID))
+  .filter((c): c is CandidateOpportunity => Boolean(c) && validateCandidate(c as CandidateOpportunity));
+assert(
+  "atom feed: alternate link wins, category inferred, deadline null",
+  atomNormalized.length === 2 &&
+    atomNormalized.some((c) => c.url === "https://www.fsdt.or.tz/2026/08/20/call-for-proposals") &&
+    atomNormalized.every((c) => c.deadline === null && c.venueName === null),
+  JSON.stringify(atomNormalized.map((c) => ({ u: c.url, d: c.deadline })))
 );
 
 // 3. duplicate page against existing rows and within batch

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>State University of Zanzibar</title>
+    <link>https://suza.ac.tz</link>
+    <description>SUZA announcements</description>
+    <item>
+      <title>Short Course on Marine Sciences</title>
+      <link>https://suza.ac.tz/?p=20100</link>
+      <description>Applications are open for the marine sciences short course at the Institute of Marine Sciences.</description>
+      <pubDate>Mon, 24 Aug 2026 08:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Graduation Ceremony Announcement</title>
+      <link>https://suza.ac.tz/?p=20101</link>
+      <description>The 2026 graduation ceremony schedule has been released.</description>
+      <pubDate>Tue, 25 Aug 2026 09:30:00 +0000</pubDate>
+    </item>
+  </channel>
+</rss>

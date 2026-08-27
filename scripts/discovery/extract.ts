@@ -74,6 +74,63 @@ function extractJsonLdDeadline(event: Record<string, unknown> | undefined): stri
 }
 
 /**
+ * Feed URLs advertised by a source page via <link rel="alternate"> with an
+ * RSS/Atom type. Discovery never guesses feed paths — only advertised ones.
+ */
+export function discoverFeedUrls(html: string, baseUrl: string): string[] {
+  const urls: string[] = [];
+  for (const m of html.matchAll(/<link[^>]*type=["'][^"']*(?:rss|atom)[^"']*["'][^>]*>/gi)) {
+    const href = m[0].match(/href=["']([^"']+)["']/i)?.[1];
+    if (!href) continue;
+    try {
+      const abs = new URL(href, baseUrl).toString();
+      if (!urls.includes(abs)) urls.push(abs);
+    } catch {}
+  }
+  return urls;
+}
+
+/**
+ * Atom entry extraction. Evidence is the entry itself: its alternate link is
+ * the opportunity URL, its title/summary the text. Atom entries carry no
+ * location or application-deadline fields in practice, so none are set —
+ * unknown stays unknown. Entries are recorded under the "rss" discovery
+ * method (feed family) for schema compatibility.
+ */
+export function extractCandidatesFromAtom(body: string, sourceId: string, sourceUrl: string): Array<Record<string, string | null>> {
+  const candidates: Array<Record<string, string | null>> = [];
+  for (const entryMatch of body.matchAll(/<entry[\s\S]*?<\/entry>/gi)) {
+    const entry = entryMatch[0];
+    const title = stripHtml(entry.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "");
+    let link: string | null = null;
+    for (const linkMatch of entry.matchAll(/<link[^>]*>/gi)) {
+      const tag = linkMatch[0];
+      const href = tag.match(/href=["']([^"']+)["']/i)?.[1] ?? null;
+      if (!href) continue;
+      const rel = tag.match(/rel=["']([^"']+)["']/i)?.[1] ?? "alternate";
+      if (rel === "alternate") { link = href; break; }
+      if (!link) link = href;
+    }
+    if (!title || !link) continue;
+    const summary = stripHtml(entry.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i)?.[1] ?? "");
+    candidates.push({
+      title,
+      url: link,
+      description: summary || title,
+      sourceId,
+      sourceUrl,
+      discoveryMethod: "rss",
+      venueName: null,
+      address: null,
+      city: null,
+      region: null,
+      deadline: null,
+    });
+  }
+  return candidates;
+}
+
+/**
  * Maps schema.org Event.location into the candidate location keys the
  * normalizer already accepts. Only explicit, structured values are used —
  * a bare string is treated as a venue name unless it is a national

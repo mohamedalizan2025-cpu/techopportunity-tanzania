@@ -1,6 +1,12 @@
 ﻿import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { fetchPage } from "./fetch";
-import { extractCandidatesFromHtml, extractCandidatesFromJsonLd, extractCandidatesFromRss } from "./extract";
+import {
+  discoverFeedUrls,
+  extractCandidatesFromAtom,
+  extractCandidatesFromHtml,
+  extractCandidatesFromJsonLd,
+  extractCandidatesFromRss,
+} from "./extract";
 import { normalizeCandidate } from "./normalize";
 import { isDuplicate, sameUrl } from "./dedupe";
 import { validateCandidate } from "./validate";
@@ -51,8 +57,26 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
       const rawCandidates = [
         ...extractCandidatesFromRss(html, source.id, source.base_url),
         ...extractCandidatesFromJsonLd(html, source.id, source.base_url),
+        ...extractCandidatesFromAtom(html, source.id, source.base_url),
         ...extractCandidatesFromHtml(html, source.id, source.base_url),
       ];
+
+      // Advertised feeds (link rel=alternate only, capped at 2 per source)
+      // carry item-level title/link/description evidence the homepage HTML
+      // lacks. Each feed fetch is failure-isolated like a source.
+      const feedUrls = discoverFeedUrls(html, source.base_url).slice(0, 2);
+      for (const feedUrl of feedUrls) {
+        try {
+          const feedBody = await fetchPage(feedUrl);
+          rawCandidates.push(
+            ...extractCandidatesFromRss(feedBody, source.id, feedUrl),
+            ...extractCandidatesFromAtom(feedBody, source.id, feedUrl)
+          );
+        } catch (feedError) {
+          const message = feedError instanceof Error ? feedError.message : "feed fetch failed";
+          console.error(`[${source.name}] feed fetch failed ${feedUrl}: ${message}`);
+        }
+      }
 
       summary.candidatesFound += rawCandidates.length;
 

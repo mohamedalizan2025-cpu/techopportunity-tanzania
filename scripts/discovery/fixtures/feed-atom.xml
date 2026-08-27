@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>FSDT Updates</title>
+  <link rel="alternate" href="https://www.fsdt.or.tz/"/>
+  <entry>
+    <title>Call for Proposals: Financial Inclusion Research</title>
+    <link rel="alternate" href="https://www.fsdt.or.tz/2026/08/20/call-for-proposals"/>
+    <summary>Expressions of interest are invited from Tanzanian researchers.</summary>
+  </entry>
+  <entry>
+    <title>Programme Learning Brief</title>
+    <link href="https://www.fsdt.or.tz/2026/08/10/learning-brief"/>
+    <summary>A published brief on financial inclusion outcomes.</summary>
+  </entry>
+</feed>
