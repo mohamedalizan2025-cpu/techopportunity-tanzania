@@ -46,6 +46,9 @@ alter table public.opportunities
 create index if not exists idx_opportunity_sources_active
   on public.opportunity_sources (active, country, source_type);
 
+create unique index if not exists idx_opportunity_sources_base_url
+  on public.opportunity_sources (base_url);
+
 create index if not exists idx_opportunities_source_id
   on public.opportunities (source_id);
 
