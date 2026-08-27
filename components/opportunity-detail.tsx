@@ -53,12 +53,6 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
       <dl className="mt-8 flex flex-col gap-4 rounded-lg border border-black/[.08] bg-white p-5 text-sm dark:border-white/[.145] dark:bg-zinc-950 sm:p-6">
         <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
           <dt className="w-28 shrink-0 font-medium text-black dark:text-zinc-50">
-            Deadline
-          </dt>
-          <dd className="text-zinc-600 dark:text-zinc-400">{deadlineText}</dd>
-        </div>
-        <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
-          <dt className="w-28 shrink-0 font-medium text-black dark:text-zinc-50">
             Location
           </dt>
           <dd className="text-zinc-600 dark:text-zinc-400">
@@ -68,6 +62,12 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
               </span>
             ))}
           </dd>
+        </div>
+        <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+          <dt className="w-28 shrink-0 font-medium text-black dark:text-zinc-50">
+            Deadline
+          </dt>
+          <dd className="text-zinc-600 dark:text-zinc-400">{deadlineText}</dd>
         </div>
       </dl>
 

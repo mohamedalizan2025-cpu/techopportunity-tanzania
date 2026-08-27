@@ -97,13 +97,24 @@ export default async function ModerationPage() {
                   <p className="break-words font-medium text-black dark:text-zinc-50">
                     {opportunity.title}
                   </p>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                    {opportunity.organization} ·{" "}
-                    {categoryLabel(opportunity.category)}
-                    {opportunity.location?.city
-                      ? ` · ${opportunity.location.city}`
-                      : " · Remote"}
-                  </p>
+                  {(() => {
+                    const segments = [
+                      opportunity.organization,
+                      categoryLabel(opportunity.category),
+                      opportunity.location?.city ?? null,
+                    ].filter((segment): segment is string => segment !== null && segment !== "");
+                    return segments.length > 0 ? (
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        {segments.join(" · ")}
+                      </p>
+                    ) : null;
+                  })()}
+                  {opportunity.sourceName ? (
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                      Auto-discovered · {opportunity.sourceName}
+                      {opportunity.discoveryMethod ? ` · ${opportunity.discoveryMethod}` : ""}
+                    </p>
+                  ) : null}
                   <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
                     Submitted {formatSubmitted(opportunity.createdAt)} · Deadline{" "}
                     {formatQueueDeadline(opportunity.deadline)}
