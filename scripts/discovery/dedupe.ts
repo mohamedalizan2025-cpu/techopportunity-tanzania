@@ -28,3 +28,7 @@ function normalizeUrl(value: string): string {
     return value.trim();
   }
 }
+
+export function sameUrl(a: string, b: string): boolean {
+  return normalizeUrl(a) === normalizeUrl(b);
+}

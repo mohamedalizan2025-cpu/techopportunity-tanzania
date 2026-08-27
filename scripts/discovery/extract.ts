@@ -62,7 +62,8 @@ export function extractCandidatesFromHtml(html: string, sourceId: string, source
     if (!title || title.length < 6) continue;
     const anchor = html.slice(Math.max(0, match.index ?? 0), Math.min(html.length, (match.index ?? 0) + 500));
     const urlMatch = anchor.match(/href=["']([^"']+)["']/i);
-    const url = urlMatch ? sanitizeUrl(urlMatch[1]) : sourceUrl;
+    if (!urlMatch) continue;
+    const url = sanitizeUrl(urlMatch[1], sourceUrl);
     if (!url) continue;
     candidates.push({
       title,
@@ -81,12 +82,13 @@ function stripHtml(value: string): string {
   return value.replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
 }
 
-function sanitizeUrl(value: string): string | null {
+function sanitizeUrl(value: string, baseUrl?: string): string | null {
   const trimmed = value.trim();
   if (!trimmed || /^javascript:/i.test(trimmed) || /^mailto:/i.test(trimmed)) return null;
   try {
-    const url = new URL(trimmed, "https://example.com");
-    return url.origin === "https://example.com" && !trimmed.startsWith("/") ? null : trimmed;
+    const url = new URL(trimmed, baseUrl ?? "https://example.invalid");
+    if (!["http:", "https:"].includes(url.protocol)) return null;
+    return url.toString();
   } catch {
     return null;
   }

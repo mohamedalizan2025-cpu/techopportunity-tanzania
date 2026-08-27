@@ -5,7 +5,7 @@ export function normalizeCandidate(input: Record<string, string | null>, sourceI
   const title = cleanText(input.title);
   const description = cleanText(input.description) || `${title} — discovered via source automation.`;
   const url = normalizeUrl(input.url ?? "");
-  const category = normalizeCategory(input.category ?? "");
+  const category = resolveCategory(input.category, [title ?? "", description ?? ""]);
   const organization = cleanText(input.organization) || "Unknown organization";
   const deadline = normalizeDeadline(input.deadline ?? null);
   const country = cleanText(input.country) || "Tanzania";
@@ -60,9 +60,33 @@ function normalizeDeadline(value: string | null): string | null {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
 }
 
-function normalizeCategory(value: string): string | null {
-  const normalized = value.toLowerCase().trim().replace(/\s+/g, "-");
-  return (OPPORTUNITY_CATEGORIES as readonly string[]).includes(normalized)
-    ? normalized
-    : null;
+function resolveCategory(value: string | null | undefined, hintTexts: string[]): string | null {
+  const explicit = cleanText(value)?.toLowerCase().trim().replace(/\s+/g, "-");
+  if (explicit) {
+    return (OPPORTUNITY_CATEGORIES as readonly string[]).includes(explicit)
+      ? explicit
+      : null;
+  }
+  const inferred = inferCategory(hintTexts);
+  return (OPPORTUNITY_CATEGORIES as readonly string[]).includes(inferred) ? inferred : "other";
+}
+
+const CATEGORY_PATTERNS: Array<[string, RegExp]> = [
+  ["hackathon", /\bhack(?:athon|fest)\b/i],
+  ["scholarship", /\bscholarship\b|bursary/i],
+  ["fellowship", /\bfellowship\b/i],
+  ["grant", /\bgrants?\b|call for proposals|\bfunding\b/i],
+  ["internship", /\binternship(s)?\b|\bintern(s)?\b/i],
+  ["competition", /competiti|\bchallenge\b|\bpitch\b|\baward(s)?\b|\bprize\b/i],
+  ["workshop", /\bworkshop\b|\bbootcamp\b|\btraining\b/i],
+  ["conference", /conference|\bsummit\b|\bforum\b/i],
+  ["tech-event", /\bmeetup\b|tech\s+week|tech\s+talk|\bdevfest\b|\bmakerspace\b/i],
+];
+
+export function inferCategory(texts: string[]): string {
+  const haystack = texts.filter(Boolean).join(" ");
+  for (const [category, pattern] of CATEGORY_PATTERNS) {
+    if (pattern.test(haystack)) return category;
+  }
+  return "other";
 }
