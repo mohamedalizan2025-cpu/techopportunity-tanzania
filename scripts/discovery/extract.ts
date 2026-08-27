@@ -43,6 +43,7 @@ export function extractCandidatesFromJsonLd(html: string, sourceId: string, sour
           sourceId,
           sourceUrl,
           discoveryMethod: "json-ld",
+          ...extractJsonLdLocation(event?.location),
         });
       }
     } catch {
@@ -51,6 +52,36 @@ export function extractCandidatesFromJsonLd(html: string, sourceId: string, sour
   }
 
   return candidates;
+}
+
+/**
+ * Maps schema.org Event.location into the candidate location keys the
+ * normalizer already accepts. Only explicit, structured values are used —
+ * a bare string is treated as a venue name; address parts are taken from
+ * the structured PostalAddress fields. Nothing is inferred.
+ */
+function extractJsonLdLocation(
+  location: unknown
+): { venueName: string | null; address: string | null; city: string | null; region: string | null } {
+  const empty = { venueName: null, address: null, city: null, region: null };
+  if (!location) return empty;
+
+  const first = Array.isArray(location) ? location[0] : location;
+  if (!first) return empty;
+
+  if (typeof first === "string") {
+    const venue = stringify(first);
+    return venue ? { ...empty, venueName: venue } : empty;
+  }
+
+  if (typeof first !== "object") return empty;
+  const obj = first as Record<string, unknown>;
+  const address = typeof obj.address === "object" && obj.address !== null ? (obj.address as Record<string, unknown>) : null;
+  const venueName = stringify(obj.name);
+  const street = stringify(address ? address.streetAddress : obj.address);
+  const city = stringify(address ? address.addressLocality : obj.addressLocality);
+  const region = stringify(address ? address.addressRegion : obj.addressRegion);
+  return { venueName, address: street, city, region };
 }
 
 export function extractCandidatesFromHtml(html: string, sourceId: string, sourceUrl: string): Array<Record<string, string | null>> {

@@ -60,6 +60,29 @@ assert(
   JSON.stringify(validCandidates)
 );
 
+// 1b. explicit JSON-LD location extracted into structured fields
+assert(
+  "valid opportunity: JSON-LD location structured",
+  validCandidates.length === 1 &&
+    validCandidates[0].venueName === "Costech Building" &&
+    validCandidates[0].city === "Dar es Salaam" &&
+    validCandidates[0].region === "Dar es Salaam" &&
+    validCandidates[0].address === "Ali Hassan Mwinyi Road",
+  JSON.stringify(validCandidates[0])
+);
+
+// 1c. ambiguous bare-string location stays traceable but unstructured
+const ambiguous = pipeline(loadFixture("ambiguous-location.html"));
+assert(
+  "ambiguous location: venue kept, city/region stay null",
+  ambiguous.length === 1 &&
+    ambiguous[0].venueName === "Tanzania" &&
+    ambiguous[0].city === null &&
+    ambiguous[0].region === null &&
+    ambiguous[0].address === null,
+  JSON.stringify(ambiguous)
+);
+
 // 2 + 6. missing deadline is tolerated, category inferred from keywords
 if (validCandidates.length === 1) {
   assert("missing deadline: candidate survives with null deadline", validCandidates[0].deadline === null);
