@@ -1,0 +1,127 @@
+# AI Opportunity Assistant — Architecture Design (NOT IMPLEMENTED)
+
+Status: **DESIGN ONLY** · Prepared 2026-08-27 · No provider, API key, SDK,
+vector store, or runtime code exists or may be added until explicitly approved.
+
+This document defines how a future natural-language discovery assistant fits
+the existing architecture without violating any of its rules:
+
+```
+UI → lib/data/* → Supabase          (data access centralized)
+RLS authoritative                   (published-only reads for the public)
+Discovery moderation-first          (AI never publishes, edits, or moderates)
+$0/month target                     (free tier first, hard cost ceilings)
+Web-first                           (assistant surfaces in the website)
+```
+
+---
+
+## 1. Interaction model
+
+A text (later voice) question box on the public site:
+
+> "Find hackathons in Dar es Salaam." · "What scholarships are open this
+> month?" · "Any technology events in Zanzibar?" · "Deadlines coming soon?"
+
+The assistant NEVER returns free-invented listings. Every answer is rendered
+from structured query results. If the query returns nothing, the assistant
+says so and offers broader filters — it does not guess.
+
+## 2. Data flow (the only permitted shape)
+
+```
+Visitor question (client)
+        ↓  fetch POST /api/assistant/ask  (rate-limited route handler)
+AI interpretation layer          ← server-side ONLY, key in server env
+        ↓  emits a JSON "query plan" (strict schema, see §4)
+lib/data/assistant-queries.ts    ← NEW module inside the existing data layer
+        ↓  Supabase PostgREST queries (anon client, RLS enforced)
+published opportunities only
+        ↓
+Answer builder (server) → returns { summary, items[], filters? }
+        ↓
+UI renders items with the SAME OpportunityCard/Detail components
+```
+
+Key property: the LLM produces *filter parameters*, never result text.
+The database remains the source of truth.
+
+## 3. Security boundary
+
+| Rule | Mechanism |
+|---|---|
+| No direct DB access from browser | Only the route handler touches data, via `lib/data/*` |
+| RLS never bypassed | Queries run with the **anon client**; only `status='published'` rows are visible — pending/rejected/registry are structurally unreachable |
+| AI cannot publish/moderate | The assistant code path contains no write operations of any kind; it imports only read functions |
+| No secrets client-side | Provider key lives in a server-only env var (never `NEXT_PUBLIC_*`), referenced solely inside the route handler |
+| Prompt-injection containment | Page content is never fed back to the model; the model only sees the user question and a fixed field dictionary |
+
+## 4. Query-generation strategy (deterministic, tool-calling style)
+
+The model receives a **fixed JSON contract** and must return a plan:
+
+```json
+{
+  "intent": "search",
+  "q": "hackathon",
+  "category": "hackathon | null",
+  "city": "string | null",
+  "region": "string | null",
+  "deadline": "soon | upcoming | rolling | null",
+  "sort": "deadline | newest",
+  "answer_style": "list | count | summary"
+}
+```
+
+Validation (Zod-style parse) rejects anything outside the contract, then the
+plan is executed by `assistant-queries.ts` — the *same* functions the manual
+search UI uses. Unknown/ambiguous slots default to null (no invented values).
+This reuses every existing filter and keeps behavior auditable: the UI can
+display the applied filters ("hackathon · Dar es Salaam · closing soon") next
+to results.
+
+## 5. Grounding / anti-hallucination
+
+1. Answers are templates filled from result rows (counts, titles, slugs,
+   deadlines, organizers when known) — the model drafts *phrasing* only.
+2. Every listed item renders with a link to its internal detail page.
+3. Zero-result queries return an explicit "nothing found" message plus
+   suggested broader filters (computed from real category/city values).
+4. The model is never shown other users' data or any moderation content.
+
+## 6. Fallback behavior
+
+If the provider is unreachable, rate-limited, or returns an invalid plan:
+the route handler degrades gracefully to plain keyword search
+(`q = raw question minus stopwords`) — the user still gets real results.
+No AI response is ever fabricated server-side.
+
+## 7. Cost-control strategy
+
+- Free-tier provider first; hard monthly cap via provider dashboard + route-level rate limiting (per-IP token bucket).
+- Cap: 1 interpretation call per question (no chat loops in v1).
+- Short system prompt + small schema; no opportunity payloads sent to the model.
+- Cached interpretations for repeated identical questions (in-memory LRU at MVP scale).
+- Kill switch: env flag `ASSISTANT_ENABLED=false` disables the route entirely.
+
+## 8. Testing strategy
+
+- Contract tests: malformed plans rejected; every valid plan maps to expected PostgREST filter (fixture-based).
+- Grounding tests: rendered answer strings must only reference rows returned by the executed query (snapshot diff).
+- Security tests: injection attempts in questions never alter SQL beyond whitelisted parameters; anon visibility matrix unchanged (pending=0, rejected=0, registry=0).
+- Fallback tests: provider failure ⇒ keyword-search results, 200 response.
+- Load sanity: rate limiter blocks burst; cost counters logged server-side (no secrets in logs).
+
+## 9. Future extension points
+
+- Multi-turn refinement (plan patching: "…only Zanzibar" → update last plan).
+- Saved searches / digest emails (Phase-3 Supabase Auth + pg_cron, §10 of ARCHITECTURE.md).
+- Embedding-based similarity ONLY after Phase-4 approval (pgvector, computed offline by the existing discovery pipeline — never a browser concern).
+- Voice input via the same `/api/assistant/ask` contract.
+
+## 10. Explicit non-goals until separately approved
+
+No provider account, no API key, no SDK dependency, no route handler, no
+vector store, no paid tier. Implementation requires: (1) this design's
+acceptance, (2) a chosen free provider + key custody plan, (3) owner sign-off
+on the §3 boundary audit.
