@@ -51,9 +51,11 @@ function TextField({
 export function DecisionForm({
   opportunity,
   organizations,
+  nextPendingId,
 }: {
   opportunity: Opportunity;
   organizations: OrganizationOption[];
+  nextPendingId: string | null;
 }) {
   const [state, formAction, isPending] = useActionState(
     decideOpportunityAction,
@@ -70,9 +72,21 @@ export function DecisionForm({
           </span>
         </p>
         <div className="flex flex-wrap gap-3">
+          {nextPendingId ? (
+            <Link
+              href={`/moderation/${nextPendingId}`}
+              className="inline-flex h-10 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+            >
+              Review next in queue →
+            </Link>
+          ) : null}
           <Link
             href="/moderation"
-            className="inline-flex h-10 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+            className={
+              nextPendingId
+                ? "inline-flex h-10 items-center rounded-full border border-black/[.10] bg-white px-5 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+                : "inline-flex h-10 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+            }
           >
             Back to queue
           </Link>

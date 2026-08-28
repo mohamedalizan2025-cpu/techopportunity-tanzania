@@ -101,6 +101,32 @@ function toOpportunityRows(data: unknown): OpportunityRow[] {
   return (data ?? []) as unknown as OpportunityRow[];
 }
 
+/**
+ * Pure selector: the id that follows `currentId` in the rendered queue
+ * order. Exported for unit testing; used by getNextPendingId.
+ */
+export function nextPendingAfter(
+  pendingIds: string[],
+  currentId: string
+): string | null {
+  const index = pendingIds.indexOf(currentId);
+  if (index === -1) return null;
+  return pendingIds[index + 1] ?? null;
+}
+
+/**
+ * The pending row that follows `currentId` in the SAME order the queue
+ * renders (created_at ascending, then id as a deterministic tie-break).
+ * Powers "review next" navigation after a decision so moderators do not
+ * pay a full queue round-trip per item. Read-only, staff-only (same RLS
+ * path as the queue); returns null at the end of the queue or on error.
+ */
+export async function getNextPendingId(currentId: string): Promise<string | null> {
+  if (!isValidOpportunityId(currentId)) return null;
+  const pending = await listPendingOpportunities();
+  return nextPendingAfter(pending.map((o) => o.id), currentId);
+}
+
 export async function listPendingOpportunities(): Promise<Opportunity[]> {
   const access = await getModerationAccess();
   if (!access.ok) return [];
@@ -114,6 +140,7 @@ export async function listPendingOpportunities(): Promise<Opportunity[]> {
     .select(OPPORTUNITY_SELECT)
     .eq("status", "pending")
     .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
     .limit(QUEUE_LIMIT);
 
   if (error) {

@@ -7,6 +7,7 @@ import { listOrganizationOptions } from "@/lib/data/opportunities";
 import {
   getEnrichmentAuditStatus,
   getModerationAccess,
+  getNextPendingId,
   getPendingOpportunityById,
   isValidOpportunityId,
 } from "@/lib/data/moderation";
@@ -68,6 +69,7 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
   const opportunity = await getPendingOpportunityById(id);
   const organizations = await listOrganizationOptions();
   const auditStatus = await getEnrichmentAuditStatus();
+  const nextPendingId = await getNextPendingId(id);
 
   if (!opportunity) {
     return (
@@ -163,7 +165,11 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
             </p>
           ) : null}
           <div className="mt-4">
-            <DecisionForm opportunity={opportunity} organizations={organizations} />
+            <DecisionForm
+              opportunity={opportunity}
+              organizations={organizations}
+              nextPendingId={nextPendingId}
+            />
           </div>
         </section>
       </main>

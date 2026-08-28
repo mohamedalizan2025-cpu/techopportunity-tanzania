@@ -4,6 +4,7 @@
  * protection) are enforced by the server action + RLS and verified separately.
  */
 import { parseReviewInput } from "../lib/data/moderation-review";
+import { nextPendingAfter } from "../lib/data/moderation";
 
 let passed = 0;
 let failed = 0;
@@ -93,6 +94,14 @@ const rC2 = parseReviewInput(form({ ...BASE, country: "Kenya" }));
 assert("country: moderator-verified value preserved", rC2.ok && rC2.review.country === "Kenya");
 const rC3 = parseReviewInput(form({ ...BASE, country: "x".repeat(101) }));
 assert("country: over-long value rejected", !rC3.ok && rC3.message.includes("Country"));
+
+// queue navigation: "review next" must follow the rendered queue order and
+// never fabricate an id (null = end of queue / row no longer pending).
+const QUEUE = ["a", "b", "c"];
+assert("next-in-queue: mid item advances", nextPendingAfter(QUEUE, "a") === "b");
+assert("next-in-queue: last item yields null", nextPendingAfter(QUEUE, "c") === null);
+assert("next-in-queue: decided/unknown id yields null", nextPendingAfter(QUEUE, "zz") === null);
+assert("next-in-queue: empty queue yields null", nextPendingAfter([], "a") === null);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;
