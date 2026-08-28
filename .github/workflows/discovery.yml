@@ -18,9 +18,21 @@ jobs:
           node-version: 20
           cache: npm
 
+      # --- quality gates: discovery only runs if all of these pass ---------
       - name: Install dependencies
         run: npm ci
 
+      - name: Run tests
+        run: npm test
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      # Secrets are attached ONLY to this step: the quality gates above run
+      # with no credentials at all.
       - name: Run discovery worker
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
