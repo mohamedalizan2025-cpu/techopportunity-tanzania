@@ -780,6 +780,78 @@ throughput (170 pending), not discovery volume.
 - Moderation: discovery never publishes, infers approval or fabricates;
   AI runtime still disabled (no credentials configured).
 
+### 12.12 Product Implementation Milestone 2 — data integrity + moderation throughput (2026-08-29)
+
+Every prior-report claim was re-verified against the LIVE database this
+milestone (`scripts/discovery/inspect-live.ts`, read-only except one
+reversible probe row that was deleted in the same run). Findings that
+contradicted earlier reports are stated plainly below.
+
+**Live schema truth (probed, not assumed)**
+
+- Applied: 0001, 0002, 0003 (behaviour-verified: `opportunity_sources`
+  discovery columns present; `opportunity_enrichments` table exists,
+  0 rows).
+- NOT applied: **0004** (no `admissions` seed row), 0005, 0006, 0007,
+  **0008**, 0009, **0010** (no `jobs` seed row) — each verified by
+  column/table absence or seed-row absence, never by filename.
+- **Country honesty status is PARTIAL, not complete.** The pipeline
+  omits `country` without evidence (code honest), but 0008 is unapplied,
+  so the live DB still fills `default 'Tanzania'` — proven by a
+  reversible INSERT probe (field omitted → stored "Tanzania" → probe
+  row deleted). Until the owner applies 0008, every discovery row
+  without country evidence carries the fabricated default. Migrations
+  0004–0010 remain OWNER-GATED; nothing was applied autonomously.
+- Consequence measured: `admissions`/`jobs` candidates are SKIPPED by
+  the runner (loud warn + `categorySkipped` counter) — a live dry-run
+  this milestone produced 4 admissions + 3 jobs candidates that would
+  be dropped, not mis-inserted. Nothing crashes; the loss is bounded
+  and visible in run summaries.
+
+**Measured baseline (same as Milestone 1 day, re-confirmed)**
+
+185 rows (170 pending / 10 published / 5 rejected). Categories via
+`category_id`: other=160, fellowship=7, scholarship=6, grant=3,
+competition=3, hackathon=2, internship=2, conference=2. Coverage:
+deadline 5, city 5, region 3, venue 3, organization_id 2; country
+"Tanzania" ×185 (default-derived). Duplicates: 1 test-URL pair only;
+duplicate TITLES are section-label junk ("quick links" ×4) from
+pre-noise-gate runs. Audit trail: 0 rows. Heuristic queue classes
+(signals, NOT truth): ~18 action-like, ~4 news-like, ~148 ambiguous.
+
+**Findings disposition (implement B only)**
+
+- **B (fixed now): moderation next-item navigation.** After a decision
+  the success panel links straight to the next pending row in rendered
+  queue order (`nextPendingAfter` pure selector, unit-tested; queue
+  gains a deterministic id tie-break). No status change, no heuristic
+  decision, no bulk action — human review remains the publication
+  boundary; the fix removes one queue round-trip per item.
+- **A (kept):** pending-only discovery, RLS staff boundary, exact-match
+  noise gate, runner loud-skip on missing seeds, evidence chain,
+  lifecycle derivation, assistant disabled-by-default.
+- **C (deferred with measurement):** Phase 6 relevance HINT — on the
+  real queue only ~18/170 titles carry a reliable action signal; the
+  148-row ambiguous majority cannot be hinted without an opaque
+  classifier, which the milestone forbids. Deferred; no storage change.
+  Also deferred: queue pagination (queue 170 < 500 cap), bulk rejection
+  (no safe authorization model without 0009 attribution).
+- **D (owner gate, prepared, verified):** 0004 + 0010 are the
+  highest-value owner actions — their absence silently drops every
+  admissions/jobs candidate (7 measured this run). 0008 next (country
+  honesty completion). 0009 then 0006/0005/0007 later. Files verified
+  idempotent and architecture-compatible; code already assumes nothing
+  beyond what exists.
+
+**Boundaries re-verified (nothing built)**
+
+No new sources (backlog is the bottleneck; Milestone 1 probes already
+measured every shortlisted worldwide candidate as junk/unreachable).
+AI runtime stays disabled — no `ASSISTANT_*` variable exists in the
+environment template or locally; provider module still throws until a
+legitimate credential lands. No DDL applied; no embeddings; no
+automatic publication or rejection.
+
 ---
 
 ## 13. Decision log
@@ -807,3 +879,4 @@ throughput (170 pending), not discovery volume.
 | 2026-08-29 | Corrective pass (§12.9): lifecycle corrected to four states (null/malformed deadline = `unknown`, never `rolling`); evidence chain formalized (`evidenceUrl`/`referenceKind`, evidence-keyed parent suppression); migration 0005 redesigned pre-application to the single verifiable fact "may Tanzanians apply?"; URL-dedupe limitation documented; no migration applied, no RLS change | Absence of evidence is not evidence; eligibility and location stay separate dimensions; identity readiness without speculative machinery |
 | 2026-08-29 | Final hardening milestone (§12.10): country fabrication stopped (null without evidence, field omitted pre-migration), silent 1,000-row dependence removed (explicit pagination/caps on dedupe, queue, published list, assistant), acquisition hardened (scheme/SSRF/redirect/size/timeout guards in one choke point), CI gated install→test→typecheck→lint→discovery with secrets only on the worker step; migrations 0008 (country), 0009 (attribution), 0010 (jobs seed) designed but NOT applied | The four remaining structural weaknesses closed without speculative machinery; owner-gated schema changes stay reversible and honest; the pipeline is production-safe regardless of migration timing |
 | 2026-08-29 | Product Milestone 1 (§12.11): real-DB baseline (185 rows, 170 pending) drove all decisions; four evidence-based extraction fixes (entity decoding, readable-slug rule, bare-URL title guard, 5 exact noise labels); zero new sources and zero reactivations — every probed candidate measured as junk/unreachable; no relevance heuristics, no metrics platform, no channel-type additions | Quality over row count: moderator throughput (170 pending) is the binding constraint, not discovery volume; every fix is deterministic, test-covered and preserves the pending-only/moderation-boundary invariants |
+| 2026-08-29 | Product Milestone 2 (§12.12): live-verified migration state (0004/0010 NOT applied — admissions/jobs candidates skipped loudly, 7 measured; 0008 NOT applied — DB default 'Tanzania' still live, proven by reversible INSERT probe); added moderation next-item navigation (pure selector + tie-break ordering); relevance hint DEFERRED (148/170 ambiguous rows — unreliable without opaque classifier); no DDL applied | Prior reports reconciled against the live DB, not trusted; only the one B-finding implemented; owner-gated migrations documented with measured product cost so the owner can act on evidence |
