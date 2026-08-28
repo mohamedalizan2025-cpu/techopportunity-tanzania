@@ -1,7 +1,11 @@
-# AI Opportunity Assistant — Architecture Design (NOT IMPLEMENTED)
+# AI Opportunity Assistant — Architecture Design
 
-Status: **DESIGN ONLY** · Prepared 2026-08-27 · No provider, API key, SDK,
-vector store, or runtime code exists or may be added until explicitly approved.
+Status: **SCAFFOLD IMPLEMENTED · PROVIDER DISABLED** · Prepared 2026-08-27,
+status corrected 2026-08-29 after the architecture audit. The route handler,
+strict plan contract, grounded execution, fallback, kill switch and rate
+limiter are implemented and deployed (disabled by default). No provider,
+API key, SDK or vector store exists; none may be added until explicitly
+approved per §10:
 
 This document defines how a future natural-language discovery assistant fits
 the existing architecture without violating any of its rules:
@@ -118,13 +122,38 @@ No AI response is ever fabricated server-side.
 - Saved searches / digest emails (Phase-3 Supabase Auth + pg_cron, §10 of ARCHITECTURE.md).
 - Embedding-based similarity ONLY after Phase-4 approval (pgvector, computed offline by the existing discovery pipeline — never a browser concern).
 - Voice input via the same `/api/assistant/ask` contract.
+- Worldwide/eligibility questions ("scholarships Tanzanians can apply for",
+  "online opportunities", "international fellowships"): the plan contract
+  is additive — an optional `eligibility` filter field joins only AFTER
+  migration 0005 (revised in the corrective pass: `eligibility` ∈
+  {`unknown`, `tanzanians_eligible`, `tanzanians_not_eligible`} +
+  `eligibility_evidence`, owner-gated) is applied and moderators have
+  populated evidence. The assistant may filter on eligibility ONLY for
+  rows where `eligibility != 'unknown'`; it must never derive
+  eligibility from location, organizer, source domain, university name,
+  URL structure, or wording such as "international". Location questions
+  ("in Africa", "online", "worldwide") and eligibility questions
+  ("Tanzanians can apply") are SEPARATE plan dimensions and must never
+  be answered by conflating them. Hard rule: the LLM NEVER infers
+  eligibility or invents opportunities; a question whose answer depends
+  on missing evidence returns the honest published-only results it can
+  ground, with no guessed facts. "Opportunities in Dar es Salaam" and
+  "closing this month" already map onto existing plan fields
+  (region/city, deadline).
+- Lifecycle claims: per `lib/lifecycle.ts` the product distinguishes
+  `active` / `expired` / `rolling` / `unknown`. The assistant may never
+  call an opportunity "rolling" — no schema field can prove it today;
+  missing or invalid deadlines are `unknown`. The plan-contract value
+  `deadline: "rolling"` is a filter label meaning "no deadline listed"
+  (deadline IS NULL), not a lifecycle assertion.
 
 ## 10. Explicit non-goals until separately approved
 
-No provider account, no API key, no SDK dependency, no route handler, no
-vector store, no paid tier. Implementation requires: (1) this design's
-acceptance, (2) a chosen free provider + key custody plan, (3) owner sign-off
-on the §3 boundary audit.
+No provider account, no API key, no SDK dependency, no vector store, no
+paid tier. The scaffold (route handler, plan contract, grounding, fallback,
+kill switch, rate limit) IS implemented and stays provider-neutral.
+Activation requires: (1) this design's acceptance, (2) a chosen free
+provider + key custody plan, (3) owner sign-off on the §3 boundary audit.
 
 ## 11. Provider research & recommendation (researched 2026-02, cited)
 

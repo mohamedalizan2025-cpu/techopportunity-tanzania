@@ -14,8 +14,8 @@ could reuse the same Supabase backend unchanged; see
 
 - [Next.js](https://nextjs.org) 16 — App Router, TypeScript, React Server Components
 - [Tailwind CSS](https://tailwindcss.com) v4 — styling
-- [Supabase](https://supabase.com) — PostgreSQL, auth, storage *(to be connected)*
-- [Vercel](https://vercel.com) — hosting *(to be connected)*
+- [Supabase](https://supabase.com) — PostgreSQL, auth, storage *(connected: `tto-staging`)*
+- [Vercel](https://vercel.com) — hosting *(deployed)*
 
 ## Project structure
 
@@ -32,8 +32,9 @@ could reuse the same Supabase backend unchanged; see
 ├── docs/
 │   └── architecture.md# Architecture decisions - start here
 ├── public/            # Static assets
-├── .env.example       # Required variable NAMES (values never committed)
-└── pipeline/          # (future) Python scraping/AI batch jobs
+├── scripts/discovery/ # TypeScript discovery pipeline (GitHub Actions daily)
+├── supabase/          # Migrations + source-registry seeds
+└── .env.example       # Required variable NAMES (values never committed)
 ```
 
 Architectural rule: **UI → `lib/data/` → database.** Components never query
@@ -65,6 +66,12 @@ fixture and is never mixed into real results.
 | `npm run build` | Production build (also type-checks) |
 | `npm run start` | Serve the production build locally |
 | `npm run lint` | ESLint |
+| `npm test` | All test suites (fixtures, review, assistant, lifecycle, acquisition) |
+| `npm run test:fixtures` | Discovery extraction/normalization/dedupe fixture tests |
+| `npm run test:review` | Moderator review parser tests |
+| `npm run test:assistant` | Assistant plan-contract/grounding tests |
+| `npm run test:lifecycle` | Lifecycle derivation tests (four states) |
+| `npm run test:acquisition` | Acquisition-guard + country-honesty tests |
 
 ## Environment variables
 
@@ -80,11 +87,12 @@ requirements would justify adding a separate backend service.
 
 ## Roadmap
 
-1. **MVP** — curated listings + admin moderation (current phase)
+1. **MVP** — curated listings + admin moderation (done)
    - within MVP+: interactive location maps, "Get Directions", city/region
      filters, near-me search — data model already ready
      (`docs/architecture.md` §11); no map SDK chosen yet
-2. **Aggregation** — scheduled Python discovery/extraction/classification
+2. **Aggregation** — scheduled discovery (done: TypeScript pipeline in
+   `scripts/discovery/`, daily GitHub Actions run, moderation-first)
 3. **Users** — accounts, saved searches, deadline digests
 4. **Intelligence** — recommendations via offline embedding jobs
 5. **Platform** — independent API service only if a concrete trigger appears

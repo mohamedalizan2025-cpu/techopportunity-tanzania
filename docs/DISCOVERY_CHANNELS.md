@@ -45,13 +45,18 @@ existing pipeline harvests item-level candidates from feeds automatically,
 with full provenance (source_id + discovered_at + discovery_method='rss')
 and the pending-only invariant unchanged.
 
-## Taxonomy gap (documented, owner decision)
+## Taxonomy gap (RESOLVED AS DESIGN — owner gate)
 
 "Vacancies/jobs" appeared repeatedly in the opportunity-first requirements
-but has NO category in the current taxonomy (`hackathon…other`). Affected
-rows today: several VETA/DIT/HESLB admission and recruitment items. Adding a
-`vacancies` (or `jobs`) category requires a categories-table seed migration —
-an OWNER STOP GATE per the current rules. Not implemented.
+but had NO category in the taxonomy (`hackathon…other`). Resolved in the
+final hardening milestone (§architecture 12.10): a live dry-run (2026-08-29,
+18 sources, 169 valid candidates) confirmed job-titled candidates in the
+pending-eligible pool, so `jobs` ("Jobs & Vacancies") was implemented in
+code (type, label, conservative inference for vacancy/job/ajira/nafasi-za-
+kazi only) together with seed migration `0010_jobs_category.sql` — designed,
+NOT applied, OWNER GATE. Until the seed is applied the runner skips `jobs`
+candidates loudly (skip + warn + `categorySkipped` counter); nothing
+crashes and nothing mis-inserts.
 
 ## IMPLEMENTED (2026-02): Africa-wide aggregator feeds
 
