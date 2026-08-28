@@ -21,6 +21,8 @@ export interface ReviewInput {
   address: string | null;
   city: string | null;
   region: string | null;
+  /** Moderator-verified country; null keeps the record honest as unknown. */
+  country: string | null;
   deadline: string | null;
   organizationId: string | null;
 }
@@ -111,6 +113,14 @@ export function parseReviewInput(formData: FormData): ParseReviewResult {
     region = canonical;
   }
 
+  // Country is moderator free text (worldwide scope) — bounded only, never
+  // defaulted. Empty means unknown and stores NULL once migration 0008 is
+  // applied.
+  const country = cleanSingleLine(field(formData, "country"), 100);
+  if (field(formData, "country") !== "" && country === null) {
+    return { ok: false, message: "Country is too long (max 100 characters)." };
+  }
+
   const organizationRaw = field(formData, "organizationId");
   let organizationId: string | null = null;
   if (organizationRaw !== "") {
@@ -131,6 +141,7 @@ export function parseReviewInput(formData: FormData): ParseReviewResult {
       address,
       city,
       region,
+      country,
       deadline,
       organizationId,
     },

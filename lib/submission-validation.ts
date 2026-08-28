@@ -27,7 +27,7 @@ export interface ValidatedSubmission {
   address: string | null;
   city: string | null;
   region: string | null;
-  country: string;
+  country: string | null;
 }
 
 export type SubmissionValidationResult =
@@ -56,7 +56,7 @@ export const initialSubmissionState: SubmissionFormState = {
     address: "",
     city: "",
     region: "",
-    country: "Tanzania",
+    country: "",
   },
 };
 
@@ -136,8 +136,9 @@ export function validateSubmission(
     }
   }
 
-  const country = input.country.trim() === "" ? "Tanzania" : input.country.trim();
-  if (country.length > 100) {
+  // Country honesty: an empty field means UNKNOWN, never "Tanzania".
+  const country = optionalText(input.country);
+  if (country !== null && country.length > 100) {
     errors.country = "Country name is too long.";
   }
 

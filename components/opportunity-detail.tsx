@@ -2,7 +2,9 @@ import { categoryLabel } from "@/lib/category-labels";
 import type { Opportunity } from "@/lib/types";
 
 function formatDeadline(iso: string | null): string {
-  if (!iso) return "Rolling — no fixed deadline";
+  // Absence of a deadline is not evidence of rolling admissions — state
+  // only what the record actually contains.
+  if (!iso) return "No deadline listed";
   const formatted = new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "long",
@@ -17,7 +19,7 @@ function formatLocationLines(location: {
   address: string | null;
   city: string | null;
   region: string | null;
-  country: string;
+  country: string | null;
 }): string[] {
   const lines = [location.venueName, location.address].filter(
     (line): line is string => line !== null && line.trim() !== ""

@@ -15,6 +15,7 @@ const AUDITABLE_FIELDS: Array<{ field: string; previous: keyof ReviewInput; next
   { field: "address", previous: "address", next: "address" },
   { field: "city", previous: "city", next: "city" },
   { field: "region", previous: "region", next: "region" },
+  { field: "country", previous: "country", next: "country" },
   { field: "deadline", previous: "deadline", next: "deadline" },
 ];
 
@@ -108,6 +109,12 @@ export async function decideOpportunityAction(
     update.address = review.address;
     update.city = review.city;
     update.region = review.region;
+    // Country is written ONLY when the moderator supplies one; empty means
+    // unknown. Before migration 0008 the column is not-null, so null is
+    // omitted (keeping the stored value); after it, null clears it.
+    if (review.country !== null) {
+      update.country = review.country;
+    }
     update.deadline = review.deadline;
     update.organization_id = review.organizationId;
 
@@ -154,8 +161,19 @@ export async function decideOpportunityAction(
   // Field-level audit for moderator enrichment (best-effort; the audit table
   // exists only after migration 0003 — its absence never blocks moderation).
   if (rawDecision === "approve" && review !== null) {
+    // Pre-decision snapshot for the "previous" audit column. Location
+    // fields live nested under location on the mapped record; reading them
+    // flat (the old behavior) always recorded null as the previous value.
+    const previousValues: Record<string, unknown> = {
+      venueName: current.location?.venueName ?? null,
+      address: current.location?.address ?? null,
+      city: current.location?.city ?? null,
+      region: current.location?.region ?? null,
+      country: current.location?.country ?? null,
+      deadline: current.deadline ?? null,
+    };
     const auditRows = AUDITABLE_FIELDS.map(({ field, previous, next }) => {
-      const before = (current as unknown as Record<string, unknown>)[previous];
+      const before = previousValues[previous];
       const after = review[next];
       if ((before ?? null) === (after ?? null)) return null;
       return {

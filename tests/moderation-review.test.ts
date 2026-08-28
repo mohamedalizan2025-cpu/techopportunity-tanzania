@@ -86,5 +86,13 @@ assert("extra: javascript: URL rejected", !rEx3.ok && rEx3.message.includes("htt
 const rEx4 = parseReviewInput(form({ ...BASE, region: "mjini magharibi" }));
 assert("extra: canonical region case-insensitive", rEx4.ok && r4.ok && rEx4.review.region === "Mjini Magharibi");
 
+// country honesty: empty stays null (never defaulted), verified value preserved
+const rC1 = parseReviewInput(form(BASE));
+assert("country: absent field stays null (no default)", rC1.ok && rC1.review.country === null);
+const rC2 = parseReviewInput(form({ ...BASE, country: "Kenya" }));
+assert("country: moderator-verified value preserved", rC2.ok && rC2.review.country === "Kenya");
+const rC3 = parseReviewInput(form({ ...BASE, country: "x".repeat(101) }));
+assert("country: over-long value rejected", !rC3.ok && rC3.message.includes("Country"));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;

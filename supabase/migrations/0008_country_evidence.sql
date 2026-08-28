@@ -1,0 +1,42 @@
+-- =====================================================================
+-- TechOpportunity Tanzania - Migration 0008: country honesty
+-- Status:  DESIGNED — NOT APPLIED. OWNER GATE: apply manually in the
+--          Supabase SQL editor only after the owner approves.
+--
+-- Purpose: stop the fabricated country. The column was created as
+--          `country text not null default 'Tanzania'` (migration 0001),
+--          which turned "we do not know where this opportunity is"
+--          into a false location fact for every row without evidence.
+--          The platform serves Tanzanians finding opportunities ANYWHERE
+--          in the world (and online), so a Tanzania default is a lie the
+--          moment a single international or online opportunity exists.
+--
+-- What this migration does:
+--   * drops the 'Tanzania' default
+--   * makes the column nullable (NULL = unknown, honestly)
+--
+-- What this migration deliberately does NOT do:
+--   * NO backfill, NO rewriting of existing rows. Rows that already carry
+--     'Tanzania' keep it — whether each came from real evidence or from
+--     the old default is a data-review question for the owner, not a
+--     mass UPDATE this migration may decide on its own.
+--   * NO RLS change.
+--
+-- Companion code (committed with this migration's design):
+--   * discovery (scripts/discovery/normalize.ts + runner.ts) no longer
+--     fabricates 'Tanzania': candidates without extracted country
+--     evidence are inserted WITHOUT the field. Until this migration is
+--     applied the DB default still fills 'Tanzania' for omitted fields;
+--     after it, those rows honestly carry NULL.
+--   * the moderator review form gains an explicit Country field
+--     (bounded free text, empty = unknown), audited like other
+--     enrichment fields.
+--   * public submission treats an empty country as NULL, not 'Tanzania'.
+-- =====================================================================
+
+alter table public.opportunities alter column country drop default;
+alter table public.opportunities alter column country drop not null;
+
+-- Sanity check after applying:
+-- select count(*) filter (where country is null) as unknown_countries
+--   from public.opportunities;

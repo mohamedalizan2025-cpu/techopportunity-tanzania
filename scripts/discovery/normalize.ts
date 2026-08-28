@@ -8,7 +8,10 @@ export function normalizeCandidate(input: Record<string, string | null>, sourceI
   const category = resolveCategory(input.category, [title ?? "", description ?? ""]);
   const organization = cleanText(input.organization) || "Unknown organization";
   const deadline = normalizeDeadline(input.deadline ?? null);
-  const country = cleanText(input.country) || "Tanzania";
+  // COUNTRY HONESTY: no evidence, no country. The previous
+  // "|| 'Tanzania'" default fabricated location facts for every candidate
+  // without structured country evidence; unknown must remain unknown.
+  const country = cleanText(input.country);
   const venueName = cleanText(input.venueName);
   const address = cleanText(input.address);
   const city = cleanText(input.city);
@@ -31,6 +34,12 @@ export function normalizeCandidate(input: Record<string, string | null>, sourceI
     country,
     sourceId,
     sourceUrl: input.sourceUrl ?? "",
+    // Evidence chain: the document testifying about this opportunity is the
+    // document it was extracted from, unless the extractor recorded a
+    // distinct one (roundup children carry their parent page).
+    evidenceUrl: cleanText(input.evidenceUrl) ?? cleanText(input.sourceUrl) ?? null,
+    referenceKind:
+      input.referenceKind === "evidence-document" ? "evidence-document" : "source-base",
     discoveryMethod: (input.discoveryMethod as CandidateOpportunity["discoveryMethod"]) ?? "html",
   };
 }
@@ -83,6 +92,11 @@ const CATEGORY_PATTERNS: Array<[string, RegExp]> = [
   ["fellowship", /\bfellowship\b/i],
   ["grant", /\bgrants?\b|call for proposals|\bfunding\b/i],
   ["internship", /\binternship(s)?\b|\bintern(s)?\b/i],
+  // jobs/vacancies (owner-gated seed 0010): deliberately conservative —
+  // vacancy/vacancies, "job(s)" as a word, ajira, nafasi za kazi. Terms
+  // like "position", "career(s)" or "officer" stay UNMAPPED: they are
+  // frequent in news headlines and would turn noise into job rows.
+  ["jobs", /\bvacanc(?:y|ies)\b|\bjobs?\b|\bajira\b|nafasi za kazi/i],
   ["competition", /competiti|\bchallenge\b|\bpitch\b|\baward(s)?\b|\bprize\b|\bmashindano\b|\bshindano\b/i],
   ["workshop", /\bworkshop\b|\bbootcamp\b|\btraining\b|\bmafunzo\b/i],
   ["conference", /conference|\bsummit\b|\bforum\b|\bkongamano\b/i],
@@ -93,9 +107,10 @@ const CATEGORY_PATTERNS: Array<[string, RegExp]> = [
  * Unambiguous Swahili opportunity terms now covered: mafunzo (training),
  * mashindano/shindano (competition), kongamano (conference), udhamini
  * (scholarship), udahili/fomu ya maombi (admissions/application — backed by
- * the dedicated 'admissions' category). Terms WITHOUT a clear category
- * equivalent — ajira (employment), tuzo (awards), maonesho (exhibition),
- * miradi (projects), orodha ya waliochaguliwa (selection lists) — are
+ * the dedicated 'admissions' category), ajira/nafasi za kazi (employment —
+ * backed by the owner-gated 'jobs' category). Terms WITHOUT a clear
+ * category equivalent — tuzo (awards), maonesho (exhibition), miradi
+ * (projects), orodha ya waliochaguliwa (selection lists) — are
  * deliberately NOT mapped: they stay "other" for the human moderator
  * instead of being guessed.
  */

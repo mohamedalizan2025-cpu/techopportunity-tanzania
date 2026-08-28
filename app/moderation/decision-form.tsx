@@ -180,6 +180,11 @@ export function DecisionForm({
         <TextField label="Venue" name="venue_name" defaultValue={opportunity.location?.venueName ?? ""} />
         <TextField label="Address" name="address" defaultValue={opportunity.location?.address ?? ""} />
         <TextField label="City" name="city" defaultValue={opportunity.location?.city ?? ""} />
+        <TextField
+          label="Country (worldwide — leave empty when unverified)"
+          name="country"
+          defaultValue={opportunity.location?.country ?? ""}
+        />
         <label className={labelClasses}>
           Region
           <select
