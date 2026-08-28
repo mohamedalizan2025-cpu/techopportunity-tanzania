@@ -1,14 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { fetchPage } from "./fetch";
-import {
-  discoverFeedUrls,
-  extractCandidatesFromAtom,
-  extractCandidatesFromHtml,
-  extractCandidatesFromJsonLd,
-  extractCandidatesFromRss,
-} from "./extract";
+import { extractAllCandidates, extractFeedCandidates } from "./adapters";
+import { discoverFeedUrls } from "./extract";
 import { normalizeCandidate } from "./normalize";
-import { isObviousSectionLabel, isValidOpportunityUrl, validateCandidate } from "./validate";import type { CandidateOpportunity, SourceRecord } from "./types";
+import { isObviousSectionLabel, isValidOpportunityUrl, validateCandidate } from "./validate";
+import type { CandidateOpportunity, SourceRecord } from "./types";
 
 /**
  * Read-only dry-run: exercises the full discovery extraction pipeline
@@ -44,21 +40,13 @@ for (const source of activeSources) {
   try {
     const html = await fetchPage(source.base_url);
     totals.fetched += 1;
-    const raw = [
-      ...extractCandidatesFromRss(html, source.id, source.base_url),
-      ...extractCandidatesFromJsonLd(html, source.id, source.base_url),
-      ...extractCandidatesFromAtom(html, source.id, source.base_url),
-      ...extractCandidatesFromHtml(html, source.id, source.base_url),
-    ];
+    const raw = extractAllCandidates(html, source.id, source.base_url);
     const feedUrls = discoverFeedUrls(html, source.base_url).slice(0, 2);
     for (const feedUrl of feedUrls) {
       try {
         const feedBody = await fetchPage(feedUrl);
         totals.fetched += 1;
-        raw.push(
-          ...extractCandidatesFromRss(feedBody, source.id, feedUrl),
-          ...extractCandidatesFromAtom(feedBody, source.id, feedUrl)
-        );
+        raw.push(...extractFeedCandidates(feedBody, source.id, feedUrl));
       } catch {
         totals.failures += 1;
       }

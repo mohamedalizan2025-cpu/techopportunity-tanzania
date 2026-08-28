@@ -9,7 +9,8 @@ import {
 import { normalizeCandidate, inferCategory } from "./normalize";
 import { isDuplicate } from "./dedupe";
 import { isValidOpportunityUrl, validateCandidate } from "./validate";
-import { isRoundupTitle, extractOpportunityLinks } from "./extract";
+import { isRoundupTitle, extractOpportunityLinks, roundupInnerCandidates } from "./extract";
+import { EVIDENCE_EXTRACTORS, extractAllCandidates, extractFeedCandidates } from "./adapters";
 import type { CandidateOpportunity } from "./types";
 
 const SOURCE_ID = "00000000-0000-0000-0000-000000000001";
@@ -210,6 +211,8 @@ const mkTitleCandidate = (title: string): CandidateOpportunity => ({
   country: "Tanzania",
   sourceId: SOURCE_ID,
   sourceUrl: SOURCE_URL,
+  evidenceUrl: SOURCE_URL,
+  referenceKind: "source-base",
   discoveryMethod: "html",
 });
 for (const noise of ["ANNOUNCEMENTS", "Latest News", "View our events", "Publications", "Financial Markets", "QUICK LINKS", "Main navigation", "Welcome Note"]) {
@@ -275,6 +278,96 @@ assert("roundup: short non-action anchor rejected", !innerLinks.some((l) => l.ti
 assert("roundup title: 30 Hot Job Opportunities detected", isRoundupTitle("30 Hot Job Opportunities Accross Various Sectors Currently Open"));
 assert("roundup title: 10 Scholarships detected", isRoundupTitle("10 Scholarships for African Students"));
 assert("roundup title: single opportunity NOT detected", !isRoundupTitle("WISE Scholarship-Cohort 4 Application"));
+
+// ONE-ROW-ONE-OPPORTUNITY INVARIANT
+// A multi-opportunity document decomposes into individual candidates, each
+// carrying the evidence chain back to its parent; when decomposition finds
+// nothing reliable, the parent remains a candidate (never silently dropped).
+const parent = { title: "30 Hot Job Opportunities", url: "https://example.org/roundup/30-hot-jobs", sourceId: SOURCE_ID, discoveryMethod: "rss" };
+const decomposed = roundupInnerCandidates(roundupHtml, parent);
+assert("invariant: roundup decomposes into individual candidates", decomposed.length === 4, String(decomposed.length));
+assert(
+  "invariant: every inner candidate points at the parent (evidence chain)",
+  decomposed.every((c) => c.sourceUrl === parent.url && c.sourceId === SOURCE_ID && typeof c.url === "string" && c.url !== parent.url),
+  JSON.stringify(decomposed.map((c) => c.sourceUrl))
+);
+assert(
+  "invariant: inner candidates are distinct opportunities (unique URLs)",
+  new Set(decomposed.map((c) => c.url)).size === decomposed.length
+);
+assert(
+  "invariant: empty decomposition yields nothing — caller keeps the parent",
+  roundupInnerCandidates("<p>No opportunity links here</p>", parent).length === 0
+);
+// A feed with N items must yield N individual candidates, never one row.
+const multiItemFeed = loadFixture("feed-rss.xml");
+const feedRows = extractFeedCandidates(multiItemFeed, SOURCE_ID, "https://example.org/feed");
+assert("invariant: each feed item becomes exactly one candidate", feedRows.length === 2, String(feedRows.length));
+
+// P7 strengthening: suppression decisions must be made by EVIDENCE, and
+// failed children must never silently delete the parent's chance.
+assert(
+  "invariant: children testify via a distinct evidence document",
+  decomposed.every((c) => c.evidenceUrl === parent.url && c.referenceKind === "evidence-document"),
+  JSON.stringify(decomposed.map((c) => [c.evidenceUrl, c.referenceKind]))
+);
+const directNormalized = normalizeCandidate(
+  extractAllCandidates(validPage, SOURCE_ID, SOURCE_URL)[0],
+  SOURCE_ID
+);
+assert(
+  "invariant: direct extraction testifies with the fetched document itself",
+  directNormalized !== null &&
+    directNormalized.referenceKind === "source-base" &&
+    directNormalized.evidenceUrl === SOURCE_URL
+);
+// Children that pass validation justify suppressing the parent...
+const survivingChildren = decomposed
+  .map((c) => normalizeCandidate(c, SOURCE_ID))
+  .filter((c): c is CandidateOpportunity => c !== null && validateCandidate(c));
+assert(
+  "invariant: parent suppression requires at least one surviving child",
+  survivingChildren.length > 0 &&
+    survivingChildren.every((c) => c.evidenceUrl === parent.url),
+  String(survivingChildren.length)
+);
+// ...but a roundup whose links ALL fail validation keeps the parent: the
+// runner drops a parent only when a child it testified about survives.
+const lossyRoundupHtml = `
+  <a href="ftp://files.example.org/jobs">Ftp job board</a>
+  <a href="javascript:applyNow()">Apply via script</a>
+`;
+const lossyChildren = roundupInnerCandidates(lossyRoundupHtml, parent)
+  .map((c) => normalizeCandidate(c, SOURCE_ID))
+  .filter((c): c is CandidateOpportunity => c !== null && validateCandidate(c));
+assert(
+  "invariant: all-invalid links → zero survivors → parent row is kept",
+  lossyChildren.length === 0
+);
+// Duplicate inner items never produce duplicate rows (URL-keyed batch dedupe
+// applies identically to decomposed children).
+const dupChildren = decomposed.filter(
+  (a, i) => decomposed.findIndex((b) => b.url === a.url) === i
+);
+assert("invariant: duplicate inner items collapse to one candidate each", dupChildren.length === decomposed.length);
+
+// SOURCE-ADAPTER REGISTRY
+// Extraction is an ordered list of pure adapters; the runner and dry-run
+// share the single extraction path, so attribution stays consistent.
+assert("adapters: registry covers the four implemented families", EVIDENCE_EXTRACTORS.map((e) => e.family).join(",") === "json-ld,rss,atom,html");
+const jsonLdPage = extractAllCandidates(validPage, SOURCE_ID, SOURCE_URL);
+assert(
+  "adapters: unified extraction finds the JSON-LD opportunity",
+  jsonLdPage.some((c) => c.discoveryMethod === "json-ld" && c.title === "AI for Africa Hackathon")
+);
+assert(
+  "adapters: foreign formats yield zero candidates (safe sniffing)",
+  extractAllCandidates("plain text with no markup", SOURCE_ID, SOURCE_URL).length === 0
+);
+assert(
+  "adapters: feed family never runs page extractors on feeds",
+  extractFeedCandidates(validPage, SOURCE_ID, SOURCE_URL).every((c) => c.discoveryMethod === "rss")
+);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;

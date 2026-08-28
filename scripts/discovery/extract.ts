@@ -161,6 +161,40 @@ export function extractOpportunityLinks(html: string, baseUrl: string): Array<{ 
 }
 
 /**
+ * ONE-ROW-ONE-OPPORTUNITY INVARIANT
+ *
+ * One database row represents one actionable opportunity. A fetched page,
+ * feed or (future) social post may contain one or fifty opportunities; the
+ * ingestion layer decomposes them into individual candidates.
+ *
+ * Decomposition of a roundup parent into inner candidates is pure and
+ * loss-aware: every inner candidate points back at the parent page via
+ * `sourceUrl` (evidence chain: registry source → roundup page → item URL).
+ * The CALLER decides suppression: a parent is dropped only when at least
+ * one inner candidate survives validation/dedupe. If decomposition yields
+ * nothing reliable (no qualifying links, ambiguous anchors, fetch failure)
+ * the parent REMAINS a pending candidate — multi-opportunity content is
+ * never silently discarded; it reaches the human moderator instead.
+ */
+export function roundupInnerCandidates(
+  pageHtml: string,
+  parent: { title: string; url: string; sourceId: string; discoveryMethod: string | null }
+): Array<Record<string, string | null>> {
+  return extractOpportunityLinks(pageHtml, parent.url).map((link) => ({
+    title: link.title,
+    url: link.url,
+    description: `Listed in: ${parent.title}`,
+    sourceId: parent.sourceId,
+    sourceUrl: parent.url,
+    // The parent page is a distinct evidence document testifying about
+    // this opportunity; the registry source base is one hop further up.
+    evidenceUrl: parent.url,
+    referenceKind: "evidence-document",
+    discoveryMethod: parent.discoveryMethod,
+  }));
+}
+
+/**
  * Atom entry extraction. Evidence is the entry itself: its alternate link is
  * the opportunity URL, its title/summary the text. Atom entries carry no
  * location or application-deadline fields in practice, so none are set —

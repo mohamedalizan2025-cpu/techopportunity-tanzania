@@ -38,7 +38,8 @@ function parseSort(value?: string): "deadline" | "newest" {
 }
 
 function formatCardDeadline(iso: string | null): string {
-  if (!iso) return "Rolling";
+  // Missing deadline = unknown, never a claim that it is rolling.
+  if (!iso) return "No deadline listed";
   return `Deadline ${new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "short",

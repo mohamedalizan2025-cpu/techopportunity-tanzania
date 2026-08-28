@@ -146,7 +146,7 @@ export function OpportunityFilters({
           <option value="">Any deadline</option>
           <option value="soon">Closing soon (14 days)</option>
           <option value="upcoming">Upcoming deadlines</option>
-          <option value="rolling">Rolling / no deadline</option>
+          <option value="rolling">No deadline listed</option>
         </select>
 
         {hasLocations ? (

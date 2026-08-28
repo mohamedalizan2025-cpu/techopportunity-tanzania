@@ -23,6 +23,25 @@ export interface SourceRecord {
   last_error: string | null;
 }
 
+/**
+ * Evidence channels. A Source (registry row) is WHO publishes; an evidence
+ * document is WHERE a specific claim was found. The opportunity domain
+ * downstream never cares which channel produced a candidate — only the
+ * adapter layer does. "website"/"feed" are implemented; "api" and "social"
+ * are reserved for future owner-approved channels and are never written
+ * until such a channel exists.
+ */
+export type EvidenceChannel = "website" | "feed" | "api" | "social";
+
+/**
+ * What a single URL represents in the evidence chain:
+ * - "source-base": the registry source's own base page/feed
+ * - "evidence-document": a different document that testifies about the
+ *   opportunity (e.g. the roundup page listing it). The candidate's own
+ *   opportunity URL is recorded separately on the row (`url`).
+ */
+export type ReferenceKind = "source-base" | "evidence-document";
+
 export interface CandidateOpportunity {
   title: string;
   description: string;
@@ -34,13 +53,61 @@ export interface CandidateOpportunity {
   address: string | null;
   city: string | null;
   region: string | null;
-  country: string;
+  /**
+   * Physical location country. null = UNKNOWN — discovery never fabricates
+   * a country; the row is inserted without the field until a moderator
+   * verifies one (migration 0008 makes the column nullable). Evidence
+   * comes only from extracted structured data (e.g. JSON-LD address).
+   */
+  country: string | null;
   sourceId: string;
+  /**
+   * The fetched document this candidate was extracted from. Stored as
+   * `source_url` on the row: for direct extraction it is the registry
+   * source's base URL; for roundup children it is the parent page that
+   * listed the opportunity (evidence chain: source → parent → item).
+   */
   sourceUrl: string;
+  /**
+   * The document that testifies about this opportunity. Equals sourceUrl
+   * today (the pipeline has no distinct evidence documents yet); becomes
+   * the anchor when future channels deliver evidence separate from the
+   * fetch target. NOT yet persisted — the future references table
+   * (migration 0006) is its home.
+   */
+  evidenceUrl: string | null;
+  /** What sourceUrl represents in the evidence chain. */
+  referenceKind: ReferenceKind;
   discoveryMethod: "rss" | "json-ld" | "html" | "sitemap";
 }
 
+/**
+ * Structured per-source run result. Lets operators reconstruct a historical
+ * run from the JSON summary alone: distinguish successful-zero from fetch
+ * failure, extraction yield, noise rejection, duplicates and DB failure.
+ */
+export interface SourceRunResult {
+  sourceId: string;
+  name: string;
+  ok: boolean;
+  /** Every candidate extracted, before any gate. */
+  candidatesFound: number;
+  /** Candidates rejected by validation/noise gates. */
+  noiseRejected: number;
+  /** Candidates that passed validation but duplicate existing/batch rows. */
+  duplicatesSkipped: number;
+  /** Candidates that passed validation AND dedupe (would-be inserts). */
+  validCandidates: number;
+  /** Valid candidates skipped only because their category seed is missing. */
+  categorySkipped: number;
+  /** Actionable yield: rows actually inserted as pending. */
+  insertedPending: number;
+  error: string | null;
+}
+
 export interface DiscoverySummary {
+  startedAt: string;
+  finishedAt: string | null;
   sourcesChecked: number;
   sourcesSucceeded: number;
   candidatesFound: number;
@@ -48,4 +115,5 @@ export interface DiscoverySummary {
   insertedPending: number;
   duplicatesSkipped: number;
   errors: number;
+  perSource: SourceRunResult[];
 }

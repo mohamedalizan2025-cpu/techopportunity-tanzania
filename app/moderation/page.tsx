@@ -20,7 +20,8 @@ function formatSubmitted(iso: string): string {
 }
 
 function formatQueueDeadline(iso: string | null): string {
-  if (!iso) return "Rolling";
+  // Missing deadline = unknown; moderators must see the truth, not a guess.
+  if (!iso) return "No deadline";
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "short",
