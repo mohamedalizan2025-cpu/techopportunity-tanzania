@@ -1,4 +1,5 @@
 import { isObviousSectionLabel } from "./validate";
+import { decodeHtmlEntities } from "./normalize";
 
 export function extractCandidatesFromRss(html: string, sourceId: string, sourceUrl: string): Array<Record<string, string | null>> {
   const candidates: Array<Record<string, string | null>> = [];
@@ -119,7 +120,7 @@ export function extractOpportunityLinks(html: string, baseUrl: string): Array<{ 
   const out: Array<{ title: string; url: string }> = [];
   const seen = new Set<string>();
   for (const m of html.matchAll(/<a\s[^>]*href=["']([^"']+)["'][^>]*>([\s\S]{0,300}?)<\/a>/gi)) {
-    const rawText = m[2].replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
+    const rawText = decodeHtmlEntities(m[2].replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
     if (rawText.length < 12 || rawText.length > 200) continue;
     if (isObviousSectionLabel(rawText)) continue;
     // Actionable signal OR a long descriptive title (≥25 chars). Short
@@ -150,7 +151,19 @@ export function extractOpportunityLinks(html: string, baseUrl: string): Array<{ 
         .replace(/\s+/g, " ")
         .trim();
       const letters = humanized.replace(/[^a-zA-Z]/g, "").length;
-      title = humanized.length >= 10 && letters / humanized.length >= 0.5 ? humanized : null;
+      // Evidence-based guards (live roundup probe 2026-08-29): file-like
+      // slugs ("jobdetail.ftl") and opaque single-token slugs
+      // ("detailoffre") carry no opportunity information. A humanized
+      // title must read like words: letter-dense, long enough, containing
+      // a space and no file-extension dot. Failing anchors are skipped —
+      // the parent row is kept when no child survives, so nothing real is
+      // ever silently lost.
+      const readable =
+        humanized.length >= 10 &&
+        letters / humanized.length >= 0.5 &&
+        humanized.includes(" ") &&
+        !humanized.includes(".");
+      title = readable ? humanized : null;
     }
     if (!title) continue;
 

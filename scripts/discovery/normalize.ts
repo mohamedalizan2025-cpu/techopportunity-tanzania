@@ -46,8 +46,52 @@ export function normalizeCandidate(input: Record<string, string | null>, sourceI
 
 function cleanText(value: string | null | undefined): string | null {
   if (typeof value !== "string") return null;
-  const cleaned = value.replace(/\s+/g, " ").trim();
+  const cleaned = decodeHtmlEntities(value).replace(/\s+/g, " ").trim();
   return cleaned.length > 0 ? cleaned : null;
+}
+
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+  ndash: "\u2013",
+  mdash: "\u2014",
+  hellip: "\u2026",
+  lsquo: "\u2018",
+  rsquo: "\u2019",
+  ldquo: "\u201c",
+  rdquo: "\u201d",
+  copy: "\u00a9",
+  reg: "\u00ae",
+  trade: "\u2122",
+  laquo: "\u00ab",
+  raquo: "\u00bb",
+};
+
+/**
+ * Deterministic HTML-entity decoding for extracted text. Evidence from the
+ * pending queue showed RSS/HTML titles stored with raw entities ("...Open
+ * &#8211; August 27, 2026"). Numeric entities and a closed list of common
+ * named entities are decoded; unknown entities are left untouched (never
+ * guessed). Pure and exported for testing.
+ */
+export function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&#x([0-9a-f]{1,6});/gi, (_m, hex: string) => entityChar(parseInt(hex, 16)))
+    .replace(/&#(\d{1,7});/g, (_m, dec: string) => entityChar(parseInt(dec, 10)))
+    .replace(/&([a-z]{2,8});/gi, (m, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? m);
+}
+
+function entityChar(code: number): string {
+  // Reject surrogates and out-of-range code points: an undecodable entity
+  // collapses to nothing rather than corrupting the title.
+  if (!Number.isFinite(code) || code < 1 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) {
+    return "";
+  }
+  return String.fromCodePoint(code);
 }
 
 function normalizeUrl(value: string): string | null {

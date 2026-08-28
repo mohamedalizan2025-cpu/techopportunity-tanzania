@@ -47,6 +47,15 @@ const SECTION_LABELS = new Set([
   "view our events",
   "join the community",
   "explore our involvement",
+  // Added from pending-queue evidence (2026-08-29): exact navigation/
+  // section titles that reached the queue from currently active sources.
+  // Exact-match only — a genuine opportunity is never a title that is
+  // exactly one of these labels.
+  "our quick links",
+  "subfooter menu",
+  "social media",
+  "upcoming events",
+  "about the university",
 ]);
 
 export function isObviousSectionLabel(title: string): boolean {
@@ -56,6 +65,9 @@ export function isObviousSectionLabel(title: string): boolean {
 
 export function validateCandidate(candidate: CandidateOpportunity): boolean {
   if (!candidate.title || candidate.title.length < 3) return false;
+  // A bare URL carries no opportunity information (pending-queue evidence:
+  // rows whose title IS the link). Titles must describe, not merely point.
+  if (/^https?:\/\//i.test(candidate.title.trim())) return false;
   if (isObviousSectionLabel(candidate.title)) return false;
   if (!candidate.description || candidate.description.length < 10) return false;
   if (!(OPPORTUNITY_CATEGORIES as readonly string[]).includes(candidate.category)) return false;

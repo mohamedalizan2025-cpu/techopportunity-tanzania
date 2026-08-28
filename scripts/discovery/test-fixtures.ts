@@ -6,7 +6,7 @@ import {
   extractCandidatesFromJsonLd,
   extractCandidatesFromRss,
 } from "./extract";
-import { normalizeCandidate, inferCategory } from "./normalize";
+import { normalizeCandidate, inferCategory, decodeHtmlEntities } from "./normalize";
 import { isDuplicate } from "./dedupe";
 import { isValidOpportunityUrl, validateCandidate } from "./validate";
 import { isRoundupTitle, extractOpportunityLinks, roundupInnerCandidates } from "./extract";
@@ -221,6 +221,50 @@ for (const noise of ["ANNOUNCEMENTS", "Latest News", "View our events", "Publica
 for (const legit of ["ANNOUNCEMENTS: New Scholarship 2026", "Call for Applications-WISE Scholarship-Cohort 4", "TANGAZO LA UDAHILI WA STASHAHADA 2026/2027"]) {
   assert(`noise gate preserves: ${legit.slice(0, 34)}`, validateCandidate(mkTitleCandidate(legit)));
 }
+// Evidence-based additions (live pending queue, 2026-08-29): exact
+// navigation/section titles that reached the queue from active sources.
+for (const noise of ["Our Quick Links", "Subfooter Menu", "Social Media", "Upcoming Events", "About the University"]) {
+  assert(`noise gate rejects: ${noise}`, !validateCandidate(mkTitleCandidate(noise)));
+}
+// A bare URL carries no opportunity information (pending rows existed whose
+// title WAS the link); titles must describe, not merely point.
+assert(
+  "noise gate rejects: bare URL title",
+  !validateCandidate(mkTitleCandidate("https://asiafoundation.org/call-for-applications-2025-fuller-fellowship/"))
+);
+assert(
+  "noise gate preserves: ordinary opportunity title",
+  validateCandidate(mkTitleCandidate("Applications open for the 2026 youth fellowship"))
+);
+
+// Deterministic HTML-entity decoding (numeric + closed named list; unknown
+// entities stay untouched — never guessed). Evidence: RSS titles stored
+// with raw entities ("...Open &#8211; August 27, 2026").
+assert("entities: numeric + named decoded", decodeHtmlEntities("Open &#8211; Go &amp; Apply") === "Open \u2013 Go & Apply");
+assert("entities: hex numeric decoded", decodeHtmlEntities("A &#x2014; B") === "A \u2014 B");
+assert("entities: unknown entity preserved", decodeHtmlEntities("Stay &curious; today") === "Stay &curious; today");
+const entityNormalized = normalizeCandidate(
+  {
+    title: "30 Hot Jobs &#8211; Open &amp; Closing Soon",
+    url: "https://example.org/jobs",
+    category: null,
+    description: "Enough description text to pass validation.",
+    organization: null,
+    deadline: null,
+    venueName: null,
+    address: null,
+    city: null,
+    region: null,
+    country: null,
+    sourceUrl: SOURCE_URL,
+  },
+  SOURCE_ID
+);
+assert(
+  "entities: decoded inside normalized title",
+  entityNormalized !== null && entityNormalized.title === "30 Hot Jobs \u2013 Open & Closing Soon",
+  entityNormalized?.title
+);
 
 if (relativeCandidates.length === 1) {
   assert("category inference: tech-event for meetup", inferCategory([relativeCandidates[0].title]) === "tech-event");
@@ -273,6 +317,22 @@ assert("roundup: descriptive anchor title used", innerLinks.some((l) => l.title.
 assert("roundup: generic anchor humanized from slug", innerLinks.some((l) => l.title === "global fund wd1"), JSON.stringify(innerLinks.map((l) => l.title)));
 assert("roundup: URL-as-text anchor gets humanized title", innerLinks.some((l) => l.title === "2026 young innovators programme"), JSON.stringify(innerLinks.map((l) => l.title)));
 assert("roundup: short non-action anchor rejected", !innerLinks.some((l) => l.title === "Our Secretariat Team"));
+
+// Roundup slug humanization rejects opaque slugs (live roundup probe
+// 2026-08-29 produced "jobdetail.ftl" and "detailoffre" as titles).
+const opaqueRoundup = `
+  <a href="https://jobs.example.org/apply/jobdetail.ftl?r=1">https://jobs.example.org/apply/jobdetail.ftl?r=1</a>
+  <a href="https://carriere.example.org/offre/detailoffre">https://carriere.example.org/offre/detailoffre</a>
+  <a href="https://example.org/grant/clean-cookstoves-challenge-2026">https://example.org/grant/clean-cookstoves-challenge-2026</a>
+`;
+const opaqueLinks = extractOpportunityLinks(opaqueRoundup, "https://example.org/roundup/ten-grants");
+assert("roundup: file-like slug rejected (jobdetail.ftl)", !opaqueLinks.some((l) => l.url.includes("jobdetail")));
+assert("roundup: single-token slug rejected (detailoffre)", !opaqueLinks.some((l) => l.url.includes("detailoffre")));
+assert(
+  "roundup: multi-word slug still humanized",
+  opaqueLinks.some((l) => l.title === "clean cookstoves challenge 2026"),
+  JSON.stringify(opaqueLinks.map((l) => l.title))
+);
 
 // roundup title detection
 assert("roundup title: 30 Hot Job Opportunities detected", isRoundupTitle("30 Hot Job Opportunities Accross Various Sectors Currently Open"));
