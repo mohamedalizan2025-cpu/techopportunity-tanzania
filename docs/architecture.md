@@ -725,6 +725,61 @@ weaknesses; nothing speculative was added.
   the assistant stays plan-execute-ground (deterministic queries,
   explicit caps inherited from Priority 2).
 
+### 12.11 Product Implementation Milestone 1 — opportunity discovery expansion (2026-08-29)
+
+The hardened architecture (§12.1–§12.10) served as a GUARDRAIL, not a
+redesign target: no broad audit, no structural change, no broken
+protections. Every conclusion below was derived from the real database
+and live probes, not from prior reports.
+
+**Measured baseline (read-only, `scripts/discovery/analyze-baseline.ts`)**
+
+- 185 rows: 170 pending / 10 published / 5 rejected; 0 duplicate URLs.
+- Category quality: `other` = 160 of 185 — institutional sources
+  dominate with news-shaped rows; deadline coverage ~3%, region ~2%,
+  organizer ~1%.
+- Every row carries `country = "Tanzania"` from the pre-0008 DB
+  default; new pipeline rows omit the column (honest NULL after 0008).
+- Published set contains leftover test rows (moderation-hygiene item).
+
+**Findings disposition (implement B only, per the milestone mandate)**
+
+- **B (fixed now):** raw HTML entities in RSS titles → deterministic
+  decoder in `normalize.ts`; opaque humanized slugs ("jobdetail.ftl…",
+  "detailoffre…") as roundup titles → readability rule in `extract.ts`;
+  bare-URL titles → validation guard; five observed navigation labels →
+  exact-match noise gate additions. All four are test-covered
+  (fixtures 93/93).
+- **A (kept):** adapter boundary, one-row-one-opportunity, pending-only
+  inserts, exact-match noise semantics, runner funnel counters
+  (`noiseRejected`/`validCandidates`/`categorySkipped`/
+  `insertedPending`) — measured adequate, no metrics platform added.
+- **C (documented, deferred):** relevance rejection heuristics
+  (no deterministic rule justified without dropping real aggregator
+  opportunities — noise gate already covers every deterministic class),
+  tenders category (no evidence in queue), worldwide display polish.
+- **D (owner gate, unchanged):** migrations 0008/0009/0010 remain
+  designed but NOT applied.
+
+**Expansion verdict (quality over volume)**
+
+Zero new sources added and none reactivated: every probed candidate
+(NACTE, TCU, COSTECH, DAAD, Chevening, AfterSchoolAfrica, YouthOp)
+measured as 0–junk actionable yield or unreachable (§DISCOVERY_CHANNELS,
+measured-baseline section). The binding constraint is moderator
+throughput (170 pending), not discovery volume.
+
+**Boundaries re-verified (nothing built)**
+
+- Relevance: conservative deterministic signals only; no embeddings,
+  vector DB, LLM classification or opaque scoring introduced.
+- Roundup: one-hop, bounded, `evidenceUrl` preserved, generic titles
+  rejected (readability rule).
+- Worldwide honesty: country stays evidence-driven; eligibility and
+  location remain separate dimensions.
+- Moderation: discovery never publishes, infers approval or fabricates;
+  AI runtime still disabled (no credentials configured).
+
 ---
 
 ## 13. Decision log
@@ -751,3 +806,4 @@ weaknesses; nothing speculative was added.
 | 2026-08-29 | Targeted hardening pass (§12.8): adapter registry + one-row-one-opportunity invariant + derived lifecycle + structured run summaries implemented; eligibility/identity/lifecycle migrations 0005–0007 designed but NOT applied | Separates extraction from orchestration, formalizes invariants with tests, and prepares worldwide-opportunity semantics without touching RLS, moderation authority or provenance immutability |
 | 2026-08-29 | Corrective pass (§12.9): lifecycle corrected to four states (null/malformed deadline = `unknown`, never `rolling`); evidence chain formalized (`evidenceUrl`/`referenceKind`, evidence-keyed parent suppression); migration 0005 redesigned pre-application to the single verifiable fact "may Tanzanians apply?"; URL-dedupe limitation documented; no migration applied, no RLS change | Absence of evidence is not evidence; eligibility and location stay separate dimensions; identity readiness without speculative machinery |
 | 2026-08-29 | Final hardening milestone (§12.10): country fabrication stopped (null without evidence, field omitted pre-migration), silent 1,000-row dependence removed (explicit pagination/caps on dedupe, queue, published list, assistant), acquisition hardened (scheme/SSRF/redirect/size/timeout guards in one choke point), CI gated install→test→typecheck→lint→discovery with secrets only on the worker step; migrations 0008 (country), 0009 (attribution), 0010 (jobs seed) designed but NOT applied | The four remaining structural weaknesses closed without speculative machinery; owner-gated schema changes stay reversible and honest; the pipeline is production-safe regardless of migration timing |
+| 2026-08-29 | Product Milestone 1 (§12.11): real-DB baseline (185 rows, 170 pending) drove all decisions; four evidence-based extraction fixes (entity decoding, readable-slug rule, bare-URL title guard, 5 exact noise labels); zero new sources and zero reactivations — every probed candidate measured as junk/unreachable; no relevance heuristics, no metrics platform, no channel-type additions | Quality over row count: moderator throughput (170 pending) is the binding constraint, not discovery volume; every fix is deterministic, test-covered and preserves the pending-only/moderation-boundary invariants |
