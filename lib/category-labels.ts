@@ -11,6 +11,7 @@ export const CATEGORY_LABELS: Record<OpportunityCategory, string> = {
   grant: "Grant",
   "tech-event": "Tech Event",
   admissions: "Admissions & Programmes",
+  jobs: "Jobs & Vacancies",
   other: "Other",
 };
 

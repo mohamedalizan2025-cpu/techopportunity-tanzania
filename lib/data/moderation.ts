@@ -105,20 +105,30 @@ export async function listPendingOpportunities(): Promise<Opportunity[]> {
   const access = await getModerationAccess();
   if (!access.ok) return [];
 
+  // Explicit cap, never the implicit PostgREST 1,000-row limit: a queue
+  // this deep is itself the signal to build queue pagination (§12.1).
+  const QUEUE_LIMIT = 500;
+
   const { data, error } = await access.staff.client
     .from("opportunities")
     .select(OPPORTUNITY_SELECT)
     .eq("status", "pending")
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .limit(QUEUE_LIMIT);
 
   if (error) {
     console.error("[lib/data] Failed to list pending opportunities:", error.message);
     return [];
   }
 
-  return toOpportunityRows(data).map((row) =>
-    mapOpportunityRow(row, "pending")
-  );
+  const rows = toOpportunityRows(data);
+  if (rows.length >= QUEUE_LIMIT) {
+    console.warn(
+      `[lib/data] Pending queue reached the ${QUEUE_LIMIT}-row explicit cap — older rows are hidden until queue pagination ships (§12.1)`
+    );
+  }
+
+  return rows.map((row) => mapOpportunityRow(row, "pending"));
 }
 
 export async function getPendingOpportunityById(

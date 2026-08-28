@@ -9,6 +9,9 @@ export const OPPORTUNITY_CATEGORIES = [
   "grant",
   "tech-event",
   "admissions",
+  // Owner-gated migration 0010 seeds this row; discovery skips `jobs`
+  // candidates (skip + warn, never crash) until the seed exists.
+  "jobs",
   "other",
 ] as const;
 
@@ -21,7 +24,8 @@ export interface OpportunityLocation {
   address: string | null;
   city: string | null;
   region: string | null;
-  country: string;
+  /** null = unknown; never inferred, only evidenced or moderator-set. */
+  country: string | null;
   latitude: number | null;
   longitude: number | null;
 }

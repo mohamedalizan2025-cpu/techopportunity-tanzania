@@ -45,7 +45,7 @@ export function buildGroundedAnswerFromResults(
   if (plan.city) filterBits.push(`in ${plan.city}`);
   if (plan.region) filterBits.push(`in the ${plan.region} region`);
   if (plan.deadline === "soon") filterBits.push("closing within 14 days");
-  if (plan.deadline === "rolling") filterBits.push("with no fixed deadline");
+  if (plan.deadline === "rolling") filterBits.push("with no deadline listed");
 
   const summary =
     results.length === 0

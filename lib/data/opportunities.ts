@@ -29,7 +29,7 @@ export interface OpportunityRow {
   address: string | null;
   city: string | null;
   region: string | null;
-  country: string;
+  country: string | null;
   latitude: number | null;
   longitude: number | null;
   image_url: string | null;
@@ -180,8 +180,19 @@ export function parseDeadlineFilter(raw: string | null | undefined): DeadlineFil
     : null;
 }
 
+/**
+ * Explicit result cap for public listing. PostgREST silently caps
+ * un-limited selects at 1,000 rows; declaring our own limit keeps the
+ * behavior deliberate (and identical for the browse UI and the assistant,
+ * which share this function) instead of accidental. Keyset pagination is
+ * the documented next step once the published set outgrows the cap
+ * (§12.6).
+ */
+const PUBLISHED_LIST_LIMIT = 500;
+
 export async function listPublishedOpportunities(
-  query?: OpportunityQuery
+  query?: OpportunityQuery,
+  limit: number = PUBLISHED_LIST_LIMIT
 ): Promise<Opportunity[]> {
   const supabase = createSupabaseServerClient();
   if (!supabase) return [];
@@ -235,6 +246,8 @@ export async function listPublishedOpportunities(
       .order("created_at", { ascending: false });
   }
 
+  request = request.limit(Math.max(1, Math.min(limit, PUBLISHED_LIST_LIMIT)));
+
   const { data, error } = await request;
 
   if (error) {
@@ -271,8 +284,10 @@ export interface PublishedLocations {
 
 /**
  * Distinct, non-null locations across published opportunities.
- * Deduplicated in memory â€” appropriate at current scale, no extra
- * database features required.
+ * Deduplicated in memory — appropriate at current scale, no extra
+ * database features required. The explicit 1,000-row select is a cap on
+ * RAW rows scanned, not on the result: city/region values come from a
+ * bounded taxonomy, so distinct coverage saturates long before the cap.
  */
 export async function listPublishedLocations(): Promise<PublishedLocations> {
   const supabase = createSupabaseServerClient();
