@@ -189,6 +189,24 @@ still environment-blocked (Turbopack os error 5); GitHub push still
 network-blocked. See architecture.md §12.15. The owner action below
 remains exactly as stated.
 
+Status update (same day, Milestone 8): operational-reliability pass.
+Three fixes shipped without any DDL or secret change: (1) a whole-run
+health gate so a scheduled discovery run can no longer go silently green
+when every source errors (partial failures stay isolated); (2)
+`timeout-minutes: 30` on the workflow job; (3) the submit form now renders
+the SAME live taxonomy as the homepage hub, so unseeded admissions/jobs
+are no longer selectable. Battery 194/194; tsc/lint clean; build still
+environment-blocked. The failing "Discovery sync" workflow is classified
+I (logs unreachable — no gh CLI and GitHub down, so the exact step/error
+could not be observed, not inferred); reproducible evidence points at the
+checkout/setup-node/npm-ci window, never at discovery logic, and a local
+run of the exact CI command succeeded (28 inserted pending). Deployment
+truth: production is the PRE-Milestone-7 build (still shows static
+admissions/jobs chips), so M7 is NOT production-deployed. GitHub push
+still network-blocked (7th session); recovery is a single `git push origin
+main`. See architecture.md §12.16. The owner action below remains exactly
+as stated.
+
 Why this one: every other candidate milestone multiplies off it. It ends
 measured silent data loss (7 candidates per run), makes country claims
 true at the storage layer, converts the dormant backlog into real

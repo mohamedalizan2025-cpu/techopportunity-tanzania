@@ -1004,6 +1004,83 @@ intact.
 
 ---
 
+### 12.16 Milestone 8 — discovery sync reliability + taxonomy consistency (2026-08-29)
+
+Milestone 8 is an operational-reliability pass, not a redesign. Owner
+migration gates (0004/0010/0008/0009) remain open and unchanged; no DDL
+applied, no GitHub secret created or modified, no failure signal
+suppressed. Architecture untouched; score holds at 9.7/10.
+
+**The three issues and what was done**
+
+1. *Unpushed commits.* Five local commits (6f2d12e…c544477) still cannot
+   reach `origin/main`: github.com and api.github.com both fail to
+   connect (~21s timeout) — 7th consecutive session. No force-push, no
+   history rewrite, no duplicate commits. Recovery remains a single
+   `git push origin main` once connectivity returns.
+2. *Failing "Discovery sync" scheduled runs.* Root cause is
+   **unverifiable from this environment and is reported as such**: no
+   `gh` CLI is installed, and every GitHub endpoint is unreachable, so
+   no run log could be fetched (classification **I — logs unavailable**).
+   What the static + reproducible evidence rules in/out: the workflow
+   YAML is valid and the env contract matches exactly (all three names
+   identical across workflow, `.env.example` and the runner); the
+   discovery code reproduces green locally; and the ~28s failure
+   duration places any real fault in the checkout → setup-node →
+   `npm ci` window (locally `npm ci` alone ran ~3 min), i.e. before any
+   test/typecheck/lint/discovery step — pointing at a dependency,
+   runtime or Actions-infra cause (C/D/H), never at discovery logic.
+3. *Submit taxonomy exposure.* Proven defect: the submission form
+   rendered all 12 static categories including unseeded
+   `admissions`/`jobs`, so a user could pick a category that the live
+   DB then rejects. Fix: the form now renders from
+   `listLiveCategories()` — the same live-taxonomy source as the
+   homepage hub — via a prop, contract-tested. When 0004/0010 land the
+   options appear automatically with no frontend change.
+
+**Fixes shipped (smallest safe)**
+
+- Whole-run health gate (`scripts/discovery/index.ts`): individual
+  source/feed/roundup failures stay isolated and the run exits 0, but
+  when EVERY checked source errors the scheduled run now exits non-zero
+  instead of going silently green. Partial runs keep their designed
+  isolation. No `|| true`, no `continue-on-error`.
+- `timeout-minutes: 30` on the `discover` job so a zombie run cannot
+  occupy the daily cron slot.
+- Submit form live taxonomy + `tests/submit-taxonomy.test.ts` (6
+  contract tests: unseeded excluded, seeded auto-appear, every offered
+  option passes `validateSubmission`, options ⊆ accepted taxonomy,
+  order preserved, unknown slug rejected).
+
+**Worker validation (local, exact CI command).** A full discovery run
+reproduced the scheduled job end-to-end: 18 sources checked, 14 ok, 4
+fetch errors (ICT Commission, NM-AIST, UDSM, UDOM — isolated, did not
+abort the run), 165 candidates → 28 valid → 28 inserted pending, 108
+duplicates skipped, 0 categorySkipped. Data behavior is consistent; the
+4 errored sources confirm the isolation path holds under real failure.
+
+**Verification**: battery grew to 194/194 (6 new submit-taxonomy
+tests), eslint + `tsc --noEmit` clean. `next build` remains
+ENVIRONMENT-BLOCKED on this machine (Turbopack pooled-process spawn
+"Access is denied", os error 5 — identical to Milestones 5–7, zero code
+involvement, classified not redesigned). CI gates on test/tsc/lint, not
+`next build`, so this does not affect the workflow.
+
+**Deployment truth.** Production was probed and is the PRE-Milestone-7
+build: the homepage still renders static "Admissions & Programmes" and
+"Jobs & Vacancies" chips, the old hero/filters, and an enabled assistant
+form. Because the M7 commits never reached `origin/main` and Vercel
+deploys from origin, **Milestone 7 is NOT production-deployed**. It
+becomes verifiable only after connectivity returns and the push +
+deploy complete.
+
+**Not changed (deliberately)**: per-source isolation model, pending-only
+discovery, moderation authority, RLS, anon-only public reads, assistant
+kill switch (disabled), migration state. GitHub push still
+network-blocked (7th session).
+
+---
+
 ## 13. Decision log
 
 | Date | Decision | Reason |
@@ -1033,3 +1110,4 @@ intact.
 | 2026-08-29 | Milestone 3 (§12.13): live re-probe showed ALL owner-gated migrations still unapplied; delivered read-only `triage-queue.ts` (priority-ordered 170-row backlog), test-artifact census (5 published test rows identified, not deleted), honest BEFORE=AFTER discovery measurement (0 recovered; 5 candidates/run still skipped), full battery + security + production re-verification; stopped at owner gate with exact SQL application order | No DDL without owner authorization; everything shippable without schema change was shipped; recovery math measured so the owner action's product payoff is quantified |
 | 2026-08-29 | Milestone 4 (§12.14): live re-probe again showed ALL four owner-gated migrations unapplied (behavior probes, reversible INSERT included); activation phases could not run; battery 176/176 + production re-probes re-verified locally; BEFORE=AFTER unchanged; stopped at the same owner gate; GitHub push still network-blocked | Milestones cannot substitute for the owner's SQL-editor action; honest BEFORE=AFTER reported instead of fabricated recovery; no speculative work invented to fill the gap |
 | 2026-08-29 | Milestone 7 (§12.15): opportunity-first product pass — live-taxonomy category hub, deadline quick links, opportunity-first hero, country display suppressed pending 0008 evidence, assistant boundary copy; battery 188/188; no data-access, RLS or provider changes | The public UI must never claim categories the live DB lacks nor present schema-default country as verified; live-taxonomy mechanism auto-picks up 0004/0010 later without frontend churn |
+| 2026-08-29 | Milestone 8 (§12.16): discovery reliability + taxonomy consistency — GitHub failure classified I (logs unreachable, not inferred); whole-run health gate added (total source failure exits non-zero, partial stays isolated); `timeout-minutes: 30`; submit form switched to the same live taxonomy as the homepage; battery 194/194; no DDL, no secret changes, no failure suppression | A scheduled run must never go silently green when every source fails, and the submit form must never offer a category the live DB lacks; the exact CI failure could not be observed from this machine, so it is reported honestly rather than guessed |
