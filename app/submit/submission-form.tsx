@@ -4,8 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { submitOpportunityAction } from "@/lib/data/submit-opportunity";
 import { initialSubmissionState } from "@/lib/submission-validation";
-import { CATEGORY_LABELS } from "@/lib/category-labels";
-import { OPPORTUNITY_CATEGORIES } from "@/lib/types";
+import type { LiveCategory } from "@/lib/data/categories";
 interface OrganizationOption {
   id: string;
   name: string;
@@ -43,8 +42,10 @@ function Label({
 
 export function SubmissionForm({
   organizations,
+  categories,
 }: {
   organizations: OrganizationOption[];
+  categories: LiveCategory[];
 }) {
   const [state, formAction, isPending] = useActionState(
     submitOpportunityAction,
@@ -130,9 +131,9 @@ export function SubmissionForm({
             className={fieldClassName(errors.category !== undefined)}
           >
             <option value="">Select a category…</option>
-            {OPPORTUNITY_CATEGORIES.map((slug) => (
-              <option key={slug} value={slug}>
-                {CATEGORY_LABELS[slug]}
+            {categories.map((category) => (
+              <option key={category.slug} value={category.slug}>
+                {category.label}
               </option>
             ))}
           </select>

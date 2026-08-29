@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { listLiveCategories } from "@/lib/data/categories";
 import { listOrganizationOptions } from "@/lib/data/opportunities";
 import { SubmissionForm } from "./submission-form";
 
@@ -13,6 +14,10 @@ export const metadata: Metadata = {
 
 export default async function SubmitPage() {
   const organizations = await listOrganizationOptions();
+  // Same live taxonomy as the homepage hub: the form offers exactly the
+  // categories seeded in the live database. When 0004/0010 land, their
+  // options appear automatically — no frontend change.
+  const categories = await listLiveCategories();
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 font-sans dark:bg-black">
@@ -34,7 +39,7 @@ export default async function SubmitPage() {
         </p>
 
         <div className="mt-8 rounded-lg border border-black/[.08] bg-white p-5 dark:border-white/[.145] dark:bg-zinc-950 sm:p-6">
-          <SubmissionForm organizations={organizations} />
+          <SubmissionForm organizations={organizations} categories={categories} />
         </div>
       </main>
     </div>
