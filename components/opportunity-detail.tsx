@@ -1,4 +1,5 @@
 import { categoryLabel } from "@/lib/category-labels";
+import { formatLocationDisplay } from "@/lib/opportunity-presentation";
 import type { Opportunity } from "@/lib/types";
 
 function formatDeadline(iso: string | null): string {
@@ -14,29 +15,15 @@ function formatDeadline(iso: string | null): string {
   return `Deadline: ${formatted}`;
 }
 
-function formatLocationLines(location: {
-  venueName: string | null;
-  address: string | null;
-  city: string | null;
-  region: string | null;
-  country: string | null;
-}): string[] {
-  const lines = [location.venueName, location.address].filter(
-    (line): line is string => line !== null && line.trim() !== ""
-  );
-  const placeParts = [location.city, location.region, location.country].filter(
-    (part): part is string => part !== null && part.trim() !== ""
-  );
-  if (placeParts.length > 0) lines.push(placeParts.join(", "));
-  return lines;
-}
-
 export function OpportunityDetail({ opportunity }: { opportunity: Opportunity }) {
   const deadlineText = formatDeadline(opportunity.deadline);
+  // Country is deliberately excluded from location lines: until migration
+  // 0008 lands, every stored country value is the unverified schema default
+  // and must not be presented as a verified fact (see lib/opportunity-presentation).
   const locationLines =
     opportunity.location === null
       ? ["Location not specified — see the official page for venue details."]
-      : formatLocationLines(opportunity.location);
+      : formatLocationDisplay(opportunity.location);
 
   return (
     <>

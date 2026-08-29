@@ -1,14 +1,10 @@
 import Link from "next/link";
-import { categoryLabel } from "@/lib/category-labels";
-import {
-  OPPORTUNITY_CATEGORIES,
-  type OpportunityCategory,
-} from "@/lib/types";
 import {
   TANZANIA_MAINLAND_REGIONS,
   TANZANIA_ZANZIBAR_REGIONS,
   extraRegionValues,
 } from "@/lib/tanzania-regions";
+import type { OpportunityCategory } from "@/lib/types";
 import type { DeadlineFilter, PublishedLocations } from "@/lib/data/opportunities";
 
 interface OpportunityFiltersProps {
@@ -21,7 +17,7 @@ interface OpportunityFiltersProps {
   locations?: PublishedLocations;
 }
 
-function buildHref(
+export function buildHref(
   category: OpportunityCategory | null,
   sort: "deadline" | "newest",
   filters: {
@@ -45,7 +41,7 @@ function buildHref(
 const selectClasses =
   "h-10 rounded-full border border-black/[.10] bg-white px-4 text-sm text-zinc-700 outline-none transition-colors focus:border-black/40 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-300 dark:focus:border-white/40";
 
-function FilterLink({
+export function FilterLink({
   href,
   active,
   children,
@@ -213,27 +209,6 @@ export function OpportunityFilters({
           Apply
         </button>
       </form>
-
-      <ul className="flex flex-wrap justify-center gap-2">
-        <li>
-          <FilterLink
-            href={buildHref(null, activeSort, { q: activeQuery, city: activeCity, region: activeRegion, deadline: activeDeadline })}
-            active={activeCategory === null}
-          >
-            All
-          </FilterLink>
-        </li>
-        {OPPORTUNITY_CATEGORIES.map((category) => (
-          <li key={category}>
-            <FilterLink
-              href={buildHref(category, activeSort, { q: activeQuery, city: activeCity, region: activeRegion, deadline: activeDeadline })}
-              active={activeCategory === category}
-            >
-              {categoryLabel(category)}
-            </FilterLink>
-          </li>
-        ))}
-      </ul>
 
       <ul className="flex flex-wrap justify-center gap-2">
         <li>

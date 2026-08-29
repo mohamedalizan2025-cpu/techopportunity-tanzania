@@ -50,6 +50,9 @@ export function AssistantPanel() {
       aria-label="Opportunity assistant"
       className="flex w-full max-w-xl flex-col gap-3 rounded-lg border border-black/[.08] bg-white p-4 text-left dark:border-white/[.145] dark:bg-zinc-950"
     >
+      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+        Opportunity assistant
+      </p>
       <form onSubmit={ask} className="flex flex-col gap-2 sm:flex-row">
         <label htmlFor="assistant-question" className="sr-only">
           Ask about opportunities
@@ -71,6 +74,11 @@ export function AssistantPanel() {
           {state === "loading" ? "Thinking…" : "Ask"}
         </button>
       </form>
+
+      <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-500">
+        Searches published opportunities only — it never invents results or
+        shows unpublished records.
+      </p>
 
       {errorText ? (
         <p role="alert" className="text-sm text-red-700 dark:text-red-300">
