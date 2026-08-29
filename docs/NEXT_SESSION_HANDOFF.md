@@ -1,254 +1,173 @@
-# Next-Session Handoff — End-of-Day Checkpoint
+# Next-Session Handoff — End-of-Day Freeze / Checkpoint (authoritative restart)
 
-Freeze note for resuming work. Not a redesign document. Verified against
-the live repository and live database on 2026-08-29; every number below
-came from a behavior probe or test run in that session, not from memory
-or earlier reports.
+STOP/FREEZE note. This is the single authoritative document for resuming
+work next session. It is not a redesign and not a feature plan. Git state
+and the safety battery below were re-run on **2026-08-30**; live data
+counts come from the last real DB probe (2026-08-29) plus the verified
+Milestone-8 run — re-confirm with `scripts/discovery/inspect-live.ts`
+before acting on any number.
 
 ---
 
-## A. Current project purpose
+## A. Current Git HEAD
+`d7a1a9a` — "docs: Milestone 8 record — discovery reliability + taxonomy consistency"
 
-TechOpportunity Tanzania should discover trustworthy, actionable
-opportunities for Tanzanians — in Tanzania and worldwide, regardless of
-where the opportunity originates — while keeping human moderation as the
-only publication boundary. Categories, search, filters, and (later) an AI
-assistant exist to make real opportunities findable; nothing may fabricate
-deadlines, locations, organizers, categories, or eligibility to look
-complete.
+The three Milestone-8 commits immediately before it:
+- `204409b` fix(discovery): whole-run health gate + job timeout-minutes
+- `b17947b` fix(submit): offer only live-taxonomy categories
+- `d7a1a9a` docs: Milestone 8 record
 
-## B. Current architecture (as deployed)
+## B. Branch / origin synchronization
+- Branch `main`, **ahead 8, behind 0** of `origin/main`.
+- The 8 unpushed commits are all legitimate (5 prior-milestone + 3
+  Milestone-8). No temp files, no secrets, working tree clean.
+- **Not pushed because github.com is unreachable from this environment**
+  (8th consecutive session; `Failed to connect to github.com:443 after
+  ~21000 ms`). Recovery is a single `git push origin main` once
+  connectivity returns. No force-push, no history rewrite.
 
-- Next.js 16 App Router on Vercel; Supabase (Postgres + PostgREST + Auth)
-  as the only datastore. No custom backend, no queue, no vector store.
-- RLS is the security authority: anon sees only published opportunities
-  (plus organizations for display); registry, audit, pending, and rejected
-  rows are invisible to anon — re-verified live with an anon probe.
-- All data access flows through `lib/data/` (server components + one
-  server action for moderation decisions). UI never talks to Supabase
-  directly; the only `createClient` outside scripts is the anon server
-  client in `lib/data/supabase-client.ts`.
-- Service-role keys exist only in `scripts/discovery/*` (CI worker +
-  retained read-only analysis tools) — never in `app/`, `components/`,
-  `lib/`, or the browser.
-- Discovery runs as a GitHub Actions workflow gated by install → tests →
-  typecheck → lint; it inserts only `status: "pending"` rows.
-- Assistant: one API route that executes a validated filter plan against
-  the same published-only queries as the browse UI. Runtime is disabled
-  until a provider credential exists (see G).
+## C. Latest completed milestone
+**Milestone 8 — Discovery Sync Reliability + Git Recovery + Taxonomy
+Consistency.** Operational-reliability pass; no architecture change
+(score holds 9.7/10).
 
-## C. Current discovery pipeline
+## D. What WAS implemented (Milestone 8)
+- Whole-run health gate (`scripts/discovery/index.ts`): per-source/feed/
+  roundup failures stay isolated (exit 0), but when EVERY checked source
+  errors the run now exits NON-zero — no more silent green on a total
+  outage.
+- `timeout-minutes: 30` on the `discover` job (`.github/workflows/discovery.yml`).
+- Submit form switched to the SAME live taxonomy as the homepage hub
+  (`listLiveCategories()` via a prop), so unseeded admissions/jobs are no
+  longer selectable. 6 contract tests in `tests/submit-taxonomy.test.ts`.
+- Docs: `architecture.md` §12.16 + decision-log row.
+- Safety battery this freeze: tests 194/194, lint clean, tsc clean, L3
+  security review 0 findings.
+- Carried locally (from Milestone 7, still unpushed): live-taxonomy hub,
+  deadline quick links, opportunity-first hero, country display
+  suppressed pending 0008, assistant boundary copy.
 
-`opportunity_sources` registry (29 rows, 18 active) → acquisition
-(`scripts/discovery/fetch.ts`, the single SSRF choke point: scheme +
-private-range + `.internal`/`.local` blocks) → adapter sniffing (4
-implemented families: JSON-LD pages, RSS, Atom, HTML links/roundups) →
-extraction (one-hop roundup decomposition with evidence chain) →
-normalization (`normalize.ts`; country stays null without evidence) →
-validation (`validate.ts`; URL guard, date rules — event dates never
-become deadlines) → noise gate (nav/footer/junk titles rejected, real
-announcement titles preserved) → dedupe (URL + title similarity) →
-**pending** (loud skip + counter when a category seed is missing) →
-moderation (staff-only decision; pending-guarded UPDATE; enrichment
-audit best-effort) → publication → search/category/region/deadline
-filters → AI (disabled; see G).
+## E. What was DELIBERATELY NOT implemented
+- No migrations applied; no GitHub secrets created/modified.
+- No retry storm, no `|| true`, no `continue-on-error`, no suppression of
+  any failure signal.
+- Did NOT claim the GitHub Actions failure is fixed (no run log could be
+  read). Did NOT claim Milestone 7 is production-deployed (it is not).
+- No new sources, no news/classifier subsystem, no AI provider, no
+  architecture change, no second search engine.
 
-## D. Opportunity categories that ACTUALLY exist in the live database
+## F. Live migration / taxonomy state (owner-gated)
+- Migrations **0004** (admissions), **0010** (jobs), **0008** (drop
+  `'Tanzania'` country default), **0009** (moderation attribution) —
+  all **ABSENT**, owner action required.
+- Live `categories` table has exactly **10** rows: hackathon, competition,
+  scholarship, conference, workshop, internship, fellowship, grant,
+  tech-event, other. `admissions`/`jobs` are NOT seeded and are skipped
+  loudly (warn + counter) by discovery; UI now hides them in BOTH hub and
+  submit form. They auto-appear when 0004/0010 land — no frontend change.
+- `country` is still `not null default 'Tanzania'` (0008 pending), so
+  public UI suppresses country display entirely.
 
-Seeded and usable: `hackathon`, `competition`, `scholarship`,
-`conference`, `workshop`, `internship`, `fellowship`, `grant`,
-`tech-event`, `other` (10 rows in `categories`).
+## G. Current discovery state
+- Registry `opportunity_sources`: 29 rows, 18 active. Pipeline: fetch
+  (SSRF choke point in `scripts/discovery/fetch.ts`) → adapter → extract
+  → normalize → validate → noise gate → dedupe → pending → moderation.
+- Last FULL run (exact CI command, 2026-08-29): 18 checked, 14 ok, 4 fetch
+  errors (ICT Commission, NM-AIST, UDSM, UDOM — isolated, run completed),
+  165 candidates → 28 valid → **28 inserted pending**, 108 duplicates
+  skipped, **0 categorySkipped**.
+- Estimated DB now: ~213 total / ~198 pending (185/170 last probe + 28
+  inserts). **Re-verify with `inspect-live.ts`.**
 
-**Do not treat as existing:** `admissions` and `jobs` are referenced by
-app types and planned migrations 0004/0010, but their seed rows are NOT
-in the live database. Every admissions/jobs discovery candidate is
-currently skipped (warn + counter) — measured: 7 candidates per recent
-dry-run. The browse UI honestly shows "Nothing found" for those filters.
+## H. Current moderation state
+- Pending backlog is substantial (~198 rows) with <4% metadata coverage —
+  moderation throughput, not discovery volume, is the binding constraint.
+- Next-in-queue navigation exists; no bulk actions (needs 0009).
+- ~5 published test artifacts (`regression-*`, `hack*`,
+  `production-link-test-delete-me`) need owner/moderator cleanup —
+  deliberately not touched.
 
-## E. Current data state (verified 2026-08-29)
+## I. Current AI state
+- **Disabled.** Scaffold complete and tested (plan parser, grounded
+  published-only executor, boundary detection, rate limiter, `mode:disabled`
+  on POST). Runtime gated by `ASSISTANT_ENABLED`/provider credential, which
+  do not exist. Do not activate until moderation + taxonomy gates clear and
+  the owner supplies a provider credential.
 
-- 185 opportunity rows total: **170 pending / 10 published / 5 rejected**.
-- Published detail: of the 10 published rows, ~5 are regression/test
-  artifacts (`regression-alpha`, `regression-bravo`, `hackkka`, `hack`,
-  `production-link-test-delete-me`). Removing them is an owner/moderator
-  data decision, deliberately not taken tonight.
-- Category spread: `other` = 160 (86.5%); fellowship 7, scholarship 6,
-  grant 3, competition 3, hackathon 2, internship 2, conference 2.
-- Metadata coverage on all 185 rows: deadline 5, city 5, region 3,
-  venue 3, organizer 2. Country coverage is unreliable because the DB
-  still force-defaults `'Tanzania'` (see F).
-- Enrichment audit rows written so far: 0. Registry rows: 29. Duplicate
-  URL pairs: 1 (test rows only).
-- Heuristic classes of the 170 pending titles — **estimates from regex
-  inspection, explicitly NOT ground truth**: ~18 action-like, ~4
-  news-like, ~148 ambiguous. Ambiguity is why automatic triage was
-  refused (see the do-not-do list).
+## J. Known production state
+- Production (https://techopportunity-tanzania.vercel.app) is the **PRE-
+  Milestone-7 build**: still renders static "Admissions & Programmes" /
+  "Jobs & Vacancies" chips and an enabled assistant form. Vercel deploys
+  from `origin/main`, which lacks the 8 unpushed commits.
+- Therefore **Milestone 7 AND 8 are NOT deployed.** Deployment truth is
+  gated entirely on the push succeeding.
 
-## F. Worldwide status — exactly what is supported
+## K. Known environment problems (do not chase tonight)
+- GitHub (`github.com`, `api.github.com`, Actions) unreachable from this
+  environment — blocks both push and CI-log forensics.
+- No `gh` CLI installed.
+- `next build` **environment-blocked**: Turbopack pooled-process spawn
+  "Access is denied" (os error 5), machine-level, unrelated to code, seen
+  Milestones 5–8. Attempt once, classify, move on. CI gates on
+  install→test→tsc→lint→discovery, NOT on `next build`.
+- Windows fallback-shell quirks: quote mangling breaks inline `node -e`,
+  `findstr` multi-pattern, and `git commit -m "..."`. Use script files, the
+  Grep tool, and `git commit -F <file>`.
 
-- **Tanzania**: full path works (discovery → moderation → publish →
-  filters → detail). Region filter offers the 31 canonical Tanzanian
-  regions.
-- **Other countries / worldwide**: partially supported and honest in the
-  UI only after human correction. The `country` column is still
-  `not null default 'Tanzania'` because migration 0008 is NOT applied —
-  any inserted row without explicit country is silently stored as
-  Tanzania. A moderator CAN set a real country (parser and action
-  support it and never overwrite with a default when null is omitted).
-- **Online opportunities**: representable (null location fields render as
-  unknown, never claimed); no dedicated "online" flag exists yet
-  (migration 0006 column is absent — confirmed by probe).
-- **Eligibility**: not stored anywhere, by design. Never inferred from
-  domain, institution, or title. Blocked behind 0005/0007 columns and a
-  future evidence-backed design.
+## L. Outstanding owner gates
+1. Apply migrations in order **0004 → 0010 → 0008 → 0009**.
+2. Restore GitHub connectivity / repo credentials so the 8 commits can
+   push and Actions logs become readable.
+3. Confirm the three GitHub Actions secrets exist (names verified to
+   match: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `SUPABASE_SERVICE_ROLE_KEY`) — existence is not readable from here.
+4. Provide a provider credential + decision before enabling AI.
+5. Provision/confirm Supabase Auth staff accounts for moderators.
+6. Decide removal of the ~5 published test rows.
 
-## G. Current AI status
+## M. Exact FIRST task for the next session
+> **Investigate the repeated GitHub Actions "Discovery sync" failures
+> before any further discovery expansion.**
 
-- Scaffold: complete and tested (plan parser, grounded executor that
-  returns exactly the executed published rows, boundary detection for
-  off-product questions, in-memory rate limiter, `mode:disabled` JSON on
-  POST, 405 on GET).
-- Provider decision: none made; code is provider-independent behind
-  `lib/assistant/provider.ts`.
-- Runtime: **disabled**. `isProviderConfigured()` checks
-  `ASSISTANT_PROVIDER_API_KEY`; no `ASSISTANT_*` variable exists in
-  `.env.example` or `.env.local`.
-- Kill switch: absence of the credential itself — provider calls throw
-  `ProviderNotConfiguredError`; production POST returns the honest
-  disabled message (verified live).
-- Next activation requirement: owner supplies a provider credential and
-  makes the provider decision. Do not activate before moderation
-  throughput and taxonomy gates are cleared.
+Concretely, once GitHub is reachable: read the actual failed run logs
+(`gh run list`, `gh run view --log`), identify the exact failing step and
+error, and classify it (do not infer from the ~28s duration). Prior local
+evidence pointed at the checkout→setup-node→`npm ci` window (dependency /
+runtime / Actions-infra), never at discovery code — confirm or correct that
+with real logs.
 
-## H. Owner gates (every action requiring the owner)
+Then:
+> **After discovery reliability is understood/fixed, return to
+> opportunity-first product implementation.**
 
-1. Apply migration **0004** (admissions seed) and **0010** (jobs seed) —
-   stops the measured silent skipping of every admissions/jobs candidate.
-2. Apply migration **0008** (drop the `'Tanzania'` country default) —
-   completes country honesty at the DB layer.
-3. Apply **0009** (moderator decision attribution) — precondition for
-   any bulk-action feature.
-4. Decide on **0005 / 0006 / 0007** (references, online flag, eligibility
-   columns) — all confirmed absent by probe.
-5. Provide `ASSISTANT_*` provider credential if AI should be activated.
-6. Confirm Supabase Auth staff accounts for moderators (login exists;
-   account provisioning is owner-side).
-7. Decide removal of the ~5 test rows currently published.
-8. GitHub Actions secret rotation / Vercel env changes, if ever needed.
-9. Real-device QA of the UI (no mobile/desktop device pass has been
-   done).
+## N. Recommended model for that first task
+A **MAX-tier high-reasoning model** for the Actions forensics (log triage
+across steps, timing, and dependency/runtime hypotheses is reasoning-heavy).
+A lighter flash-tier model is appropriate for routine checkpoint/freeze and
+docs work like this one, but not for the forensic investigation.
 
-## I. Known technical limitations
-
-- 170-row moderation backlog with <4% metadata coverage; published set
-  is tiny (and partly test rows), so the public product is currently
-  thin despite the pipeline.
-- Queue loads max 500 pending rows without pagination (deferred until
-  the queue approaches the cap; 170 is well under it).
-- Dedupe is URL- and title-based; distinct URLs for the same underlying
-  opportunity are not merged.
-- Enrichment audit is best-effort and has never run in production (0
-  rows written).
-- PostgREST does not expose `information_schema`, so schema truth
-  requires behavior probes — use `scripts/discovery/inspect-live.ts`.
-- Windows dev-shell quirks (quote stripping in the fallback shell) make
-  inline `node -e` / `findstr` pipelines unreliable; prefer script files
-  and the Grep tool.
-- Heuristic title classification cannot separate actionable from news
-  reliably (148/170 ambiguous) — no automatic triage may build on it.
-
-## J. Next highest-value milestone (one)
-
-**"Migration Day + Backlog Triage":** the owner applies 0004, 0010, and
-0008 (H1–H2), then a single moderation session works the 170-row backlog
-with the new next-in-queue navigation, re-running discovery afterwards so
-admissions/jobs candidates stop being dropped.
-
-Status update (same day, Milestone 3): executed and STOPPED at the owner
-gate — the live re-probe found all four migrations still unapplied.
-Delivered meanwhile: `scripts/discovery/triage-queue.ts` (priority-ordered
-backlog, buckets 1–8), test-artifact census (5 published test rows
-identified, not deleted), BEFORE=AFTER discovery measurement (0 recovered,
-5 candidates/run still skipped). See architecture.md §12.13. The owner
-action below is unchanged and is still the single highest-value step.
-
-Status update (same day, Milestone 4): re-probed again — STILL no owner
-action; all four migrations remain unapplied (behavior probes: seeds
-absent, `decided_by`/`decided_at` absent, reversible INSERT still stores
-`'Tanzania'`). Activation phases could not run; battery 176/176 and
-production probes re-verified locally; BEFORE=AFTER unchanged. See
-architecture.md §12.14. The owner action below remains exactly as stated.
-
-Status update (same day, Milestone 7): per the milestone directive the
-audit loop ended; product UX work that does NOT depend on the owner
-migrations shipped — opportunity-first homepage, live-taxonomy category
-hub (10 live categories resolve; admissions/jobs appear automatically
-once 0004/0010 land), deadline quick links, country display suppressed
-pending 0008 evidence, assistant boundary copy. Battery 188/188; build
-still environment-blocked (Turbopack os error 5); GitHub push still
-network-blocked. See architecture.md §12.15. The owner action below
-remains exactly as stated.
-
-Status update (same day, Milestone 8): operational-reliability pass.
-Three fixes shipped without any DDL or secret change: (1) a whole-run
-health gate so a scheduled discovery run can no longer go silently green
-when every source errors (partial failures stay isolated); (2)
-`timeout-minutes: 30` on the workflow job; (3) the submit form now renders
-the SAME live taxonomy as the homepage hub, so unseeded admissions/jobs
-are no longer selectable. Battery 194/194; tsc/lint clean; build still
-environment-blocked. The failing "Discovery sync" workflow is classified
-I (logs unreachable — no gh CLI and GitHub down, so the exact step/error
-could not be observed, not inferred); reproducible evidence points at the
-checkout/setup-node/npm-ci window, never at discovery logic, and a local
-run of the exact CI command succeeded (28 inserted pending). Deployment
-truth: production is the PRE-Milestone-7 build (still shows static
-admissions/jobs chips), so M7 is NOT production-deployed. GitHub push
-still network-blocked (7th session); recovery is a single `git push origin
-main`. See architecture.md §12.16. The owner action below remains exactly
-as stated.
-
-Why this one: every other candidate milestone multiplies off it. It ends
-measured silent data loss (7 candidates per run), makes country claims
-true at the storage layer, converts the dormant backlog into real
-published opportunities, and directly moves the product metric —
-trustworthy actionable opportunities per unit of moderator effort —
-whereas new sources, AI, or pagination would add surface to an empty
-shop.
-
-## K. Do-not-do list (architectural boundaries, preserved)
-
+## O. Do-not-do list (architectural boundaries, preserved)
 - No uncontrolled social scraping.
 - No autonomous publishing — human moderation is the only gate.
 - No eligibility guessing from domain, institution, or title.
-- No fabricated deadlines, locations, or organizers.
-- No crawler framework without evidence of need.
-- No premature vector database.
-- No unnecessary backend.
-- No mobile implementation before web product maturity.
+- No fabricated deadlines, locations, organizers, categories, or country.
+- No crawler framework, vector DB, or extra backend without evidence.
+- No mobile work before web product maturity.
 - No architecture rewrite without concrete evidence.
 - No applying owner-gated migrations from application code or scripts.
 - No presenting heuristic classification as ground truth.
+- No suppressing workflow failures (`|| true`, `continue-on-error`) to
+  appear green.
+- No claiming an issue fixed or a milestone deployed without evidence.
 
 ---
 
-## Git checkpoint record
-
-- Date: 2026-08-29 (end of day)
-- Branch: `main`, synchronized with `origin/main`
-- Latest milestone commit: `a0b37e0` — "docs: Milestone 2 record — live
-  schema truth and measured dispositions" (Milestone 2: Data Integrity +
-  Moderation Throughput + Opportunity Taxonomy). This handoff note itself
-  is committed as the end-of-day checkpoint commit immediately after it.
-- Tests: 176/176 passing (fixtures 93, review 21, assistant 21,
-  lifecycle 11, acquisition 30)
-- Lint / typecheck: clean
-- Build: clean (Next.js 16.3.2)
-- Security: L3 deep review 0 findings before the Milestone 2 push; anon
-  RLS probes re-confirmed; no secrets or temp artifacts tracked
-- Production verification: full surface probed live on
-  https://techopportunity-tanzania.vercel.app (home, search, category /
-  region / deadline filters, published detail 200, pending detail 404,
-  /moderation 307 → login, /submit 200, assistant disabled)
-- Architecture score: 9.7/10 (held, not inflated)
-- Current milestone name: Milestone 2 — CLOSED. Repository frozen; next
-  session starts at section J.
+## Freeze record (this session, 2026-08-30)
+- HEAD `d7a1a9a`; `main` ahead 8, behind 0; working tree clean.
+- Tests 194/194; lint clean; typecheck clean; build environment-blocked
+  (Turbopack os error 5); L3 security review 0 findings.
+- `.env.local` ignored + untracked; no temp/probe files tracked or on disk;
+  no `SERVICE_ROLE` reference in `app`/`components`/`lib`.
+- Checkpoint commit created after this edit; push attempted.
+- **No new feature work, no migration, no audit, no speculative change was
+  started.** Repository frozen for an exact, safe restart at section M.
