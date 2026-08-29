@@ -164,6 +164,14 @@ dry-run. The browse UI honestly shows "Nothing found" for those filters.
 with the new next-in-queue navigation, re-running discovery afterwards so
 admissions/jobs candidates stop being dropped.
 
+Status update (same day, Milestone 3): executed and STOPPED at the owner
+gate — the live re-probe found all four migrations still unapplied.
+Delivered meanwhile: `scripts/discovery/triage-queue.ts` (priority-ordered
+backlog, buckets 1–8), test-artifact census (5 published test rows
+identified, not deleted), BEFORE=AFTER discovery measurement (0 recovered,
+5 candidates/run still skipped). See architecture.md §12.13. The owner
+action below is unchanged and is still the single highest-value step.
+
 Why this one: every other candidate milestone multiplies off it. It ends
 measured silent data loss (7 candidates per run), makes country claims
 true at the storage layer, converts the dormant backlog into real

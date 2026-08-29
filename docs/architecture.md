@@ -852,6 +852,60 @@ environment template or locally; provider module still throws until a
 legitimate credential lands. No DDL applied; no embeddings; no
 automatic publication or rejection.
 
+### 12.13 Milestone 3 — migration day + backlog triage + discovery recovery (2026-08-29)
+
+Milestone 3 re-probed the live database first (`inspect-live.ts`).
+Result: **no owner migration has been applied since the checkpoint** —
+0004, 0008, 0009, 0010 all still unapplied (behavior probes: missing
+seeds, missing `decided_by`/`decided_at`, reversible INSERT still
+stores `country = 'Tanzania'`). Counts unchanged: 170 pending /
+10 published / 5 rejected.
+
+**What this milestone delivered despite the closed gate**
+
+- Migration files 0004/0008/0009/0010 re-validated against the current
+  architecture: additive, idempotent (`on conflict do nothing`), no RLS
+  change, no backfill, no ordering hazards; exact owner actions are
+  recorded in `docs/NEXT_SESSION_HANDOFF.md` §H.
+- `scripts/discovery/triage-queue.ts` — new read-only operational tool
+  that prints the 170-row pending queue in the milestone's priority
+  order (buckets 1–8). Measured split: 20 actionable-looking
+  (heuristic), 13 scholarship/fellowship/grant/internship,
+  0 jobs, 0 admissions (seeds absent), 2 competition, 2
+  conference/tech-event, 127 ambiguous, 6 news-looking. Buckets 1 and 8
+  are labeled heuristic signals, never truth; the moderator remains the
+  authority.
+- Test-artifact census (Phase 7): 5 of the 10 published rows are
+  manual test rows (`regression-alpha`, `regression-bravo`, `hackkka`,
+  `hack`, `production-link-test-delete-me`). Identified, NOT deleted —
+  removal is a moderator rejection or owner decision.
+- Discovery BEFORE/AFTER measured honestly: dry-run (18 sources)
+  yields 122 valid candidates, 28 noise-filtered, 4 fetch failures
+  (ICT Commission, NM-AIST, UDSM, UDOM unreachable this run). Skipped
+  candidates: admissions 4 (DIT 2, VETA 2) + jobs 1 (YUNA) = 5. Since
+  no migration was applied, AFTER = BEFORE: **0 opportunities
+  recovered**; recovery is blocked exactly at the owner gate.
+- Quality evidence: real actionable candidates exist in the pending
+  pool (DIT/VETA admission calls, ERASMUS+ nominations, KPMG graduate
+  programme, funded fellowships), but the majority of institutional
+  site output remains navigation/institutional junk that survives the
+  noise gate — the queue, not discovery volume, is still the binding
+  constraint.
+
+**Production re-probed**: home/search/category (admissions + jobs +
+scholarship)/region filters 200; admissions and jobs filters render
+the honest empty state ("Nothing found"); published detail 200;
+pending detail 404; `/moderation` 307 → login; assistant GET 405,
+POST `{"mode":"disabled"}`. Security reconfirmed: anon sees 0
+non-published rows, 0 registry rows, 0 audit rows, and anon writes are
+filtered to nothing; service role remains confined to `scripts/`.
+
+**Stopped at the true owner boundary.** Exact owner action: in the
+Supabase SQL editor, apply in order `0004_admissions_category.sql`,
+`0010_jobs_category.sql`, `0008_country_evidence.sql`,
+`0009_moderation_attribution.sql` (each file is self-contained and
+idempotent), then re-run discovery and moderate the triage order.
+
 ---
 
 ## 13. Decision log
@@ -880,3 +934,4 @@ automatic publication or rejection.
 | 2026-08-29 | Final hardening milestone (§12.10): country fabrication stopped (null without evidence, field omitted pre-migration), silent 1,000-row dependence removed (explicit pagination/caps on dedupe, queue, published list, assistant), acquisition hardened (scheme/SSRF/redirect/size/timeout guards in one choke point), CI gated install→test→typecheck→lint→discovery with secrets only on the worker step; migrations 0008 (country), 0009 (attribution), 0010 (jobs seed) designed but NOT applied | The four remaining structural weaknesses closed without speculative machinery; owner-gated schema changes stay reversible and honest; the pipeline is production-safe regardless of migration timing |
 | 2026-08-29 | Product Milestone 1 (§12.11): real-DB baseline (185 rows, 170 pending) drove all decisions; four evidence-based extraction fixes (entity decoding, readable-slug rule, bare-URL title guard, 5 exact noise labels); zero new sources and zero reactivations — every probed candidate measured as junk/unreachable; no relevance heuristics, no metrics platform, no channel-type additions | Quality over row count: moderator throughput (170 pending) is the binding constraint, not discovery volume; every fix is deterministic, test-covered and preserves the pending-only/moderation-boundary invariants |
 | 2026-08-29 | Product Milestone 2 (§12.12): live-verified migration state (0004/0010 NOT applied — admissions/jobs candidates skipped loudly, 7 measured; 0008 NOT applied — DB default 'Tanzania' still live, proven by reversible INSERT probe); added moderation next-item navigation (pure selector + tie-break ordering); relevance hint DEFERRED (148/170 ambiguous rows — unreliable without opaque classifier); no DDL applied | Prior reports reconciled against the live DB, not trusted; only the one B-finding implemented; owner-gated migrations documented with measured product cost so the owner can act on evidence |
+| 2026-08-29 | Milestone 3 (§12.13): live re-probe showed ALL owner-gated migrations still unapplied; delivered read-only `triage-queue.ts` (priority-ordered 170-row backlog), test-artifact census (5 published test rows identified, not deleted), honest BEFORE=AFTER discovery measurement (0 recovered; 5 candidates/run still skipped), full battery + security + production re-verification; stopped at owner gate with exact SQL application order | No DDL without owner authorization; everything shippable without schema change was shipped; recovery math measured so the owner action's product payoff is quantified |
