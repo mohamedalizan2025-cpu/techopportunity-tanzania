@@ -908,6 +908,51 @@ idempotent), then re-run discovery and moderate the triage order.
 
 ---
 
+### 12.14 Milestone 4 — owner migration activation attempt (2026-08-29)
+
+Milestone 4 ("Owner Migration Activation + Live Recovery Verification")
+re-probed the live database before doing anything else (`inspect-live.ts`).
+Result, measured from live behavior — NOT filenames:
+
+- 0004 admissions: seed row ABSENT from live `categories` (10 seeds).
+- 0010 jobs: seed row ABSENT.
+- 0008 country: reversible INSERT probe with `country` omitted still
+  stores `'Tanzania'` — the 0001 default remains live (probe row deleted).
+- 0009 attribution: `decided_by`/`decided_at` both ABSENT (PostgREST
+  column errors).
+- 0005/0006/0007: all still absent, as expected.
+- Counts unchanged: 170 pending / 10 published / 5 rejected; all 185
+  rows still carry `country = 'Tanzania'` from the default.
+
+**Conclusion: no owner action has occurred since Milestone 3.** The
+milestone's activation phases (category recovery test, live discovery
+run, country-integrity verification, moderation-attribution trial) are
+all conditional on live migrations and therefore could NOT execute.
+Per the operating rule "do not apply DDL without owner authorization",
+the milestone STOPPED at the same owner boundary; the owner action is
+byte-for-byte unchanged from §12.13.
+
+**Locally-safe verification performed anyway:**
+
+- Full battery re-run: 176/176 tests, eslint clean, `tsc --noEmit`
+  clean, production build clean.
+- Production re-probed: home + category=admissions/jobs/scholarship/
+  hackathon + region + deadline filters all 200; admissions and jobs
+  render the honest empty state ("Nothing found"); published detail
+  200; pending detail 404; `/moderation` 307 → login; assistant POST
+  `{"mode":"disabled"}`.
+- Phase 10 honest answer: BEFORE = AFTER again. No material
+  improvement was possible because nothing was activated; the measured
+  cost remains 5 skipped candidates/run (4 admissions + 1 jobs).
+- 0005/0006/0007 re-assessment: no new product evidence justifies
+  them; they stay owner-gated and unapplied. AI remains disabled
+  (no provider credential).
+- Git: `github.com` remained unreachable from this machine (push of
+  the two Milestone 3 commits still blocked; local state safe, no
+  history rewrite, no force-push, no duplicate commits).
+
+---
+
 ## 13. Decision log
 
 | Date | Decision | Reason |
@@ -935,3 +980,4 @@ idempotent), then re-run discovery and moderate the triage order.
 | 2026-08-29 | Product Milestone 1 (§12.11): real-DB baseline (185 rows, 170 pending) drove all decisions; four evidence-based extraction fixes (entity decoding, readable-slug rule, bare-URL title guard, 5 exact noise labels); zero new sources and zero reactivations — every probed candidate measured as junk/unreachable; no relevance heuristics, no metrics platform, no channel-type additions | Quality over row count: moderator throughput (170 pending) is the binding constraint, not discovery volume; every fix is deterministic, test-covered and preserves the pending-only/moderation-boundary invariants |
 | 2026-08-29 | Product Milestone 2 (§12.12): live-verified migration state (0004/0010 NOT applied — admissions/jobs candidates skipped loudly, 7 measured; 0008 NOT applied — DB default 'Tanzania' still live, proven by reversible INSERT probe); added moderation next-item navigation (pure selector + tie-break ordering); relevance hint DEFERRED (148/170 ambiguous rows — unreliable without opaque classifier); no DDL applied | Prior reports reconciled against the live DB, not trusted; only the one B-finding implemented; owner-gated migrations documented with measured product cost so the owner can act on evidence |
 | 2026-08-29 | Milestone 3 (§12.13): live re-probe showed ALL owner-gated migrations still unapplied; delivered read-only `triage-queue.ts` (priority-ordered 170-row backlog), test-artifact census (5 published test rows identified, not deleted), honest BEFORE=AFTER discovery measurement (0 recovered; 5 candidates/run still skipped), full battery + security + production re-verification; stopped at owner gate with exact SQL application order | No DDL without owner authorization; everything shippable without schema change was shipped; recovery math measured so the owner action's product payoff is quantified |
+| 2026-08-29 | Milestone 4 (§12.14): live re-probe again showed ALL four owner-gated migrations unapplied (behavior probes, reversible INSERT included); activation phases could not run; battery 176/176 + production re-probes re-verified locally; BEFORE=AFTER unchanged; stopped at the same owner gate; GitHub push still network-blocked | Milestones cannot substitute for the owner's SQL-editor action; honest BEFORE=AFTER reported instead of fabricated recovery; no speculative work invented to fill the gap |

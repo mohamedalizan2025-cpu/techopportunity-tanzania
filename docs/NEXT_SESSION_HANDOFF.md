@@ -172,6 +172,13 @@ identified, not deleted), BEFORE=AFTER discovery measurement (0 recovered,
 5 candidates/run still skipped). See architecture.md §12.13. The owner
 action below is unchanged and is still the single highest-value step.
 
+Status update (same day, Milestone 4): re-probed again — STILL no owner
+action; all four migrations remain unapplied (behavior probes: seeds
+absent, `decided_by`/`decided_at` absent, reversible INSERT still stores
+`'Tanzania'`). Activation phases could not run; battery 176/176 and
+production probes re-verified locally; BEFORE=AFTER unchanged. See
+architecture.md §12.14. The owner action below remains exactly as stated.
+
 Why this one: every other candidate milestone multiplies off it. It ends
 measured silent data loss (7 candidates per run), makes country claims
 true at the storage layer, converts the dormant backlog into real
