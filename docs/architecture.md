@@ -953,6 +953,57 @@ byte-for-byte unchanged from §12.13.
 
 ---
 
+### 12.15 Milestone 7 — opportunity-first product implementation (2026-08-29)
+
+Milestone 7 deliberately moved past the migration audit loop (owner
+gates 0004/0010/0008/0009 remain open and unchanged) and implemented
+product UX work that does NOT depend on them. Architecture untouched;
+score holds at 9.7/10.
+
+**What shipped**
+
+- Opportunity-first homepage: hero now says "Find opportunities you can
+  apply for"; new "Browse by type" hub and "By deadline" quick links
+  give one-click discovery of type and urgency before the refinement
+  filters; the assistant panel sits below the discovery surface.
+- Live taxonomy mechanism (`lib/data/categories.ts`): the category hub
+  renders ONLY categories with a seeded row in the live `categories`
+  table (world-readable, anon client, read-only). Live probe: 10
+  categories resolve; `admissions`/`jobs` are correctly absent and will
+  appear automatically when 0004/0010 land — no hardcoded claim of an
+  absent category survives in the UI.
+- Country honesty gate (`lib/opportunity-presentation.ts`): while 0008
+  is unapplied, every stored country value is the unverified schema
+  default, so public cards and detail pages no longer render country at
+  all. Unknown fields stay neutral ("Location not specified", no
+  placeholder noise). Reintroduction point is a single function once
+  evidence exists.
+- Cards: category label promoted to a visible badge; meta line shows
+  organizer + recorded place only when verified.
+- Assistant shell copy now states its boundary ("Searches published
+  opportunities only — it never invents results or shows unpublished
+  records"). No provider change; still disabled in production.
+- Search/filter internals untouched: same `listPublishedOpportunities()`
+  path shared by browse UI and assistant; no second search engine.
+
+**Verification**: battery grew to 188/188 (12 new presentation-honesty
+tests), eslint + `tsc --noEmit` clean. `next build` remains
+ENVIRONMENT-BLOCKED on this machine (Turbopack pooled-process spawn
+"Access is denied", os error 5 — identical to Milestones 5–6, zero code
+involvement, classified not redesigned). Production probes (current
+deployment): home/category/deadline/region/search filters 200;
+published detail 200; pending detail 404; `/moderation` 307; assistant
+POST `{"mode":"disabled"}`; homepage HTML contains zero card meta
+lines claiming country "Tanzania" (hits were brand + Zanzibar region).
+
+**Not changed (deliberately)**: moderation, data-access architecture,
+RLS, assistant provider boundary, database semantics, news policy
+(pending rows stay invisible until moderated — no classifier, no news
+table). GitHub push still network-blocked (5th session); local history
+intact.
+
+---
+
 ## 13. Decision log
 
 | Date | Decision | Reason |
@@ -981,3 +1032,4 @@ byte-for-byte unchanged from §12.13.
 | 2026-08-29 | Product Milestone 2 (§12.12): live-verified migration state (0004/0010 NOT applied — admissions/jobs candidates skipped loudly, 7 measured; 0008 NOT applied — DB default 'Tanzania' still live, proven by reversible INSERT probe); added moderation next-item navigation (pure selector + tie-break ordering); relevance hint DEFERRED (148/170 ambiguous rows — unreliable without opaque classifier); no DDL applied | Prior reports reconciled against the live DB, not trusted; only the one B-finding implemented; owner-gated migrations documented with measured product cost so the owner can act on evidence |
 | 2026-08-29 | Milestone 3 (§12.13): live re-probe showed ALL owner-gated migrations still unapplied; delivered read-only `triage-queue.ts` (priority-ordered 170-row backlog), test-artifact census (5 published test rows identified, not deleted), honest BEFORE=AFTER discovery measurement (0 recovered; 5 candidates/run still skipped), full battery + security + production re-verification; stopped at owner gate with exact SQL application order | No DDL without owner authorization; everything shippable without schema change was shipped; recovery math measured so the owner action's product payoff is quantified |
 | 2026-08-29 | Milestone 4 (§12.14): live re-probe again showed ALL four owner-gated migrations unapplied (behavior probes, reversible INSERT included); activation phases could not run; battery 176/176 + production re-probes re-verified locally; BEFORE=AFTER unchanged; stopped at the same owner gate; GitHub push still network-blocked | Milestones cannot substitute for the owner's SQL-editor action; honest BEFORE=AFTER reported instead of fabricated recovery; no speculative work invented to fill the gap |
+| 2026-08-29 | Milestone 7 (§12.15): opportunity-first product pass — live-taxonomy category hub, deadline quick links, opportunity-first hero, country display suppressed pending 0008 evidence, assistant boundary copy; battery 188/188; no data-access, RLS or provider changes | The public UI must never claim categories the live DB lacks nor present schema-default country as verified; live-taxonomy mechanism auto-picks up 0004/0010 later without frontend churn |

@@ -179,6 +179,16 @@ absent, `decided_by`/`decided_at` absent, reversible INSERT still stores
 production probes re-verified locally; BEFORE=AFTER unchanged. See
 architecture.md §12.14. The owner action below remains exactly as stated.
 
+Status update (same day, Milestone 7): per the milestone directive the
+audit loop ended; product UX work that does NOT depend on the owner
+migrations shipped — opportunity-first homepage, live-taxonomy category
+hub (10 live categories resolve; admissions/jobs appear automatically
+once 0004/0010 land), deadline quick links, country display suppressed
+pending 0008 evidence, assistant boundary copy. Battery 188/188; build
+still environment-blocked (Turbopack os error 5); GitHub push still
+network-blocked. See architecture.md §12.15. The owner action below
+remains exactly as stated.
+
 Why this one: every other candidate milestone multiplies off it. It ends
 measured silent data loss (7 candidates per run), makes country claims
 true at the storage layer, converts the dormant backlog into real
