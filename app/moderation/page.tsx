@@ -135,6 +135,14 @@ export default async function ModerationPage({
                 ? "queue is empty"
                 : `${pending.length} awaiting review`}
             </p>
+            <p className="mt-1 text-sm">
+              <Link
+                href="/published-management"
+                className="font-medium text-zinc-600 underline underline-offset-2 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
+              >
+                Published records →
+              </Link>
+            </p>
           </div>
           <form action={logOutAction}>
             <button type="submit" className={signOutButtonClasses}>

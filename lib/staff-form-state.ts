@@ -27,3 +27,30 @@ export const initialDecisionState: DecisionState = {
   decidedTitle: null,
   decidedSlug: null,
 };
+
+/**
+ * Client-safe shared form-state module (no server-only imports).
+ *
+ * The published-management confirmation token lives here on purpose: the
+ * staff list page and its client control both need it, and importing it from
+ * lib/data/published-management would pull `next/headers` (via the Supabase
+ * auth server client) into the browser bundle.
+ */
+export const UNPUBLISH_CONFIRM_TOKEN = "unpublish" as const;
+
+/**
+ * Published-record management (Milestone 14). Deliberately narrower than
+ * DecisionState: an unpublish changes visibility only, so the only useful
+ * echo back to the staff member is WHICH record disappeared.
+ */
+export interface UnpublishState {
+  status: "idle" | "success" | "error";
+  message: string | null;
+  unpublishedId: string | null;
+}
+
+export const initialUnpublishState: UnpublishState = {
+  status: "idle",
+  message: null,
+  unpublishedId: null,
+};

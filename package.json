@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "npm run test:fixtures && npm run test:review && npm run test:assistant && npm run test:lifecycle && npm run test:acquisition && npm run test:presentation && npm run test:submit-taxonomy && npm run test:triage && npm run test:queue-filter",
+    "test": "npm run test:fixtures && npm run test:review && npm run test:assistant && npm run test:lifecycle && npm run test:acquisition && npm run test:presentation && npm run test:submit-taxonomy && npm run test:triage && npm run test:queue-filter && npm run test:published-management",
     "test:fixtures": "tsx scripts/discovery/test-fixtures.ts",
     "test:review": "tsx tests/moderation-review.test.ts",
     "test:assistant": "tsx tests/assistant.test.ts",
@@ -16,7 +16,8 @@
     "test:presentation": "tsx tests/presentation.test.ts",
     "test:submit-taxonomy": "tsx tests/submit-taxonomy.test.ts",
     "test:triage": "tsx tests/triage-bucket.test.ts",
-    "test:queue-filter": "tsx tests/queue-filter.test.ts"
+    "test:queue-filter": "tsx tests/queue-filter.test.ts",
+    "test:published-management": "tsx tests/published-management.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
