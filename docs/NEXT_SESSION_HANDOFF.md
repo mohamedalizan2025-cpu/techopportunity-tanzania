@@ -2,68 +2,63 @@
 
 STOP/FREEZE note. This is the single authoritative document for resuming
 work next session. It is not a redesign and not a feature plan. Git state
-and the safety battery below were re-run on **2026-08-30** (Milestone 10);
-live data counts come from the last real DB probe (2026-08-29) plus the
-verified Milestone-8/9 runs — re-confirm with
+and the safety battery below were re-run on **2026-08-30** (Milestone 11);
+live data counts come from a fresh read-only DB probe on 2026-08-30
+(213/198/10/5) — re-confirm with
 `scripts/discovery/inspect-live.ts` before acting on any number.
 
 ---
 
 ## A. Current Git HEAD
-Tip of `main` / `origin/main` is the Milestone-10 docs commit sitting on
+Tip of `main` / `origin/main` is the Milestone-11 docs commit sitting on
 top of:
+- `feat(moderation): server-side queue view filters` (Milestone-11 code)
+- `60c739b` docs: Milestone 10 record
 - `a34e38e` feat(moderation): evidence-first review, triage hints,
-  live-taxonomy categories (the Milestone-10 code commit)
-- `e64fe93` docs: Milestone 9 record
+  live-taxonomy categories (Milestone-10 code)
 
 ## B. Branch / origin synchronization
 - Branch `main`, **in sync** with `origin/main` (ahead 0, behind 0) after
-  the Milestone-10 push.
+  the Milestone-11 push.
 - No force-push, no history rewrite, no duplicate checkpoint commits.
 
 ## C. Latest completed milestone
-**Milestone 10 — moderation throughput + opportunity quality.** Product
-(display-layer) work only. Architecture review CLOSED, score holds 9.7/10
-— do not reopen without new structural evidence.
+**Milestone 11 — real moderation experience + targeted filtering.**
+Product (display-layer) work only. Architecture review CLOSED, score
+holds 9.7/10 — do not reopen without new structural evidence.
 
-## D. What WAS implemented (Milestone 10)
-- **Queue (`/moderation`)**: triage bucket badge per row (port of the CLI
-  triage buckets, `lib/triage-bucket.ts`), "suggested high-value record"
-  entry link, honesty footnote for the two starred heuristic buckets
-  (actionable-looking / news-like). Queue order itself unchanged
-  (deterministic `created_at`).
-- **Review (`/moderation/[id]`)**: evidence-first layout replacing the
-  duplicated public detail render — prominent official-page link +
-  discovery provenance block + honesty note first; "as discovered" facts;
-  known-from-source vs unknown hints on every enrichment field (from
-  defaultValue only — nothing inferred); sticky decision bar (`form=`
-  attribute); "Item X of Y" position pill via a single queue read;
-  success panel's next-record link autoFocused (Enter-driven flow).
-  Approve AND reject both lead to the next pending record.
-- **Category**: select now driven by the live taxonomy
-  (`listReviewCategoryOptions` → pure `reviewCategoryOptions`); unseeded
-  slugs never offered; record's own category always reviewable; foreign
-  slugs dropped; falls back to the record's own category if the table is
-  unreadable. Adopts 0004/0010 automatically when they land.
-- **New tests**: `tests/triage-bucket.test.ts` (29 contract tests:
-  buckets, heuristic honesty, suggestion stability, taxonomy honesty),
-  wired into the `npm test` chain.
-- **Audited, UNCHANGED**: `parseReviewInput`, `decideOpportunityAction`
-  (double pending guard, reject = status-only, approve = validated write,
-  provenance never read from form), RLS, migrations, secrets.
-- Safety battery this freeze: tests **223/223**, lint clean, tsc clean
-  (standard + fresh-checkout ci-check). Build: known Turbopack os error 5
-  — environment-blocked, not redesigned.
+## D. What WAS implemented (Milestone 11, on top of Milestone 10)
+- **Live re-probe replaced estimates**: 213 total / 198 pending / 10
+  published / 5 rejected (sum closes); 79% of records are category
+  `other`; top 5 sources hold ~half the queue; live categories remain
+  the 10 seeded rows (0004/0010 still absent).
+- **Queue view filters** (`?bucket=1..8`, `?source=<name>`): server-side
+  URL params over the SAME deterministic staff-only pending read — chip
+  row for triage buckets (with counts), collapsible source list, "All" /
+  "Clear filter", filtered empty state. Pure `parseQueueFilter` is
+  hostile-input-safe; buckets reuse `triageBucketOf` (no second score).
+- **Filter carry-forward**: `getQueueNavigation(id, filter)` computes
+  position + next WITHIN the filtered batch ("Item X of Y in this
+  filter"); back-to-queue and next-record links keep the filter;
+  end-of-batch has no fallthrough to hidden rows. `DecisionForm` takes
+  server-built `nextHref`/`queueHref`.
+- **New tests**: `tests/queue-filter.test.ts` (30 contract tests),
+  wired into `npm test`.
+- **Milestone 10 stands**: evidence-first review, known/unknown hints,
+  sticky decisions, Enter-driven next record, live-taxonomy select,
+  suggested entry, triage badges (all unchanged and still tested).
+- Safety battery this freeze: tests **253/253**, lint clean, tsc clean
+  (standard + fresh-checkout ci-check).
 
-## E. What was DELIBERATELY NOT implemented
-- No auto-approve / auto-reject / bulk decisions of any kind. Triage is a
-  prioritization hint only.
-- No inferred unknown values; no eligibility guessing; no fabricated
-  evidence; no provenance semantics change; no scraping from the
-  moderation UI.
-- No schema/migration changes; no fake admissions/jobs seeds.
-- No queue reordering (suggestion is an entry point, not a reshuffle).
-- No public write path, no new API route, no new env var/secret.
+## E. What was DELIBERATELY NOT implemented (Milestone 11)
+- No DB-side filter engine, no client JS state, no keyword/location/
+  deadline filters — the data justified exactly two filters; more would
+  turn the queue into a dashboard.
+- No auto-approve / auto-reject / bulk decisions; filters are views,
+  never verdicts; heuristic buckets stay starred.
+- No deletion of the published test artifacts (mutation boundary).
+- No inferred unknown values; no schema/migration changes; no new
+  secrets/env vars/API routes/external integrations.
 
 ## F. Live migration / taxonomy state (owner-gated)
 - Migrations **0004** (admissions), **0010** (jobs), **0008** (drop
@@ -82,22 +77,24 @@ top of:
 - Milestone-9 validation run (exact CI command, 2026-08-30): 18/18 ok,
   0 errors, 215 candidates → 0 inserted (177 duplicates skipped —
   everything discoverable today is already queued), ~49s wall time.
-- Estimated DB now: ~213 total / ~198 pending. **Re-verify with
-  `inspect-live.ts`.**
-- **GitHub-side proof still pending**: as of the M10 freeze no new
-  Discovery sync run existed since Milestone 9 (runs #1–#3 all failed at
-  typecheck pre-fix). CI fix is pushed and locally verified; the green
-  run is expected at the 2026-08-31 03:00 UTC cron or an owner dispatch.
+- Live DB (re-probed 2026-08-30, M11): **213 total / 198 pending /
+  10 published / 5 rejected.**
+- **GitHub-side proof still pending**: latest runs are still #1–#3 (all
+  pre-fix typecheck failures). CI fix is pushed and locally verified;
+  the green run is expected at the 2026-08-31 03:00 UTC cron or an owner
+  dispatch.
 
 ## H. Current moderation state
-- Pending backlog ~198 rows; moderation throughput is THE binding
-  constraint. Milestone 10 shortened the per-record path:
-  evidence visible immediately, decisions sticky, next record one Enter.
-- Next-in-queue navigation preserved and improved; NO bulk actions
+- Pending backlog 198 rows (live-confirmed); moderation throughput
+  remains THE binding constraint. M10 shortened the per-record path;
+  M11 added batch navigation (bucket + source filters with
+  carry-forward) so like records clear like one walk-through.
+- Next-in-queue navigation preserved and filter-aware; NO bulk actions
   (attribution needs 0009 anyway).
-- ~5 published test artifacts (`regression-*`, `hack*`,
-  `production-link-test-delete-me`) still need owner/moderator cleanup —
-  deliberately not touched.
+- 10 published rows include ~5 loudly-titled test artifacts
+  (`regression-*`, `hack*`, `production-link-test-delete-me`) — no
+  moderator-facing published-record management exists yet; removal is
+  an owner decision (bulk mutation boundary).
 
 ## I. Current AI state
 - **Disabled.** Runtime gated by `ASSISTANT_ENABLED`/provider credential,
@@ -106,15 +103,15 @@ top of:
 
 ## J. Known production state
 - Production (https://techopportunity-tanzania.vercel.app) deploys from
-  `origin/main`; M7–M10 become live as Vercel redeploys. **Verify at
+  `origin/main`; M7–M11 become live as Vercel redeploys. **Verify at
   session start**: homepage live-taxonomy hub (M7), `/moderation`
-  staff-gated with the new evidence-first review (M10), and the next
-  Discovery sync cron green (M9).
+  staff-gated with filter chips (M11), and the next Discovery sync cron
+  green (M9).
 
 ## K. Known environment problems
 - `next build` **environment-blocked**: Turbopack pooled-process spawn
   "Access is denied" (os error 5), machine-level, unrelated to code, seen
-  Milestones 5–10. Attempt once, classify, move on. CI gates on
+  Milestones 5–11. Attempt once, classify, move on. CI gates on
   install→test→tsc→lint→discovery, NOT on `next build`.
 - `gh` CLI is NOT installed; read-only GitHub inspection works through
   unauthenticated REST (`api.github.com`, repo is public). Forensics
@@ -138,12 +135,12 @@ top of:
 
 ## M. Exact FIRST task for the next session
 > **Confirm the Discovery sync workflow ran green on GitHub (cron run of
-> 2026-08-31 03:00 UTC or an owner dispatch). Then continue PRODUCT work:
-> the actual moderation of the ~198-row queue is now owner/moderator
-> work; the next engineering milestone is whatever the moderation
-> experience still lacks (candidates: per-bucket queue filtering,
-> deadline visibility in the queue rows, or enrichment prefill rules the
-> owner explicitly approves).**
+> 2026-08-31 03:00 UTC or an owner dispatch). Then get REAL moderator
+> usage of the filtered queue — the next friction list must come from
+> actual review sessions, not more speculative UI. Likely candidates
+> once moderation is in motion: published-record management (cleaning
+> the test artifacts) and queue pagination past the 500-row cap (still
+> far away at 198).**
 
 Concretely: fetch `/actions/workflows/343653332/runs?per_page=3`; if the
 newest run is green with a `discover` step that reached the worker,
@@ -172,15 +169,17 @@ new forensics round ONLY if the next workflow run fails again.
 
 ---
 
-## Freeze record (this session, 2026-08-30, Milestone 10)
+## Freeze record (this session, 2026-08-30, Milestone 11)
 - Git: `main` pushed to `origin/main`; working tree clean; one code
-  commit (`a34e38e`) + one docs commit on top of `e64fe93`.
-- Tests 223/223; lint clean; typecheck clean (standard + fresh-checkout
+  commit + one docs commit on top of the M10 tip.
+- Tests 253/253; lint clean; typecheck clean (standard + fresh-checkout
   ci-check); build environment-blocked (Turbopack os error 5); pre-push
   L3 deep security review run per policy.
 - Security pass: moderation staff-gated, zero SERVICE_ROLE references
-  outside `scripts/discovery`, no new write path / env var / secret /
-  external integration; decision semantics unchanged.
+  outside `scripts/discovery`, filter code is pure/read-only/view-only;
+  no new write path / env var / secret / external integration;
+  decision semantics unchanged.
+- Live DB probes were READ-ONLY (count + slug selects); no rows touched.
 - `.env.local` ignored + untracked; no temp/probe files tracked.
 - **No migration, no schema change, no auto-decision logic, no bulk
   action was introduced.** Repository frozen for an exact, safe restart
