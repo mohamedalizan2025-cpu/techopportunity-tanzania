@@ -1,5 +1,6 @@
 import type { Opportunity, OpportunityCategory } from "../types";
 import { OPPORTUNITY_CATEGORIES } from "../types";
+import { triageBucketOf, type TriageBucket } from "../triage-bucket";
 import { createSupabaseAuthServerClient } from "./supabase-auth";
 import {
   OPPORTUNITY_SELECT,
@@ -128,6 +129,86 @@ export async function getNextPendingId(currentId: string): Promise<string | null
   return nextPendingAfter(pending.map((o) => o.id), currentId);
 }
 
+/**
+ * Queue filter (Milestone 11): a server-side VIEW filter over the same
+ * deterministic pending list. It never changes what is pending, never
+ * hides records from other views, and never affects decision logic —
+ * the moderator can always clear it. Triage buckets remain prioritization
+ * hints; filtering by a hint is batch navigation, not automated judgment.
+ */
+export interface QueueFilter {
+  bucket: TriageBucket | null;
+  sourceName: string | null;
+}
+
+export const EMPTY_QUEUE_FILTER: QueueFilter = { bucket: null, sourceName: null };
+
+const MAX_SOURCE_PARAM_LENGTH = 120;
+
+function firstParam(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+/** Pure, hostile-input-safe parser for queue filter search params. */
+export function parseQueueFilter(
+  raw: Record<string, string | string[] | undefined>
+): QueueFilter {
+  let bucket: TriageBucket | null = null;
+  const bucketRaw = firstParam(raw.bucket);
+  if (bucketRaw !== null && /^[1-8]$/.test(bucketRaw)) {
+    bucket = Number(bucketRaw) as TriageBucket;
+  }
+  let sourceName: string | null = null;
+  const sourceRaw = firstParam(raw.source);
+  if (sourceRaw !== null) {
+    const trimmed = sourceRaw.trim();
+    if (trimmed !== "" && trimmed.length <= MAX_SOURCE_PARAM_LENGTH) {
+      sourceName = trimmed;
+    }
+  }
+  return { bucket, sourceName };
+}
+
+export function isQueueFilterEmpty(filter: QueueFilter): boolean {
+  return filter.bucket === null && filter.sourceName === null;
+}
+
+/** Pure predicate: both active conditions must match (AND). */
+export function matchesQueueFilter(
+  opportunity: Pick<Opportunity, "category" | "title" | "sourceName">,
+  filter: QueueFilter
+): boolean {
+  if (
+    filter.bucket !== null &&
+    triageBucketOf(opportunity.category, opportunity.title) !== filter.bucket
+  ) {
+    return false;
+  }
+  if (filter.sourceName !== null && (opportunity.sourceName ?? null) !== filter.sourceName) {
+    return false;
+  }
+  return true;
+}
+
+/** Deterministic order preserved — filtering only removes rows. */
+export function filterPendingQueue(
+  items: Opportunity[],
+  filter: QueueFilter
+): Opportunity[] {
+  if (isQueueFilterEmpty(filter)) return items;
+  return items.filter((item) => matchesQueueFilter(item, filter));
+}
+
+/** Query suffix ("" or "?a=b&c=d") to carry a filter across navigation. */
+export function queueFilterQuery(filter: QueueFilter): string {
+  const params = new URLSearchParams();
+  if (filter.bucket !== null) params.set("bucket", String(filter.bucket));
+  if (filter.sourceName !== null) params.set("source", filter.sourceName);
+  const query = params.toString();
+  return query === "" ? "" : `?${query}`;
+}
+
 export interface QueueNavigation {
   /** 1-based position in the rendered queue order; null when the record
    *  is not in the rendered window (e.g. beyond the explicit cap). */
@@ -136,23 +217,38 @@ export interface QueueNavigation {
   nextId: string | null;
 }
 
+/** Pure core of getQueueNavigation, over an already-ordered id list. */
+export function queueNavigationFromIds(
+  pendingIds: string[],
+  currentId: string
+): QueueNavigation {
+  const index = pendingIds.indexOf(currentId);
+  return {
+    position: index === -1 ? null : index + 1,
+    total: pendingIds.length,
+    nextId: nextPendingAfter(pendingIds, currentId),
+  };
+}
+
 /**
  * One queue read serving both the position indicator and the next-in-queue
- * link (same deterministic order as the rendered queue). Read-only,
- * staff-only; a non-pending or unknown id yields position null.
+ * link (same deterministic order as the rendered queue). When a filter is
+ * active, position and next are computed WITHIN the filtered view so the
+ * moderator can finish a batch without leaving it. Read-only, staff-only;
+ * a non-pending or unknown id yields position null.
  */
-export async function getQueueNavigation(currentId: string): Promise<QueueNavigation> {
+export async function getQueueNavigation(
+  currentId: string,
+  filter: QueueFilter = EMPTY_QUEUE_FILTER
+): Promise<QueueNavigation> {
   if (!isValidOpportunityId(currentId)) {
     return { position: null, total: 0, nextId: null };
   }
   const pending = await listPendingOpportunities();
-  const ids = pending.map((o) => o.id);
-  const index = ids.indexOf(currentId);
-  return {
-    position: index === -1 ? null : index + 1,
-    total: pending.length,
-    nextId: nextPendingAfter(ids, currentId),
-  };
+  return queueNavigationFromIds(
+    filterPendingQueue(pending, filter).map((o) => o.id),
+    currentId
+  );
 }
 
 export async function listPendingOpportunities(): Promise<Opportunity[]> {

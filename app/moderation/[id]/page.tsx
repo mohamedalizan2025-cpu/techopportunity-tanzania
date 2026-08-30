@@ -8,8 +8,11 @@ import {
   getModerationAccess,
   getPendingOpportunityById,
   getQueueNavigation,
+  isQueueFilterEmpty,
   isValidOpportunityId,
   listReviewCategoryOptions,
+  parseQueueFilter,
+  queueFilterQuery,
 } from "@/lib/data/moderation";
 import { listOrganizationOptions } from "@/lib/data/opportunities";
 import { formatLocationDisplay } from "@/lib/opportunity-presentation";
@@ -23,10 +26,16 @@ export const metadata: Metadata = {
 
 interface ReviewPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function ModerationReviewPage({ params }: ReviewPageProps) {
+export default async function ModerationReviewPage({ params, searchParams }: ReviewPageProps) {
   const { id } = await params;
+  // Queue view filter (bucket/source), carried forward from the queue link
+  // so "next in queue" stays inside the batch the moderator chose.
+  const filter = parseQueueFilter(await searchParams);
+  const filterQuery = queueFilterQuery(filter);
+  const queueHref = `/moderation${filterQuery}`;
   const access = await getModerationAccess();
 
   if (!access.ok) {
@@ -60,7 +69,7 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
           Submission not found
         </h1>
         <Link
-          href="/moderation"
+          href={queueHref}
           className="text-sm font-medium underline underline-offset-4 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
         >
           ← Back to queue
@@ -82,7 +91,7 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
           have been reviewed.
         </p>
         <Link
-          href="/moderation"
+          href={queueHref}
           className="text-sm font-medium underline underline-offset-4 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
         >
           ← Back to queue
@@ -93,7 +102,8 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
 
   const organizations = await listOrganizationOptions();
   const auditStatus = await getEnrichmentAuditStatus();
-  const navigation = await getQueueNavigation(id);
+  const navigation = await getQueueNavigation(id, filter);
+  const nextHref = navigation.nextId ? `/moderation/${navigation.nextId}${filterQuery}` : null;
   const categoryOptions = await listReviewCategoryOptions(
     opportunity.category,
     categoryLabel
@@ -117,7 +127,7 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
-              href="/moderation"
+              href={queueHref}
               className="text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
             >
               ← Moderation queue
@@ -125,6 +135,7 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
             {navigation.position !== null ? (
               <span className="rounded-full border border-black/[.08] bg-white px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400">
                 Item {navigation.position} of {navigation.total}
+                {isQueueFilterEmpty(filter) ? "" : " in this filter"}
               </span>
             ) : null}
           </div>
@@ -238,7 +249,8 @@ export default async function ModerationReviewPage({ params }: ReviewPageProps) 
             <DecisionForm
               opportunity={opportunity}
               organizations={organizations}
-              nextPendingId={navigation.nextId}
+              nextHref={nextHref}
+              queueHref={queueHref}
               categoryOptions={categoryOptions}
             />
           </div>
