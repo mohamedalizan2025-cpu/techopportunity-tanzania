@@ -2,34 +2,37 @@
 
 STOP/FREEZE note. This is the single authoritative document for resuming
 work next session. It is not a redesign and not a feature plan. Git state
-and the safety battery below were re-run on **2026-08-30** (Milestone 14);
+and the safety battery below were re-run on **2026-08-30** (Milestone 15);
 live data counts come from a fresh read-only DB probe on 2026-08-30
 (213/198/10/5) — re-confirm with
 `scripts/discovery/inspect-live.ts` before acting on any number.
+**Caution (M15)**: `inspect-live.ts` contains a reversible INSERT+DELETE
+schema probe — use read-only selects unless the owner explicitly asks for
+that probe.
 
 ---
 
 ## A. Current Git HEAD
-Tip of `main` / `origin/main` is the Milestone-14 docs commit sitting on
-top of the Milestone-14 code commit (staff-only published-record
-management), then:
+Tip of `main` / `origin/main` is the Milestone-15 docs commit (session
+attempt + supply-ceiling measurement, no code) sitting on the Milestone-14
+pair (`c099972` code, `46bca13` docs), then:
 - `0b5574e` docs: Milestone 13 owner-gate activation pass
 - `6c01f87` docs: Milestone 12 verification pass
 - `7e792f4` docs: Milestone 11 record
-- `1f352e7` feat(moderation): server-side queue view filters
 
 ## B. Branch / origin synchronization
 - Branch `main`, **in sync** with `origin/main` (ahead 0, behind 0) after
-  the Milestone-14 push.
+  the Milestone-15 push.
 - No force-push, no history rewrite, no duplicate checkpoint commits.
 
 ## C. Latest completed milestone
-**Milestone 14 — published-record management + public trust cleanup.**
-The first mutation-capable staff surface since moderation, built inside
-the existing authorization boundary and with zero DDL. It ships the
-CONTROL; the actual cleanup of the test artifacts is the owner's
-per-record decision. Architecture review CLOSED, score holds 9.7/10 —
-do not reopen without new structural evidence.
+**Milestone 15 — first real moderation/trust session ATTEMPT.** It could
+not happen: no staff session exists in this environment and none was
+simulated. What it produced instead is the most important measurement of
+the project so far — a **supply ceiling**: no record in the product has
+deadline evidence (see section H). Verification-only milestone: no code
+written, no data modified, no migration touched. Architecture review
+CLOSED, score holds 9.7/10.
 
 ## D. What WAS implemented (Milestone 14, on top of Milestones 11–13)
 - **Staff-only `/published-management`** (new route, `noindex`): lists
@@ -83,7 +86,15 @@ do not reopen without new structural evidence.
 - Safety battery this freeze: tests **253/253**, lint clean, tsc clean
   (standard + fresh-checkout ci-check).
 
-## E. What was DELIBERATELY NOT implemented (Milestones 11–14)
+## E. What was DELIBERATELY NOT implemented (Milestones 11–15)
+- **Milestone 15**: NO record unpublished (no staff session existed), no
+  simulated/faked session, no new moderation UI, no redesign of the
+  existing queue, no speculative efficiency numbers, no source added or
+  removed on anecdotal evidence, no deadline "fix" invented for the
+  supply ceiling, no AI activation, no migration applied. The one
+  suspected post-unpublish UI quirk (the success message may not render
+  because the row leaves the list on revalidation) was deliberately NOT
+  touched — unobservable without a session and speculation to fix.
 - **Milestone 14**: NO record was unpublished — cleanup is the owner's
   per-record decision, not an autonomous batch. No new status, no
   migration, no delete path, no re-publish path, no bulk action, no
@@ -103,7 +114,8 @@ do not reopen without new structural evidence.
 ## F. Live migration / taxonomy state (owner-gated)
 - Migrations **0004** (admissions), **0010** (jobs), **0008** (drop
   `'Tanzania'` country default), **0009** (moderation attribution) —
-  all **ABSENT** (last live-verified 2026-08-29), owner action required.
+  all **ABSENT** (re-verified by live behavior probes 2026-08-30 in
+  Milestone 15), owner action required.
 - Live `categories` table has exactly **10** rows. `admissions`/`jobs`
   are NOT seeded; discovery skips them loudly; submit form, homepage hub
   AND the moderation category select all hide them until 0004/0010 land
@@ -113,65 +125,120 @@ do not reopen without new structural evidence.
   only when the moderator supplies it.
 
 ## G. Current discovery state
-- Registry `opportunity_sources`: 29 rows, 18 active. Pipeline unchanged.
+- Registry `opportunity_sources`: 29 rows, 18 active. Every active source
+  has succeeded at least once (`last_success_at` set, `last_error` null).
+  Two transient fetch failures on 2026-08-30: Bank of Tanzania, Youth of
+  UNATA.
 - Milestone-9 validation run (exact CI command, 2026-08-30): 18/18 ok,
   0 errors, 215 candidates → 0 inserted (177 duplicates skipped —
   everything discoverable today is already queued), ~49s wall time.
-- Live DB (re-probed 2026-08-30, M11): **213 total / 198 pending /
-  10 published / 5 rejected.**
+- Live DB (re-probed 2026-08-30, M11 + M15): **213 total / 198 pending /
+  10 published / 5 rejected / 0 expired** — unchanged, no drift.
+- **M15 read-only dry-run** (`scripts/discovery/dry-run.ts`, writes
+  nothing): 18 sources → 20 fetches, 2 failures, **147 valid candidates,
+  0 with explicit location, 0 with deadline, 0 with both, 147 with
+  neither**, 29 obvious section labels noise-filtered. This is the
+  primary evidence for the deadline ceiling in section H.
+- **Latent 0004/0010 recovery, measured WITHOUT applying them**: 5 of the
+  147 live candidates propose `admissions` (4) or `jobs` (1); today
+  `runner.ts` counts them `categorySkipped` because no seed row exists.
+  They would be captured by the first run after the owner applies 0004 +
+  0010 — a real, if small, expected yield, not an estimate.
 - **GitHub-side proof still pending**: latest runs are still #1–#3 (all
-  pre-fix typecheck failures; re-checked M12 + M13 + M14, 2026-08-30 — no
-  new run yet). No dispatch credential exists here. The green run is
-  expected at the 2026-08-31 03:00 UTC cron or an owner dispatch.
-- **M12 behavior probes (2026-08-30)**: 0004 NOT applied (no
-  `admissions` row), 0010 NOT applied (no `jobs` row), 0008 NOT applied
-  (all 213 rows still carry `country='Tanzania'`, 0 NULL — the count of
-  historical default rows if/when 0008 lands), 0009 NOT applied
-  (`decided_by` column absent), 0003 applied (audit table live).
+  pre-fix failures; re-checked M12 + M13 + M14 + M15, 2026-08-30 — no new
+  run yet). Run #3 step detail: Install ✓, Tests ✓, **Typecheck ✗**, Lint
+  and the discovery worker skipped — the failure is the known pre-fix
+  typecheck, NOT a discovery defect. No dispatch credential exists here;
+  the green run is expected at the 2026-08-31 03:00 UTC cron or an owner
+  dispatch.
+- **M12 + M15 behavior probes agree (2026-08-30)**: 0004 NOT applied (no
+  `admissions` row among the 10 live category slugs), 0010 NOT applied
+  (no `jobs` row), 0008 NOT applied (all 213 rows still carry
+  `country='Tanzania'`, 0 NULL — the count of historical default rows
+  if/when 0008 lands), 0009 NOT applied (`select decided_by` → "column
+  opportunities.decided_by does not exist"), 0003 applied (audit table
+  live, 0 status audit rows).
 
 ## H. Current moderation state
-- Pending backlog 198 rows (live-confirmed); moderation throughput
-  remains THE binding constraint. M10 shortened the per-record path;
-  M11 added batch navigation (bucket + source filters with
+- Pending backlog 198 rows (live-confirmed). M10 shortened the per-record
+  path; M11 added batch navigation (bucket + source filters with
   carry-forward) so like records clear like one walk-through.
-- **M12 quality measurement of the 198 pending rows** (exact triage
-  regexes, read-only): 31 high-value + 3 hack/comp + 2 event/training +
-  21 actionable* = **57 candidates worth reviewing first**; 135
-  ambiguous + 6 news-like*. Best sources: OpportunitiesForAfricans
-  (17 high-value / 25), OpportunityDesk (10/20), Youth of UNATA (11/14),
-  SUZA (5/15); worst yield: NMAIST (1 actionable of 36 — 35 ambiguous
-  nav fragments like "Monetary Policy", "Quick Links").
+- **M15 refuted part of the earlier claim that "moderation throughput is
+  THE binding constraint".** Effort is a constraint, but there is a hard
+  supply ceiling underneath it: **198/198 pending rows have
+  `deadline = NULL`**. Persistence is NOT the bug — `runner.ts`
+  `buildPendingRow` does write `deadline`, and `enrich.ts` re-derives it
+  from JSON-LD. The gap is upstream: `extract.ts` deliberately reads a
+  deadline only from explicit typed evidence
+  (`applicationDeadline → registrationDeadline → validThrough`) and
+  never infers one from `startDate`/`endDate`/`pubDate` (fixture-tested
+  behaviour). Honest policy, so the cost shows up as NULL.
+- **What that means for the KPI, measured with the production
+  derivations** (`lib/lifecycle.ts` `deriveLifecycleState`, real
+  `lib/triage-bucket.ts`): the 10 published rows are 1 active / 2
+  expired / 7 unknown, and the one active row is a test artifact →
+  **0 legitimate published records are currently provably actionable by
+  deadline**. Of the 57 first-review pending rows (buckets 1–6),
+  **active = 0, unknown = 57** → *a perfect first session can publish at
+  most 0 provably-live items without reading each source page.*
+- **M12/M15 triage distribution of the 198** (real library, read-only):
+  bucket 1 looks-actionable 21, bucket 2 high-value 31, bucket 5
+  hackathon/competition 3, bucket 6 event/training 2, bucket 7 ambiguous
+  135, bucket 8 news-like 6 (= 198). Non-ambiguous yield by source:
+  OpportunitiesForAfricans 17/25, Youth of UNATA 11/14, OpportunityDesk
+  10/20, SUZA 5/15, DIT 4/16, VETA 4/10; worst NMAIST 1/36 (35 ambiguous
+  nav fragments). No source was added or removed on this evidence.
 - Next-in-queue navigation preserved and filter-aware; NO bulk actions
   (attribution needs 0009 anyway).
 - 10 published rows include 5 loudly-titled test artifacts identified by
   exact title (`PRODUCTION LINK TEST — DELETE ME`, `REGRESSION Alpha`,
   `REGRESSION Bravo`, `hack`, `hackkka`) plus a Swahili news headline;
-  all 5 artifacts have `opportunity_sources` = null (manual test writes,
-  not discovery output).
+  M15 re-confirmed by id/slug/date: **all five artifacts have
+  `opportunity_sources` = null and 2026-08-26 timestamps, while the five
+  legitimate rows are source-linked 2026-08-27 discovery output** — the
+  cleanup target set is unambiguous.
 - **M14 shipped the missing control surface**: `/published-management`
   (staff-only, one confirmed unpublish per row, `published → rejected`).
   Using it is still the owner's per-record decision and requires a real
-  staff session — no record has been unpublished by engineering.
+  staff session — **no record has been unpublished by engineering, and
+  none was simulated in M15**.
+- **Staff account state (M15)**: `profiles` holds exactly one row, `role
+  = 'moderator'`, which satisfies both authorization layers — the app
+  check `["moderator","admin"]` (`lib/data/moderation.ts`) and SQL
+  `is_staff()` (`role in ('admin','moderator')`, 0001). So gate L5 is a
+  credential/session handoff, not a provisioning defect.
 
 ## I. Current AI state
-- **Disabled.** Runtime gated by `ASSISTANT_ENABLED`/provider credential,
-  which do not exist. Do not activate until moderation + taxonomy gates
-  clear and the owner supplies a provider credential.
+- **Disabled, and confirmed disabled in production** (M15): no provider
+  or assistant vars exist in this environment (names audited, values
+  never printed), and `POST /api/assistant/ask` returns
+  `{"mode":"disabled"}`. Do not activate until moderation + taxonomy
+  gates clear, the published corpus is trustworthy, and the owner
+  supplies a provider credential — M15's supply-ceiling finding moves
+  AI further away, not closer.
 
 ## J. Known production state
 - Production (https://techopportunity-tanzania.vercel.app) deploys from
-  `origin/main`; M7–M14 become live as Vercel redeploys. **Verify at
-  session start**: homepage live-taxonomy hub (M7), `/moderation`
-  staff-gated with filter chips (M11), unauthenticated
-  `/published-management` → login redirect (M14), and the next Discovery
-  sync cron green (M9). Staff INTERACTION with the new surface is
-  unverified until a real staff session exists — do not claim otherwise.
+  `origin/main`; M7–M14 are live. **M15 verified unauthenticated**:
+  `/published-management` → 307 `/login?next=%2Fpublished-management`,
+  `/moderation` → 307, published detail 200, pending detail 404,
+  rejected detail 404, category filters render, assistant disabled.
+- **The cleanup baseline is armed.** As of 2026-08-30 all five artifact
+  detail pages return 200 and their exact titles are still present in
+  the HTML of `/`, `?category=hackathon`, `?category=competition`,
+  `?category=fellowship`, `?category=scholarship` and `?sort=newest`
+  (needle list recorded in the M15 freeze record). After the owner
+  unpublishes them, the same fetches must show every needle gone and
+  nothing else changed.
+- Staff INTERACTION with `/published-management` and the moderation queue
+  remains unverified — no staff session existed and none was simulated.
 
 ## K. Known environment problems
 - `next build` **environment-blocked**: Turbopack pooled-process spawn
   "Access is denied" (os error 5), machine-level, unrelated to code, seen
-  Milestones 5–14. Attempt once, classify, move on. CI gates on
-  install→test→tsc→lint→discovery, NOT on `next build`.
+  Milestones 5–15. Attempt once, classify, move on; the successful
+  Vercel production build of the same commit is the substitute proof.
+  CI gates on install→test→tsc→lint→discovery, NOT on `next build`.
 - `gh` CLI is NOT installed; read-only GitHub inspection works through
   unauthenticated REST (`api.github.com`, repo is public). Forensics
   method: `/actions/runs/<id>/jobs` + `/check-runs/<id>/annotations`.
@@ -189,28 +256,36 @@ do not reopen without new structural evidence.
    the Actions tab to validate the M9 fix immediately instead of waiting
    for the 03:00 UTC cron.
 4. Provide a provider credential + decision before enabling AI.
-5. Provision/confirm Supabase Auth staff accounts for moderators.
+5. Supply ONE interactive staff login (browser session on production).
+   M15 proved the account already exists and is authorized (`role =
+   'moderator'`, passes both layers) — what is missing is only the
+   credential/handoff, so no provisioning work is needed.
 6. Hide the 5 known published test rows with the new M14 tool
    (`/published-management`, staff login, one deliberate confirmation
    per record). There is deliberately no bulk path and engineering will
-   not perform this cleanup autonomously.
+   not perform this cleanup autonomously. The BEFORE baseline (section J)
+   is armed, so each action is verifiable after the fact.
+7. NEW (M15): decide whether deadline EVIDENCE becomes the next product
+   focus. 198/198 pending rows and 147/147 live candidates carry no
+   deadline, so moderation effort alone cannot raise trustworthy
+   published inventory — that is a data-supply problem, not a UI one.
 
 ## M. Exact FIRST task for the next session
-> **Confirm the Discovery sync workflow ran green on GitHub (cron run of
-> 2026-08-31 03:00 UTC or an owner dispatch). Then run the FIRST REAL
-> MODERATION SESSION with a staff account (owner gate L5): walk the
-> filtered pending queue AND use `/published-management` to hide the 5
-> known test artifacts one record at a time. Friction must be reported
-> from actual usage — the tooling is now complete enough that further
-> UI work without a session would be speculation.**
+> **Spend one real staff session on the two things engineering cannot
+> do: (1) unpublish the 5 known test artifacts in
+> `/published-management`, one confirmation each, then re-fetch the
+> section-J URLs and require every needle gone; (2) review the first
+> 10–15 bucket-2 high-value pending records with the CURRENT UI and
+> write down only friction actually hit.** No new moderation feature
+> before that observation exists.
 
-Concretely: fetch `/actions/workflows/343653332/runs?per_page=3`; if the
-newest run is green with a `discover` step that reached the worker,
-Milestone 9 is closed end-to-end. If it failed, read that run's jobs +
-annotations (same method as M9) and fix only the proven cause. After any
-manual unpublish, re-probe `/`, `?category=hackathon` and
-`?category=fellowship` to confirm the removed rows are gone and nothing
-else changed.
+Then: fetch `/actions/workflows/343653332/runs?per_page=3`. If the
+2026-08-31 03:00 UTC cron run is green with the `discover` worker
+reached, Milestone 9 closes end-to-end; if it failed, read that run's
+jobs + annotations (same method as M9) and fix only the proven cause.
+If the owner's unpublish actions happened, also re-confirm the 5
+legitimate published rows are untouched (ids recorded in the M15 freeze
+record) and that no record was deleted — status only.
 
 ## N. Recommended model for that first task
 A lighter flash-tier model is sufficient for the run-status check and
@@ -234,7 +309,55 @@ new forensics round ONLY if the next workflow run fails again.
 
 ---
 
-## Freeze record (this session, 2026-08-30, Milestone 14; M12/M13 verification passes appended below)
+## Freeze record (this session, 2026-08-30, Milestone 15; M14/M13/M12 passes appended below)
+
+### M15 first-session attempt (2026-08-30, read-only, no code changes)
+- Started clean at `46bca13`, `main == origin/main`; ended with docs only.
+  **No code written, no row modified, no migration applied, no AI
+  activation.**
+- **The first real moderation/trust session DID NOT happen and was not
+  simulated.** This environment has no authenticated staff session; env
+  var NAMES were audited (3 Supabase vars only, no credentials printed),
+  and the single `profiles` row is `role = 'moderator'` — so the
+  authorized account exists and the gate is purely the interactive
+  login. Implementation was verified by code, tests, and the public
+  authentication boundary instead (307 to `/login?next=…` from
+  production for both `/published-management` and `/moderation`).
+- Phase 2 boundary checks passed with no design change needed: staff-only
+  listing of `status='published'` only, one unpublish action per row,
+  no delete, no bulk, no arbitrary status control (43 contract tests +
+  production auth probe).
+- **BEFORE baseline (armed for the owner's cleanup)** — all five artifact
+  detail URLs 200, and these exact needles present in `/`,
+  `?category=hackathon|competition|fellowship|scholarship`,
+  `?sort=newest`: `REGRESSION Alpha`, `hackkka`,
+  `PRODUCTION LINK TEST — DELETE ME`, `hack`, `REGRESSION Bravo`.
+  Target ids (for after-the-fact verification, read from live DB):
+  `regression-alpha`, `hackkka-3bde699b`,
+  `production-link-test-delete-me-23cf5bc9`, `hack-194b91c0`,
+  `regression-bravo`. Keep rows (source-linked, 2026-08-27):
+  `digital-financial-services-…`, `master-of-innovation-…`,
+  `university-of-dar-es-salaam-…`, `waziri-wa-elimu-…`,
+  `erasmus-global-call-for-applications-…`.
+- **Highest-value finding — the supply ceiling**: 198/198 pending and
+  147/147 freshly extracted candidates have NO deadline evidence; 0
+  legitimate published rows are provably live; a perfect first session
+  publishes at most 0 provably-live items without reading source pages.
+  Traced to the intentional extraction policy, NOT a persistence bug
+  (`runner.ts` writes `deadline`; `extract.ts` refuses `startDate`/
+  `endDate`/`pubDate`; `enrich.ts` is JSON-LD-only).
+- Post-cleanup projection (read-only): hiding the 5 artifacts leaves 5
+  published rows — 4 category `other`, 1 scholarship whose deadline is
+  already past. Public trust improves; inventory usefulness does not.
+- Battery: **296/296** tests, lint clean, tsc clean (standard +
+  ci-check). Build attempted ONCE → known Turbopack os error 5 at
+  pooled-process spawn AFTER every code-level gate passed
+  (environment-blocked, Milestones 5–15); no code error hidden behind
+  that classification.
+- Security re-verified by grep: 0 `SERVICE_ROLE` outside
+  `scripts/discovery`, no Supabase `.delete(` anywhere in app code, no
+  `.upsert(`/`.in(`/`.match(`, one API route, `.env.local` ignored,
+  `/published-management` reachable only from staff pages.
 
 ### M14 published-record management pass (2026-08-30)
 - Started clean at `0b5574e`; read-only Phase 0 inventory listed all 10

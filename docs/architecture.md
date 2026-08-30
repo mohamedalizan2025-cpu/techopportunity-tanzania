@@ -1370,6 +1370,75 @@ modified in this milestone.
 
 ---
 
+### 12.21 Milestone 15 — first-session attempt and the supply ceiling (2026-08-30)
+
+Milestone 15 was meant to be a human session, not an engineering pass. It
+is recorded here because it measured a ceiling that changes what the next
+milestone must be. **Architecture verdict unchanged: sound, closed.** No
+code was written, no data was modified, no migration was touched.
+
+**Session status: not executable in this environment (no simulation)**
+
+- `.env.local` exposes only the three Supabase variables — no staff
+  credential of any kind, and no client session exists.
+- `profiles` holds exactly **one** row with `role='moderator'`, which both
+  `is_staff()` and `getModerationAccess()` accept (verified: the app's
+  `['moderator','admin']` check matches the SQL function's
+  `role in ('admin','moderator')`). So the account already exists; only
+  the interactive password/browser session is out of reach here.
+- Reported as required: *Staff session unavailable; implementation
+  verified by code, tests, and public authentication boundary.*
+- A BEFORE baseline was armed for the owner's cleanup: all five artifact
+  detail URLs return 200, and `REGRESSION Alpha/Bravo`, `hackkka`,
+  `hack`, `PRODUCTION LINK TEST` and the `WAZIRI…` headline are all
+  present on `/`, `/?category=hackathon|competition|fellowship|scholarship`
+  and `/?sort=newest`. Pending and rejected details are 404.
+
+**The measured ceiling: no deadline evidence reaches the product**
+
+- **198 / 198** pending rows carry `deadline = NULL`.
+- A read-only discovery dry-run over the live registry: 18 sources, 20
+  fetches, 2 failures, **147 valid candidates, `withDeadline = 0`,
+  `withLocation = 0`, `withNeither = 147`**.
+- Of the 10 published rows, exactly one legitimate record has a deadline
+  at all — `ERASMUS GLOBAL CALL FOR APPLICATIONS`, `2026-07-15`, already
+  past. Derived freshness: 1 active (a test artifact), 2 expired, 7
+  unknown ⇒ **0 trustworthy provably-live public opportunities**.
+- This is NOT a persistence bug and NOT a defect: `buildPendingRow` does
+  write `deadline`, and the extractor deliberately refuses `startDate`/
+  `endDate`/`pubDate` as deadlines (fixture-tested). Tanzanian
+  institutional pages simply carry no JSON-LD deadline field, so the
+  honesty policy correctly yields NULL. The consequence is arithmetic:
+  publishing any part of the backlog today produces "No deadline listed"
+  cards, so moderator effort cannot by itself raise the KPI.
+- Therefore, after the owner hides the five artifacts, the public site
+  shows 5 rows — 4 category `other`, 1 expired-scholarship. Public trust
+  improves; inventory does not. Both facts belong in the next decision.
+
+**Corrections to earlier handoff claims (evidence, not theory)**
+
+- "Moderator throughput is THE binding constraint" is now half-refuted:
+  it is A constraint; the deadline-evidence ceiling is upstream of it.
+- Registry health: 29 sources / 18 active, all with `last_success_at`,
+  none with `last_error`. Today's dry-run failed to fetch 2 of 18 (Bank
+  of Tanzania, Youth of UNATA — previously the best-yield source), which
+  is drift to watch, not a code regression.
+- Latent owner-gate yield, measured without applying anything: 5 of the
+  147 live candidates propose `admissions` (4) or `jobs` (1), which
+  `runner.ts` counts as `categorySkipped` because no seed row exists.
+  That is the real, bounded expected recovery from 0004 + 0010 — worth
+  applying, but not a flood of new inventory.
+
+**Battery**: 296/296, lint clean, tsc clean (standard + ci-check). One
+build attempt: Turbopack `os error 5` at pooled-process spawn AFTER all
+code gates passed — environment-blocked, and independently answered by
+the production Vercel build succeeding with `/published-management` live.
+GitHub: still runs #1–#3; run #3's steps are install ✓ tests ✓
+**typecheck ✗** lint/worker skipped — the exact step the M9 fix targets;
+no post-fix run exists yet.
+
+---
+
 ## 13. Decision log
 
 | Date | Decision | Reason |
@@ -1400,6 +1469,7 @@ modified in this milestone.
 | 2026-08-29 | Milestone 4 (§12.14): live re-probe again showed ALL four owner-gated migrations unapplied (behavior probes, reversible INSERT included); activation phases could not run; battery 176/176 + production re-probes re-verified locally; BEFORE=AFTER unchanged; stopped at the same owner gate; GitHub push still network-blocked | Milestones cannot substitute for the owner's SQL-editor action; honest BEFORE=AFTER reported instead of fabricated recovery; no speculative work invented to fill the gap |
 | 2026-08-29 | Milestone 7 (§12.15): opportunity-first product pass — live-taxonomy category hub, deadline quick links, opportunity-first hero, country display suppressed pending 0008 evidence, assistant boundary copy; battery 188/188; no data-access, RLS or provider changes | The public UI must never claim categories the live DB lacks nor present schema-default country as verified; live-taxonomy mechanism auto-picks up 0004/0010 later without frontend churn |
 | 2026-08-29 | Milestone 8 (§12.16): discovery reliability + taxonomy consistency — GitHub failure classified I (logs unreachable, not inferred); whole-run health gate added (total source failure exits non-zero, partial stays isolated); `timeout-minutes: 30`; submit form switched to the same live taxonomy as the homepage; battery 194/194; no DDL, no secret changes, no failure suppression | A scheduled run must never go silently green when every source fails, and the submit form must never offer a category the live DB lacks; the exact CI failure could not be observed from this machine, so it is reported honestly rather than guessed |
+| 2026-08-30 | Milestone 15 (§12.21): no session simulated, no code written; measured that the KPI is capped upstream of moderation — 198/198 pending and 147/147 live candidates carry no deadline evidence, and 0 legitimate published rows have a future deadline | Derived freshness from the production lifecycle function against the live DB and a read-only dry-run, not from estimates; the honest next milestone is deadline-evidence capture feasibility, because no amount of moderator effort can publish a provably-live opportunity today |
 | 2026-08-30 | Milestone 14 (§12.20): staff-only `/published-management` with per-record unpublish implemented as an EXISTING-status transition (published → rejected), pure pre-query gates, conditional update, zero DDL, zero deletion; no cleanup executed | M13 proved test artifacts are publicly visible with no safe path to hide them; this is the smallest control surface that closes the trust defect without inventing a status, weakening RLS or touching provenance — bulk deletion stays an owner decision |
 | 2026-08-30 | Milestone 11 (§12.19): queue view filters — exactly two (triage bucket + source), server-side URL params over the existing single pending read, with position/next computed inside the active filter and the filter carried forward on every navigation link. 253/253 tests. No DB filter engine, no client JS state, no new access path | Live counts showed 79% of the queue is category `other` from a handful of sources — the friction is batch navigation, and the data justified only these two filters; anything more would be a dashboard platform, which the brief forbids |
 | 2026-08-30 | Milestone 10 (§12.18): moderation throughput product pass — display-layer only. Triage buckets surfaced as prioritization hints (never decisions) with a suggested entry link; review page rebuilt evidence-first with known/unknown field hints, sticky decision bar, Enter-driven next-record flow; category select switched to the live taxonomy with unseeded slugs never offered. 223/223 tests. No schema/action/provenance/RLS change | Moderator time is the binding constraint now that discovery is net-zero; every improvement had to preserve the honesty contract (hints marked heuristic, unknowns never inferred, taxonomy never faked) and the moderator's authority — so no auto-decision, no bulk actions, no inferred values |
