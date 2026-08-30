@@ -1081,6 +1081,95 @@ network-blocked (7th session).
 
 ---
 
+### 12.17 Milestone 9 — GitHub Discovery Sync forensics + operational recovery (2026-08-30)
+
+Milestone 9 is an operational-reliability investigation with hard
+GitHub-side evidence, not an architecture audit. GitHub became reachable
+from this environment for the first time in nine sessions; the push
+backlog (11 commits) landed on `origin/main` and the actual failing run
+was read, reproduced bit-for-bit, and fixed. Architecture untouched;
+score holds at 9.7/10.
+
+**Incident evidence (read-only GitHub REST, unauthenticated, public repo)**
+
+- Run `33302411277` ("Discovery sync", run #3, event `schedule`,
+  `head_sha ed13afe565a…`), created 2026-08-30T08:46:26Z, conclusion
+  `failure`. Job `discover` ran 08:46:30Z → 08:46:55Z (≈25s, matching
+  the notification email exactly).
+- Step timeline from the jobs API: Set up job ✓ (1s), Checkout ✓ (1s),
+  Setup Node ✓ (5s), Install dependencies ✓ (9s), Run tests ✓ (3s),
+  **Typecheck ✗ (4s)**, Lint skipped, Run discovery worker skipped.
+- Check-run annotations (3): the Node.js-20 action deprecation warning,
+  `Process completed with exit code 2`, and the actual error —
+  `app/layout.tsx:22:50 — Cannot find name 'LayoutProps'.`
+- Context: runs #1 (`f1a8c21`) and #2 (`ed13afe`, identical step
+  signature) failed the same way; discovery has never executed in CI.
+
+**Root cause (classification B — application-code defect caught by the
+typecheck gate, exactly as designed)**
+
+`RootLayout` was typed `LayoutProps<"/">` — a global declared only by
+`.next/types/routes.d.ts` (imported via `next-env.d.ts`). Both files
+are git-ignored build artifacts: present on a developer machine after
+any `next dev`/`build` (so local `tsc` passed, reinforced by a stale
+`tsconfig.tsbuildinfo`), absent on a fresh CI checkout (so `tsc`
+failed). The 25s duration was never the diagnostic — the annotations
+were.
+
+Reproduced bit-for-bit locally by moving `.next` aside and restoring
+the `ed13afe` file: identical file, line 22, column 50, message
+TS2304, exit code 2. After the fix, the same fresh-checkout typecheck
+passes.
+
+**Fixes shipped (smallest safe)**
+
+- `app/layout.tsx`: explicit local `RootLayoutProps` interface instead
+  of the build-generated global. No behavior change.
+- `.github/workflows/discovery.yml`: `actions/checkout@v5` /
+  `actions/setup-node@v5` and Node 22, resolving the run's Node.js-20
+  deprecation annotation (Node 20 is EOL). Steps, commands, secrets
+  attachment and `timeout-minutes` unchanged.
+- `tsconfig.ci-check.json`: diagnostic tsconfig excluding `.next` with
+  incremental disabled, so the fresh-checkout typecheck can be
+  reproduced locally (full fidelity requires `.next` moved aside).
+
+**Recovery + validation**
+
+- Push succeeded (`ed13afe..75fbc39`): all 11 commits now on
+  `origin/main`; local and remote are in sync. Pre-push L3 deep
+  security review: 0 findings.
+- Local battery: 194/194 tests, lint clean, `tsc --noEmit` clean,
+  fresh-checkout typecheck clean. `next build` remains
+  ENVIRONMENT-BLOCKED (Turbopack os error 5 — identical to Milestones
+  5–8, machine-level, classified not redesigned). CI does not gate on
+  `next build`.
+- Discovery worker validation (exact CI command, once): 18/18 sources
+  ok, 0 errors, 215 candidates, 177 duplicates skipped, 0 new pending
+  inserts, ~49s wall time — well inside the 30-minute bound.
+- Database correlation: in runs #1–#3 the `discover` step never
+  started, so those runs wrote zero rows by design (the secrets-bearing
+  step is last). No partial writes, no timestamp updates, queue
+  unchanged — confirmed by pipeline ordering, not assumed.
+- Env/secret contract: all three names identical across workflow,
+  `.env.example` and `runner.ts`; the worker fails loudly when absent.
+- Production (probed pre-push): healthy, still the PRE-Milestone-7
+  build; `/moderation` still routes through staff sign-in. Vercel
+  deploys from `origin/main`, so M7–M9 become live when its redeploy
+  completes.
+
+**Not yet provable (honest gate)**: a green workflow run on GitHub.
+Pushes do not trigger `Discovery sync` (schedule + `workflow_dispatch`
+only) and no credential exists here to dispatch. Proof arrives at the
+next cron (03:00 UTC) or via one owner click on "Run workflow".
+
+**Not changed (deliberately)**: pending-only discovery, moderation
+authority, RLS, provenance immutability, adapter boundary, roundup
+decomposition, source-failure isolation, assistant kill switch,
+migration state. No `|| true`, no `continue-on-error`, no failure
+suppression, no secret creation/modification.
+
+---
+
 ## 13. Decision log
 
 | Date | Decision | Reason |
@@ -1111,3 +1200,4 @@ network-blocked (7th session).
 | 2026-08-29 | Milestone 4 (§12.14): live re-probe again showed ALL four owner-gated migrations unapplied (behavior probes, reversible INSERT included); activation phases could not run; battery 176/176 + production re-probes re-verified locally; BEFORE=AFTER unchanged; stopped at the same owner gate; GitHub push still network-blocked | Milestones cannot substitute for the owner's SQL-editor action; honest BEFORE=AFTER reported instead of fabricated recovery; no speculative work invented to fill the gap |
 | 2026-08-29 | Milestone 7 (§12.15): opportunity-first product pass — live-taxonomy category hub, deadline quick links, opportunity-first hero, country display suppressed pending 0008 evidence, assistant boundary copy; battery 188/188; no data-access, RLS or provider changes | The public UI must never claim categories the live DB lacks nor present schema-default country as verified; live-taxonomy mechanism auto-picks up 0004/0010 later without frontend churn |
 | 2026-08-29 | Milestone 8 (§12.16): discovery reliability + taxonomy consistency — GitHub failure classified I (logs unreachable, not inferred); whole-run health gate added (total source failure exits non-zero, partial stays isolated); `timeout-minutes: 30`; submit form switched to the same live taxonomy as the homepage; battery 194/194; no DDL, no secret changes, no failure suppression | A scheduled run must never go silently green when every source fails, and the submit form must never offer a category the live DB lacks; the exact CI failure could not be observed from this machine, so it is reported honestly rather than guessed |
+| 2026-08-30 | Milestone 9 (§12.17): Discovery Sync forensics from real run logs reclassified the failure from I to B (app-code defect): `RootLayout` used the build-generated `LayoutProps` global, which exists only in git-ignored `.next` artifacts — green locally, TS2304 on every fresh CI checkout; fixed with an explicit prop type, bumped actions to v5/Node 22, added `tsconfig.ci-check.json` fresh-checkout guard; pushed all 11 backlogged commits; no discovery-code change because the worker never ran | Evidence over inference: annotations named the exact file/line/column; the fix is the smallest change that makes local and CI typechecking see the same truth; workflow proof is held for a real GitHub run rather than claimed from local execution |
