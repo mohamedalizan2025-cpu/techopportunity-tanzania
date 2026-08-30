@@ -3,12 +3,13 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { decideOpportunityAction } from "@/lib/data/moderation-actions";
+import type { ModerationCategoryOption } from "@/lib/data/moderation";
 import { initialDecisionState } from "@/lib/staff-form-state";
 import {
   TANZANIA_MAINLAND_REGIONS,
   TANZANIA_ZANZIBAR_REGIONS,
 } from "@/lib/tanzania-regions";
-import { OPPORTUNITY_CATEGORIES, type Opportunity } from "@/lib/types";
+import type { Opportunity } from "@/lib/types";
 
 interface OrganizationOption {
   id: string;
@@ -20,23 +21,37 @@ const selectClasses =
 const inputClasses = selectClasses;
 const labelClasses = "block text-sm font-medium text-black dark:text-zinc-50";
 
+// Known-vs-unknown hints: a prefilled value was discovered automatically
+// (still worth a glance); an empty value is UNKNOWN and must only be filled
+// from the official page. Never inferred by the UI.
+const KNOWN_HINT_CLASSES =
+  "ml-2 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium normal-case text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200";
+const UNKNOWN_HINT_CLASSES =
+  "ml-2 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-medium normal-case text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200";
+
+function KnownHint({ hasValue }: { hasValue: boolean }) {
+  return hasValue ? (
+    <span className={KNOWN_HINT_CLASSES}>known from source — verify</span>
+  ) : (
+    <span className={UNKNOWN_HINT_CLASSES}>unknown — check official page</span>
+  );
+}
+
 function TextField({
   label,
   name,
   defaultValue,
   type = "text",
-  required = false,
 }: {
   label: string;
   name: string;
   defaultValue: string;
   type?: string;
-  required?: boolean;
 }) {
   return (
     <label className={labelClasses}>
       {label}
-      {required ? null : <span className="ml-1 font-normal text-zinc-500">(optional)</span>}
+      <KnownHint hasValue={defaultValue !== ""} />
       <input
         type={type}
         name={name}
@@ -52,10 +67,12 @@ export function DecisionForm({
   opportunity,
   organizations,
   nextPendingId,
+  categoryOptions,
 }: {
   opportunity: Opportunity;
   organizations: OrganizationOption[];
   nextPendingId: string | null;
+  categoryOptions: ModerationCategoryOption[];
 }) {
   const [state, formAction, isPending] = useActionState(
     decideOpportunityAction,
@@ -75,9 +92,10 @@ export function DecisionForm({
           {nextPendingId ? (
             <Link
               href={`/moderation/${nextPendingId}`}
+              autoFocus
               className="inline-flex h-10 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
             >
-              Review next in queue →
+              Review next in queue → (Enter)
             </Link>
           ) : null}
           <Link
@@ -104,7 +122,7 @@ export function DecisionForm({
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form id="decision-form" action={formAction} className="flex flex-col gap-5">
       {state.status === "error" && state.message !== null ? (
         <p
           role="alert"
@@ -122,6 +140,7 @@ export function DecisionForm({
         </legend>
         <label className={labelClasses}>
           Title
+          <KnownHint hasValue={true} />
           <input
             type="text"
             name="title"
@@ -133,16 +152,18 @@ export function DecisionForm({
         </label>
         <label className={labelClasses}>
           Category
+          <KnownHint hasValue={true} />
           <select name="category" defaultValue={opportunity.category} className={`${selectClasses} mt-1.5`}>
-            {OPPORTUNITY_CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {category}
+            {categoryOptions.map((option) => (
+              <option key={option.slug} value={option.slug}>
+                {option.label}
               </option>
             ))}
           </select>
         </label>
         <label className={labelClasses}>
           Description
+          <KnownHint hasValue={opportunity.description.trim() !== ""} />
           <textarea
             name="description"
             defaultValue={opportunity.description}
@@ -154,6 +175,7 @@ export function DecisionForm({
         </label>
         <label className={labelClasses}>
           Official URL
+          <KnownHint hasValue={true} />
           <input
             type="url"
             name="url"
@@ -172,6 +194,7 @@ export function DecisionForm({
         <label className={labelClasses}>
           Organization{" "}
           <span className="font-normal text-zinc-500">(only when verified)</span>
+          <KnownHint hasValue={opportunity.organizationId != null} />
           <select
             name="organizationId"
             defaultValue={opportunity.organizationId ?? ""}
@@ -201,6 +224,7 @@ export function DecisionForm({
         />
         <label className={labelClasses}>
           Region
+          <KnownHint hasValue={(opportunity.location?.region ?? "") !== ""} />
           <select
             name="region"
             defaultValue={opportunity.location?.region ?? ""}
@@ -237,9 +261,12 @@ export function DecisionForm({
         />
       </fieldset>
 
-      <div className="flex flex-wrap gap-3">
+      {/* Decision controls stay reachable at the bottom of long records;
+          they submit the same form (no duplicated state). */}
+      <div className="sticky bottom-0 -mx-6 mt-2 flex flex-wrap gap-3 border-t border-black/[.08] bg-zinc-50 px-6 py-4 dark:border-white/[.145] dark:bg-black">
         <button
           type="submit"
+          form="decision-form"
           name="decision"
           value="approve"
           disabled={isPending}
@@ -249,6 +276,7 @@ export function DecisionForm({
         </button>
         <button
           type="submit"
+          form="decision-form"
           name="decision"
           value="reject"
           disabled={isPending}

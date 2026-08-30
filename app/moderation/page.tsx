@@ -4,6 +4,12 @@ import { redirect } from "next/navigation";
 import { logOutAction } from "@/lib/data/auth-actions";
 import { categoryLabel } from "@/lib/category-labels";
 import { getModerationAccess, listPendingOpportunities } from "@/lib/data/moderation";
+import {
+  TRIAGE_BUCKET_SHORT,
+  TRIAGE_HEURISTIC_NOTE,
+  firstSuggestedReview,
+  triageBucketOf,
+} from "@/lib/triage-bucket";
 
 export const metadata: Metadata = {
   title: "Moderation queue · TechOpportunity Tanzania",
@@ -61,6 +67,15 @@ export default async function ModerationPage() {
   const pending = await listPendingOpportunities();
   const signedInAs = displayName ?? email ?? "staff";
 
+  // Triage hints are prioritization signals only (title + category
+  // heuristics); the queue order itself stays deterministic.
+  const triageItems = pending.map((opportunity) => ({
+    id: opportunity.id,
+    bucket: triageBucketOf(opportunity.category, opportunity.title),
+  }));
+  const bucketById = new Map(triageItems.map((item) => [item.id, item.bucket]));
+  const suggested = firstSuggestedReview(triageItems);
+
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 font-sans dark:bg-black">
       <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
@@ -88,42 +103,65 @@ export default async function ModerationPage() {
             No submissions are waiting for review right now.
           </p>
         ) : (
-          <ul className="mt-8 flex flex-col gap-3">
-            {pending.map((opportunity) => (
-              <li key={opportunity.id}>
-                <Link
-                  href={`/moderation/${opportunity.id}`}
-                  className="block rounded-lg border border-black/[.08] bg-white p-4 transition-colors hover:border-black/30 dark:border-white/[.145] dark:bg-zinc-950 dark:hover:border-white/40"
-                >
-                  <p className="break-words font-medium text-black dark:text-zinc-50">
-                    {opportunity.title}
-                  </p>
-                  {(() => {
-                    const segments = [
-                      opportunity.organization,
-                      categoryLabel(opportunity.category),
-                      opportunity.location?.city ?? null,
-                    ].filter((segment): segment is string => segment !== null && segment !== "");
-                    return segments.length > 0 ? (
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        {segments.join(" · ")}
+          <>
+            {suggested ? (
+              <Link
+                href={`/moderation/${suggested.id}`}
+                className="mt-8 inline-flex h-11 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+              >
+                Start with a suggested high-value record →
+              </Link>
+            ) : null}
+            <ul className="mt-6 flex flex-col gap-3">
+              {pending.map((opportunity) => {
+                const bucket = bucketById.get(opportunity.id);
+                return (
+                  <li key={opportunity.id}>
+                    <Link
+                      href={`/moderation/${opportunity.id}`}
+                      className="block rounded-lg border border-black/[.08] bg-white p-4 transition-colors hover:border-black/30 dark:border-white/[.145] dark:bg-zinc-950 dark:hover:border-white/40"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="min-w-0 flex-1 break-words font-medium text-black dark:text-zinc-50">
+                          {opportunity.title}
+                        </p>
+                        {bucket ? (
+                          <span className="shrink-0 rounded-full border border-black/[.08] bg-zinc-50 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-400">
+                            {TRIAGE_BUCKET_SHORT[bucket]}
+                          </span>
+                        ) : null}
+                      </div>
+                      {(() => {
+                        const segments = [
+                          opportunity.organization,
+                          categoryLabel(opportunity.category),
+                          opportunity.location?.city ?? null,
+                        ].filter((segment): segment is string => segment !== null && segment !== "");
+                        return segments.length > 0 ? (
+                          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                            {segments.join(" · ")}
+                          </p>
+                        ) : null;
+                      })()}
+                      {opportunity.sourceName ? (
+                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                          Auto-discovered · {opportunity.sourceName}
+                          {opportunity.discoveryMethod ? ` · ${opportunity.discoveryMethod}` : ""}
+                        </p>
+                      ) : null}
+                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+                        Submitted {formatSubmitted(opportunity.createdAt)} · Deadline{" "}
+                        {formatQueueDeadline(opportunity.deadline)}
                       </p>
-                    ) : null;
-                  })()}
-                  {opportunity.sourceName ? (
-                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-                      Auto-discovered · {opportunity.sourceName}
-                      {opportunity.discoveryMethod ? ` · ${opportunity.discoveryMethod}` : ""}
-                    </p>
-                  ) : null}
-                  <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
-                    Submitted {formatSubmitted(opportunity.createdAt)} · Deadline{" "}
-                    {formatQueueDeadline(opportunity.deadline)}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-500">
+              {TRIAGE_HEURISTIC_NOTE}
+            </p>
+          </>
         )}
       </main>
     </div>

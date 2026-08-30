@@ -1,4 +1,5 @@
-import type { Opportunity } from "../types";
+import type { Opportunity, OpportunityCategory } from "../types";
+import { OPPORTUNITY_CATEGORIES } from "../types";
 import { createSupabaseAuthServerClient } from "./supabase-auth";
 import {
   OPPORTUNITY_SELECT,
@@ -127,6 +128,33 @@ export async function getNextPendingId(currentId: string): Promise<string | null
   return nextPendingAfter(pending.map((o) => o.id), currentId);
 }
 
+export interface QueueNavigation {
+  /** 1-based position in the rendered queue order; null when the record
+   *  is not in the rendered window (e.g. beyond the explicit cap). */
+  position: number | null;
+  total: number;
+  nextId: string | null;
+}
+
+/**
+ * One queue read serving both the position indicator and the next-in-queue
+ * link (same deterministic order as the rendered queue). Read-only,
+ * staff-only; a non-pending or unknown id yields position null.
+ */
+export async function getQueueNavigation(currentId: string): Promise<QueueNavigation> {
+  if (!isValidOpportunityId(currentId)) {
+    return { position: null, total: 0, nextId: null };
+  }
+  const pending = await listPendingOpportunities();
+  const ids = pending.map((o) => o.id);
+  const index = ids.indexOf(currentId);
+  return {
+    position: index === -1 ? null : index + 1,
+    total: pending.length,
+    nextId: nextPendingAfter(ids, currentId),
+  };
+}
+
 export async function listPendingOpportunities(): Promise<Opportunity[]> {
   const access = await getModerationAccess();
   if (!access.ok) return [];
@@ -181,4 +209,73 @@ export async function getPendingOpportunityById(
   return data
     ? mapOpportunityRow(toOpportunityRows([data])[0], "pending")
     : null;
+}
+
+export interface ModerationCategoryOption {
+  slug: OpportunityCategory;
+  label: string;
+}
+
+/**
+ * Pure selector: the category options a moderator may choose for a record.
+ *
+ * Options come from the LIVE categories table (same honesty contract as the
+ * homepage hub and submit form — unseeded slugs are never offered). The
+ * record's own category is always kept even if it is missing from the live
+ * list: the moderator must be able to keep or correct the discovered value,
+ * and approving must never fail because the select lost its current value.
+ * When the live table is unreadable (empty rows), fall back to the record's
+ * own category only — never to a fabricated full taxonomy.
+ */
+export function reviewCategoryOptions(
+  liveRows: Array<{ slug: string; label: string | null }>,
+  recordCategory: OpportunityCategory,
+  fallbackLabel: (slug: OpportunityCategory) => string
+): ModerationCategoryOption[] {
+  const options: ModerationCategoryOption[] = [];
+  const seen = new Set<OpportunityCategory>();
+  for (const row of liveRows) {
+    // Same contract as mapLiveCategories: slugs outside the application
+    // taxonomy are never surfaced.
+    if (!(OPPORTUNITY_CATEGORIES as readonly string[]).includes(row.slug)) continue;
+    const slug = row.slug as OpportunityCategory;
+    if (seen.has(slug)) continue;
+    seen.add(slug);
+    const trimmed = row.label?.trim() ?? "";
+    options.push({ slug, label: trimmed !== "" ? trimmed : fallbackLabel(slug) });
+  }
+  if (!seen.has(recordCategory)) {
+    options.push({
+      slug: recordCategory,
+      label: `${fallbackLabel(recordCategory)} (current)`,
+    });
+  }
+  return options;
+}
+
+/**
+ * Live category options for the review form, read through the SAME staff
+ * client as the rest of moderation (no new access path). Read-only.
+ */
+export async function listReviewCategoryOptions(
+  recordCategory: OpportunityCategory,
+  fallbackLabel: (slug: OpportunityCategory) => string
+): Promise<ModerationCategoryOption[]> {
+  const access = await getModerationAccess();
+  if (!access.ok) {
+    return reviewCategoryOptions([], recordCategory, fallbackLabel);
+  }
+
+  const { data, error } = await access.staff.client
+    .from("categories")
+    .select("slug,label")
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("[lib/data] Failed to list categories for review:", error.message);
+    return reviewCategoryOptions([], recordCategory, fallbackLabel);
+  }
+
+  const rows = (data ?? []) as unknown as Array<{ slug: string; label: string | null }>;
+  return reviewCategoryOptions(rows, recordCategory, fallbackLabel);
 }
