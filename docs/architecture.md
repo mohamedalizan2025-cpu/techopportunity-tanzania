@@ -1437,6 +1437,25 @@ GitHub: still runs #1–#3; run #3's steps are install ✓ tests ✓
 **typecheck ✗** lint/worker skipped — the exact step the M9 fix targets;
 no post-fix run exists yet.
 
+**Post-push CI forensics (M15, the one genuinely new operational finding)**
+
+The three Discovery sync runs all report `head_branch: main`, but their
+`head_sha` is `ed13afe` (runs #2, #3) and `f1a8c21` (run #1). Local
+history proves `ed13afe` is an ancestor of the Milestone-9 fix `75fbc39`,
+and `main` had long since moved past both. So **the scheduled runs never
+evaluated the fixed code**, which means the M9 failure verdict is still
+unresolved in both directions: the cron cannot be read as proof the fix
+works, nor as proof it does not. Two consequences are recorded as policy:
+
+- A scheduled run's conclusion is only meaningful after checking
+  `head_sha` against current `main`; earlier milestones read conclusions
+  without that check.
+- The reliable proof is an owner `workflow_dispatch` (already an open
+  gate, now upgraded from "optional, to save time" to "the only
+  trustworthy signal"). Nothing in this repository causes the stale-ref
+  behaviour, and inventing a workaround (self-triggering, push events)
+  would be speculation about GitHub-side scheduling.
+
 ---
 
 ## 13. Decision log

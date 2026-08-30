@@ -145,12 +145,19 @@ CLOSED, score holds 9.7/10.
   They would be captured by the first run after the owner applies 0004 +
   0010 — a real, if small, expected yield, not an estimate.
 - **GitHub-side proof still pending**: latest runs are still #1–#3 (all
-  pre-fix failures; re-checked M12 + M13 + M14 + M15, 2026-08-30 — no new
-  run yet). Run #3 step detail: Install ✓, Tests ✓, **Typecheck ✗**, Lint
-  and the discovery worker skipped — the failure is the known pre-fix
-  typecheck, NOT a discovery defect. No dispatch credential exists here;
-  the green run is expected at the 2026-08-31 03:00 UTC cron or an owner
-  dispatch.
+  failures; re-checked M12 + M13 + M14 + M15, 2026-08-30 — no new run
+  yet). Run #3 step detail: Install ✓, Tests ✓, **Typecheck ✗**, Lint and
+  the discovery worker skipped — the failure is the known pre-fix
+  typecheck, NOT a discovery defect.
+- **NEW M15 forensic fact (post-push re-check)**: all three runs report
+  `head_branch: main` but `head_sha` = `ed13afe` (runs #2, #3) /
+  `f1a8c21` (run #1) — `git merge-base --is-ancestor` proves `ed13afe`
+  predates the Milestone-9 fix `75fbc39`, and `main` is now `5381a18`.
+  **The scheduled runs never checked out the fixed code**, so the fix is
+  still unexercised — and the cron appears to resolve a stale ref.
+  Consequence: do NOT infer pass/fail from the cron; only an owner
+  `workflow_dispatch` (gate L3) proves the current tip. No dispatch
+  credential exists here; the next cron is 2026-08-31 03:00 UTC.
 - **M12 + M15 behavior probes agree (2026-08-30)**: 0004 NOT applied (no
   `admissions` row among the 10 live category slugs), 0010 NOT applied
   (no `jobs` row), 0008 NOT applied (all 213 rows still carry
@@ -252,9 +259,11 @@ CLOSED, score holds 9.7/10.
    match: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
    `SUPABASE_SERVICE_ROLE_KEY`) — existence is not readable
    unauthenticated.
-3. Optionally trigger ONE `workflow_dispatch` of "Discovery sync" from
-   the Actions tab to validate the M9 fix immediately instead of waiting
-   for the 03:00 UTC cron.
+3. Trigger ONE `workflow_dispatch` of "Discovery sync" from the Actions
+   tab. This is now the ONLY trustworthy proof of the M9 fix: the M15
+   re-check showed every cron run checked out a pre-fix commit (`ed13afe`)
+   even though `main` had moved on, so a scheduled run cannot be read as
+   a verdict on the current tip.
 4. Provide a provider credential + decision before enabling AI.
 5. Supply ONE interactive staff login (browser session on production).
    M15 proved the account already exists and is authorized (`role =
@@ -279,10 +288,13 @@ CLOSED, score holds 9.7/10.
 > write down only friction actually hit.** No new moderation feature
 > before that observation exists.
 
-Then: fetch `/actions/workflows/343653332/runs?per_page=3`. If the
-2026-08-31 03:00 UTC cron run is green with the `discover` worker
-reached, Milestone 9 closes end-to-end; if it failed, read that run's
-jobs + annotations (same method as M9) and fix only the proven cause.
+Then: fetch `/actions/workflows/343653332/runs?per_page=3` and read
+`head_sha` BEFORE interpreting the conclusion — if it is not current
+`main`, the run did not test the fix (that is exactly what M15 found for
+all three existing runs). A green result on the current tip with the
+`discover` worker reached closes Milestone 9 end-to-end; if it failed,
+read that run's jobs + annotations (same method as M9) and fix only the
+proven cause.
 If the owner's unpublish actions happened, also re-confirm the 5
 legitimate published rows are untouched (ids recorded in the M15 freeze
 record) and that no record was deleted — status only.
@@ -358,6 +370,9 @@ new forensics round ONLY if the next workflow run fails again.
   `scripts/discovery`, no Supabase `.delete(` anywhere in app code, no
   `.upsert(`/`.in(`/`.match(`, one API route, `.env.local` ignored,
   `/published-management` reachable only from staff pages.
+- Post-push re-check added the CI forensics in section G (cron runs
+  checked out a pre-fix `head_sha`), which is why gate L3 became "the
+  only trustworthy proof" rather than "optional speed-up".
 
 ### M14 published-record management pass (2026-08-30)
 - Started clean at `0b5574e`; read-only Phase 0 inventory listed all 10
