@@ -1170,6 +1170,77 @@ suppression, no secret creation/modification.
 
 ---
 
+### 12.18 Milestone 10 — moderation throughput + opportunity quality (2026-08-30)
+
+Milestone 10 is display-layer product work only. Architecture review
+remains closed (score 9.7/10). The binding constraint is human
+moderation throughput: discovery is net-zero new items (18/18 sources
+ok, 215 candidates, 177 duplicates, 0 inserts), so the KPI becomes
+trustworthy actionable opportunities published per unit of moderator
+effort. No schema, server-action, provenance, or RLS change.
+
+**Queue (`/moderation`) — opportunity-first entry**
+
+- Every row carries a triage bucket badge
+  (`lib/triage-bucket.ts`, one-to-one port of
+  `scripts/discovery/triage-queue.ts`): category-driven buckets
+  (scholarship/fellowship/grant/internship = high value, jobs,
+  admissions, hackathon/competition, workshop/conference/tech-event)
+  plus two starred TITLE-heuristic buckets (actionable-looking /
+  news-like) with a visible honesty footnote: hints, never verdicts.
+- A "start with a suggested high-value record" entry link uses
+  `firstSuggestedReview` (bucket priority, stable within bucket).
+  The rendered queue order and next-in-queue navigation keep their
+  deterministic `created_at` ordering — the suggestion only adds an
+  entry point.
+
+**Review (`/moderation/[id]`) — evidence-first layout**
+
+- Replaced the duplicated public `OpportunityDetail` render with a
+  purpose-built layout: Source evidence section (prominent official-page
+  link, discovered-from / discovered-at / submitted-by provenance) with
+  an honesty note, then "as discovered" facts, then the decision form.
+- `getQueueNavigation` gives position + next in ONE queue read
+  ("Item X of Y" pill); not-pending records skip the queue read.
+- `KnownHint` marks every enrichment field as "known from source —
+  verify" or "unknown — check official page" from `defaultValue` alone.
+  No value is ever inferred.
+- Sticky decision bar via the HTML5 `form=` attribute keeps
+  Approve/Reject in reach on long records; the success panel's
+  next-record link is `autoFocus`ed for Enter-driven flow. Approve and
+  reject both lead to the next pending record; queue homepage return is
+  never forced.
+
+**Category decision quality — live taxonomy honesty**
+
+- The category select is now driven by `listReviewCategoryOptions`
+  (staff read of the live `categories` table) through pure
+  `reviewCategoryOptions`: slugs outside `OPPORTUNITY_CATEGORIES` are
+  dropped, unseeded `admissions`/`jobs` (0004/0010 pending) are never
+  offered, the record's own discovered category is always reviewable,
+  and an unreadable table falls back to the record's own category only.
+  When 0004/0010 land, the select adopts them automatically — no code
+  change needed.
+
+**Validation + tests**
+
+- `parseReviewInput` / `decideOpportunityAction` audited, UNCHANGED:
+  invalid values rejected, optional fields stay null, provenance never
+  read from the form, reject = status-only, approve = validated write,
+  double pending guard intact, best-effort enrichment audit intact.
+- Battery: **223/223** (194 prior + 29 new `tests/triage-bucket.test.ts`
+  contract tests covering buckets, heuristic honesty, suggestion
+  stability, and taxonomy honesty), lint clean, tsc clean (standard +
+  ci-check). Build attempt: known Turbopack os error 5 —
+  environment-blocked, not redesigned.
+
+**Security pass**: moderation pages remain behind
+`getModerationAccess()`; zero `SERVICE_ROLE` references outside
+`scripts/discovery`; no new API route, write path, env var, or external
+integration; decision semantics unchanged.
+
+---
+
 ## 13. Decision log
 
 | Date | Decision | Reason |
@@ -1200,4 +1271,5 @@ suppression, no secret creation/modification.
 | 2026-08-29 | Milestone 4 (§12.14): live re-probe again showed ALL four owner-gated migrations unapplied (behavior probes, reversible INSERT included); activation phases could not run; battery 176/176 + production re-probes re-verified locally; BEFORE=AFTER unchanged; stopped at the same owner gate; GitHub push still network-blocked | Milestones cannot substitute for the owner's SQL-editor action; honest BEFORE=AFTER reported instead of fabricated recovery; no speculative work invented to fill the gap |
 | 2026-08-29 | Milestone 7 (§12.15): opportunity-first product pass — live-taxonomy category hub, deadline quick links, opportunity-first hero, country display suppressed pending 0008 evidence, assistant boundary copy; battery 188/188; no data-access, RLS or provider changes | The public UI must never claim categories the live DB lacks nor present schema-default country as verified; live-taxonomy mechanism auto-picks up 0004/0010 later without frontend churn |
 | 2026-08-29 | Milestone 8 (§12.16): discovery reliability + taxonomy consistency — GitHub failure classified I (logs unreachable, not inferred); whole-run health gate added (total source failure exits non-zero, partial stays isolated); `timeout-minutes: 30`; submit form switched to the same live taxonomy as the homepage; battery 194/194; no DDL, no secret changes, no failure suppression | A scheduled run must never go silently green when every source fails, and the submit form must never offer a category the live DB lacks; the exact CI failure could not be observed from this machine, so it is reported honestly rather than guessed |
+| 2026-08-30 | Milestone 10 (§12.18): moderation throughput product pass — display-layer only. Triage buckets surfaced as prioritization hints (never decisions) with a suggested entry link; review page rebuilt evidence-first with known/unknown field hints, sticky decision bar, Enter-driven next-record flow; category select switched to the live taxonomy with unseeded slugs never offered. 223/223 tests. No schema/action/provenance/RLS change | Moderator time is the binding constraint now that discovery is net-zero; every improvement had to preserve the honesty contract (hints marked heuristic, unknowns never inferred, taxonomy never faked) and the moderator's authority — so no auto-decision, no bulk actions, no inferred values |
 | 2026-08-30 | Milestone 9 (§12.17): Discovery Sync forensics from real run logs reclassified the failure from I to B (app-code defect): `RootLayout` used the build-generated `LayoutProps` global, which exists only in git-ignored `.next` artifacts — green locally, TS2304 on every fresh CI checkout; fixed with an explicit prop type, bumped actions to v5/Node 22, added `tsconfig.ci-check.json` fresh-checkout guard; pushed all 11 backlogged commits; no discovery-code change because the worker never ran | Evidence over inference: annotations named the exact file/line/column; the fix is the smallest change that makes local and CI typechecking see the same truth; workflow proof is held for a real GitHub run rather than claimed from local execution |
