@@ -80,9 +80,9 @@ holds 9.7/10 — do not reopen without new structural evidence.
 - Live DB (re-probed 2026-08-30, M11): **213 total / 198 pending /
   10 published / 5 rejected.**
 - **GitHub-side proof still pending**: latest runs are still #1–#3 (all
-  pre-fix typecheck failures; re-checked M12, 2026-08-30). No dispatch
-  credential exists here. The green run is expected at the 2026-08-31
-  03:00 UTC cron or an owner dispatch.
+  pre-fix typecheck failures; re-checked M12 + M13, 2026-08-30 — no new
+  run yet). No dispatch credential exists here. The green run is
+  expected at the 2026-08-31 03:00 UTC cron or an owner dispatch.
 - **M12 behavior probes (2026-08-30)**: 0004 NOT applied (no
   `admissions` row), 0010 NOT applied (no `jobs` row), 0008 NOT applied
   (all 213 rows still carry `country='Tanzania'`, 0 NULL — the count of
@@ -201,6 +201,37 @@ new forensics round ONLY if the next workflow run fails again.
 - **Next session**: same as section M — confirm the green cron run,
   then the owner's migration + staff-account gates unblock everything
   downstream (recovery, attribution, the real session).
+
+## M13 owner-gate activation pass (2026-08-30, read-only, no code changes)
+- Git unchanged at start: `main` == `origin/main` @ `6c01f87`, tree clean.
+- All four owner migrations re-probed and STILL ABSENT (0004 no
+  `admissions` row, 0010 no `jobs` row, 0008 213/213 `'Tanzania'` +
+  0 NULL, 0009 no `decided_by` column); 0003 audit live. Dependent
+  Phases 3/4/5/6 could not run and were not faked.
+- Honesty re-verified while gated: `decided_by`/`decided_at` are
+  referenced NOWHERE in `app/` or `lib/` (no writes to missing 0009
+  columns); country written only when supplied (not-null guard holds);
+  `?category=jobs` / `?category=admissions` render honest empty states;
+  homepage hub lists only the 10 live categories.
+- Source yield re-measured (identical 213/198 — discovery still gated,
+  nothing drifted): NMAIST 1 actionable of 36 (3%) — noise pattern
+  CONFIRMED; best OpportunitiesForAfricans (17 actionable / 15
+  high-value), Youth of UNATA (79% yield). Aggregates match M12
+  (31 high-value, 57 actionable-first).
+- **NEWLY PROVEN (Phase 8)**: the ~6 test/noise published artifacts are
+  live on the PUBLIC homepage and category filters (`?category=hackathon`
+  → "REGRESSION Alpha", "hack"; `?category=fellowship` → "PRODUCTION
+  LINK TEST — DELETE ME"; homepage also shows the "WAZIRI…" news
+  headline). They actively damage public trust and the KPI, and there is
+  NO published-record management surface to remove them. This is now an
+  evidence-backed owner need, not speculation.
+- Battery: 253/253 tests, lint, tsc green on unchanged tree; build
+  env-blocked (Turbopack os error 5) as usual, attempted once.
+- Production re-probed: `/`, scholarship/fellowship/hackathon/internship,
+  jobs/admissions/soon honest-empty, published detail 200, pending
+  detail 404, `/moderation` staff gate, assistant disabled — all correct.
+- **First real moderation session: still blocked** on staff credentials
+  (owner gate L5); no friction invented.
 
 ### Milestone 11 freeze record
 - Git: `main` pushed to `origin/main`; working tree clean; one code
