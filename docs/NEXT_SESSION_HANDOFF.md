@@ -80,15 +80,27 @@ holds 9.7/10 — do not reopen without new structural evidence.
 - Live DB (re-probed 2026-08-30, M11): **213 total / 198 pending /
   10 published / 5 rejected.**
 - **GitHub-side proof still pending**: latest runs are still #1–#3 (all
-  pre-fix typecheck failures). CI fix is pushed and locally verified;
-  the green run is expected at the 2026-08-31 03:00 UTC cron or an owner
-  dispatch.
+  pre-fix typecheck failures; re-checked M12, 2026-08-30). No dispatch
+  credential exists here. The green run is expected at the 2026-08-31
+  03:00 UTC cron or an owner dispatch.
+- **M12 behavior probes (2026-08-30)**: 0004 NOT applied (no
+  `admissions` row), 0010 NOT applied (no `jobs` row), 0008 NOT applied
+  (all 213 rows still carry `country='Tanzania'`, 0 NULL — the count of
+  historical default rows if/when 0008 lands), 0009 NOT applied
+  (`decided_by` column absent), 0003 applied (audit table live).
 
 ## H. Current moderation state
 - Pending backlog 198 rows (live-confirmed); moderation throughput
   remains THE binding constraint. M10 shortened the per-record path;
   M11 added batch navigation (bucket + source filters with
   carry-forward) so like records clear like one walk-through.
+- **M12 quality measurement of the 198 pending rows** (exact triage
+  regexes, read-only): 31 high-value + 3 hack/comp + 2 event/training +
+  21 actionable* = **57 candidates worth reviewing first**; 135
+  ambiguous + 6 news-like*. Best sources: OpportunitiesForAfricans
+  (17 high-value / 25), OpportunityDesk (10/20), Youth of UNATA (11/14),
+  SUZA (5/15); worst yield: NMAIST (1 actionable of 36 — 35 ambiguous
+  nav fragments like "Monetary Policy", "Quick Links").
 - Next-in-queue navigation preserved and filter-aware; NO bulk actions
   (attribution needs 0009 anyway).
 - 10 published rows include ~5 loudly-titled test artifacts
@@ -169,7 +181,28 @@ new forensics round ONLY if the next workflow run fails again.
 
 ---
 
-## Freeze record (this session, 2026-08-30, Milestone 11)
+## Freeze record (this session, 2026-08-30, Milestone 11; M12 verification pass appended)
+
+### M12 verification pass (2026-08-30, read-only, no code changes)
+- Git unchanged: `main` == `origin/main` @ `7e792f4`, tree clean; no
+  checkpoint commit created.
+- All four owner-gated migrations re-confirmed ABSENT by live behavior
+  (details in section G). Category recovery, country probe, and
+  attribution test were therefore SKIPPED — they need the owner's SQL
+  action first (0004 → 0010 → 0008 → 0009).
+- First real moderation session: **not executable here** — moderation
+  requires staff credentials that only the owner can provision (gate
+  L5). No speculative friction was invented.
+- Battery re-run clean on the unchanged tree: 253/253 tests, lint,
+  tsc; build env-blocked (os error 5) as usual.
+- Production re-probed: homepage, category filters (jobs/admissions
+  honestly empty), region filter, published detail 200, pending 404,
+  `/moderation` staff gate — all correct.
+- **Next session**: same as section M — confirm the green cron run,
+  then the owner's migration + staff-account gates unblock everything
+  downstream (recovery, attribution, the real session).
+
+### Milestone 11 freeze record
 - Git: `main` pushed to `origin/main`; working tree clean; one code
   commit + one docs commit on top of the M10 tip.
 - Tests 253/253; lint clean; typecheck clean (standard + fresh-checkout
