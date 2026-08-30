@@ -2,7 +2,7 @@
 
 STOP/FREEZE note. This is the single authoritative document for resuming
 work next session. It is not a redesign and not a feature plan. Git state
-and the safety battery below were re-run on **2026-08-30** (Milestone 11);
+and the safety battery below were re-run on **2026-08-30** (Milestone 14);
 live data counts come from a fresh read-only DB probe on 2026-08-30
 (213/198/10/5) — re-confirm with
 `scripts/discovery/inspect-live.ts` before acting on any number.
@@ -10,24 +10,57 @@ live data counts come from a fresh read-only DB probe on 2026-08-30
 ---
 
 ## A. Current Git HEAD
-Tip of `main` / `origin/main` is the Milestone-11 docs commit sitting on
-top of:
-- `feat(moderation): server-side queue view filters` (Milestone-11 code)
-- `60c739b` docs: Milestone 10 record
-- `a34e38e` feat(moderation): evidence-first review, triage hints,
-  live-taxonomy categories (Milestone-10 code)
+Tip of `main` / `origin/main` is the Milestone-14 docs commit sitting on
+top of the Milestone-14 code commit (staff-only published-record
+management), then:
+- `0b5574e` docs: Milestone 13 owner-gate activation pass
+- `6c01f87` docs: Milestone 12 verification pass
+- `7e792f4` docs: Milestone 11 record
+- `1f352e7` feat(moderation): server-side queue view filters
 
 ## B. Branch / origin synchronization
 - Branch `main`, **in sync** with `origin/main` (ahead 0, behind 0) after
-  the Milestone-11 push.
+  the Milestone-14 push.
 - No force-push, no history rewrite, no duplicate checkpoint commits.
 
 ## C. Latest completed milestone
-**Milestone 11 — real moderation experience + targeted filtering.**
-Product (display-layer) work only. Architecture review CLOSED, score
-holds 9.7/10 — do not reopen without new structural evidence.
+**Milestone 14 — published-record management + public trust cleanup.**
+The first mutation-capable staff surface since moderation, built inside
+the existing authorization boundary and with zero DDL. It ships the
+CONTROL; the actual cleanup of the test artifacts is the owner's
+per-record decision. Architecture review CLOSED, score holds 9.7/10 —
+do not reopen without new structural evidence.
 
-## D. What WAS implemented (Milestone 11, on top of Milestone 10)
+## D. What WAS implemented (Milestone 14, on top of Milestones 11–13)
+- **Staff-only `/published-management`** (new route, `noindex`): lists
+  the live published set — title, category, organization, source (or an
+  explicit "none recorded (manually entered)"), publication date,
+  "Status · publicly visible", a link to the public page — with ONE
+  unpublish action per row behind a required confirmation step. Reached
+  from the moderation queue header. No dashboards, no bulk selection,
+  no analytics.
+- **Unpublish = `published → rejected`** using the EXISTING enum value:
+  no new status invented, no DDL, no deletion. The public detail page
+  404s afterwards via the pre-existing published-only read; provenance
+  columns are untouched; the row does not re-enter the pending queue.
+- **Same authorization boundary**: `getModerationAccess()`, the same
+  staff client, the same `OPPORTUNITY_SELECT`/`mapOpportunityRow`, the
+  same explicit 500-row cap and `created_at asc, id asc` order.
+  No RLS change, no second auth system.
+- **Single-record safety**: pure pre-query gates (exact UUID target +
+  fixed confirmation token + staff role + still-published) and a
+  conditional update `.eq("id").eq("status","published")` that no-ops on
+  a concurrent change; the payload is provably `{ status }` only.
+- **New tests**: `tests/published-management.test.ts` (43 contract tests
+  mapped 1:1 onto the ten required guarantees), wired into `npm test` →
+  **296/296**.
+- **Build caught a real defect** introduced by this milestone: a client
+  component imported a value from a server-only module, pulling
+  `next/headers` into the browser bundle. The confirm token now lives in
+  client-safe `lib/staff-form-state.ts`. Treat "lint + tsc green" as
+  insufficient for client/server boundaries — only `next build` proves it.
+
+### Milestone 11 (on top of Milestone 10)
 - **Live re-probe replaced estimates**: 213 total / 198 pending / 10
   published / 5 rejected (sum closes); 79% of records are category
   `other`; top 5 sources hold ~half the queue; live categories remain
@@ -50,8 +83,15 @@ holds 9.7/10 — do not reopen without new structural evidence.
 - Safety battery this freeze: tests **253/253**, lint clean, tsc clean
   (standard + fresh-checkout ci-check).
 
-## E. What was DELIBERATELY NOT implemented (Milestone 11)
-- No DB-side filter engine, no client JS state, no keyword/location/
+## E. What was DELIBERATELY NOT implemented (Milestones 11–14)
+- **Milestone 14**: NO record was unpublished — cleanup is the owner's
+  per-record decision, not an autonomous batch. No new status, no
+  migration, no delete path, no re-publish path, no bulk action, no
+  second auth system, no public mutation route. A status-change AUDIT
+  row is impossible without DDL (0003 CHECK-constrains
+  `opportunity_enrichments.field` to venue/address/city/region/deadline)
+  — reported as an owner gate rather than worked around or faked.
+- **Milestone 11**: no DB-side filter engine, no client JS state, no keyword/location/
   deadline filters — the data justified exactly two filters; more would
   turn the queue into a dashboard.
 - No auto-approve / auto-reject / bulk decisions; filters are views,
@@ -80,8 +120,8 @@ holds 9.7/10 — do not reopen without new structural evidence.
 - Live DB (re-probed 2026-08-30, M11): **213 total / 198 pending /
   10 published / 5 rejected.**
 - **GitHub-side proof still pending**: latest runs are still #1–#3 (all
-  pre-fix typecheck failures; re-checked M12 + M13, 2026-08-30 — no new
-  run yet). No dispatch credential exists here. The green run is
+  pre-fix typecheck failures; re-checked M12 + M13 + M14, 2026-08-30 — no
+  new run yet). No dispatch credential exists here. The green run is
   expected at the 2026-08-31 03:00 UTC cron or an owner dispatch.
 - **M12 behavior probes (2026-08-30)**: 0004 NOT applied (no
   `admissions` row), 0010 NOT applied (no `jobs` row), 0008 NOT applied
@@ -103,10 +143,15 @@ holds 9.7/10 — do not reopen without new structural evidence.
   nav fragments like "Monetary Policy", "Quick Links").
 - Next-in-queue navigation preserved and filter-aware; NO bulk actions
   (attribution needs 0009 anyway).
-- 10 published rows include ~5 loudly-titled test artifacts
-  (`regression-*`, `hack*`, `production-link-test-delete-me`) — no
-  moderator-facing published-record management exists yet; removal is
-  an owner decision (bulk mutation boundary).
+- 10 published rows include 5 loudly-titled test artifacts identified by
+  exact title (`PRODUCTION LINK TEST — DELETE ME`, `REGRESSION Alpha`,
+  `REGRESSION Bravo`, `hack`, `hackkka`) plus a Swahili news headline;
+  all 5 artifacts have `opportunity_sources` = null (manual test writes,
+  not discovery output).
+- **M14 shipped the missing control surface**: `/published-management`
+  (staff-only, one confirmed unpublish per row, `published → rejected`).
+  Using it is still the owner's per-record decision and requires a real
+  staff session — no record has been unpublished by engineering.
 
 ## I. Current AI state
 - **Disabled.** Runtime gated by `ASSISTANT_ENABLED`/provider credential,
@@ -115,15 +160,17 @@ holds 9.7/10 — do not reopen without new structural evidence.
 
 ## J. Known production state
 - Production (https://techopportunity-tanzania.vercel.app) deploys from
-  `origin/main`; M7–M11 become live as Vercel redeploys. **Verify at
+  `origin/main`; M7–M14 become live as Vercel redeploys. **Verify at
   session start**: homepage live-taxonomy hub (M7), `/moderation`
-  staff-gated with filter chips (M11), and the next Discovery sync cron
-  green (M9).
+  staff-gated with filter chips (M11), unauthenticated
+  `/published-management` → login redirect (M14), and the next Discovery
+  sync cron green (M9). Staff INTERACTION with the new surface is
+  unverified until a real staff session exists — do not claim otherwise.
 
 ## K. Known environment problems
 - `next build` **environment-blocked**: Turbopack pooled-process spawn
   "Access is denied" (os error 5), machine-level, unrelated to code, seen
-  Milestones 5–11. Attempt once, classify, move on. CI gates on
+  Milestones 5–14. Attempt once, classify, move on. CI gates on
   install→test→tsc→lint→discovery, NOT on `next build`.
 - `gh` CLI is NOT installed; read-only GitHub inspection works through
   unauthenticated REST (`api.github.com`, repo is public). Forensics
@@ -143,21 +190,27 @@ holds 9.7/10 — do not reopen without new structural evidence.
    for the 03:00 UTC cron.
 4. Provide a provider credential + decision before enabling AI.
 5. Provision/confirm Supabase Auth staff accounts for moderators.
-6. Decide removal of the ~5 published test rows.
+6. Hide the 5 known published test rows with the new M14 tool
+   (`/published-management`, staff login, one deliberate confirmation
+   per record). There is deliberately no bulk path and engineering will
+   not perform this cleanup autonomously.
 
 ## M. Exact FIRST task for the next session
 > **Confirm the Discovery sync workflow ran green on GitHub (cron run of
-> 2026-08-31 03:00 UTC or an owner dispatch). Then get REAL moderator
-> usage of the filtered queue — the next friction list must come from
-> actual review sessions, not more speculative UI. Likely candidates
-> once moderation is in motion: published-record management (cleaning
-> the test artifacts) and queue pagination past the 500-row cap (still
-> far away at 198).**
+> 2026-08-31 03:00 UTC or an owner dispatch). Then run the FIRST REAL
+> MODERATION SESSION with a staff account (owner gate L5): walk the
+> filtered pending queue AND use `/published-management` to hide the 5
+> known test artifacts one record at a time. Friction must be reported
+> from actual usage — the tooling is now complete enough that further
+> UI work without a session would be speculation.**
 
 Concretely: fetch `/actions/workflows/343653332/runs?per_page=3`; if the
 newest run is green with a `discover` step that reached the worker,
 Milestone 9 is closed end-to-end. If it failed, read that run's jobs +
-annotations (same method as M9) and fix only the proven cause.
+annotations (same method as M9) and fix only the proven cause. After any
+manual unpublish, re-probe `/`, `?category=hackathon` and
+`?category=fellowship` to confirm the removed rows are gone and nothing
+else changed.
 
 ## N. Recommended model for that first task
 A lighter flash-tier model is sufficient for the run-status check and
@@ -181,28 +234,31 @@ new forensics round ONLY if the next workflow run fails again.
 
 ---
 
-## Freeze record (this session, 2026-08-30, Milestone 11; M12 verification pass appended)
+## Freeze record (this session, 2026-08-30, Milestone 14; M12/M13 verification passes appended below)
 
-### M12 verification pass (2026-08-30, read-only, no code changes)
-- Git unchanged: `main` == `origin/main` @ `7e792f4`, tree clean; no
-  checkpoint commit created.
-- All four owner-gated migrations re-confirmed ABSENT by live behavior
-  (details in section G). Category recovery, country probe, and
-  attribution test were therefore SKIPPED — they need the owner's SQL
-  action first (0004 → 0010 → 0008 → 0009).
-- First real moderation session: **not executable here** — moderation
-  requires staff credentials that only the owner can provision (gate
-  L5). No speculative friction was invented.
-- Battery re-run clean on the unchanged tree: 253/253 tests, lint,
-  tsc; build env-blocked (os error 5) as usual.
-- Production re-probed: homepage, category filters (jobs/admissions
-  honestly empty), region filter, published detail 200, pending 404,
-  `/moderation` staff gate — all correct.
-- **Next session**: same as section M — confirm the green cron run,
-  then the owner's migration + staff-account gates unblock everything
-  downstream (recovery, attribution, the real session).
+### M14 published-record management pass (2026-08-30)
+- Started clean at `0b5574e`; read-only Phase 0 inventory listed all 10
+  published rows with id/slug/category/source/date and pinned the 5
+  exact-title test artifacts (every one of them `src` = null).
+- One new staff-only route + one new data module + one new server action
+  path (`app/published-management/`, `lib/data/published-management.ts`,
+  `unpublishOpportunityAction`); moderation queue gained a single link.
+- `published → rejected` chosen after reading the 0001 enum + RLS
+  policies: existing value, no DDL, no delete, public read scoping does
+  the hiding. No audit row written because 0003's `field` CHECK forbids
+  it — reported as an owner gate, not silently worked around.
+- Security verified by grep, not assertion: 0 `SERVICE_ROLE` in `app/` +
+  `components/`, 0 `.delete(` / `.upsert(` in `app/`, 0 `.from(` in
+  `app/api` (assistant still cannot mutate), exactly one new write op in
+  `lib/data` and it is status-only.
+- Battery: **296/296** tests (43 new), lint clean, tsc clean (standard +
+  ci-check). Build attempt 1 failed on a REAL defect introduced here
+  (`next/headers` in the client bundle) → fixed → attempt 2 returned the
+  known Turbopack os error 5 (environment-blocked, Milestones 5–14).
+- **NO data was modified**: nothing unpublished, no cleanup performed,
+  no production staff interaction claimed as verified.
 
-## M13 owner-gate activation pass (2026-08-30, read-only, no code changes)
+### M13 owner-gate activation pass (2026-08-30, read-only, no code changes)
 - Git unchanged at start: `main` == `origin/main` @ `6c01f87`, tree clean.
 - All four owner migrations re-probed and STILL ABSENT (0004 no
   `admissions` row, 0010 no `jobs` row, 0008 213/213 `'Tanzania'` +
@@ -232,6 +288,25 @@ new forensics round ONLY if the next workflow run fails again.
   detail 404, `/moderation` staff gate, assistant disabled — all correct.
 - **First real moderation session: still blocked** on staff credentials
   (owner gate L5); no friction invented.
+
+### M12 verification pass (2026-08-30, read-only, no code changes)
+- Git unchanged: `main` == `origin/main` @ `7e792f4`, tree clean; no
+  checkpoint commit created.
+- All four owner-gated migrations re-confirmed ABSENT by live behavior
+  (details in section G). Category recovery, country probe, and
+  attribution test were therefore SKIPPED — they need the owner's SQL
+  action first (0004 → 0010 → 0008 → 0009).
+- First real moderation session: **not executable here** — moderation
+  requires staff credentials that only the owner can provision (gate
+  L5). No speculative friction was invented.
+- Battery re-run clean on the unchanged tree: 253/253 tests, lint,
+  tsc; build env-blocked (os error 5) as usual.
+- Production re-probed: homepage, category filters (jobs/admissions
+  honestly empty), region filter, published detail 200, pending 404,
+  `/moderation` staff gate — all correct.
+- **Next session**: same as section M — confirm the green cron run,
+  then the owner's migration + staff-account gates unblock everything
+  downstream (recovery, attribution, the real session).
 
 ### Milestone 11 freeze record
 - Git: `main` pushed to `origin/main`; working tree clean; one code
