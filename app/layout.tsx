@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
@@ -19,7 +20,14 @@ export const metadata: Metadata = {
     "Discover hackathons, scholarships, competitions, internships, fellowships, grants and tech events across Tanzania.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+// Explicit prop type: LayoutProps<"/"> is a build-generated global from
+// .next/types/routes.d.ts, which does not exist on a fresh CI checkout —
+// using it makes tsc pass locally but fail in the Discovery sync workflow.
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="en"
