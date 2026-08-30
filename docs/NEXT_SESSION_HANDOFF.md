@@ -12,9 +12,64 @@ that probe.
 
 ---
 
+## EMERGENCY CHECKPOINT — 2026-08-30 (credit exhaustion, safe-close)
+
+Repository frozen at a clean boundary: **no work in progress, nothing
+uncommitted**. `main == origin/main` @ `0442046`, working tree clean, no
+temp/probe files left, `.env.local` ignored (only `.env.example`
+tracked). The Milestone-15 record below (sections C–J + the M15 freeze
+block) is complete and pushed, so this checkpoint adds no new facts — it
+only guarantees an exact resume point.
+
+- **Latest verified battery** (code unchanged since): 296/296 tests, lint
+  clean, tsc clean (standard + fresh-checkout ci-check). `next build`
+  environment-blocked (Turbopack os error 5, Milestones 5–15) — do NOT
+  retry it; the successful Vercel production build of the same commit is
+  the substitute proof.
+- **Live DB** (probed 2026-08-30): 213 total / 198 pending / 10 published
+  / 5 rejected / 0 expired. Migrations 0004/0010/0008/0009 ABSENT, 0003
+  live. GitHub Discovery Sync: 3 runs, all failures, every one checked out
+  a PRE-FIX `head_sha` (section G) — CI is NOT green and no code change is
+  waiting on it. AI disabled. **No record has ever been unpublished by
+  engineering, and no staff session was simulated.**
+- **Verification pending** (do not assume): staff interaction with
+  `/published-management` + the moderation queue, post-unpublish public
+  cleanup proof, and the deadline-evidence census.
+- **Do NOT repeat this session's work**: the read-only inventory probe,
+  the triage distribution recompute, the migration-absence probes, the
+  GitHub runs re-check, another build attempt. Every result is recorded
+  here; re-running them spends credits for no new information.
+- **Project direction preserved**: an opportunity-discovery platform for
+  Tanzanians at home and worldwide, running
+  PERMITTED SOURCES → automated recurring discovery → extraction →
+  normalization → validation → dedupe → pending → human moderation →
+  published → search/filter → grounded AI LATER. Not a general news site;
+  no prohibited social scraping. Architecture review CLOSED at 9.7/10;
+  emphasis is PRODUCT EXECUTION (reliable automated discovery, trustworthy
+  inventory, efficient moderation, strong search), not redesign.
+
+NEXT SESSION START HERE:
+Ask the owner for ONE real staff login and spend a single session on the
+two things engineering cannot do: unpublish the 5 known test artifacts in
+`/published-management` (one deliberate confirmation each), then re-fetch
+the section-J baseline URLs and require every needle gone with the 5
+legitimate rows untouched. If no login can be had, run the READ-ONLY
+deadline-evidence census of the 57 first-review pending rows instead and
+write no code.
+
+RECOMMENDED MODEL:
+Flash (light tier). Reserve Max for a forensics round only if the owner's
+staff session exposes a real defect.
+
+WHY:
+Both options are single-session, evidence-producing, and fully armed by
+this document — no speculative build or redesign involved.
+
+---
+
 ## A. Current Git HEAD
-Tip of `main` / `origin/main` is the Milestone-15 docs commit (session
-attempt + supply-ceiling measurement, no code) sitting on the Milestone-14
+Tip of `main` / `origin/main` is **`0442046`** (M15 CI forensics) on top
+of `5381a18` (Milestone-15 docs record), both sitting on the Milestone-14
 pair (`c099972` code, `46bca13` docs), then:
 - `0b5574e` docs: Milestone 13 owner-gate activation pass
 - `6c01f87` docs: Milestone 12 verification pass
