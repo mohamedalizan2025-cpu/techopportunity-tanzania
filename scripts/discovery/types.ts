@@ -94,6 +94,12 @@ export interface SourceRunResult {
   candidatesFound: number;
   /** Candidates rejected by validation/noise gates. */
   noiseRejected: number;
+  /** Clearly non-relevant institutional/news/stale records. */
+  relevanceRejected: number;
+  /** Explicit evidence limits applicants to a nationality excluding Tanzania. */
+  eligibilityRejected: number;
+  /** Surviving candidates with no eligibility evidence; kept for moderation. */
+  eligibilityUnknown: number;
   /** Candidates that passed validation but duplicate existing/batch rows. */
   duplicatesSkipped: number;
   /** Candidates that passed validation AND dedupe (would-be inserts). */
@@ -114,6 +120,9 @@ export interface DiscoverySummary {
   validCandidates: number;
   insertedPending: number;
   duplicatesSkipped: number;
+  relevanceRejected: number;
+  eligibilityRejected: number;
+  eligibilityUnknown: number;
   errors: number;
   perSource: SourceRunResult[];
 }

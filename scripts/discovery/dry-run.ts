@@ -4,6 +4,7 @@ import { extractAllCandidates, extractFeedCandidates } from "./adapters";
 import { discoverFeedUrls } from "./extract";
 import { normalizeCandidate } from "./normalize";
 import { isObviousSectionLabel, isValidOpportunityUrl, validateCandidate } from "./validate";
+import { qualifyOpportunity, shouldEnterModerationQueue } from "./qualification";
 import type { CandidateOpportunity, SourceRecord } from "./types";
 
 /**
@@ -31,7 +32,7 @@ const { data: sources } = await client
 
 const activeSources = (sources ?? []) as unknown as SourceRecord[];
 
-const totals = { sources: 0, fetched: 0, failures: 0, candidates: 0, valid: 0, withLocation: 0, withDeadline: 0, withBoth: 0, withNeither: 0, noiseFiltered: 0 };
+const totals = { sources: 0, fetched: 0, failures: 0, candidates: 0, valid: 0, withLocation: 0, withDeadline: 0, withBoth: 0, withNeither: 0, noiseFiltered: 0, relevanceRejected: 0, eligibilityRejected: 0, eligibilityUnknown: 0 };
 
 
 
@@ -55,7 +56,13 @@ for (const source of activeSources) {
     const normalized = raw
       .map((c) => ({ c, n: normalizeCandidate(c, source.id) }))
       .filter((x): x is { c: Parameters<typeof normalizeCandidate>[0]; n: CandidateOpportunity } => x.n !== null);
-    const valid = normalized.filter((x) => validateCandidate(x.n)).map((x) => x.n);
+    const structurallyValid = normalized.filter((x) => validateCandidate(x.n)).map((x) => x.n);
+    const qualified = structurallyValid.map((candidate) => ({ candidate, qualification: qualifyOpportunity(candidate) }));
+    totals.relevanceRejected += qualified.filter((x) => x.qualification.relevance === "not_relevant").length;
+    totals.eligibilityRejected += qualified.filter((x) => x.qualification.relevance !== "not_relevant" && x.qualification.tanzaniaAccessibility === "tanzanians_not_eligible").length;
+    const survivors = qualified.filter((x) => shouldEnterModerationQueue(x.qualification));
+    const valid = survivors.map((x) => x.candidate);
+    totals.eligibilityUnknown += survivors.filter((x) => x.qualification.tanzaniaAccessibility === "unknown").length;
     const labelNoise = normalized.filter((x) => !validateCandidate(x.n) && isObviousSectionLabel(x.n.title) && x.c.url && isValidOpportunityUrl(x.c.url));
     totals.noiseFiltered += labelNoise.length;
     if (labelNoise.length > 0) {

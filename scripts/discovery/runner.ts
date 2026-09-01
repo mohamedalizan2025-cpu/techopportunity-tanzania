@@ -5,6 +5,7 @@ import { discoverFeedUrls, roundupInnerCandidates } from "./extract";
 import { normalizeCandidate } from "./normalize";
 import { isDuplicate, sameUrl } from "./dedupe";
 import { validateCandidate } from "./validate";
+import { qualifyOpportunity, shouldEnterModerationQueue } from "./qualification";
 import { loadActiveSources } from "./sources";
 import type { CandidateOpportunity, DiscoverySummary, SourceRunResult } from "./types";
 
@@ -24,6 +25,9 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
     validCandidates: 0,
     insertedPending: 0,
     duplicatesSkipped: 0,
+    relevanceRejected: 0,
+    eligibilityRejected: 0,
+    eligibilityUnknown: 0,
     errors: 0,
     perSource: [],
   };
@@ -51,6 +55,9 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
       ok: false,
       candidatesFound: 0,
       noiseRejected: 0,
+      relevanceRejected: 0,
+      eligibilityRejected: 0,
+      eligibilityUnknown: 0,
       duplicatesSkipped: 0,
       validCandidates: 0,
       categorySkipped: 0,
@@ -149,6 +156,26 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
         if (!candidate || !validateCandidate(candidate)) {
           sourceResult.noiseRejected += 1;
           continue;
+        }
+
+        const qualification = qualifyOpportunity(candidate);
+        if (!shouldEnterModerationQueue(qualification)) {
+          if (qualification.relevance === "not_relevant") {
+            summary.relevanceRejected += 1;
+            sourceResult.relevanceRejected += 1;
+          } else {
+            summary.eligibilityRejected += 1;
+            sourceResult.eligibilityRejected += 1;
+          }
+          console.log(
+            `[${source.name}] qualification rejected '${candidate.title.slice(0, 70)}' — ` +
+              (qualification.relevanceEvidence ?? qualification.eligibilityEvidence ?? "explicit rule")
+          );
+          continue;
+        }
+        if (qualification.tanzaniaAccessibility === "unknown") {
+          summary.eligibilityUnknown += 1;
+          sourceResult.eligibilityUnknown += 1;
         }
 
         if (isDuplicate(candidate, existingRows)) {
