@@ -83,6 +83,11 @@ const canadaQualification = qualifyOpportunity(applyDetailEvidence(candidate(), 
 assert("explicit Canadian-only detail is rejected", canadaQualification.tanzaniaAccessibility === "tanzanians_not_eligible");
 assert("foreign-only detail does not enter moderation", !shouldEnterModerationQueue(canadaQualification));
 
+const foreignLocationHtml = `<article><h1>Small Business Support Program</h1><p>Applications are open.</p><h2>Eligibility</h2><p>The program is open to small businesses located in: Atlanta, GA; Charlotte, NC; Chicago, IL; Dallas/Fort Worth, TX; Los Angeles, CA; New York City, NY; Philadelphia, PA; San Diego, CA; and West Virginia.</p><h2>Application</h2></article>`;
+const foreignLocationQualification = qualifyOpportunity(applyDetailEvidence(candidate(), extractDetailEvidence(foreignLocationHtml, candidate().url)));
+assert("explicit foreign operating-location detail is rejected", foreignLocationQualification.tanzaniaAccessibility === "tanzanians_not_eligible");
+assert("foreign operating-location detail stays out of moderation", !shouldEnterModerationQueue(foreignLocationQualification));
+
 const unknownHtml = `<article><h1>Research Fellowship 2027</h1><p>Deadline: October 1, 2026</p><p>Applications are open for researchers.</p><h2>Eligibility</h2><p>Applicants must hold a PhD awarded after January 2023.</p><h2>Application</h2></article>`;
 const unknown = applyDetailEvidence(candidate(), extractDetailEvidence(unknownHtml, candidate().url));
 assert("non-geographic requirements leave eligibility unknown", qualifyOpportunity(unknown).tanzaniaAccessibility === "unknown");

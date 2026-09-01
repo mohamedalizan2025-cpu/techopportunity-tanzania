@@ -41,6 +41,14 @@ const EXPLICIT_OTHER_NATIONALITY_TITLE =
 const EXPLICIT_OTHER_NATIONALITY_BODY =
   /\b(?:eligibility|requirements|who can apply|applicants? must)\b[\s\S]{0,240}\b(?:only\s+)?(?:kenyans?|nigerians?|south africans?|ghanaians?|canadians?|asians?|eritreans?)\b/i;
 
+// Some programmes express the same exclusion as an exhaustive operating-
+// location requirement rather than a nationality requirement. This is
+// eligibility evidence only when restrictive language ("open to ... located
+// in") and a small, measured foreign-jurisdiction list occur together.
+// Ordinary venue/location prose remains deliberately outside this rule.
+const EXPLICIT_FOREIGN_LOCATION_RESTRICTION =
+  /\b(?:program|programme|opportunity|applications?)\s+(?:is|are)\s+open to\s+(?:eligible\s+)?(?:small\s+)?(?:businesses|applicants?|participants?|candidates?)\s+(?:located|based|resident)\s+in\s*:?\s*(?:canada|united states|u\.?s\.?(?:a\.)?|united kingdom|u\.?k\.?|kenya|nigeria|south africa|ghana|atlanta|charlotte|chicago|dallas(?:\/fort worth)?|los angeles|new york city|philadelphia|san diego|west virginia)\b/i;
+
 const EXPLICIT_TANZANIA =
   /\b(?:open to|eligible (?:to|for)|applications? (?:are )?(?:open to|invited from)|for)\s+(?:all\s+)?tanzanians?\b|\btanzanian (?:citizens?|nationals?|residents?|students?|developers?|innovators?|entrepreneurs?|researchers?) (?:may|can|are eligible to)\b/i;
 
@@ -109,7 +117,7 @@ export function qualifyOpportunity(
   let tanzaniaAccessibility: TanzaniaAccessibility = "unknown";
   let eligibilityEvidence: string | null = null;
   const exclusion = matchedEvidence(title, [EXPLICIT_OTHER_NATIONALITY_TITLE])
-    ?? matchedEvidence(body, [EXPLICIT_OTHER_NATIONALITY_BODY]);
+    ?? matchedEvidence(body, [EXPLICIT_OTHER_NATIONALITY_BODY, EXPLICIT_FOREIGN_LOCATION_RESTRICTION]);
   if (exclusion) {
     tanzaniaAccessibility = "tanzanians_not_eligible";
     eligibilityEvidence = exclusion;

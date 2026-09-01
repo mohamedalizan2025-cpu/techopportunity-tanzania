@@ -48,6 +48,25 @@ assert("exclusion retains supporting text", Boolean(kenyaOnly.eligibilityEvidenc
 const southAfricansOnly = qualifyOpportunity(candidate("Graduate Programme 2027 for young South Africans"));
 assert("plural other-nationality restriction is excluded", southAfricansOnly.tanzaniaAccessibility === "tanzanians_not_eligible");
 
+const foreignLocationOnly = qualifyOpportunity(candidate(
+  "Intuit IDEAS Program 2026 for Small Businesses",
+  "Eligibility: The program is open to small businesses located in: Atlanta, GA; Charlotte, NC; Chicago, IL; Dallas/Fort Worth, TX; Los Angeles, CA; New York City, NY; Philadelphia, PA; San Diego, CA; and West Virginia."
+));
+assert("explicit foreign operating-location restriction is excluded", foreignLocationOnly.tanzaniaAccessibility === "tanzanians_not_eligible");
+assert("foreign operating-location exclusion stays out of moderation", !shouldEnterModerationQueue(foreignLocationOnly));
+
+const venueOnly = qualifyOpportunity(candidate(
+  "Open Source Conference 2026",
+  "Applications are open. The conference takes place in Toronto, Canada."
+));
+assert("foreign venue alone never becomes eligibility", venueOnly.tanzaniaAccessibility === "unknown");
+
+const tanzaniaBusinessLocation = qualifyOpportunity(candidate(
+  "Small Business Innovation Program 2026",
+  "Eligibility: The program is open to small businesses located in Tanzania."
+));
+assert("Tanzania operating location alone never proves applicant eligibility", tanzaniaBusinessLocation.tanzaniaAccessibility === "unknown");
+
 const globalWordOnly = qualifyOpportunity(candidate("Global AI Developer Challenge 2026"));
 assert("bare global wording never proves eligibility", globalWordOnly.tanzaniaAccessibility === "unknown");
 assert("unknown eligibility remains pending", shouldEnterModerationQueue(globalWordOnly));
