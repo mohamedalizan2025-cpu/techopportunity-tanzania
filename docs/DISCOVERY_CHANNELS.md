@@ -147,3 +147,22 @@ No new channel type, no crawler, no social scraping, no headless browser,
 no metrics platform, no embeddings/vector search. Every network read
 still funnels through the `fetchPage` choke point; discovery still inserts
 pending-only; moderation remains the sole publication boundary.
+
+## Milestone 22 source-quality refresh (2026-09-01)
+
+Run 8 and a same-day read-only 18-source replay changed the optimization
+target from extraction volume to explicit product fit. Internal operational
+classification (not a registry mutation):
+
+| Class | Sources | Current evidence |
+|---|---|---|
+| Productive | OpportunitiesForAfricans | Only source that inserted product-scope records in run 8; current feed exposes technical/research calls plus bounded detail evidence |
+| Useful but noisy | OpportunityDesk, SUZA | Real calls exist, but news/general jobs and duplicated HTML/feed extraction require qualification and dedupe |
+| Weak/noisy for the current product boundary | BOT, DIT, FSDT, HESLB, ICTC, IHI, JGI Tanzania, Ministry of Agriculture, NM-AIST, SUA, Twaweza, UDSM, UDOM, VETA, YUNA | Current pages are dominated by articles, navigation, degree/admission pages, past cohorts, or generic institutional material; none failed acquisition |
+| Failing | none | All 18 sources and all 10 bounded detail fetches succeeded in the final replay |
+| Redundant evidence | FSDT extraction paths; some OFA/OpportunityDesk listings | Dedupe remains the response; no source was disabled from one observation |
+| Future expansion candidate | Zindi first; Devpost/MLH later | High product fit, but the current adapters yielded zero Zindi opportunities, one generic Devpost navigation row, and no actionable MLH event row |
+
+No source was activated or deactivated. Zindi, Devpost and MLH need a bounded,
+testable item-level adapter plus per-item eligibility evidence before a registry
+row is justified; adding them today would produce zero or misleading yield.

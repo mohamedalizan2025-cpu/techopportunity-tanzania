@@ -338,6 +338,10 @@ assert(
 assert("roundup title: 30 Hot Job Opportunities detected", isRoundupTitle("30 Hot Job Opportunities Accross Various Sectors Currently Open"));
 assert("roundup title: 10 Scholarships detected", isRoundupTitle("10 Scholarships for African Students"));
 assert("roundup title: single opportunity NOT detected", !isRoundupTitle("WISE Scholarship-Cohort 4 Application"));
+assert("roundup title: cohort year is not an opportunity count", !isRoundupTitle("2027/2028 Schlumberger Foundation Faculty for the Future Fellowships"));
+assert("roundup title: year-led scholarship is not a roundup", !isRoundupTitle("2027 Scholarships for African Students"));
+assert("roundup title: count survives a later cohort year", isRoundupTitle("30 Scholarships for African Students 2027"));
+assert("roundup title: one advertised fellowship is not a roundup", !isRoundupTitle("1 Fellowship for African Researchers"));
 
 // ONE-ROW-ONE-OPPORTUNITY INVARIANT
 // A multi-opportunity document decomposes into individual candidates, each

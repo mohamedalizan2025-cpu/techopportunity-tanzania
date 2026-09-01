@@ -100,9 +100,15 @@ export function discoverFeedUrls(html: string, baseUrl: string): string[] {
  * Conservative: requires an explicit count + plural opportunity noun.
  */
 export function isRoundupTitle(title: string): boolean {
-  return /\b\d{1,4}\+?\s+[\w&\s\-']{0,40}?(jobs?|opportunities?|scholarships?|internships?|fellowships?|grants?|positions?|vacancies?|calls?)\b/i.test(
-    title
-  );
+  const pattern = /\b(\d{1,4})\+?\s+[\w&\s\-']{0,40}?(jobs?|opportunities?|scholarships?|internships?|fellowships?|grants?|positions?|vacancies?|calls?)\b/gi;
+  for (const match of title.matchAll(pattern)) {
+    const count = Number(match[1]);
+    // A roundup is plural in fact, not merely grammar. Four-digit cohort
+    // years (the measured 2027/2028 Schlumberger false positive) and a
+    // single advertised opportunity must never trigger page expansion.
+    if (count >= 2 && (count < 2000 || count > 2099)) return true;
+  }
+  return false;
 }
 
 /**

@@ -26,9 +26,10 @@ const hasLocation = (c: CandidateOpportunity) =>
   Boolean(c.venueName) || Boolean(c.address) || Boolean(c.city) || Boolean(c.region);
 
 async function main() {
+const qualificationNow = new Date();
 const { data: sources } = await client
   .from("opportunity_sources")
-  .select("id,name,base_url,active")
+  .select("id,name,base_url,source_type,country,region,active,last_checked_at,last_success_at,last_error")
   .eq("active", true)
   .order("name");
 
@@ -71,7 +72,12 @@ for (const source of activeSources) {
     totals.fetched += detailMetrics.fetches;
     totals.failures += detailMetrics.failures;
     const structurallyValid = normalized.filter((x) => validateCandidate(x.n)).map((x) => x.n);
-    const qualified = structurallyValid.map((candidate) => ({ candidate, qualification: qualifyOpportunity(candidate) }));
+    const qualified = structurallyValid.map((candidate) => ({
+      candidate,
+      qualification: qualifyOpportunity(candidate, qualificationNow, {
+        sourceType: source.source_type,
+      }),
+    }));
     totals.relevanceRejected += qualified.filter((x) => x.qualification.relevance === "not_relevant").length;
     totals.eligibilityRejected += qualified.filter((x) => x.qualification.relevance !== "not_relevant" && x.qualification.tanzaniaAccessibility === "tanzanians_not_eligible").length;
     const survivors = qualified.filter((x) => shouldEnterModerationQueue(x.qualification));

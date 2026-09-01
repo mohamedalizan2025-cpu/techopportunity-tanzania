@@ -1,4 +1,4 @@
-import type { CandidateOpportunity } from "./types";
+import type { CandidateOpportunity, SourceType } from "./types";
 
 export type OpportunityRelevance = "relevant" | "ambiguous" | "not_relevant";
 export type TanzaniaAccessibility =
@@ -13,6 +13,10 @@ export interface OpportunityQualification {
   evidenceQuality: QualificationEvidenceQuality;
   relevanceEvidence: string | null;
   eligibilityEvidence: string | null;
+}
+
+export interface QualificationContext {
+  sourceType?: SourceType;
 }
 
 const CLEARLY_NON_OPPORTUNITY_TITLES = [
@@ -32,6 +36,13 @@ const ACTION_CALL =
 
 const TARGET_OPPORTUNITY =
   /\b(hackathons?|fellowships?|internships?|scholarships?|accelerators?|incubators?|bootcamps?|workshops?|conferences?|summits?|developer events?|tech(?:nology)? competitions?|innovation challenges?|startup challenges?|research opportunities|consultancy opportunities|volunteer opportunities|vacanc(?:y|ies)|grants? (?:for|to|programmes?|programs?|funding|challenges?|calls?)|(?:research|innovation|startup) grants?|challenges? 20\d{2}|competitions? 20\d{2})\b/i;
+
+// Product boundary, independent from opportunity shape. A call can be real
+// yet still belong on a general jobs, admissions, scholarship or events site.
+// Require a positive technology/research/innovation signal; never infer fit
+// from the source's country, organization, or generic opportunity wording.
+const PRODUCT_SCOPE =
+  /\b(?:ai|artificial intelligence|machine learning|data(?: science| engineering| analytics)?|software|developers?|programming|coding|open source|computer(?: science| engineering| systems?)?|cyber(?:security)?|digital(?: health| skills?| transformation| innovation)?|technology|tech|technical|ict|information and communication systems?|engineering|stem|scientific|science|research(?:ers?| opportunities?)?|innovation|innovators?|startup|entrepreneur(?:ship|s?)?|fintech|agritech|healthtech|climatetech|robotics?|cloud computing|embedded systems?|network security|hackathons?)\b/i;
 
 // Evidence-backed nationalities seen in the live inventory. This deliberately
 // stays small: broad country guessing would create false exclusions.
@@ -58,6 +69,20 @@ const EXPLICIT_AFRICA_WIDE =
 const EXPLICIT_WORLDWIDE =
   /\b(?:open to|applications? (?:are )?(?:open to|invited from)|eligible (?:to|for))\b[\s\S]{0,100}\b(?:all countries|worldwide|all over the world|regardless of nationality)\b|\b(?:people|applicants?|candidates?)\s+of\s+all\s+nationalities\s+(?:are\s+)?(?:welcome|eligible)\s+to\s+apply\b/i;
 
+// Exact measured contract from the 2027 WBG Young Professionals Program.
+// Tanzania is an official World Bank Group member country; generic phrases
+// such as "member country" remain unknown because the organization matters.
+const EXPLICIT_WBG_MEMBER_COUNTRY =
+  /\b(?:applicants?|candidates?)\s+must\s+(?:hold|have)\s+(?:the\s+)?nationality\s+of\s+(?:a\s+)?world bank group member countr(?:y|ies)\b/i;
+
+const INSTITUTIONAL_SOURCE_TYPES = new Set<SourceType>([
+  "university",
+  "government",
+  "ngo",
+  "company",
+  "scholarship_provider",
+]);
+
 function matchedEvidence(text: string, patterns: RegExp[]): string | null {
   for (const pattern of patterns) {
     const match = text.match(pattern);
@@ -69,7 +94,10 @@ function matchedEvidence(text: string, patterns: RegExp[]): string | null {
 function isClearlyStale(title: string, deadline: string | null, now: Date): boolean {
   if (deadline && new Date(deadline).getTime() >= now.getTime()) return false;
   const years = [...title.matchAll(/\b(20\d{2})\b/g)].map((match) => Number(match[1]));
-  return years.length > 0 && Math.max(...years) <= now.getUTCFullYear() - 2;
+  // A title whose latest cohort year is already behind the current UTC year
+  // is no longer an actionable call. Cross-year titles containing the current
+  // year (for example 2025/2026 during 2026) remain reviewable.
+  return years.length > 0 && Math.max(...years) < now.getUTCFullYear();
 }
 
 /**
@@ -79,7 +107,8 @@ function isClearlyStale(title: string, deadline: string | null, now: Date): bool
  */
 export function qualifyOpportunity(
   candidate: CandidateOpportunity,
-  now = new Date()
+  now = new Date(),
+  context: QualificationContext = {}
 ): OpportunityQualification {
   const title = candidate.title.trim();
   const detailEligibility = candidate.detailEvidence?.eligibilityEvidence ?? "";
@@ -96,15 +125,26 @@ export function qualifyOpportunity(
     && !candidate.detailEvidence?.relevanceEvidence
     && !candidate.detailEvidence?.applicationUrl
     && !candidate.detailEvidence?.deadlineEvidence;
+  const scopeEvidence = matchedEvidence(body, [PRODUCT_SCOPE]);
+  const excludedAdmission = candidate.category === "admissions"
+    ? "university admissions are outside the technology-opportunity scope"
+    : null;
+  const outsideProductScope = !scopeEvidence
+    ? "candidate has no explicit technology, research, science/engineering, innovation/startup, developer, data/AI, or hackathon evidence"
+    : null;
 
   let relevance: OpportunityRelevance = "ambiguous";
   let relevanceEvidence: string | null = null;
-  if (nonOpportunityEvidence || reportingEvidence || staleEvidence || detailHasNoAction) {
+  if (nonOpportunityEvidence || reportingEvidence || staleEvidence || detailHasNoAction || excludedAdmission || outsideProductScope) {
     relevance = "not_relevant";
     relevanceEvidence = nonOpportunityEvidence
       ?? reportingEvidence
       ?? staleEvidence
-      ?? "detail page contains no explicit opportunity action, application link, or deadline";
+      ?? (detailHasNoAction
+        ? "detail page contains no explicit opportunity action, application link, or deadline"
+        : null)
+      ?? excludedAdmission
+      ?? outsideProductScope;
   } else {
     const targetEvidence = candidate.detailEvidence?.relevanceEvidence
       ?? matchedEvidence(title, [ACTION_CALL, TARGET_OPPORTUNITY]);
@@ -112,6 +152,20 @@ export function qualifyOpportunity(
       relevance = "relevant";
       relevanceEvidence = targetEvidence;
     }
+  }
+
+  // Institutional homepages repeatedly expose headings for courses, news,
+  // projects, membership and navigation. When such a candidate has neither
+  // an explicit action nor a target opportunity-family signal, ambiguity is
+  // not enough to put it in the moderation queue. Aggregator feeds retain the
+  // existing ambiguity path because their item boundary is itself evidence.
+  if (
+    relevance === "ambiguous"
+    && context.sourceType !== undefined
+    && INSTITUTIONAL_SOURCE_TYPES.has(context.sourceType)
+  ) {
+    relevance = "not_relevant";
+    relevanceEvidence = "institutional source candidate has no explicit opportunity action or target-family evidence";
   }
 
   let tanzaniaAccessibility: TanzaniaAccessibility = "unknown";
@@ -122,7 +176,12 @@ export function qualifyOpportunity(
     tanzaniaAccessibility = "tanzanians_not_eligible";
     eligibilityEvidence = exclusion;
   } else {
-    const inclusion = matchedEvidence(body, [EXPLICIT_TANZANIA, EXPLICIT_AFRICA_WIDE, EXPLICIT_WORLDWIDE]);
+    const inclusion = matchedEvidence(body, [
+      EXPLICIT_TANZANIA,
+      EXPLICIT_AFRICA_WIDE,
+      EXPLICIT_WORLDWIDE,
+      EXPLICIT_WBG_MEMBER_COUNTRY,
+    ]);
     if (inclusion) {
       tanzaniaAccessibility = "tanzanians_eligible";
       eligibilityEvidence = inclusion;

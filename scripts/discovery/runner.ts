@@ -18,6 +18,7 @@ import type { CandidateOpportunity, DiscoverySummary, SourceRunResult } from "./
 export async function runDiscovery(): Promise<DiscoverySummary> {
   const sources = await loadActiveSources();
   const startedAt = new Date().toISOString();
+  const qualificationNow = new Date(startedAt);
   const summary: DiscoverySummary = {
     startedAt,
     finishedAt: null,
@@ -189,7 +190,9 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
         }
         sourceResult.structurallyValidCandidates += 1;
 
-        const qualification = qualifyOpportunity(candidate);
+        const qualification = qualifyOpportunity(candidate, qualificationNow, {
+          sourceType: source.source_type,
+        });
         if (!shouldEnterModerationQueue(qualification)) {
           if (qualification.relevance === "not_relevant") {
             sourceResult.relevanceRejected += 1;
