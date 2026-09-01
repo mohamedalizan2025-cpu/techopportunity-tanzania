@@ -623,10 +623,11 @@ hardened the evidence model. Status legend as §12.8.
   wording. Worldwide-opportunity + Tanzanian-eligibility is modeled as
   location fields (independent) + eligibility (independent); the two are
   never joined as proxies.
-- `0006_opportunity_references.sql` — unchanged design, now explicitly
-  documented: URL-based dedupe REMAINS the MVP identity strategy even
-  after it applies; the table is the foundation for a later
-  duplicate-evidence workflow, not a silent dedupe upgrade.
+- `0006_opportunity_references.sql` — unchanged design. URL identity
+  remains the primary strategy, with a deliberately narrow deterministic
+  fallback for cross-source records: the same cohort year plus exact
+  substantial title-core equality. The table remains the foundation for a
+  later duplicate-evidence workflow; no migration was applied here.
 
 **Category architecture (verified, no taxonomy change)**
 
@@ -640,12 +641,16 @@ owner-gated (§12.7); nothing was added silently.
 
 **Honest limitation documented**
 
-Multi-source identity is URL-exact only. The same opportunity reached
-via different URLs from different channels becomes separate pending
-rows that humans merge by rejecting duplicates; the references table
-(0006) is the designed foundation for canonical identity. No semantic
-matching, embeddings, or AI dedupe is planned before that human-in-the-
-loop foundation exists.
+Identity is URL-first: canonical URLs remove fragments and known tracking
+parameters while retaining query parameters that can identify distinct
+opportunities. Across different sources only, a candidate is also treated
+as the same opportunity when it has the same cohort year and an exactly
+equal substantial title core (at least five tokens after removing a small
+set of generic programme words). Partial title overlaps and short titles
+remain separate pending records for human review. There is no fuzzy,
+semantic, embedding, or AI matching. The references table (0006) remains
+the designed foundation for preserving multiple evidence documents; no
+historical records were rewritten or merged by this change.
 
 ### 12.10 Final hardening milestone (2026-08-29, fourth round)
 
@@ -1493,3 +1498,4 @@ works, nor as proof it does not. Two consequences are recorded as policy:
 | 2026-08-30 | Milestone 11 (§12.19): queue view filters — exactly two (triage bucket + source), server-side URL params over the existing single pending read, with position/next computed inside the active filter and the filter carried forward on every navigation link. 253/253 tests. No DB filter engine, no client JS state, no new access path | Live counts showed 79% of the queue is category `other` from a handful of sources — the friction is batch navigation, and the data justified only these two filters; anything more would be a dashboard platform, which the brief forbids |
 | 2026-08-30 | Milestone 10 (§12.18): moderation throughput product pass — display-layer only. Triage buckets surfaced as prioritization hints (never decisions) with a suggested entry link; review page rebuilt evidence-first with known/unknown field hints, sticky decision bar, Enter-driven next-record flow; category select switched to the live taxonomy with unseeded slugs never offered. 223/223 tests. No schema/action/provenance/RLS change | Moderator time is the binding constraint now that discovery is net-zero; every improvement had to preserve the honesty contract (hints marked heuristic, unknowns never inferred, taxonomy never faked) and the moderator's authority — so no auto-decision, no bulk actions, no inferred values |
 | 2026-08-30 | Milestone 9 (§12.17): Discovery Sync forensics from real run logs reclassified the failure from I to B (app-code defect): `RootLayout` used the build-generated `LayoutProps` global, which exists only in git-ignored `.next` artifacts — green locally, TS2304 on every fresh CI checkout; fixed with an explicit prop type, bumped actions to v5/Node 22, added `tsconfig.ci-check.json` fresh-checkout guard; pushed all 11 backlogged commits; no discovery-code change because the worker never ran | Evidence over inference: annotations named the exact file/line/column; the fix is the smallest change that makes local and CI typechecking see the same truth; workflow proof is held for a real GitHub run rather than claimed from local execution |
+| 2026-09-01 | Milestone 21: reconcile machine-readable discovery totals from per-source evidence, expose attempted/failed/structural/dedupe/category/source-health counters, add conservative canonical-URL plus exact-core-title/shared-year cross-source dedupe, and recognize explicit all-nationalities eligibility wording; no schema, schedule, source activation, AI, or existing-row change | Run 7 proved execution but not current-head repeatability, and its private stdout could not prove the full metric contract. The 15 inserted rows exposed two unambiguous cross-source duplicate pairs and one measured worldwide eligibility phrase. Deterministic, test-covered changes close those narrow gaps while ambiguous matches and existing data remain with moderators. Six-hour scheduling stays owner-gated pending a post-change GitHub run and repeat-run evidence |

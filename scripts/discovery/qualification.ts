@@ -56,7 +56,7 @@ const EXPLICIT_AFRICA_WIDE =
   /\b(?:open to|applications? (?:are )?(?:open to|invited from)|eligible (?:to|for)|for)\s+(?:applicants? |participants? |students? |developers? |researchers? |entrepreneurs? |women )?(?:from )?(?:all |all 54 )?african (?:countries|nationals?|citizens?|residents?|applicants?|participants?|students?|developers?|researchers?|entrepreneurs?|women)\b|\b(?:you|who) are african\b[\s\S]{0,100}\b(?:reside|resident) in an african country\b|\b(?:citizens?|nationals?|residents?|refugees?)(?:\s+or\s+(?:citizens?|nationals?|residents?|refugees?))?\s+of\s+(?:an?\s+)?african\s+(?:country|union member state)\b/i;
 
 const EXPLICIT_WORLDWIDE =
-  /\b(?:open to|applications? (?:are )?(?:open to|invited from)|eligible (?:to|for))\b[\s\S]{0,100}\b(?:all countries|worldwide|all over the world|regardless of nationality)\b/i;
+  /\b(?:open to|applications? (?:are )?(?:open to|invited from)|eligible (?:to|for))\b[\s\S]{0,100}\b(?:all countries|worldwide|all over the world|regardless of nationality)\b|\b(?:people|applicants?|candidates?)\s+of\s+all\s+nationalities\s+(?:are\s+)?(?:welcome|eligible)\s+to\s+apply\b/i;
 
 function matchedEvidence(text: string, patterns: RegExp[]): string | null {
   for (const pattern of patterns) {

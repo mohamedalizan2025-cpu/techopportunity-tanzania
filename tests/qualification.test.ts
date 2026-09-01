@@ -77,6 +77,12 @@ const worldwide = qualifyOpportunity(candidate(
 ));
 assert("explicit worldwide access includes Tanzanians", worldwide.tanzaniaAccessibility === "tanzanians_eligible");
 
+const allNationalities = qualifyOpportunity(candidate(
+  "Global Research Fellowship 2027",
+  "People of all nationalities are welcome to apply."
+));
+assert("explicit all-nationalities access includes Tanzanians", allNationalities.tanzaniaAccessibility === "tanzanians_eligible");
+
 const located = candidate("Innovation Programme 2026");
 located.country = "Tanzania";
 located.city = "Dar es Salaam";

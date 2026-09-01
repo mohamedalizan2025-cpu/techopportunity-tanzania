@@ -112,6 +112,8 @@ export interface SourceRunResult {
   candidatesFound: number;
   /** Candidates rejected by validation/noise gates. */
   noiseRejected: number;
+  /** Candidates that passed normalization, detail acquisition and validation. */
+  structurallyValidCandidates: number;
   /** Clearly non-relevant institutional/news/stale records. */
   relevanceRejected: number;
   /** Explicit evidence limits applicants to a nationality excluding Tanzania. */
@@ -127,12 +129,17 @@ export interface SourceRunResult {
   detailApplicationFound: number;
   /** Candidates that passed validation but duplicate existing/batch rows. */
   duplicatesSkipped: number;
-  /** Candidates that passed validation AND dedupe (would-be inserts). */
+  /** Candidates that passed qualification and dedupe, before category lookup. */
+  deduplicatedCandidates: number;
+  /** Category-resolved candidates ready for the pending insert. */
   validCandidates: number;
   /** Valid candidates skipped only because their category seed is missing. */
   categorySkipped: number;
   /** Actionable yield: rows actually inserted as pending. */
   insertedPending: number;
+  /** Whether the source-registry health update itself succeeded. */
+  sourceHealthUpdated: boolean;
+  sourceHealthError: string | null;
   error: string | null;
 }
 
@@ -140,11 +147,17 @@ export interface DiscoverySummary {
   startedAt: string;
   finishedAt: string | null;
   sourcesChecked: number;
+  sourcesAttempted: number;
   sourcesSucceeded: number;
+  sourcesFailed: number;
   candidatesFound: number;
+  noiseRejected: number;
+  structurallyValidCandidates: number;
+  deduplicatedCandidates: number;
   validCandidates: number;
   insertedPending: number;
   duplicatesSkipped: number;
+  categorySkipped: number;
   relevanceRejected: number;
   eligibilityRejected: number;
   eligibilityUnknown: number;
@@ -154,6 +167,7 @@ export interface DiscoverySummary {
   detailDeadlineFound: number;
   detailEligibilityFound: number;
   detailApplicationFound: number;
+  sourceHealthFailures: number;
   errors: number;
   perSource: SourceRunResult[];
 }

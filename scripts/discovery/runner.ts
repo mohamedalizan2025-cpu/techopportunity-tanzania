@@ -8,6 +8,7 @@ import { validateCandidate } from "./validate";
 import { qualifyOpportunity, shouldEnterModerationQueue } from "./qualification";
 import { createBoundedDetailAcquirer } from "./detail";
 import { loadActiveSources } from "./sources";
+import { reconcileDiscoverySummary } from "./summary";
 import type { CandidateOpportunity, DiscoverySummary, SourceRunResult } from "./types";
 
 // Category identity comes ONLY from the database. The previous hardcoded
@@ -21,11 +22,17 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
     startedAt,
     finishedAt: null,
     sourcesChecked: sources.length,
+    sourcesAttempted: 0,
     sourcesSucceeded: 0,
+    sourcesFailed: 0,
     candidatesFound: 0,
+    noiseRejected: 0,
+    structurallyValidCandidates: 0,
+    deduplicatedCandidates: 0,
     validCandidates: 0,
     insertedPending: 0,
     duplicatesSkipped: 0,
+    categorySkipped: 0,
     relevanceRejected: 0,
     eligibilityRejected: 0,
     eligibilityUnknown: 0,
@@ -35,6 +42,7 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
     detailDeadlineFound: 0,
     detailEligibilityFound: 0,
     detailApplicationFound: 0,
+    sourceHealthFailures: 0,
     errors: 0,
     perSource: [],
   };
@@ -63,6 +71,7 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
       ok: false,
       candidatesFound: 0,
       noiseRejected: 0,
+      structurallyValidCandidates: 0,
       relevanceRejected: 0,
       eligibilityRejected: 0,
       eligibilityUnknown: 0,
@@ -73,9 +82,12 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
       detailEligibilityFound: 0,
       detailApplicationFound: 0,
       duplicatesSkipped: 0,
+      deduplicatedCandidates: 0,
       validCandidates: 0,
       categorySkipped: 0,
       insertedPending: 0,
+      sourceHealthUpdated: false,
+      sourceHealthError: null,
       error: null,
     };
     try {
@@ -98,7 +110,6 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
         }
       }
 
-      summary.candidatesFound += rawCandidates.length;
       sourceResult.candidatesFound = rawCandidates.length;
 
       // One-hop roundup expansion (one-row-one-opportunity invariant): a
@@ -176,14 +187,13 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
           sourceResult.noiseRejected += 1;
           continue;
         }
+        sourceResult.structurallyValidCandidates += 1;
 
         const qualification = qualifyOpportunity(candidate);
         if (!shouldEnterModerationQueue(qualification)) {
           if (qualification.relevance === "not_relevant") {
-            summary.relevanceRejected += 1;
             sourceResult.relevanceRejected += 1;
           } else {
-            summary.eligibilityRejected += 1;
             sourceResult.eligibilityRejected += 1;
           }
           console.log(
@@ -193,24 +203,21 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
           continue;
         }
         if (qualification.tanzaniaAccessibility === "unknown") {
-          summary.eligibilityUnknown += 1;
           sourceResult.eligibilityUnknown += 1;
         }
 
         if (isDuplicate(candidate, existingRows)) {
-          summary.duplicatesSkipped += 1;
           sourceResult.duplicatesSkipped += 1;
           continue;
         }
 
         const alreadySeenInBatch = rowsToInsert.some((row) => row.url === candidate.url && sameUrl(row.url as string, candidate.url));
         if (alreadySeenInBatch) {
-          summary.duplicatesSkipped += 1;
           sourceResult.duplicatesSkipped += 1;
           continue;
         }
 
-        sourceResult.validCandidates += 1;
+        sourceResult.deduplicatedCandidates += 1;
 
         const categoryId = resolveCategoryId(candidate.category, categoryIdMap);
         if (categoryId === null) {
@@ -224,32 +231,30 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
           continue;
         }
 
+        sourceResult.validCandidates += 1;
         const row = buildPendingRow(candidate, categoryId);
         rowsToInsert.push(row);
         insertedEvidenceUrls.push(candidate.evidenceUrl ?? candidate.url);
         existingRows.push({ id: "", url: candidate.url, source_id: candidate.sourceId, title: candidate.title, deadline: candidate.deadline });
       }
 
-      summary.validCandidates += rowsToInsert.length;
-
       if (rowsToInsert.length > 0) {
         const { error } = await anonClient.from("opportunities").insert(rowsToInsert);
         if (error) {
           throw new Error(`Insert failed for ${source.name}: ${error.message}`);
         }
-        summary.insertedPending += rowsToInsert.length;
         sourceResult.insertedPending = rowsToInsert.length;
       }
 
-      summary.sourcesSucceeded += 1;
       sourceResult.ok = true;
-      await recordSourceResult(serviceClient, source.id, true);
+      sourceResult.sourceHealthError = await recordSourceResult(serviceClient, source.id, true);
+      sourceResult.sourceHealthUpdated = sourceResult.sourceHealthError === null;
     } catch (error) {
-      summary.errors += 1;
       const message = error instanceof Error ? error.message : "Unknown discovery error";
       sourceResult.error = message;
       console.error(`[${source.name}] ${message}`);
-      await recordSourceResult(serviceClient, source.id, false, message);
+      sourceResult.sourceHealthError = await recordSourceResult(serviceClient, source.id, false, message);
+      sourceResult.sourceHealthUpdated = sourceResult.sourceHealthError === null;
     } finally {
       const detail = detailAcquirer.metrics();
       sourceResult.detailFetches = detail.fetches;
@@ -258,18 +263,12 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
       sourceResult.detailDeadlineFound = detail.deadlineFound;
       sourceResult.detailEligibilityFound = detail.eligibilityFound;
       sourceResult.detailApplicationFound = detail.applicationFound;
-      summary.detailFetches += detail.fetches;
-      summary.detailSucceeded += detail.succeeded;
-      summary.detailFailures += detail.failures;
-      summary.detailDeadlineFound += detail.deadlineFound;
-      summary.detailEligibilityFound += detail.eligibilityFound;
-      summary.detailApplicationFound += detail.applicationFound;
       summary.perSource.push(sourceResult);
     }
   }
 
   summary.finishedAt = new Date().toISOString();
-  return summary;
+  return reconcileDiscoverySummary(summary);
 }
 
 async function loadCategoryIdMap(client: SupabaseClient): Promise<Record<string, number>> {
@@ -326,7 +325,7 @@ async function recordSourceResult(
   sourceId: string,
   success: boolean,
   errorMessage?: string
-): Promise<void> {
+): Promise<string | null> {
   const now = new Date().toISOString();
   const update = success
     ? { last_checked_at: now, last_success_at: now, last_error: null }
@@ -334,7 +333,9 @@ async function recordSourceResult(
   const { error } = await client.from("opportunity_sources").update(update).eq("id", sourceId);
   if (error) {
     console.error(`Failed to update source health for ${sourceId}: ${error.message}`);
+    return error.message;
   }
+  return null;
 }
 
 function buildPendingRow(candidate: CandidateOpportunity, categoryId: number) {
