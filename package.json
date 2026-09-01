@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "npm run test:fixtures && npm run test:qualification && npm run test:detail && npm run test:dedupe && npm run test:summary && npm run test:review && npm run test:assistant && npm run test:lifecycle && npm run test:acquisition && npm run test:presentation && npm run test:submit-taxonomy && npm run test:triage && npm run test:queue-filter && npm run test:published-management",
+    "test": "npm run test:fixtures && npm run test:qualification && npm run test:detail && npm run test:dedupe && npm run test:summary && npm run test:review && npm run test:assistant && npm run test:lifecycle && npm run test:acquisition && npm run test:presentation && npm run test:submit-taxonomy && npm run test:triage && npm run test:queue-filter && npm run test:published-management && npm run test:verification",
     "test:fixtures": "tsx scripts/discovery/test-fixtures.ts",
     "test:qualification": "tsx tests/qualification.test.ts",
     "test:detail": "tsx tests/detail-acquisition.test.ts",
@@ -21,7 +21,12 @@
     "test:submit-taxonomy": "tsx tests/submit-taxonomy.test.ts",
     "test:triage": "tsx tests/triage-bucket.test.ts",
     "test:queue-filter": "tsx tests/queue-filter.test.ts",
-    "test:published-management": "tsx tests/published-management.test.ts"
+    "test:published-management": "tsx tests/published-management.test.ts",
+    "test:verification": "tsx tests/verification-contract.test.ts",
+    "verify:boundaries": "tsx scripts/verification/boundaries.ts",
+    "verify:plan": "tsx scripts/verification/milestone.ts",
+    "verify": "npm test && npx tsc --noEmit && npm run lint && npm run verify:boundaries && npm run verify:plan -- --after-gates",
+    "verify:ci": "npm run verify && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

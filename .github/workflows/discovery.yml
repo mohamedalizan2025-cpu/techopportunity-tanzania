@@ -4,6 +4,21 @@ on:
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
+  # Discovery-sensitive main changes require exact-HEAD production proof.
+  # The worker remains pending-only and all credentials stay on its last step.
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/discovery/**'
+      - 'supabase/migrations/**'
+      - 'supabase/seeds/0002_pilot_sources.sql'
+      - '.github/workflows/discovery.yml'
+      - 'package.json'
+      - 'package-lock.json'
+
+concurrency:
+  group: discovery-production
+  cancel-in-progress: false
 
 jobs:
   discover:
@@ -21,18 +36,15 @@ jobs:
           node-version: 22
           cache: npm
 
-      # --- quality gates: discovery only runs if all of these pass ---------
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
-
-      - name: Typecheck
-        run: npx tsc --noEmit
-
-      - name: Lint
-        run: npm run lint
+      # Permanent contract: tests, typecheck, lint, boundary assertions,
+      # change classification and a machine-readable exact-SHA report.
+      - name: Run permanent verification gates
+        env:
+          VERIFY_BASE_SHA: ${{ github.event.before }}
+        run: npm run verify
 
       # Secrets are attached ONLY to this step: the quality gates above run
       # with no credentials at all.
