@@ -25,8 +25,9 @@
  * - Failure isolation — every guard failure throws a typed
  *   AcquisitionError; the runner already failure-isolates per source.
  *
- * This is NOT a crawler framework: no browser automation, no queue, no
- * politeness scheduling beyond the existing one-document-per-source shape.
+ * This is NOT a crawler framework: no browser automation or URL queue. The
+ * registry source/feed fetches plus the explicitly allowlisted, per-source
+ * bounded one-hop detail fetches all use this same function.
  */
 
 export class AcquisitionError extends Error {}

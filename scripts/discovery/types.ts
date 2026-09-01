@@ -79,6 +79,24 @@ export interface CandidateOpportunity {
   /** What sourceUrl represents in the evidence chain. */
   referenceKind: ReferenceKind;
   discoveryMethod: "rss" | "json-ld" | "html" | "sitemap";
+  /** Rich evidence from one bounded individual-detail fetch, when available. */
+  detailEvidence?: DetailEvidence;
+}
+
+export type DetailDeadlineKind = "date" | "rolling" | "unknown";
+
+export interface DetailEvidence {
+  canonicalTitle: string | null;
+  opportunityUrl: string;
+  evidenceUrl: string;
+  description: string | null;
+  applicationUrl: string | null;
+  deadline: string | null;
+  deadlineKind: DetailDeadlineKind;
+  deadlineEvidence: string | null;
+  location: string | null;
+  eligibilityEvidence: string | null;
+  relevanceEvidence: string | null;
 }
 
 /**
@@ -100,6 +118,13 @@ export interface SourceRunResult {
   eligibilityRejected: number;
   /** Surviving candidates with no eligibility evidence; kept for moderation. */
   eligibilityUnknown: number;
+  /** Unique one-hop detail documents fetched for this source. */
+  detailFetches: number;
+  detailSucceeded: number;
+  detailFailures: number;
+  detailDeadlineFound: number;
+  detailEligibilityFound: number;
+  detailApplicationFound: number;
   /** Candidates that passed validation but duplicate existing/batch rows. */
   duplicatesSkipped: number;
   /** Candidates that passed validation AND dedupe (would-be inserts). */
@@ -123,6 +148,12 @@ export interface DiscoverySummary {
   relevanceRejected: number;
   eligibilityRejected: number;
   eligibilityUnknown: number;
+  detailFetches: number;
+  detailSucceeded: number;
+  detailFailures: number;
+  detailDeadlineFound: number;
+  detailEligibilityFound: number;
+  detailApplicationFound: number;
   errors: number;
   perSource: SourceRunResult[];
 }

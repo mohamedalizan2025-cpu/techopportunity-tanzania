@@ -5,11 +5,13 @@ import { discoverFeedUrls } from "./extract";
 import { normalizeCandidate } from "./normalize";
 import { isObviousSectionLabel, isValidOpportunityUrl, validateCandidate } from "./validate";
 import { qualifyOpportunity, shouldEnterModerationQueue } from "./qualification";
+import { createBoundedDetailAcquirer } from "./detail";
 import type { CandidateOpportunity, SourceRecord } from "./types";
 
 /**
  * Read-only dry-run: exercises the full discovery extraction pipeline
- * (base_url + advertised feeds, all four extractors, normalize + validate)
+ * (base_url + advertised feeds, all four extractors, normalize + bounded
+ * detail + validate + qualify)
  * against every active source and reports where explicit location/deadline
  * evidence exists. Writes nothing to the database.
  */
@@ -32,12 +34,13 @@ const { data: sources } = await client
 
 const activeSources = (sources ?? []) as unknown as SourceRecord[];
 
-const totals = { sources: 0, fetched: 0, failures: 0, candidates: 0, valid: 0, withLocation: 0, withDeadline: 0, withBoth: 0, withNeither: 0, noiseFiltered: 0, relevanceRejected: 0, eligibilityRejected: 0, eligibilityUnknown: 0 };
+const totals = { sources: 0, fetched: 0, failures: 0, candidates: 0, valid: 0, withLocation: 0, withDeadline: 0, withBoth: 0, withNeither: 0, noiseFiltered: 0, relevanceRejected: 0, eligibilityRejected: 0, eligibilityUnknown: 0, detailFetches: 0, detailSucceeded: 0, detailFailures: 0, detailDeadlineFound: 0, detailEligibilityFound: 0, detailApplicationFound: 0 };
 
 
 
 for (const source of activeSources) {
   totals.sources += 1;
+  const detailAcquirer = createBoundedDetailAcquirer(source);
   try {
     const html = await fetchPage(source.base_url);
     totals.fetched += 1;
@@ -53,9 +56,20 @@ for (const source of activeSources) {
       }
     }
 
-    const normalized = raw
-      .map((c) => ({ c, n: normalizeCandidate(c, source.id) }))
-      .filter((x): x is { c: Parameters<typeof normalizeCandidate>[0]; n: CandidateOpportunity } => x.n !== null);
+    const normalized: Array<{ c: Parameters<typeof normalizeCandidate>[0]; n: CandidateOpportunity }> = [];
+    for (const c of raw) {
+      const candidate = normalizeCandidate(c, source.id);
+      if (candidate) normalized.push({ c, n: await detailAcquirer.enrich(candidate) });
+    }
+    const detailMetrics = detailAcquirer.metrics();
+    totals.detailFetches += detailMetrics.fetches;
+    totals.detailSucceeded += detailMetrics.succeeded;
+    totals.detailFailures += detailMetrics.failures;
+    totals.detailDeadlineFound += detailMetrics.deadlineFound;
+    totals.detailEligibilityFound += detailMetrics.eligibilityFound;
+    totals.detailApplicationFound += detailMetrics.applicationFound;
+    totals.fetched += detailMetrics.fetches;
+    totals.failures += detailMetrics.failures;
     const structurallyValid = normalized.filter((x) => validateCandidate(x.n)).map((x) => x.n);
     const qualified = structurallyValid.map((candidate) => ({ candidate, qualification: qualifyOpportunity(candidate) }));
     totals.relevanceRejected += qualified.filter((x) => x.qualification.relevance === "not_relevant").length;
@@ -82,7 +96,7 @@ for (const source of activeSources) {
     totals.withBoth += withBoth.length;
     totals.withNeither += valid.length - withLoc.length - withDl.length + withBoth.length;
 
-    console.log(`=== ${source.name} | candidates=${valid.length} location=${withLoc.length} deadline=${withDl.length} both=${withBoth.length} feeds=${feedUrls.length}`);
+    console.log(`=== ${source.name} | candidates=${valid.length} location=${withLoc.length} deadline=${withDl.length} both=${withBoth.length} feeds=${feedUrls.length} details=${detailMetrics.succeeded}/${detailMetrics.fetches}`);
     for (const c of withLoc) {
       console.log(`    LOC ${c.title.slice(0, 60)} -> venue=${c.venueName} city=${c.city} region=${c.region} url=${c.url.slice(0, 60)}`);
     }

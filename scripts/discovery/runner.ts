@@ -6,6 +6,7 @@ import { normalizeCandidate } from "./normalize";
 import { isDuplicate, sameUrl } from "./dedupe";
 import { validateCandidate } from "./validate";
 import { qualifyOpportunity, shouldEnterModerationQueue } from "./qualification";
+import { createBoundedDetailAcquirer } from "./detail";
 import { loadActiveSources } from "./sources";
 import type { CandidateOpportunity, DiscoverySummary, SourceRunResult } from "./types";
 
@@ -28,6 +29,12 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
     relevanceRejected: 0,
     eligibilityRejected: 0,
     eligibilityUnknown: 0,
+    detailFetches: 0,
+    detailSucceeded: 0,
+    detailFailures: 0,
+    detailDeadlineFound: 0,
+    detailEligibilityFound: 0,
+    detailApplicationFound: 0,
     errors: 0,
     perSource: [],
   };
@@ -46,6 +53,7 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
   const existingRows = await loadExistingRows(serviceClient);
 
   for (const source of sources) {
+    const detailAcquirer = createBoundedDetailAcquirer(source);
     // Structured per-source result: lets operators distinguish success-zero
     // from fetch failure, extraction failure, noise rejection and DB failure
     // after the run, from the JSON run summary alone.
@@ -58,6 +66,12 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
       relevanceRejected: 0,
       eligibilityRejected: 0,
       eligibilityUnknown: 0,
+      detailFetches: 0,
+      detailSucceeded: 0,
+      detailFailures: 0,
+      detailDeadlineFound: 0,
+      detailEligibilityFound: 0,
+      detailApplicationFound: 0,
       duplicatesSkipped: 0,
       validCandidates: 0,
       categorySkipped: 0,
@@ -152,8 +166,13 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
           if (innerSurvived) continue;
         }
 
-        const candidate = normalizeCandidate(raw, source.id);
-        if (!candidate || !validateCandidate(candidate)) {
+        const normalizedCandidate = normalizeCandidate(raw, source.id);
+        if (!normalizedCandidate) {
+          sourceResult.noiseRejected += 1;
+          continue;
+        }
+        const candidate = await detailAcquirer.enrich(normalizedCandidate);
+        if (!validateCandidate(candidate)) {
           sourceResult.noiseRejected += 1;
           continue;
         }
@@ -232,6 +251,19 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
       console.error(`[${source.name}] ${message}`);
       await recordSourceResult(serviceClient, source.id, false, message);
     } finally {
+      const detail = detailAcquirer.metrics();
+      sourceResult.detailFetches = detail.fetches;
+      sourceResult.detailSucceeded = detail.succeeded;
+      sourceResult.detailFailures = detail.failures;
+      sourceResult.detailDeadlineFound = detail.deadlineFound;
+      sourceResult.detailEligibilityFound = detail.eligibilityFound;
+      sourceResult.detailApplicationFound = detail.applicationFound;
+      summary.detailFetches += detail.fetches;
+      summary.detailSucceeded += detail.succeeded;
+      summary.detailFailures += detail.failures;
+      summary.detailDeadlineFound += detail.deadlineFound;
+      summary.detailEligibilityFound += detail.eligibilityFound;
+      summary.detailApplicationFound += detail.applicationFound;
       summary.perSource.push(sourceResult);
     }
   }

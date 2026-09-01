@@ -10,11 +10,11 @@ import {
  * from. The formal chain this file participates in:
  *
  *   Source (registry row: WHO publishes)
- *     ↓ evidence acquisition (fetch.ts — one document per channel)
+ *     ↓ evidence acquisition (fetch.ts — bounded documents per channel)
  *   Evidence acquisition
  *     ↓ this file: adapters turn the document into raw candidates
  *   Candidate extraction
- *     ↓ normalize.ts → validate.ts → dedupe.ts
+ *     ↓ normalize.ts → optional one-hop detail → validate.ts → qualify → dedupe.ts
  *   Pending opportunity (moderation queue)
  *     ↓ human verification
  *   Published opportunity

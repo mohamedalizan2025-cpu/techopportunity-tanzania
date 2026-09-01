@@ -36,16 +36,16 @@ const TARGET_OPPORTUNITY =
 // Evidence-backed nationalities seen in the live inventory. This deliberately
 // stays small: broad country guessing would create false exclusions.
 const EXPLICIT_OTHER_NATIONALITY_TITLE =
-  /\b(?:for|open to)\s+(?:young\s+)?(?:kenyans?|nigerians?|south africans?|ghanaians?|asians?|eritreans?)\b|\b(?:kenyans?|nigerians?|south africans?|ghanaians?|asians?|eritreans?)\s+(?:citizens?|nationals?|residents?|graduates?|startups?|innovators?|entrepreneurs?|changemakers?|students?|women|youth)\b/i;
+  /\b(?:for|open to)\s+(?:young\s+)?(?:kenyans?|nigerians?|south africans?|ghanaians?|canadians?|asians?|eritreans?)\b|\b(?:kenyans?|nigerians?|south africans?|ghanaians?|canadians?|asians?|eritreans?)\s+(?:citizens?|nationals?|residents?|graduates?|startups?|innovators?|entrepreneurs?|changemakers?|students?|women|youth)\b/i;
 
 const EXPLICIT_OTHER_NATIONALITY_BODY =
-  /\b(?:eligibility|who can apply|applicants? must)\b[\s\S]{0,180}\b(?:only\s+)?(?:kenyans?|nigerians?|south africans?|ghanaians?|asians?|eritreans?)\b/i;
+  /\b(?:eligibility|requirements|who can apply|applicants? must)\b[\s\S]{0,240}\b(?:only\s+)?(?:kenyans?|nigerians?|south africans?|ghanaians?|canadians?|asians?|eritreans?)\b/i;
 
 const EXPLICIT_TANZANIA =
   /\b(?:open to|eligible (?:to|for)|applications? (?:are )?(?:open to|invited from)|for)\s+(?:all\s+)?tanzanians?\b|\btanzanian (?:citizens?|nationals?|residents?|students?|developers?|innovators?|entrepreneurs?|researchers?) (?:may|can|are eligible to)\b/i;
 
 const EXPLICIT_AFRICA_WIDE =
-  /\b(?:open to|applications? (?:are )?(?:open to|invited from)|eligible (?:to|for)|for)\s+(?:applicants? |participants? |students? |developers? |researchers? |entrepreneurs? |women )?(?:from )?(?:all |all 54 )?african (?:countries|nationals?|citizens?|residents?|applicants?|participants?|students?|developers?|researchers?|entrepreneurs?|women)\b|\b(?:you|who) are african\b[\s\S]{0,100}\b(?:reside|resident) in an african country\b/i;
+  /\b(?:open to|applications? (?:are )?(?:open to|invited from)|eligible (?:to|for)|for)\s+(?:applicants? |participants? |students? |developers? |researchers? |entrepreneurs? |women )?(?:from )?(?:all |all 54 )?african (?:countries|nationals?|citizens?|residents?|applicants?|participants?|students?|developers?|researchers?|entrepreneurs?|women)\b|\b(?:you|who) are african\b[\s\S]{0,100}\b(?:reside|resident) in an african country\b|\b(?:citizens?|nationals?|residents?|refugees?)(?:\s+or\s+(?:citizens?|nationals?|residents?|refugees?))?\s+of\s+(?:an?\s+)?african\s+(?:country|union member state)\b/i;
 
 const EXPLICIT_WORLDWIDE =
   /\b(?:open to|applications? (?:are )?(?:open to|invited from)|eligible (?:to|for))\b[\s\S]{0,100}\b(?:all countries|worldwide|all over the world|regardless of nationality)\b/i;
@@ -74,7 +74,8 @@ export function qualifyOpportunity(
   now = new Date()
 ): OpportunityQualification {
   const title = candidate.title.trim();
-  const body = `${candidate.title}\n${candidate.description}`;
+  const detailEligibility = candidate.detailEvidence?.eligibilityEvidence ?? "";
+  const body = `${candidate.title}\n${candidate.description}\n${detailEligibility}`;
 
   const nonOpportunityEvidence = matchedEvidence(title, CLEARLY_NON_OPPORTUNITY_TITLES);
   const reportingEvidence = !ACTION_CALL.test(title) && NEWS_REPORTING_TITLE.test(title)
@@ -83,14 +84,22 @@ export function qualifyOpportunity(
   const staleEvidence = isClearlyStale(title, candidate.deadline, now)
     ? `title is dated before ${now.getUTCFullYear() - 1}: ${title}`.slice(0, 240)
     : null;
+  const detailHasNoAction = Boolean(candidate.detailEvidence)
+    && !candidate.detailEvidence?.relevanceEvidence
+    && !candidate.detailEvidence?.applicationUrl
+    && !candidate.detailEvidence?.deadlineEvidence;
 
   let relevance: OpportunityRelevance = "ambiguous";
   let relevanceEvidence: string | null = null;
-  if (nonOpportunityEvidence || reportingEvidence || staleEvidence) {
+  if (nonOpportunityEvidence || reportingEvidence || staleEvidence || detailHasNoAction) {
     relevance = "not_relevant";
-    relevanceEvidence = nonOpportunityEvidence ?? reportingEvidence ?? staleEvidence;
+    relevanceEvidence = nonOpportunityEvidence
+      ?? reportingEvidence
+      ?? staleEvidence
+      ?? "detail page contains no explicit opportunity action, application link, or deadline";
   } else {
-    const targetEvidence = matchedEvidence(title, [ACTION_CALL, TARGET_OPPORTUNITY]);
+    const targetEvidence = candidate.detailEvidence?.relevanceEvidence
+      ?? matchedEvidence(title, [ACTION_CALL, TARGET_OPPORTUNITY]);
     if (targetEvidence) {
       relevance = "relevant";
       relevanceEvidence = targetEvidence;
