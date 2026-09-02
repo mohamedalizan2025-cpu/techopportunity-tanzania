@@ -20,6 +20,11 @@ const sourceResult = (overrides: Partial<SourceRunResult>): SourceRunResult => (
   candidatesFound: 0,
   noiseRejected: 0,
   structurallyValidCandidates: 0,
+  evidencePresent: 0,
+  deadlineEvidencePresent: 0,
+  eligibilityEvidencePresent: 0,
+  relevanceEvidencePresent: 0,
+  applicationEvidencePresent: 0,
   relevanceRejected: 0,
   eligibilityRejected: 0,
   eligibilityUnknown: 0,
@@ -44,6 +49,9 @@ const perSource = [
   sourceResult({
     sourceId: "a", candidatesFound: 10, noiseRejected: 2,
     structurallyValidCandidates: 8, relevanceRejected: 1,
+    evidencePresent: 8, deadlineEvidencePresent: 1,
+    eligibilityEvidencePresent: 2, relevanceEvidencePresent: 7,
+    applicationEvidencePresent: 1,
     eligibilityRejected: 1, eligibilityUnknown: 5, detailFetches: 3,
     detailSucceeded: 2, detailFailures: 1, detailDeadlineFound: 1,
     detailEligibilityFound: 2, detailApplicationFound: 1,
@@ -53,6 +61,8 @@ const perSource = [
   sourceResult({
     sourceId: "b", ok: false, candidatesFound: 4, noiseRejected: 1,
     structurallyValidCandidates: 3, relevanceRejected: 1,
+    evidencePresent: 3, eligibilityEvidencePresent: 1,
+    relevanceEvidencePresent: 2,
     eligibilityUnknown: 2, detailFetches: 1, detailFailures: 1,
     duplicatesSkipped: 1, deduplicatedCandidates: 1, validCandidates: 1,
     insertedPending: 0, sourceHealthUpdated: false,
@@ -70,6 +80,11 @@ const emptySummary: DiscoverySummary = {
   candidatesFound: 0,
   noiseRejected: 0,
   structurallyValidCandidates: 0,
+  evidencePresent: 0,
+  deadlineEvidencePresent: 0,
+  eligibilityEvidencePresent: 0,
+  relevanceEvidencePresent: 0,
+  applicationEvidencePresent: 0,
   deduplicatedCandidates: 0,
   validCandidates: 0,
   insertedPending: 0,
@@ -93,6 +108,7 @@ const summary = reconcileDiscoverySummary(emptySummary);
 assert("planned source count is preserved", summary.sourcesChecked === 3);
 assert("attempted/succeeded/failed sources derive from evidence", summary.sourcesAttempted === 2 && summary.sourcesSucceeded === 1 && summary.sourcesFailed === 1);
 assert("candidate stages reconcile exactly", summary.candidatesFound === 14 && summary.noiseRejected === 3 && summary.structurallyValidCandidates === 11);
+assert("trust evidence counters reconcile exactly", summary.evidencePresent === 11 && summary.deadlineEvidencePresent === 1 && summary.eligibilityEvidencePresent === 3 && summary.relevanceEvidencePresent === 9 && summary.applicationEvidencePresent === 1);
 assert("qualification counters reconcile exactly", summary.relevanceRejected === 2 && summary.eligibilityRejected === 1 && summary.eligibilityUnknown === 7);
 assert("detail counters reconcile exactly", summary.detailFetches === 4 && summary.detailSucceeded === 2 && summary.detailFailures === 2);
 assert("detail evidence counters reconcile exactly", summary.detailDeadlineFound === 1 && summary.detailEligibilityFound === 2 && summary.detailApplicationFound === 1);

@@ -1,0 +1,66 @@
+name: Discovery schedule health
+
+on:
+  # Credential-free observer. This does not run discovery or change its daily
+  # cadence; it detects a stale/missed retained production observation.
+  schedule:
+    - cron: '30 3/6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/discovery/health.ts'
+      - 'scripts/discovery/health-artifact.ts'
+      - 'scripts/discovery/health-monitor.ts'
+      - '.github/workflows/discovery-health.yml'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discovery-schedule-health
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore discovery health history
+        uses: actions/cache/restore@v4
+        with:
+          path: discovery-health/history.json
+          key: discovery-health-monitor-${{ github.run_id }}
+          restore-keys: |
+            discovery-health-
+
+      - name: Evaluate retained schedule evidence
+        env:
+          DISCOVERY_HEALTH_HISTORY_PATH: discovery-health/history.json
+          DISCOVERY_SCHEDULE_REPORT_PATH: discovery-health/schedule-report.json
+          DISCOVERY_EXPECTED_INTERVAL_HOURS: '24'
+          DISCOVERY_TARGET_INTERVAL_HOURS: '6'
+        run: npm run health:monitor
+
+      - name: Upload schedule health evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: discovery-schedule-health-${{ github.run_id }}
+          path: discovery-health/schedule-report.json
+          if-no-files-found: error
+          retention-days: 90

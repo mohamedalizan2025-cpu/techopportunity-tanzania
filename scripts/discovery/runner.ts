@@ -29,6 +29,11 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
     candidatesFound: 0,
     noiseRejected: 0,
     structurallyValidCandidates: 0,
+    evidencePresent: 0,
+    deadlineEvidencePresent: 0,
+    eligibilityEvidencePresent: 0,
+    relevanceEvidencePresent: 0,
+    applicationEvidencePresent: 0,
     deduplicatedCandidates: 0,
     validCandidates: 0,
     insertedPending: 0,
@@ -73,6 +78,11 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
       candidatesFound: 0,
       noiseRejected: 0,
       structurallyValidCandidates: 0,
+      evidencePresent: 0,
+      deadlineEvidencePresent: 0,
+      eligibilityEvidencePresent: 0,
+      relevanceEvidencePresent: 0,
+      applicationEvidencePresent: 0,
       relevanceRejected: 0,
       eligibilityRejected: 0,
       eligibilityUnknown: 0,
@@ -189,10 +199,25 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
           continue;
         }
         sourceResult.structurallyValidCandidates += 1;
+        if (candidate.evidenceUrl || candidate.sourceUrl) {
+          sourceResult.evidencePresent += 1;
+        }
+        if (candidate.deadline || candidate.detailEvidence?.deadlineKind === "rolling") {
+          sourceResult.deadlineEvidencePresent += 1;
+        }
+        if (candidate.detailEvidence?.applicationUrl) {
+          sourceResult.applicationEvidencePresent += 1;
+        }
 
         const qualification = qualifyOpportunity(candidate, qualificationNow, {
           sourceType: source.source_type,
         });
+        if (qualification.eligibilityEvidence) {
+          sourceResult.eligibilityEvidencePresent += 1;
+        }
+        if (qualification.relevanceEvidence) {
+          sourceResult.relevanceEvidencePresent += 1;
+        }
         if (!shouldEnterModerationQueue(qualification)) {
           if (qualification.relevance === "not_relevant") {
             sourceResult.relevanceRejected += 1;

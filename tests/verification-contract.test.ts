@@ -61,6 +61,11 @@ test("workflow changes select workflow review", () => {
 test("discovery workflow changes require exact-head production evidence", () => {
   const plan = classifyChanges([".github/workflows/discovery.yml"]);
   assert.equal(plan.productionEvidence.required, true);
+  assert.deepEqual(selected(plan.changedFiles), ["discovery-health", "workflow-review"]);
+});
+
+test("health model changes select discovery and focused health regressions", () => {
+  assert.deepEqual(selected(["scripts/discovery/health.ts"]), ["discovery-regression", "discovery-health"]);
 });
 
 test("dependency changes require build and integrated production evidence", () => {

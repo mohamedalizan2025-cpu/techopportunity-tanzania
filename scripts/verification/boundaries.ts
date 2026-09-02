@@ -24,6 +24,7 @@ const fetchSource = read("scripts/discovery/fetch.ts");
 const runnerSource = read("scripts/discovery/runner.ts");
 const assistantRoute = read("app/api/assistant/ask/route.ts");
 const discoveryWorkflow = read(".github/workflows/discovery.yml");
+const healthWorkflow = read(".github/workflows/discovery-health.yml");
 const verificationWorkflow = read(".github/workflows/verification.yml");
 
 invariant("all discovery network acquisition crosses fetchPage", () => {
@@ -87,6 +88,30 @@ invariant("discovery credentials are scoped only to the worker step", () => {
   assert.ok(worker >= 0);
   assert.ok(firstSecret > worker);
   assert.doesNotMatch(discoveryWorkflow.slice(0, worker), /secrets\./);
+});
+
+invariant("health reporting is local-only and cannot mutate production", () => {
+  const healthSource = [
+    read("scripts/discovery/health.ts"),
+    read("scripts/discovery/health-artifact.ts"),
+    read("scripts/discovery/health-monitor.ts"),
+  ].join("\n");
+  assert.doesNotMatch(healthSource, /@supabase|createClient|\bfetch\s*\(|https?:\/\//);
+  assert.doesNotMatch(healthSource, /\.(insert|update|delete|upsert)\s*\(/);
+});
+
+invariant("discovery workflow retains bounded machine-readable health evidence", () => {
+  assert.match(discoveryWorkflow, /actions\/cache\/restore@v4/);
+  assert.match(discoveryWorkflow, /actions\/cache\/save@v4/);
+  assert.match(discoveryWorkflow, /actions\/upload-artifact@v4/);
+  assert.match(discoveryWorkflow, /discovery-health\/report\.json/);
+  assert.match(discoveryWorkflow, /retention-days: 90/);
+});
+
+invariant("schedule monitor is credential-free and cannot execute discovery", () => {
+  assert.match(healthWorkflow, /cron: ['"]30 3\/6 \* \* \*['"]/);
+  assert.match(healthWorkflow, /run: npm run health:monitor/);
+  assert.doesNotMatch(healthWorkflow, /secrets\.|SUPABASE_SERVICE_ROLE_KEY|scripts\/discovery\/index\.ts/);
 });
 
 invariant("ordinary milestone CI is read-only and credential-free", () => {

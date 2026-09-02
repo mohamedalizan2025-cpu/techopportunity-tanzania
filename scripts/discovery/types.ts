@@ -114,6 +114,16 @@ export interface SourceRunResult {
   noiseRejected: number;
   /** Candidates that passed normalization, detail acquisition and validation. */
   structurallyValidCandidates: number;
+  /** Structurally valid candidates retaining a source/evidence document. */
+  evidencePresent: number;
+  /** Structurally valid candidates with explicit deadline/rolling evidence. */
+  deadlineEvidencePresent: number;
+  /** Candidates whose qualification produced explicit eligibility evidence. */
+  eligibilityEvidencePresent: number;
+  /** Candidates whose qualification produced explicit relevance evidence. */
+  relevanceEvidencePresent: number;
+  /** Candidates with an explicit application URL from bounded detail evidence. */
+  applicationEvidencePresent: number;
   /** Clearly non-relevant institutional/news/stale records. */
   relevanceRejected: number;
   /** Explicit evidence limits applicants to a nationality excluding Tanzania. */
@@ -153,6 +163,11 @@ export interface DiscoverySummary {
   candidatesFound: number;
   noiseRejected: number;
   structurallyValidCandidates: number;
+  evidencePresent: number;
+  deadlineEvidencePresent: number;
+  eligibilityEvidencePresent: number;
+  relevanceEvidencePresent: number;
+  applicationEvidencePresent: number;
   deduplicatedCandidates: number;
   validCandidates: number;
   insertedPending: number;

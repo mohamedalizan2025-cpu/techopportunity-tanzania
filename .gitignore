@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/discovery-health/
 
 # next.js
 /.next/

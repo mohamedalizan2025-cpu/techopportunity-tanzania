@@ -12,6 +12,7 @@ export const ALWAYS_GATES = [
 export type ChangeGateId =
   | "build"
   | "discovery-regression"
+  | "discovery-health"
   | "qualification-regression"
   | "acquisition-security"
   | "moderation-auth"
@@ -57,6 +58,11 @@ const QUALIFICATION = [
   /^tests\/(qualification|detail-acquisition)\.test\.ts$/,
 ];
 const ACQUISITION = [/^scripts\/discovery\/(fetch|detail)\.ts$/, /^tests\/acquisition\.test\.ts$/];
+const DISCOVERY_HEALTH = [
+  /^scripts\/discovery\/(health|health-artifact|index|runner|summary|types)\.ts$/,
+  /^tests\/(discovery-health|discovery-summary)\.test\.ts$/,
+  /^\.github\/workflows\/discovery(?:-health)?\.yml$/,
+];
 const MODERATION_AUTH = [
   /^app\/(moderation|published-management|login)(\/|$)/,
   /^lib\/data\/(moderation|moderation-actions|published-management|auth-actions|supabase-auth)\.ts$/,
@@ -79,8 +85,9 @@ const BUILD = [
 ];
 
 const DISCOVERY_PRODUCTION = [
-  /^scripts\/discovery\/(adapters|dedupe|detail|extract|fetch|index|normalize|qualification|runner|sources|summary|types|validate)\.ts$/,
+  /^scripts\/discovery\/(adapters|dedupe|detail|extract|fetch|health|health-artifact|index|normalize|qualification|runner|sources|summary|types|validate)\.ts$/,
   /^\.github\/workflows\/discovery\.yml$/,
+  /^\.github\/workflows\/discovery-health\.yml$/,
   /^supabase\/seeds\/0002_pilot_sources\.sql$/,
   /^supabase\/migrations\//,
   /^package(-lock)?\.json$/,
@@ -103,6 +110,7 @@ export function classifyChanges(inputFiles: string[]): VerificationPlan {
   const discovery = select(DISCOVERY);
   const qualification = select(QUALIFICATION);
   const acquisition = select(ACQUISITION);
+  const discoveryHealth = select(DISCOVERY_HEALTH);
   const moderationAuth = select(MODERATION_AUTH);
   const assistant = select(ASSISTANT);
   const migrations = select(MIGRATIONS);
@@ -134,6 +142,7 @@ export function classifyChanges(inputFiles: string[]): VerificationPlan {
     changeTriggeredGates: [
       gate("build", "npm run build", "Runtime or build inputs changed.", build.length > 0, "No runtime or build input changed."),
       gate("discovery-regression", "npm test", "Discovery behavior or its tests changed.", discovery.length > 0, "No discovery path changed."),
+      gate("discovery-health", "npm run test:health", "Discovery metrics, health semantics, retention, or scheduling changed.", discoveryHealth.length > 0, "No discovery-health path changed."),
       gate("qualification-regression", "npm run test:qualification", "Qualification evidence rules changed.", qualification.length > 0, "No qualification path changed."),
       gate("acquisition-security", "npm run test:acquisition", "Network acquisition boundaries changed.", acquisition.length > 0, "No acquisition path changed."),
       gate("moderation-auth", "npm run test:review && npm run test:published-management", "Moderation or auth boundaries changed.", moderationAuth.length > 0, "No moderation or auth path changed."),

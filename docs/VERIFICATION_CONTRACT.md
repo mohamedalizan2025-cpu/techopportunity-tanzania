@@ -15,6 +15,9 @@ green test run into production-readiness evidence.
   CI supplies its event base SHA.
 - `npm run verify:boundaries` checks critical architecture and security
   invariants without network or database access.
+- `npm run test:health` exercises schedule, baseline, anomaly, source,
+  pipeline, freshness, and safety behavior. `npm run health:monitor` evaluates
+  retained production schedule evidence without credentials.
 
 The planner reports every selected gate, every skipped gate with a reason,
 migration and registry changes, security-sensitive paths, production-evidence
@@ -41,6 +44,7 @@ prohibited even when all code gates pass.
 |---|---|
 | Runtime UI, application data layer, config, dependencies | Production build |
 | `scripts/discovery/**` or core discovery tests | Full discovery regression |
+| Discovery health, summary, worker identity, or schedule workflows | Discovery health/anomaly regression |
 | Qualification, normalization, validation, or extraction | Qualification corpus |
 | `fetch.ts`, detail acquisition, or acquisition tests | SSRF/network acquisition suite |
 | Moderation, published management, auth, or `proxy.ts` | Moderation/auth regression and deployed access proof |
@@ -67,6 +71,11 @@ runs the permanent gates without credentials, then exposes the three existing
 Supabase secrets only to the pending-only worker step. Workflow concurrency
 prevents overlapping production discovery runs. No verification script has a
 database or network client.
+
+Each production run now retains a bounded machine-readable health report and
+history artifact. A separate credential-free schedule observer can detect a
+missing retained run without invoking the worker. The observer's six-hour
+cadence is monitoring frequency only; production discovery remains daily.
 
 Evidence is valid only when the workflow `head_sha` equals the commit being
 claimed. Record the workflow name, run ID, event, conclusion, start/finish

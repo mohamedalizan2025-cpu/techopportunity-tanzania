@@ -20,6 +20,9 @@ concurrency:
   group: discovery-production
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   discover:
     runs-on: ubuntu-latest
@@ -46,6 +49,17 @@ jobs:
           VERIFY_BASE_SHA: ${{ github.event.before }}
         run: npm run verify
 
+      # Bounded cross-run history: each run restores the newest default-branch
+      # observation and saves a new immutable key. No database or external
+      # observability service is involved.
+      - name: Restore discovery health history
+        uses: actions/cache/restore@v4
+        with:
+          path: discovery-health/history.json
+          key: discovery-health-${{ github.run_id }}
+          restore-keys: |
+            discovery-health-
+
       # Secrets are attached ONLY to this step: the quality gates above run
       # with no credentials at all.
       - name: Run discovery worker
@@ -53,4 +67,27 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DISCOVERY_HEALTH_REPORT_PATH: discovery-health/report.json
+          DISCOVERY_HEALTH_HISTORY_PATH: discovery-health/history.json
+          DISCOVERY_EXPECTED_INTERVAL_HOURS: '24'
+          DISCOVERY_TARGET_INTERVAL_HOURS: '6'
+          DISCOVERY_VERIFICATION_PASSED: 'true'
         run: node --import tsx scripts/discovery/index.ts
+
+      - name: Save discovery health history
+        if: always() && hashFiles('discovery-health/history.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: discovery-health/history.json
+          key: discovery-health-${{ github.run_id }}
+
+      - name: Upload discovery health evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: discovery-health-${{ github.run_id }}
+          path: |
+            discovery-health/report.json
+            discovery-health/history.json
+          if-no-files-found: warn
+          retention-days: 90
