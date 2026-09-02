@@ -2,6 +2,7 @@ import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import {
   DEFAULT_EXPECTED_INTERVAL_HOURS,
+  MIN_BASELINE_OBSERVATIONS,
   SIX_HOUR_TARGET_INTERVAL,
   assessSchedule,
   isComparableHealthObservation,
@@ -53,6 +54,14 @@ const report = {
   historyDepth: history.observations.length,
   scheduledHistoryDepth: scheduledObservations.length,
   successfulScheduledHistoryDepth: successfulScheduledObservations.length,
+  baseline: {
+    basis: "successful_scheduled_runs" as const,
+    state: successfulScheduledObservations.length >= MIN_BASELINE_OBSERVATIONS
+      ? "established" as const
+      : "insufficient_history" as const,
+    observations: successfulScheduledObservations.length,
+    requiredObservations: MIN_BASELINE_OBSERVATIONS,
+  },
   latestScheduledRun: latestScheduled
     ? {
         commitSha: latestScheduled.identity.commitSha,
@@ -84,6 +93,7 @@ if (process.env.GITHUB_STEP_SUMMARY) {
       `- State: **${schedule.state}**`,
       `- Reason: ${schedule.reason}`,
       `- Retained scheduled observations: ${scheduledObservations.length}`,
+      `- Baseline: **${report.baseline.state}** (${report.baseline.observations}/${report.baseline.requiredObservations})`,
       `- Six-hour readiness: **${report.sixHourReadiness}**`,
       "",
     ].join("\n"),

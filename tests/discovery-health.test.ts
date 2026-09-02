@@ -166,6 +166,20 @@ test("five successful runs establish a descriptive baseline", () => {
   assert.equal(report.baseline.basis, "successful_scheduled_runs");
 });
 
+test("the fifth scheduled success matures the baseline in its own report", () => {
+  const report = buildHealthReport({
+    summary: summary([source()], identity(4, "schedule").startedAt, identity(4, "schedule").finishedAt),
+    history: history([0, 1, 2, 3].map((i) => observation(i))),
+    identity: identity(4, "schedule"),
+    verificationPassed: true,
+  });
+  assert.equal(report.baseline.state, "established");
+  assert.equal(report.baseline.historyDepth, 5);
+  assert.equal(report.baseline.comparisonHistoryDepth, 4);
+  assert.equal(report.baseline.pipeline.candidatesFound.observations, 5);
+  assert.equal(anomaly(report, "candidate_volume_collapse"), undefined);
+});
+
 test("manual and push observations are excluded from scheduled baselines", () => {
   const observations = [
     ...[0, 1, 2, 3].map((i) => observation(i)),
@@ -417,6 +431,23 @@ test("a rerun replaces its logical workflow observation instead of double-counti
   assert.equal(retained.observations.length, 1);
   assert.equal(retained.observations[0].identity.runAttempt, 2);
   assert.equal(retained.observations[0].metrics.candidatesFound, 21);
+});
+
+test("a retry cannot satisfy readiness by double-counting one logical scheduled run", () => {
+  const first = observation(0);
+  const retry = structuredClone(first);
+  retry.identity.runAttempt = 2;
+  const report = buildHealthReport({
+    summary: summary([source()], retry.identity.startedAt, retry.identity.finishedAt),
+    history: history([first]),
+    identity: retry.identity,
+    expectedIntervalHours: 6,
+    targetIntervalHours: 6,
+    verificationPassed: true,
+  });
+  assert.equal(report.readiness.state, "PARTIALLY_PROVEN");
+  assert.equal(report.productionEvidence.retainedHistoryDepth, 1);
+  assert.equal(report.readiness.criteria.find((criterion) => criterion.id === "repeated_scheduled_runs")?.evidence.startsWith("1 successful"), true);
 });
 
 test("invalid retained history fails closed to an empty baseline", () => {

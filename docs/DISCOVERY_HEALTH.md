@@ -72,6 +72,12 @@ count, mean, minimum, and maximum for candidate volume, rejection/unknown/
 duplicate rates, detail and evidence rates, qualified/inserted counts, and run
 duration.
 
+The current successful scheduled observation contributes to descriptive
+maturity, so the fifth valid run reports `established`. Anomaly comparisons use
+prior observations only; the current run never dilutes its own deviation.
+`comparisonHistoryDepth` makes that distinction explicit. A re-run replaces its
+earlier attempt before both maturity and readiness are evaluated.
+
 History is bounded to 24 observations. Earlier production runs are documented
 evidence but are not silently converted into the new schema when exact counters
 were unavailable. This avoids manufacturing a stable baseline from partial or

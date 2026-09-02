@@ -135,6 +135,7 @@ export interface DiscoveryHealthReport {
     state: BaselineState;
     basis: "successful_scheduled_runs";
     historyDepth: number;
+    comparisonHistoryDepth: number;
     requiredHistory: number;
     pipeline: Record<BaselineMetricKey, MetricBaseline>;
     sources: Record<string, {
@@ -253,6 +254,15 @@ function successfulScheduledHistory(history: HealthObservation[]): HealthObserva
       && observation.executionState === "success"
       && observation.identity.event === "schedule"
   );
+}
+
+function sameLogicalObservation(candidate: HealthObservation, observation: HealthObservation): boolean {
+  if (candidate.identity.workflowRunId && observation.identity.workflowRunId) {
+    return candidate.identity.workflowRunId === observation.identity.workflowRunId;
+  }
+  return candidate.identity.event === observation.identity.event
+    && candidate.identity.commitSha === observation.identity.commitSha
+    && candidate.identity.startedAt === observation.identity.startedAt;
 }
 
 const ratio = (numerator: number, denominator: number): number | null =>
@@ -609,7 +619,9 @@ function readinessCriteria(
   configuredForTarget: boolean,
   verificationPassed: boolean
 ): ReadinessCriterion[] {
-  const scheduledSuccesses = successfulScheduledHistory([...history, observation]);
+  const scheduledSuccesses = successfulScheduledHistory(
+    appendObservation({ schemaVersion: 1, observations: history }, observation).observations
+  );
   return [
     { id: "scheduler_configured", passed: configuredForTarget, evidence: configuredForTarget ? "Configured interval meets the six-hour target." : "Configured discovery interval does not yet meet the six-hour target." },
     { id: "workflow_executes", passed: observation.identity.workflowRunId !== null, evidence: observation.identity.workflowRunId ? `Workflow run ${observation.identity.workflowRunId} captured.` : "No workflow run identifier captured." },
@@ -653,9 +665,17 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
     sources,
   };
 
-  const pipelineBaselines = buildPipelineBaselines(history);
-  const sourceBaselines = buildSourceBaselines(history);
-  const successfulHistory = successfulScheduledHistory(history);
+  // A re-run replaces its earlier attempt before either maturity or anomaly
+  // evaluation. Descriptive maturity includes the current successful scheduled
+  // observation; anomaly comparisons remain prior-only to avoid self-dilution.
+  const comparisonHistory = history.filter((item) => !sameLogicalObservation(item, observation));
+  const retainedHistory = appendObservation({ schemaVersion: 1, observations: history }, observation).observations;
+  const comparisonPipelineBaselines = buildPipelineBaselines(comparisonHistory);
+  const comparisonSourceBaselines = buildSourceBaselines(comparisonHistory);
+  const pipelineBaselines = buildPipelineBaselines(retainedHistory);
+  const sourceBaselines = buildSourceBaselines(retainedHistory);
+  const successfulHistory = successfulScheduledHistory(retainedHistory);
+  const comparisonSuccessfulHistory = successfulScheduledHistory(comparisonHistory);
   const baselineState: BaselineState = successfulHistory.length >= MIN_BASELINE_OBSERVATIONS ? "established" : "insufficient_history";
   const expectedInterval = input.expectedIntervalHours ?? DEFAULT_EXPECTED_INTERVAL_HOURS;
   const targetInterval = input.targetIntervalHours ?? SIX_HOUR_TARGET_INTERVAL;
@@ -678,8 +698,8 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
     if (summary.sourceHealthFailures > 0) {
       anomalies.push({ severity: "warning", code: "source_health_write_failed", scope: "run", message: "One or more source-health updates failed.", observed: summary.sourceHealthFailures });
     }
-    addPipelineAnomalies(anomalies, metrics, pipelineBaselines, history);
-    addSourceAnomalies(anomalies, sources, sourceBaselines);
+    addPipelineAnomalies(anomalies, metrics, comparisonPipelineBaselines, comparisonHistory);
+    addSourceAnomalies(anomalies, sources, comparisonSourceBaselines);
   }
   if (schedule.state === "missed") {
     anomalies.push({ severity: "critical", code: "scheduled_run_missed", scope: "schedule", message: schedule.reason, observed: schedule.observedGapHours ?? undefined });
@@ -705,6 +725,7 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
       state: baselineState,
       basis: "successful_scheduled_runs",
       historyDepth: successfulHistory.length,
+      comparisonHistoryDepth: comparisonSuccessfulHistory.length,
       requiredHistory: MIN_BASELINE_OBSERVATIONS,
       pipeline: pipelineBaselines,
       sources: sourceBaselines,
@@ -724,13 +745,13 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
     anomalies,
     productionEvidence: {
       state: input.identity.commitSha && input.identity.workflowRunId ? "captured" : "partial",
-      retainedHistoryDepth: Math.min(history.length + 1, HEALTH_HISTORY_LIMIT),
+      retainedHistoryDepth: retainedHistory.length,
       reportContainsSecrets: false,
     },
     readiness: {
       state: criteria.every((criterion) => criterion.passed)
         ? "PROVEN"
-        : configuredForTarget && successfulScheduledHistory([...history, observation]).length > 0
+        : configuredForTarget && successfulScheduledHistory(retainedHistory).length > 0
           ? "PARTIALLY_PROVEN"
           : "NOT_YET_PROVEN",
       criteria,
@@ -740,18 +761,10 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
 }
 
 export function appendObservation(history: HealthHistory | undefined, observation: HealthObservation): HealthHistory {
-  const logicalMatch = (candidate: HealthObservation): boolean => {
-    if (candidate.identity.workflowRunId && observation.identity.workflowRunId) {
-      return candidate.identity.workflowRunId === observation.identity.workflowRunId;
-    }
-    return candidate.identity.event === observation.identity.event
-      && candidate.identity.commitSha === observation.identity.commitSha
-      && candidate.identity.startedAt === observation.identity.startedAt;
-  };
   return {
     schemaVersion: 1,
     observations: [
-      ...(history?.observations ?? []).filter((candidate) => !logicalMatch(candidate)),
+      ...(history?.observations ?? []).filter((candidate) => !sameLogicalObservation(candidate, observation)),
       observation,
     ].slice(-HEALTH_HISTORY_LIMIT),
   };
