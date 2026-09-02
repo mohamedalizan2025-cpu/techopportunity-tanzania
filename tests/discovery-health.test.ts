@@ -10,6 +10,7 @@ import {
   assessSchedule,
   buildHealthReport,
   classifyFreshness,
+  triggerKindForEvent,
   type HealthHistory,
   type HealthObservation,
   type RunIdentity,
@@ -100,13 +101,15 @@ function identity(index = 0, event = "push"): RunIdentity {
     commitSha: `sha-${index}`,
     workflowRunId: `run-${index}`,
     workflowName: "Discovery sync",
+    runAttempt: 1,
     event,
+    triggerKind: triggerKindForEvent(event),
     startedAt: `2026-09-01T${hour}:00:00Z`,
     finishedAt: `2026-09-01T${hour}:01:00Z`,
   };
 }
 
-function observation(index: number, sourceOverrides: Partial<SourceRunResult> = {}, event = "push"): HealthObservation {
+function observation(index: number, sourceOverrides: Partial<SourceRunResult> = {}, event = "schedule"): HealthObservation {
   return buildHealthReport({
     summary: summary([source(sourceOverrides)], identity(index, event).startedAt, identity(index, event).finishedAt),
     identity: identity(index, event),
@@ -122,19 +125,32 @@ test("schedule is unknown without a retained scheduled run", () => {
 });
 
 test("schedule is on-time inside the interval plus tolerance", () => {
-  assert.equal(assessSchedule([observation(0, {}, "schedule")], "2026-09-02T05:00:00Z", 24, "schedule").state, "on_time");
+  const result = assessSchedule([observation(0)], "2026-09-01T07:59:00Z", 6, "schedule");
+  assert.equal(result.state, "on_time");
+  assert.equal(result.toleranceHours, 2);
 });
 
 test("late completed execution is delayed before a second interval", () => {
-  assert.equal(assessSchedule([observation(0, {}, "schedule")], "2026-09-02T11:00:00Z", 24, "schedule").state, "delayed");
+  assert.equal(assessSchedule([observation(0)], "2026-09-01T09:00:00Z", 6, "schedule").state, "delayed");
 });
 
 test("absent execution beyond tolerance is missed", () => {
-  assert.equal(assessSchedule([observation(0, {}, "schedule")], "2026-09-02T07:00:00Z", 24).state, "missed");
+  assert.equal(assessSchedule([observation(0)], "2026-09-01T09:00:00Z", 6).state, "missed");
 });
 
 test("invalid schedule time remains unknown", () => {
-  assert.equal(assessSchedule([observation(0, {}, "schedule")], "not-a-date").state, "unknown");
+  assert.equal(assessSchedule([observation(0)], "not-a-date").state, "unknown");
+});
+
+test("manual and push runs never satisfy scheduled evidence", () => {
+  assert.equal(assessSchedule([observation(0, {}, "workflow_dispatch"), observation(1, {}, "push")], "2026-09-01T02:00:00Z", 6).state, "unknown");
+});
+
+test("trigger identity distinguishes scheduled, manual, push, and other runs", () => {
+  assert.equal(triggerKindForEvent("schedule"), "scheduled");
+  assert.equal(triggerKindForEvent("workflow_dispatch"), "manual");
+  assert.equal(triggerKindForEvent("push"), "push");
+  assert.equal(triggerKindForEvent("repository_dispatch"), "other");
 });
 
 test("fewer than five successful runs is insufficient history", () => {
@@ -147,6 +163,31 @@ test("five successful runs establish a descriptive baseline", () => {
   const report = buildHealthReport({ summary: summary([source()]), history: history([0, 1, 2, 3, 4].map((i) => observation(i))), identity: identity(5) });
   assert.equal(report.baseline.state, "established");
   assert.equal(report.baseline.pipeline.candidatesFound.mean, 20);
+  assert.equal(report.baseline.basis, "successful_scheduled_runs");
+});
+
+test("manual and push observations are excluded from scheduled baselines", () => {
+  const observations = [
+    ...[0, 1, 2, 3].map((i) => observation(i)),
+    observation(4, {}, "workflow_dispatch"),
+    observation(5, {}, "push"),
+  ];
+  const report = buildHealthReport({ summary: summary([source()]), history: history(observations), identity: identity(6) });
+  assert.equal(report.baseline.state, "insufficient_history");
+  assert.equal(report.baseline.historyDepth, 4);
+});
+
+test("failed and incomplete scheduled observations are excluded from baselines", () => {
+  const failed = { ...observation(4), executionState: "failure" as const };
+  const incomplete = structuredClone(observation(5)) as HealthObservation;
+  delete (incomplete.metrics as Partial<typeof incomplete.metrics>).duplicateRate;
+  const report = buildHealthReport({
+    summary: summary([source()]),
+    history: history([... [0, 1, 2, 3].map((i) => observation(i)), failed, incomplete]),
+    identity: identity(6),
+  });
+  assert.equal(report.baseline.historyDepth, 4);
+  assert.equal(report.baseline.state, "insufficient_history");
 });
 
 test("healthy-range metrics remain healthy after baseline", () => {
@@ -312,6 +353,32 @@ test("daily configuration cannot claim six-hour readiness", () => {
   assert.equal(report.readiness.state, "NOT_YET_PROVEN");
 });
 
+test("one real scheduled success is only partially proven", () => {
+  const report = buildHealthReport({
+    summary: summary([source()]),
+    identity: identity(0, "schedule"),
+    expectedIntervalHours: 6,
+    targetIntervalHours: 6,
+    verificationPassed: true,
+  });
+  assert.equal(report.readiness.state, "PARTIALLY_PROVEN");
+  assert.equal(report.schedule.state, "unknown");
+});
+
+test("three on-time scheduled successes satisfy the readiness contract", () => {
+  const report = buildHealthReport({
+    summary: summary([source()], identity(12, "schedule").startedAt, identity(12, "schedule").finishedAt),
+    history: history([observation(0), observation(6)]),
+    identity: identity(12, "schedule"),
+    expectedIntervalHours: 6,
+    targetIntervalHours: 6,
+    verificationPassed: true,
+  });
+  assert.equal(report.schedule.state, "on_time");
+  assert.equal(report.readiness.state, "PROVEN");
+  assert.equal(report.readiness.criteria.every((criterion) => criterion.passed), true);
+});
+
 test("freshness: recent discovery is fresh", () => {
   assert.equal(classifyFreshness(null, "2026-08-30T00:00:00Z", "2026-09-02T00:00:00Z"), "fresh");
 });
@@ -341,12 +408,43 @@ test("history retention is bounded", () => {
   assert.equal(retained?.observations.length, HEALTH_HISTORY_LIMIT);
 });
 
+test("a rerun replaces its logical workflow observation instead of double-counting", () => {
+  const first = observation(0);
+  const retry = structuredClone(first);
+  retry.identity.runAttempt = 2;
+  retry.metrics.candidatesFound = 21;
+  const retained = appendObservation(appendObservation(undefined, first), retry);
+  assert.equal(retained.observations.length, 1);
+  assert.equal(retained.observations[0].identity.runAttempt, 2);
+  assert.equal(retained.observations[0].metrics.candidatesFound, 21);
+});
+
 test("invalid retained history fails closed to an empty baseline", () => {
   const directory = mkdtempSync(path.join(tmpdir(), "discovery-health-invalid-"));
   const historyPath = path.join(directory, "history.json");
   try {
     writeFileSync(historyPath, "{invalid-json", "utf8");
     assert.deepEqual(loadHealthHistory(historyPath), { schemaVersion: 1, observations: [] });
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("legacy M24 identity is normalized without becoming scheduled evidence", () => {
+  const directory = mkdtempSync(path.join(tmpdir(), "discovery-health-legacy-"));
+  const historyPath = path.join(directory, "history.json");
+  try {
+    const legacy = structuredClone(observation(0, {}, "push")) as unknown as {
+      identity: Record<string, unknown>;
+    };
+    delete legacy.identity.runAttempt;
+    delete legacy.identity.triggerKind;
+    writeFileSync(historyPath, JSON.stringify({ schemaVersion: 1, observations: [legacy] }), "utf8");
+    const loaded = loadHealthHistory(historyPath);
+    assert.equal(loaded.observations[0].identity.runAttempt, 1);
+    assert.equal(loaded.observations[0].identity.triggerKind, "push");
+    const report = buildHealthReport({ summary: summary([source()]), history: loaded, identity: identity(1) });
+    assert.equal(report.baseline.historyDepth, 0);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

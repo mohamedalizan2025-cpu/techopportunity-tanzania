@@ -2,19 +2,23 @@ import type { DiscoverySummary, SourceRunResult } from "./types";
 
 export const HEALTH_HISTORY_LIMIT = 24;
 export const MIN_BASELINE_OBSERVATIONS = 5;
-export const DEFAULT_EXPECTED_INTERVAL_HOURS = 24;
+export const DEFAULT_EXPECTED_INTERVAL_HOURS = 6;
 export const SIX_HOUR_TARGET_INTERVAL = 6;
 
 export type ScheduleState = "on_time" | "delayed" | "missed" | "unknown";
 export type BaselineState = "established" | "insufficient_history";
 export type Severity = "critical" | "warning" | "informational";
 export type FreshnessState = "fresh" | "aging" | "stale" | "expired" | "unknown";
+export type TriggerKind = "scheduled" | "manual" | "push" | "other";
+export type ReadinessState = "PROVEN" | "PARTIALLY_PROVEN" | "NOT_YET_PROVEN";
 
 export interface RunIdentity {
   commitSha: string | null;
   workflowRunId: string | null;
   workflowName: string | null;
+  runAttempt: number;
   event: string;
+  triggerKind: TriggerKind;
   startedAt: string;
   finishedAt: string;
 }
@@ -129,6 +133,7 @@ export interface DiscoveryHealthReport {
   };
   baseline: {
     state: BaselineState;
+    basis: "successful_scheduled_runs";
     historyDepth: number;
     requiredHistory: number;
     pipeline: Record<BaselineMetricKey, MetricBaseline>;
@@ -161,7 +166,7 @@ export interface DiscoveryHealthReport {
     reportContainsSecrets: false;
   };
   readiness: {
-    state: "PROVEN" | "NOT_YET_PROVEN";
+    state: ReadinessState;
     criteria: ReadinessCriterion[];
   };
   observation: HealthObservation;
@@ -176,7 +181,7 @@ export interface BuildHealthReportInput {
   verificationPassed?: boolean;
 }
 
-const BASELINE_METRICS = [
+export const BASELINE_METRICS = [
   "candidatesFound",
   "noiseRate",
   "relevanceRejectionRate",
@@ -196,6 +201,59 @@ const BASELINE_METRICS = [
 ] as const;
 
 export type BaselineMetricKey = (typeof BASELINE_METRICS)[number];
+
+export function triggerKindForEvent(event: string): TriggerKind {
+  if (event === "schedule") return "scheduled";
+  if (event === "workflow_dispatch") return "manual";
+  if (event === "push") return "push";
+  return "other";
+}
+
+function hasBaselineMetrics(value: unknown): value is HealthMetrics {
+  if (!value || typeof value !== "object") return false;
+  const metrics = value as Partial<HealthMetrics>;
+  return BASELINE_METRICS.every((key) => {
+    const metric = metrics[key];
+    return metric === null || (typeof metric === "number" && Number.isFinite(metric));
+  });
+}
+
+/** Runtime guard used before any retained observation can influence a baseline. */
+export function isComparableHealthObservation(value: unknown): value is HealthObservation {
+  if (!value || typeof value !== "object") return false;
+  const observation = value as Partial<HealthObservation>;
+  if (observation.schemaVersion !== 1) return false;
+  if (observation.executionState !== "success" && observation.executionState !== "failure") return false;
+  if (!observation.identity || typeof observation.identity.event !== "string") return false;
+  if (typeof observation.identity.commitSha !== "string" || observation.identity.commitSha.length === 0) return false;
+  if (typeof observation.identity.workflowRunId !== "string" || observation.identity.workflowRunId.length === 0) return false;
+  if (!Number.isFinite(Date.parse(observation.identity.startedAt))) return false;
+  if (!Number.isFinite(Date.parse(observation.identity.finishedAt))) return false;
+  if (!hasBaselineMetrics(observation.metrics) || !Array.isArray(observation.sources)) return false;
+  for (const count of [
+    observation.sourcesAttempted,
+    observation.sourcesSucceeded,
+    observation.sourcesFailed,
+    observation.sourceHealthFailures,
+  ]) {
+    if (typeof count !== "number" || !Number.isInteger(count) || count < 0) return false;
+  }
+  if (observation.sources.length !== observation.sourcesAttempted) return false;
+  return observation.sources.every((source) =>
+    Boolean(source)
+    && typeof source.sourceId === "string"
+    && typeof source.ok === "boolean"
+    && hasBaselineMetrics(source.metrics)
+  );
+}
+
+function successfulScheduledHistory(history: HealthObservation[]): HealthObservation[] {
+  return history.filter(
+    (observation) => isComparableHealthObservation(observation)
+      && observation.executionState === "success"
+      && observation.identity.event === "schedule"
+  );
+}
 
 const ratio = (numerator: number, denominator: number): number | null =>
   denominator > 0 ? numerator / denominator : null;
@@ -331,7 +389,7 @@ function metricBaseline(values: Array<number | null>): MetricBaseline {
 }
 
 function buildPipelineBaselines(history: HealthObservation[]): Record<BaselineMetricKey, MetricBaseline> {
-  const successful = history.filter((observation) => observation.executionState === "success");
+  const successful = successfulScheduledHistory(history);
   return Object.fromEntries(
     BASELINE_METRICS.map((key) => [key, metricBaseline(successful.map((observation) => observation.metrics[key]))])
   ) as Record<BaselineMetricKey, MetricBaseline>;
@@ -349,11 +407,11 @@ function buildSourceBaselines(history: HealthObservation[]): Record<
     evidenceRate: MetricBaseline;
   }
 > {
-  const sourceIds = new Set(history.flatMap((observation) => observation.sources.map((source) => source.sourceId)));
+  const scheduledHistory = successfulScheduledHistory(history);
+  const sourceIds = new Set(scheduledHistory.flatMap((observation) => observation.sources.map((source) => source.sourceId)));
   return Object.fromEntries(
     [...sourceIds].sort().map((sourceId) => {
-      const observations = history
-        .filter((observation) => observation.executionState === "success")
+      const observations = scheduledHistory
         .flatMap((observation) => observation.sources)
         .filter((source) => source.sourceId === sourceId && source.ok);
       const state: BaselineState = observations.length >= MIN_BASELINE_OBSERVATIONS ? "established" : "insufficient_history";
@@ -386,7 +444,7 @@ export function assessSchedule(
     return { state: "unknown", expectedIntervalHours, toleranceHours, observedGapHours: null, reason: "Invalid schedule inputs." };
   }
   const scheduled = history
-    .filter((observation) => observation.identity.event === "schedule")
+    .filter((observation) => isComparableHealthObservation(observation) && observation.identity.event === "schedule")
     .sort((a, b) => Date.parse(a.identity.startedAt) - Date.parse(b.identity.startedAt));
   const last = scheduled.at(-1);
   if (!last) {
@@ -414,7 +472,7 @@ function deviation(value: number, baseline: MetricBaseline, moderateLow: number,
 }
 
 function priorMetric(history: HealthObservation[], key: BaselineMetricKey): number | null {
-  return history.filter((observation) => observation.executionState === "success").at(-1)?.metrics[key] ?? null;
+  return successfulScheduledHistory(history).at(-1)?.metrics[key] ?? null;
 }
 
 function addPipelineAnomalies(
@@ -551,9 +609,7 @@ function readinessCriteria(
   configuredForTarget: boolean,
   verificationPassed: boolean
 ): ReadinessCriterion[] {
-  const scheduledSuccesses = [...history, observation].filter(
-    (item) => item.identity.event === "schedule" && item.executionState === "success"
-  );
+  const scheduledSuccesses = successfulScheduledHistory([...history, observation]);
   return [
     { id: "scheduler_configured", passed: configuredForTarget, evidence: configuredForTarget ? "Configured interval meets the six-hour target." : "Configured discovery interval does not yet meet the six-hour target." },
     { id: "workflow_executes", passed: observation.identity.workflowRunId !== null, evidence: observation.identity.workflowRunId ? `Workflow run ${observation.identity.workflowRunId} captured.` : "No workflow run identifier captured." },
@@ -599,7 +655,7 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
 
   const pipelineBaselines = buildPipelineBaselines(history);
   const sourceBaselines = buildSourceBaselines(history);
-  const successfulHistory = history.filter((item) => item.executionState === "success");
+  const successfulHistory = successfulScheduledHistory(history);
   const baselineState: BaselineState = successfulHistory.length >= MIN_BASELINE_OBSERVATIONS ? "established" : "insufficient_history";
   const expectedInterval = input.expectedIntervalHours ?? DEFAULT_EXPECTED_INTERVAL_HOURS;
   const targetInterval = input.targetIntervalHours ?? SIX_HOUR_TARGET_INTERVAL;
@@ -647,6 +703,7 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
     schedule: { ...schedule, targetIntervalHours: targetInterval, configuredForTarget },
     baseline: {
       state: baselineState,
+      basis: "successful_scheduled_runs",
       historyDepth: successfulHistory.length,
       requiredHistory: MIN_BASELINE_OBSERVATIONS,
       pipeline: pipelineBaselines,
@@ -670,15 +727,33 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
       retainedHistoryDepth: Math.min(history.length + 1, HEALTH_HISTORY_LIMIT),
       reportContainsSecrets: false,
     },
-    readiness: { state: criteria.every((criterion) => criterion.passed) ? "PROVEN" : "NOT_YET_PROVEN", criteria },
+    readiness: {
+      state: criteria.every((criterion) => criterion.passed)
+        ? "PROVEN"
+        : configuredForTarget && successfulScheduledHistory([...history, observation]).length > 0
+          ? "PARTIALLY_PROVEN"
+          : "NOT_YET_PROVEN",
+      criteria,
+    },
     observation,
   };
 }
 
 export function appendObservation(history: HealthHistory | undefined, observation: HealthObservation): HealthHistory {
+  const logicalMatch = (candidate: HealthObservation): boolean => {
+    if (candidate.identity.workflowRunId && observation.identity.workflowRunId) {
+      return candidate.identity.workflowRunId === observation.identity.workflowRunId;
+    }
+    return candidate.identity.event === observation.identity.event
+      && candidate.identity.commitSha === observation.identity.commitSha
+      && candidate.identity.startedAt === observation.identity.startedAt;
+  };
   return {
     schemaVersion: 1,
-    observations: [...(history?.observations ?? []), observation].slice(-HEALTH_HISTORY_LIMIT),
+    observations: [
+      ...(history?.observations ?? []).filter((candidate) => !logicalMatch(candidate)),
+      observation,
+    ].slice(-HEALTH_HISTORY_LIMIT),
   };
 }
 

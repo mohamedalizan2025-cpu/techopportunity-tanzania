@@ -4,6 +4,7 @@ import {
   DEFAULT_EXPECTED_INTERVAL_HOURS,
   SIX_HOUR_TARGET_INTERVAL,
   assessSchedule,
+  isComparableHealthObservation,
   type HealthAnomaly,
 } from "./health";
 import { loadHealthHistory } from "./health-artifact";
@@ -30,7 +31,10 @@ const anomaly: HealthAnomaly | null = schedule.state === "missed"
     ? { severity: "informational", code: "schedule_history_insufficient", scope: "schedule", message: schedule.reason }
     : null;
 const scheduledObservations = history.observations.filter(
-  (observation) => observation.identity.event === "schedule"
+  (observation) => isComparableHealthObservation(observation) && observation.identity.event === "schedule"
+);
+const successfulScheduledObservations = scheduledObservations.filter(
+  (observation) => observation.executionState === "success"
 );
 const latestScheduled = scheduledObservations
   .sort((a, b) => Date.parse(a.identity.startedAt) - Date.parse(b.identity.startedAt))
@@ -40,6 +44,7 @@ const report = {
   identity: {
     commitSha: process.env.GITHUB_SHA ?? null,
     workflowRunId: process.env.GITHUB_RUN_ID ?? null,
+    runAttempt: positiveNumber(process.env.GITHUB_RUN_ATTEMPT, 1),
     evaluatedAt,
   },
   schedule,
@@ -47,6 +52,7 @@ const report = {
   configuredForTarget: expectedIntervalHours <= targetIntervalHours,
   historyDepth: history.observations.length,
   scheduledHistoryDepth: scheduledObservations.length,
+  successfulScheduledHistoryDepth: successfulScheduledObservations.length,
   latestScheduledRun: latestScheduled
     ? {
         commitSha: latestScheduled.identity.commitSha,
@@ -56,7 +62,11 @@ const report = {
       }
     : null,
   anomaly,
-  sixHourReadiness: "NOT_YET_PROVEN" as const,
+  sixHourReadiness: expectedIntervalHours <= targetIntervalHours
+    && successfulScheduledObservations.length > 0
+    && schedule.state !== "missed"
+    ? "PARTIALLY_PROVEN" as const
+    : "NOT_YET_PROVEN" as const,
   reportContainsSecrets: false as const,
 };
 
@@ -74,7 +84,7 @@ if (process.env.GITHUB_STEP_SUMMARY) {
       `- State: **${schedule.state}**`,
       `- Reason: ${schedule.reason}`,
       `- Retained scheduled observations: ${scheduledObservations.length}`,
-      `- Six-hour readiness: **NOT_YET_PROVEN**`,
+      `- Six-hour readiness: **${report.sixHourReadiness}**`,
       "",
     ].join("\n"),
     "utf8"

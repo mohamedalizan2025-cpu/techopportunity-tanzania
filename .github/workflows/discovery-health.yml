@@ -1,8 +1,8 @@
 name: Discovery schedule health
 
 on:
-  # Credential-free observer. This does not run discovery or change its daily
-  # cadence; it detects a stale/missed retained production observation.
+  # Credential-free observer, 30 minutes after each discovery window. It does
+  # not run discovery; it detects a stale/missed retained production observation.
   schedule:
     - cron: '30 3/6 * * *'
   workflow_dispatch:
@@ -44,7 +44,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: discovery-health/history.json
-          key: discovery-health-monitor-${{ github.run_id }}
+          key: discovery-health-monitor-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             discovery-health-
 
@@ -52,7 +52,7 @@ jobs:
         env:
           DISCOVERY_HEALTH_HISTORY_PATH: discovery-health/history.json
           DISCOVERY_SCHEDULE_REPORT_PATH: discovery-health/schedule-report.json
-          DISCOVERY_EXPECTED_INTERVAL_HOURS: '24'
+          DISCOVERY_EXPECTED_INTERVAL_HOURS: '6'
           DISCOVERY_TARGET_INTERVAL_HOURS: '6'
         run: npm run health:monitor
 
@@ -60,7 +60,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: discovery-schedule-health-${{ github.run_id }}
+          name: discovery-schedule-health-${{ github.run_id }}-${{ github.run_attempt }}
           path: discovery-health/schedule-report.json
           if-no-files-found: error
           retention-days: 90

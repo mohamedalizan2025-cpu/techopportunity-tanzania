@@ -3,6 +3,8 @@ import path from "node:path";
 import {
   HEALTH_HISTORY_LIMIT,
   appendObservation,
+  isComparableHealthObservation,
+  triggerKindForEvent,
   type DiscoveryHealthReport,
   type HealthHistory,
 } from "./health";
@@ -16,15 +18,21 @@ export interface HealthArtifactPaths {
 function validHistory(value: unknown): value is HealthHistory {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<HealthHistory>;
-  return candidate.schemaVersion === 1 && Array.isArray(candidate.observations) && candidate.observations.every((observation) => {
-    if (!observation || typeof observation !== "object") return false;
-    const item = observation as Partial<HealthHistory["observations"][number]>;
-    return item.schemaVersion === 1
-      && (item.executionState === "success" || item.executionState === "failure")
-      && Boolean(item.identity && typeof item.identity.startedAt === "string" && typeof item.identity.event === "string")
-      && Boolean(item.metrics && typeof item.metrics.candidatesFound === "number")
-      && Array.isArray(item.sources);
-  });
+  return candidate.schemaVersion === 1
+    && Array.isArray(candidate.observations)
+    && candidate.observations.every(isComparableHealthObservation);
+}
+
+function normalizeHistoryIdentity(observation: HealthHistory["observations"][number]) {
+  const runAttempt = Number(observation.identity.runAttempt);
+  return {
+    ...observation,
+    identity: {
+      ...observation.identity,
+      runAttempt: Number.isInteger(runAttempt) && runAttempt > 0 ? runAttempt : 1,
+      triggerKind: triggerKindForEvent(observation.identity.event),
+    },
+  };
 }
 
 export function loadHealthHistory(historyPath: string | undefined): HealthHistory {
@@ -32,7 +40,10 @@ export function loadHealthHistory(historyPath: string | undefined): HealthHistor
   try {
     const parsed: unknown = JSON.parse(readFileSync(historyPath, "utf8"));
     if (!validHistory(parsed)) return { schemaVersion: 1, observations: [] };
-    return { schemaVersion: 1, observations: parsed.observations.slice(-HEALTH_HISTORY_LIMIT) };
+    return {
+      schemaVersion: 1,
+      observations: parsed.observations.slice(-HEALTH_HISTORY_LIMIT).map(normalizeHistoryIdentity),
+    };
   } catch {
     return { schemaVersion: 1, observations: [] };
   }
@@ -55,6 +66,7 @@ function healthMarkdown(report: DiscoveryHealthReport): string {
     "",
     `- Commit: \`${report.identity.commitSha ?? "unavailable"}\``,
     `- Workflow run: \`${report.identity.workflowRunId ?? "unavailable"}\``,
+    `- Trigger / attempt: **${report.identity.triggerKind}** / ${report.identity.runAttempt}`,
     `- Execution: **${report.execution.state}** (${report.execution.durationMs === null ? "duration unavailable" : `${report.execution.durationMs} ms`})`,
     `- Schedule: **${report.schedule.state}** (${report.schedule.reason})`,
     `- Sources: ${report.sourceHealth.succeeded}/${report.sourceHealth.attempted} succeeded`,

@@ -1,13 +1,17 @@
 import { runDiscovery } from "./runner";
-import { buildHealthReport, type RunIdentity } from "./health";
+import { buildHealthReport, triggerKindForEvent, type RunIdentity } from "./health";
 import { loadHealthHistory, retainHealthReport } from "./health-artifact";
 
 function identity(startedAt: string, finishedAt: string): RunIdentity {
+  const event = process.env.GITHUB_EVENT_NAME ?? "local";
+  const runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT);
   return {
     commitSha: process.env.GITHUB_SHA ?? null,
     workflowRunId: process.env.GITHUB_RUN_ID ?? null,
     workflowName: process.env.GITHUB_WORKFLOW ?? null,
-    event: process.env.GITHUB_EVENT_NAME ?? "local",
+    runAttempt: Number.isInteger(runAttempt) && runAttempt > 0 ? runAttempt : 1,
+    event,
+    triggerKind: triggerKindForEvent(event),
     startedAt,
     finishedAt,
   };

@@ -12,23 +12,26 @@ GitHub Actions, writes:
 - `discovery-health/history.json`: at most 24 observations; and
 - a concise GitHub step summary.
 
-The workflow restores the newest bounded history from a uniquely keyed GitHub
-Actions cache and uploads both JSON files as a 90-day run artifact. Cache loss
+The workflow restores the newest bounded history from a key containing GitHub
+run ID and run attempt, and uploads both JSON files as a 90-day run artifact.
+A re-run replaces the same logical workflow observation instead of inflating
+the baseline. Cache loss
 does not change discovery behavior: the next report honestly returns to
 `insufficient_history`. The artifact contains source identity and numeric
 outcomes, but no source URLs, raw errors, environment variables, tokens, or
 credentials. No health code imports Supabase or a network client.
 
-The separate `Discovery schedule health` workflow runs without credentials
-every six hours and on relevant pushes. It only reads the retained history. It
-does not invoke the discovery worker or change the production discovery cron.
+The separate `Discovery schedule health` workflow runs without credentials 30
+minutes after every discovery window and on relevant pushes. It only reads the
+retained history and does not invoke the discovery worker.
 It exits non-zero on a deterministic missed-run result and uploads its own
 schedule report.
 
 ## Execution and source semantics
 
-Run identity records commit SHA, workflow run ID/name/event, start, finish,
-duration, and success/failure. A thrown worker with no complete summary is a
+Run identity records commit SHA, workflow run ID/name/event, run attempt,
+scheduled/manual/push trigger kind, start, finish, duration, and success/failure.
+A thrown worker with no complete summary is a
 critical `worker_failed` observation. An all-source failure remains a failed
 worker outcome; partial source failures preserve existing failure isolation.
 
@@ -41,24 +44,29 @@ report never substitutes zero for unavailable evidence.
 
 ## Schedule states
 
-Production discovery remains daily at `0 3 * * *`. Its expected interval is 24
-hours with a six-hour tolerance, reflecting observed GitHub scheduler delay
-without pretending cron is exact.
+Production discovery uses one GitHub Actions UTC cron, `0 3/6 * * *`: 03:00,
+09:00, 15:00, and 21:00 UTC (06:00, 12:00, 18:00, and 00:00 Tanzania time).
+Its expected interval is six hours. The existing formula `max(2 hours, 25% of
+the interval)` therefore gives a two-hour tolerance without pretending GitHub
+cron delivery is exact.
 
-- `on_time`: the latest scheduled observation is no older than 30 hours.
+- `on_time`: the latest scheduled observation is no older than 8 hours.
 - `delayed`: a scheduled execution occurred after tolerance but before a
-  second interval elapsed.
+  second interval plus tolerance elapsed (more than 8 and no more than 14 hours).
 - `missed`: an observer finds no scheduled execution inside interval plus
-  tolerance, or a scheduled execution arrives more than two intervals late.
+  tolerance, or a scheduled execution arrives more than 14 hours after the
+  preceding retained scheduled observation.
 - `unknown`: timestamps are invalid or no scheduled observation is retained.
 
-The six-hour target is recorded separately. A six-hour observer is not a
-six-hour discovery schedule and does not satisfy readiness by itself.
+All timestamps are parsed as absolute instants; display/local timezone does not
+participate in the calculation.
 
 ## Baselines
 
-Baselines are descriptive and source-aware. At least five prior successful,
-schema-compatible observations are required. Before that, the run and each
+Baselines are descriptive and source-aware. Only successful, complete,
+schema-compatible `schedule` observations participate. Pushes, manual
+dispatches, failures, incomplete observations, and retry duplicates do not.
+At least five prior observations are required. Before that, the run and each
 source report `insufficient_history`. Established baselines expose observation
 count, mean, minimum, and maximum for candidate volume, rejection/unknown/
 duplicate rates, detail and evidence rates, qualified/inserted counts, and run
@@ -111,10 +119,12 @@ public treatment must be separately designed and moderator-safe.
 
 ## Six-hour readiness
 
-`PROVEN` requires all ten criteria in the report: target schedule configured,
+`PARTIALLY_PROVEN` means the target schedule is configured and at least one real
+scheduled success is retained, but the minimum repeatability contract is not
+yet complete. `PROVEN` requires all ten criteria in the report: target schedule configured,
 workflow/run identity captured, worker success, at least 80% source reachability,
 observable failures, at least three successful scheduled observations, timing
 inside tolerance, reconciled metrics, anomaly evaluation, and preceding
-security verification. The current daily discovery schedule fails the first
-criterion, and retained scheduled history initially fails the repeatability
-criteria. Therefore the honest state is `NOT_YET_PROVEN`.
+security verification. Five successful scheduled observations are separately
+required for baseline maturity. Configuration or push execution alone remains
+`NOT_YET_PROVEN`.

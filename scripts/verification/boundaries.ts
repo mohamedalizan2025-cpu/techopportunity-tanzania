@@ -76,10 +76,20 @@ invariant("moderation and published-management pages enforce the shared access g
   }
 });
 
-invariant("scheduled discovery cadence and pending-only worker remain unchanged", () => {
-  assert.match(discoveryWorkflow, /cron: ['"]0 3 \* \* \*['"]/);
+invariant("discovery uses one authoritative six-hour UTC schedule and the pending-only worker", () => {
+  assert.match(discoveryWorkflow, /cron: ['"]0 3\/6 \* \* \*['"]/);
+  assert.doesNotMatch(discoveryWorkflow, /cron: ['"]0 3 \* \* \*['"]/);
+  assert.equal((discoveryWorkflow.match(/\bcron:/g) ?? []).length, 1);
+  assert.match(discoveryWorkflow, /DISCOVERY_EXPECTED_INTERVAL_HOURS: ['"]6['"]/);
   assert.match(discoveryWorkflow, /run: npm run verify/);
   assert.match(discoveryWorkflow, /run: node --import tsx scripts\/discovery\/index\.ts/);
+});
+
+invariant("scheduled and manual discovery share a non-cancelling bounded concurrency lane", () => {
+  assert.match(discoveryWorkflow, /workflow_dispatch:/);
+  assert.match(discoveryWorkflow, /concurrency:\s*\n\s*(?:#[^\n]*\n\s*)*group: discovery-production\s*\n\s*cancel-in-progress: false/);
+  assert.match(discoveryWorkflow, /timeout-minutes: 30/);
+  assert.doesNotMatch(discoveryWorkflow, /(?:retry|re-run|rerun)-?(?:action|workflow)/i);
 });
 
 invariant("discovery credentials are scoped only to the worker step", () => {
@@ -105,11 +115,13 @@ invariant("discovery workflow retains bounded machine-readable health evidence",
   assert.match(discoveryWorkflow, /actions\/cache\/save@v4/);
   assert.match(discoveryWorkflow, /actions\/upload-artifact@v4/);
   assert.match(discoveryWorkflow, /discovery-health\/report\.json/);
+  assert.match(discoveryWorkflow, /github\.run_id \}\}-\$\{\{ github\.run_attempt/);
   assert.match(discoveryWorkflow, /retention-days: 90/);
 });
 
 invariant("schedule monitor is credential-free and cannot execute discovery", () => {
   assert.match(healthWorkflow, /cron: ['"]30 3\/6 \* \* \*['"]/);
+  assert.match(healthWorkflow, /DISCOVERY_EXPECTED_INTERVAL_HOURS: ['"]6['"]/);
   assert.match(healthWorkflow, /run: npm run health:monitor/);
   assert.doesNotMatch(healthWorkflow, /secrets\.|SUPABASE_SERVICE_ROLE_KEY|scripts\/discovery\/index\.ts/);
 });

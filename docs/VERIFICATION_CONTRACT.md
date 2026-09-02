@@ -65,17 +65,23 @@ production environment/credential change; after an incident; and periodically
 for health. It is not required for documentation-only or isolated test-only
 changes.
 
-Discovery-sensitive pushes to `main` now start the existing `Discovery sync`
-workflow automatically. The daily `0 3 * * *` schedule is unchanged. The job
+Discovery-sensitive pushes to `main` start the existing `Discovery sync`
+workflow automatically. The authoritative UTC schedule `0 3/6 * * *` runs at
+03:00, 09:00, 15:00, and 21:00 UTC. Scheduled and manual runs share the fixed
+`discovery-production` concurrency group with active-run cancellation disabled;
+the 30-minute job timeout bounds queue occupation. GitHub may replace an older
+pending member when a newer run queues, but that cancellation is observable and
+the schedule monitor detects the missing scheduled evidence. The job
 runs the permanent gates without credentials, then exposes the three existing
 Supabase secrets only to the pending-only worker step. Workflow concurrency
 prevents overlapping production discovery runs. No verification script has a
 database or network client.
 
 Each production run now retains a bounded machine-readable health report and
-history artifact. A separate credential-free schedule observer can detect a
-missing retained run without invoking the worker. The observer's six-hour
-cadence is monitoring frequency only; production discovery remains daily.
+history artifact. Cache/artifact keys include run attempt, while logical run ID
+replacement prevents a retry from becoming a second baseline observation. A
+separate credential-free schedule observer runs 30 minutes after each window
+and can detect a missing retained run without invoking the worker.
 
 Evidence is valid only when the workflow `head_sha` equals the commit being
 claimed. Record the workflow name, run ID, event, conclusion, start/finish

@@ -2,7 +2,9 @@ name: Discovery sync
 
 on:
   schedule:
-    - cron: '0 3 * * *'
+    # 03:00, 09:00, 15:00, and 21:00 UTC (06:00, 12:00, 18:00,
+    # and 00:00 in Tanzania). GitHub schedule delivery may be delayed.
+    - cron: '0 3/6 * * *'
   workflow_dispatch:
   # Discovery-sensitive main changes require exact-HEAD production proof.
   # The worker remains pending-only and all credentials stay on its last step.
@@ -17,6 +19,10 @@ on:
       - 'package-lock.json'
 
 concurrency:
+  # Scheduled and manual runs share one production lane. An active worker is
+  # never cancelled; one dispatch may wait behind it. The 30-minute job timeout
+  # prevents a stuck worker from occupying a later six-hour window, and the
+  # independent observer makes a cancelled/replaced pending window visible.
   group: discovery-production
   cancel-in-progress: false
 
@@ -56,7 +62,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: discovery-health/history.json
-          key: discovery-health-${{ github.run_id }}
+          key: discovery-health-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             discovery-health-
 
@@ -69,7 +75,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           DISCOVERY_HEALTH_REPORT_PATH: discovery-health/report.json
           DISCOVERY_HEALTH_HISTORY_PATH: discovery-health/history.json
-          DISCOVERY_EXPECTED_INTERVAL_HOURS: '24'
+          DISCOVERY_EXPECTED_INTERVAL_HOURS: '6'
           DISCOVERY_TARGET_INTERVAL_HOURS: '6'
           DISCOVERY_VERIFICATION_PASSED: 'true'
         run: node --import tsx scripts/discovery/index.ts
@@ -79,13 +85,13 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: discovery-health/history.json
-          key: discovery-health-${{ github.run_id }}
+          key: discovery-health-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload discovery health evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: discovery-health-${{ github.run_id }}
+          name: discovery-health-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             discovery-health/report.json
             discovery-health/history.json

@@ -78,6 +78,13 @@ assert(
   isDuplicate(candidate(ubcOfa, "https://ofa.example/ubc", "ofa"), [row(ubcOd, "https://od.example/ubc", "od")]),
 );
 assert(
+  "adjacent scheduled run rejects an already-persisted canonical URL",
+  isDuplicate(
+    candidate("Tanzania AI Fellowship 2027", "https://example.org/fellowship?utm_source=scheduled"),
+    [row("Tanzania AI Fellowship 2027", "https://example.org/fellowship")],
+  ),
+);
+assert(
   "same-source different URLs are not title-collapsed",
   !isDuplicate(candidate(ubcOfa, "https://ofa.example/ubc-a", "ofa"), [row(ubcOd, "https://ofa.example/ubc-b", "ofa")]),
 );
