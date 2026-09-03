@@ -16,6 +16,7 @@ export type ChangeGateId =
   | "qualification-regression"
   | "acquisition-security"
   | "moderation-auth"
+  | "deadline-alerts"
   | "assistant-kill-switch"
   | "migration-review"
   | "source-registry-review"
@@ -45,6 +46,7 @@ export interface VerificationPlan {
     migrations: string[];
     sourceRegistry: string[];
     workflow: string[];
+    alerts: string[];
     build: string[];
   };
 }
@@ -73,9 +75,20 @@ const MODERATION_AUTH = [
   /^proxy\.ts$/,
 ];
 const ASSISTANT = [/^app\/api\/assistant\//, /^lib\/assistant\//, /^tests\/assistant\.test\.ts$/];
+const ALERTS = [
+  /^app\/saved\//,
+  /^components\/alert-preference-control\.tsx$/,
+  /^lib\/(alert-preference-state|deadline-alerts|deadline-intelligence)\.ts$/,
+  /^lib\/data\/deadline-alert(?:-actions|s)\.ts$/,
+  /^scripts\/alerts\//,
+  /^tests\/deadline-alerts\.test\.ts$/,
+  /^\.github\/workflows\/deadline-alerts\.yml$/,
+  /^supabase\/migrations\/0012_deadline_alerts\.sql$/,
+];
 const MIGRATIONS = [/^supabase\/migrations\//];
 const SOURCE_REGISTRY = [/^supabase\/seeds\/0002_pilot_sources\.sql$/, /^scripts\/discovery\/sources\.ts$/];
 const WORKFLOW = [/^\.github\/workflows\//];
+const DEPENDENCIES = [/^package(-lock)?\.json$/];
 const BUILD = [
   /^app\//,
   /^components\//,
@@ -92,8 +105,6 @@ const DISCOVERY_PRODUCTION = [
   /^\.github\/workflows\/discovery\.yml$/,
   /^\.github\/workflows\/discovery-health\.yml$/,
   /^supabase\/seeds\/0002_pilot_sources\.sql$/,
-  /^supabase\/migrations\//,
-  /^package(-lock)?\.json$/,
 ];
 
 function gate(
@@ -116,9 +127,11 @@ export function classifyChanges(inputFiles: string[]): VerificationPlan {
   const discoveryHealth = select(DISCOVERY_HEALTH);
   const moderationAuth = select(MODERATION_AUTH);
   const assistant = select(ASSISTANT);
+  const alerts = select(ALERTS);
   const migrations = select(MIGRATIONS);
   const sourceRegistry = select(SOURCE_REGISTRY);
   const workflow = select(WORKFLOW);
+  const dependencies = select(DEPENDENCIES);
   const build = select(BUILD);
 
   const productionReasons: string[] = [];
@@ -126,8 +139,17 @@ export function classifyChanges(inputFiles: string[]): VerificationPlan {
   if (discoveryProduction.length > 0) {
     productionReasons.push(`Discovery production behavior changed: ${discoveryProduction.join(", ")}`);
   }
+  if (dependencies.length > 0) {
+    productionReasons.push(`Dependencies or runtime scripts changed: ${dependencies.join(", ")}`);
+  }
   if (moderationAuth.some((file) => !file.startsWith("tests/"))) {
     productionReasons.push("Moderation or authentication behavior changed and requires deployed access verification.");
+  }
+  if (alerts.some((file) => !file.startsWith("tests/"))) {
+    productionReasons.push("Deadline intelligence or alert behavior changed and requires deployed/background verification.");
+  }
+  if (migrations.length > 0) {
+    productionReasons.push(`Database schema changed: ${migrations.join(", ")}`);
   }
 
   const ownerActions: string[] = [];
@@ -149,6 +171,7 @@ export function classifyChanges(inputFiles: string[]): VerificationPlan {
       gate("qualification-regression", "npm run test:qualification", "Qualification evidence rules changed.", qualification.length > 0, "No qualification path changed."),
       gate("acquisition-security", "npm run test:acquisition", "Network acquisition boundaries changed.", acquisition.length > 0, "No acquisition path changed."),
       gate("moderation-auth", "npm run test:review && npm run test:published-management", "Moderation or auth boundaries changed.", moderationAuth.length > 0, "No moderation or auth path changed."),
+      gate("deadline-alerts", "npm run test:deadline-alerts", "Deadline semantics, ownership, idempotency, or scheduling changed.", alerts.length > 0, "No deadline-intelligence or alert path changed."),
       gate("assistant-kill-switch", "npm run test:assistant", "Assistant behavior or kill switch changed.", assistant.length > 0, "No assistant path changed."),
       gate("migration-review", null, "Database migration files changed.", migrations.length > 0, "No migration changed."),
       gate("source-registry-review", null, "Discovery registry behavior changed.", sourceRegistry.length > 0, "No source-registry path changed."),
@@ -161,10 +184,11 @@ export function classifyChanges(inputFiles: string[]): VerificationPlan {
     ownerActions,
     classifications: {
       discovery,
-      security: [...new Set([...acquisition, ...moderationAuth, ...assistant])].sort(),
+      security: [...new Set([...acquisition, ...moderationAuth, ...assistant, ...alerts])].sort(),
       migrations,
       sourceRegistry,
       workflow,
+      alerts,
       build,
     },
   };

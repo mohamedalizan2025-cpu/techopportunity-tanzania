@@ -1,0 +1,73 @@
+name: Deadline alert evaluation
+
+on:
+  # One separately observable daily evaluation at 05:15 Tanzania time.
+  schedule:
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/alerts/**'
+      - 'lib/deadline-alerts.ts'
+      - 'lib/deadline-intelligence.ts'
+      - 'supabase/migrations/0012_deadline_alerts.sql'
+      - '.github/workflows/deadline-alerts.yml'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deadline-alerts-production
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run permanent verification gates
+        env:
+          VERIFY_BASE_SHA: ${{ github.event.before }}
+        run: npm run verify
+
+      # The owner activates this only after migration 0012 is applied. Secrets
+      # are scoped to this step and never reach verification or disabled runs.
+      - name: Evaluate deadline alerts
+        if: vars.DEADLINE_ALERTS_ENABLED == 'true'
+        env:
+          DEADLINE_ALERTS_ENABLED: 'true'
+          DEADLINE_ALERT_REPORT_PATH: alert-health/report.json
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node --import tsx scripts/alerts/index.ts
+
+      - name: Record owner-gated disabled state
+        if: vars.DEADLINE_ALERTS_ENABLED != 'true'
+        env:
+          DEADLINE_ALERT_REPORT_PATH: alert-health/report.json
+          DEADLINE_ALERTS_ENABLED: 'false'
+        run: node --import tsx scripts/alerts/index.ts
+
+      - name: Upload alert evaluation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deadline-alerts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: alert-health/report.json
+          if-no-files-found: error
+          retention-days: 30

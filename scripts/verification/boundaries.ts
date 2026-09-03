@@ -30,6 +30,14 @@ const savedMigration = read("supabase/migrations/0011_saved_opportunities.sql");
 const savedAction = read("lib/data/saved-opportunity-actions.ts");
 const savedData = read("lib/data/saved-opportunities.ts");
 const savedPage = read("app/saved/page.tsx");
+const alertMigration = read("supabase/migrations/0012_deadline_alerts.sql");
+const alertAction = read("lib/data/deadline-alert-actions.ts");
+const alertData = read("lib/data/deadline-alerts.ts");
+const alertDomain = read("lib/deadline-alerts.ts");
+const deadlineDomain = read("lib/deadline-intelligence.ts");
+const alertRunner = read("scripts/alerts/runner.ts");
+const alertIndex = read("scripts/alerts/index.ts");
+const alertWorkflow = read(".github/workflows/deadline-alerts.yml");
 const authAction = read("lib/data/auth-actions.ts");
 const authCallback = read("app/auth/callback/route.ts");
 const authRedirect = read("lib/auth-redirect.ts");
@@ -105,6 +113,38 @@ invariant("saved reads protect the route and suppress unpublished content", () =
   assert.match(savedData, /related\?\.status === ["']published["']/);
 });
 
+invariant("deadline preferences and events are private least-privilege tables", () => {
+  assert.match(alertMigration, /alter table public\.user_alert_preferences enable row level security/);
+  assert.match(alertMigration, /alter table public\.deadline_alert_events enable row level security/);
+  assert.equal((alertMigration.match(/\(select auth\.uid\(\)\) = user_id/g) ?? []).length, 5);
+  assert.match(alertMigration, /revoke all on table public\.deadline_alert_events from anon, authenticated/);
+  assert.match(alertMigration, /grant select on table public\.deadline_alert_events to authenticated/);
+  assert.doesNotMatch(alertMigration, /grant insert[^;]*deadline_alert_events/i);
+});
+
+invariant("alert ownership comes from claims and unpublished content is suppressed", () => {
+  assert.match(alertAction, /getAuthenticatedUser\(\)/);
+  assert.match(alertAction, /user_id: user\.userId/);
+  assert.doesNotMatch(alertAction, /formData\.get\(["']user_?id["']\)/i);
+  assert.match(alertData, /\.eq\("user_id", user\.userId\)/);
+  assert.match(alertData, /\.eq\("opportunity\.status", "published"\)/);
+  assert.match(alertData, /opportunity\.status !== "published"/);
+});
+
+invariant("deadline evaluation and alert idempotency are centralized", () => {
+  assert.match(deadlineDomain, /export const CLOSING_SOON_DAYS = 14/);
+  assert.match(alertDomain, /evaluateAlertEligibility/);
+  assert.match(alertDomain, /exactCurrentMatch/);
+  assert.match(alertMigration, /unique \(user_id, opportunity_id, event_type, event_fingerprint\)/);
+  assert.match(alertRunner, /ignoreDuplicates: true/);
+});
+
+invariant("deadline alert state never claims unimplemented delivery", () => {
+  assert.match(alertMigration, /check \(state = 'generated'\)/);
+  assert.match(alertRunner, /deliveryAttempted: false/);
+  assert.doesNotMatch(alertRunner, /\b(?:email|smtp|sendgrid|resend)\b/i);
+});
+
 invariant("email confirmation uses a canonical callback and safe internal destination", () => {
   assert.match(authAction, /options: \{ emailRedirectTo \}/);
   assert.match(authCallback, /exchangeCodeForSession\(code\)/);
@@ -161,6 +201,27 @@ invariant("schedule monitor is credential-free and cannot execute discovery", ()
   assert.match(healthWorkflow, /DISCOVERY_EXPECTED_INTERVAL_HOURS: ['"]6['"]/);
   assert.match(healthWorkflow, /run: npm run health:monitor/);
   assert.doesNotMatch(healthWorkflow, /secrets\.|SUPABASE_SERVICE_ROLE_KEY|scripts\/discovery\/index\.ts/);
+});
+
+invariant("deadline alert scheduler is separate, bounded, owner-gated, and observable", () => {
+  assert.equal((alertWorkflow.match(/\bcron:/g) ?? []).length, 1);
+  assert.match(alertWorkflow, /cron: '15 2 \* \* \*'/);
+  assert.match(alertWorkflow, /group: deadline-alerts-production/);
+  assert.match(alertWorkflow, /cancel-in-progress: false/);
+  assert.match(alertWorkflow, /timeout-minutes: 20/);
+  assert.match(alertWorkflow, /vars\.DEADLINE_ALERTS_ENABLED == 'true'/);
+  assert.match(alertWorkflow, /actions\/upload-artifact@v4/);
+  assert.match(alertIndex, /DEADLINE_ALERTS_ENABLED !== "true"/);
+  assert.doesNotMatch(alertWorkflow, /scripts\/discovery\/index\.ts/);
+  assert.doesNotMatch(discoveryWorkflow, /scripts\/alerts\//);
+});
+
+invariant("deadline scheduler credentials are scoped only to its worker step", () => {
+  const worker = alertWorkflow.indexOf("- name: Evaluate deadline alerts");
+  const firstSecret = alertWorkflow.indexOf("secrets.");
+  assert.ok(worker >= 0);
+  assert.ok(firstSecret > worker);
+  assert.doesNotMatch(alertWorkflow.slice(0, worker), /secrets\./);
 });
 
 invariant("ordinary milestone CI is read-only and credential-free", () => {

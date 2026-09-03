@@ -2,10 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
+import { AlertPreferenceControl } from "@/components/alert-preference-control";
 import { OpportunityCard } from "@/components/opportunity-card";
 import { SaveOpportunityControl } from "@/components/save-opportunity-control";
+import { deadlineAlertEventLabel } from "@/lib/alert-preference-state";
+import {
+  getDeadlineAlertPreference,
+  listDeadlineAlertEvents,
+} from "@/lib/data/deadline-alerts";
 import { listSavedOpportunities } from "@/lib/data/saved-opportunities";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
+import { formatDeadlinePresentation } from "@/lib/opportunity-presentation";
 import { formatSavedDate } from "@/lib/saved-opportunity-state";
 
 export const metadata: Metadata = {
@@ -18,7 +25,11 @@ export default async function SavedOpportunitiesPage() {
   const user = await getAuthenticatedUser();
   if (!user) redirect("/login?next=%2Fsaved");
 
-  const result = await listSavedOpportunities(user);
+  const [result, alertPreference, alertHistory] = await Promise.all([
+    listSavedOpportunities(user),
+    getDeadlineAlertPreference(user),
+    listDeadlineAlertEvents(user),
+  ]);
   const signedInAs = user.displayName ?? user.email ?? "your account";
 
   return (
@@ -37,6 +48,66 @@ export default async function SavedOpportunitiesPage() {
           <p className="mt-3 break-words text-xs text-[var(--subtle)]">
             Signed in as {signedInAs}
           </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="deadline-alerts-heading" className="border-b border-[var(--line)]">
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">
+              Deadline intelligence
+            </p>
+            <h2 id="deadline-alerts-heading" className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
+              Alerts for saved opportunities
+            </h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--muted)]">
+              Get a private in-app alert when a saved, published opportunity is within 14 days of its known deadline, or when its deadline changes. Unknown and closed deadlines do not generate approaching alerts.
+            </p>
+            <p className="mt-2 text-xs leading-5 text-[var(--subtle)]">
+              Email delivery is not part of this milestone. An alert shown here means generated, not emailed or sent.
+            </p>
+            <div className="mt-5">
+              {alertPreference.available ? (
+                <AlertPreferenceControl enabled={alertPreference.enabled} />
+              ) : (
+                <p role="alert" className="text-sm text-amber-800 dark:text-amber-200">
+                  Deadline alert settings are temporarily unavailable.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-base font-semibold text-[var(--foreground)]">Recent generated alerts</h3>
+            {!alertHistory.available ? (
+              <p className="mt-3 text-sm text-[var(--muted)]">Alert history is temporarily unavailable.</p>
+            ) : alertHistory.events.length === 0 ? (
+              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+                No deadline alerts have been generated for your account yet.
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {alertHistory.events.map((event) => {
+                  const deadline = formatDeadlinePresentation(event.deadline);
+                  return (
+                    <li key={event.id} className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4">
+                      <Link href={`/opportunities/${encodeURIComponent(event.opportunity.slug)}?from=%2Fsaved`} className="font-semibold text-[var(--foreground)] hover:text-[var(--accent-strong)]">
+                        {event.opportunity.title}
+                      </Link>
+                      <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+                        {deadlineAlertEventLabel(event.eventType)}
+                      </p>
+                      {event.deadline ? (
+                        <p className="mt-1 text-xs text-[var(--subtle)]">
+                          {deadline.dateLabel ? `${deadline.label}: ${deadline.dateLabel}` : deadline.label}
+                        </p>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
 

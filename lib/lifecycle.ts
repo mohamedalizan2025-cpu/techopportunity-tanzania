@@ -30,16 +30,19 @@
  * The two are composed, never conflated.
  */
 
+import { evaluateDeadline } from "./deadline-intelligence";
+
 export type OpportunityLifecycle = "active" | "expired" | "rolling" | "unknown";
 
 export function deriveLifecycleState(
   deadline: string | null,
   now: Date = new Date()
 ): OpportunityLifecycle {
-  if (deadline === null) return "unknown";
-  const parsed = new Date(deadline);
-  if (Number.isNaN(parsed.getTime())) return "unknown";
-  return parsed.getTime() > now.getTime() ? "active" : "expired";
+  const state = evaluateDeadline({ deadline }, now).status;
+  if (state === "upcoming" || state === "closing_soon") return "active";
+  if (state === "closed") return "expired";
+  if (state === "rolling") return "rolling";
+  return "unknown";
 }
 
 /**

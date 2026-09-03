@@ -38,6 +38,12 @@ test("migration changes require review, production evidence, and owner approval"
   assert.equal(plan.ownerActions.length, 1);
 });
 
+test("M30 migration selects deadline alerts and migration review", () => {
+  const plan = classifyChanges(["supabase/migrations/0012_deadline_alerts.sql"]);
+  assert.deepEqual(selected(plan.changedFiles), ["deadline-alerts", "migration-review"]);
+  assert.equal(plan.productionEvidence.required, true);
+});
+
 test("source seed changes require explicit live-mutation approval", () => {
   const plan = classifyChanges(["supabase/seeds/0002_pilot_sources.sql"]);
   assert.deepEqual(selected(plan.changedFiles), ["source-registry-review"]);
@@ -52,8 +58,19 @@ test("moderation changes select build and security coverage", () => {
 
 test("saved-account changes select build and auth security coverage", () => {
   const plan = classifyChanges(["app/saved/page.tsx"]);
-  assert.deepEqual(selected(plan.changedFiles), ["build", "moderation-auth"]);
+  assert.deepEqual(selected(plan.changedFiles), ["build", "moderation-auth", "deadline-alerts"]);
   assert.equal(plan.productionEvidence.required, true);
+});
+
+test("alert runner selects focused coverage without discovery regression", () => {
+  const plan = classifyChanges(["scripts/alerts/runner.ts"]);
+  assert.deepEqual(selected(plan.changedFiles), ["deadline-alerts"]);
+  assert.equal(plan.classifications.discovery.length, 0);
+  assert.equal(plan.productionEvidence.required, true);
+});
+
+test("alert workflow selects focused coverage and workflow review", () => {
+  assert.deepEqual(selected([".github/workflows/deadline-alerts.yml"]), ["deadline-alerts", "workflow-review"]);
 });
 
 test("assistant changes select build and kill-switch coverage", () => {
@@ -78,6 +95,7 @@ test("dependency changes require build and integrated production evidence", () =
   const plan = classifyChanges(["package-lock.json"]);
   assert.deepEqual(selected(plan.changedFiles), ["build"]);
   assert.equal(plan.productionEvidence.required, true);
+  assert.equal(plan.productionEvidence.reasons.some((reason) => reason.startsWith("Discovery")), false);
 });
 
 test("ordinary docs changes do not invent production work", () => {

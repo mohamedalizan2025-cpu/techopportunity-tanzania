@@ -6,6 +6,7 @@ import {
 } from "../types";
 import { categoryLabel } from "../category-labels";
 import { deriveLifecycleState } from "../lifecycle";
+import { evaluateDeadline } from "../deadline-intelligence";
 import { createSupabaseServerClient } from "./supabase-client";
 
 export type OpportunitySort = "deadline" | "newest" | "relevance";
@@ -292,9 +293,10 @@ export function applyPublicOpportunityQuery(
       if (query.deadline === "rolling" && opportunity.deadline !== null) return [];
       if (query.deadline === "upcoming" && state !== "active") return [];
       if (query.deadline === "soon") {
-        if (state !== "active" || !opportunity.deadline) return [];
-        const remaining = normalizedDate(opportunity.deadline) - now.getTime();
-        if (remaining <= 0 || remaining > 14 * 24 * 60 * 60 * 1000) return [];
+        if (
+          evaluateDeadline({ deadline: opportunity.deadline }, now).status !==
+          "closing_soon"
+        ) return [];
       }
     }
 

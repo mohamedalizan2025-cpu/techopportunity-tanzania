@@ -1,7 +1,6 @@
 import type { Opportunity, OpportunityLocation } from "./types";
-import { deriveLifecycleState, isActionableNow } from "./lifecycle";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
+import { isActionableNow } from "./lifecycle";
+import { evaluateDeadline } from "./deadline-intelligence";
 
 export interface DeadlinePresentation {
   state: "active" | "urgent" | "expired" | "unknown";
@@ -68,21 +67,18 @@ export function formatDeadlinePresentation(
   deadline: string | null,
   now: Date = new Date()
 ): DeadlinePresentation {
-  const lifecycle = deriveLifecycleState(deadline, now);
-  if (lifecycle === "unknown" || !deadline) {
+  const evaluation = evaluateDeadline({ deadline }, now);
+  if (evaluation.status === "unknown" || evaluation.status === "invalid" || !deadline) {
     return { state: "unknown", label: "Deadline not listed", dateLabel: null };
   }
 
   const dateLabel = formatDate(deadline);
-  if (lifecycle === "expired") {
+  if (evaluation.status === "closed") {
     return { state: "expired", label: "Deadline passed", dateLabel };
   }
 
-  const remainingDays = Math.max(
-    1,
-    Math.ceil((new Date(deadline).getTime() - now.getTime()) / DAY_MS)
-  );
-  if (remainingDays <= 14) {
+  const remainingDays = evaluation.remainingDays ?? 1;
+  if (evaluation.status === "closing_soon") {
     return {
       state: "urgent",
       label: `Closes in ${remainingDays} ${remainingDays === 1 ? "day" : "days"}`,
@@ -194,10 +190,7 @@ export function buildHomepageSnapshot(
 
   const closingSoon = publishedActionable
     .filter((opportunity) => {
-      if (!opportunity.deadline) return false;
-      const deadline = new Date(opportunity.deadline).getTime();
-      const remaining = deadline - now.getTime();
-      return Number.isFinite(deadline) && remaining > 0 && remaining <= 14 * DAY_MS;
+      return evaluateDeadline({ deadline: opportunity.deadline }, now).status === "closing_soon";
     })
     .sort(
       (a, b) =>
