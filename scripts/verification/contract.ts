@@ -64,9 +64,11 @@ const DISCOVERY_HEALTH = [
   /^\.github\/workflows\/discovery(?:-health)?\.yml$/,
 ];
 const MODERATION_AUTH = [
-  /^app\/(moderation|published-management|login)(\/|$)/,
-  /^lib\/data\/(moderation|moderation-actions|published-management|auth-actions|supabase-auth)\.ts$/,
-  /^tests\/(moderation-review|published-management|lifecycle)\.test\.ts$/,
+  /^app\/(moderation|published-management|login|saved)(\/|$)/,
+  /^components\/save-opportunity-control\.tsx$/,
+  /^lib\/saved-opportunity-state\.ts$/,
+  /^lib\/data\/(moderation|moderation-actions|published-management|auth-actions|supabase-auth|saved-opportunities|saved-opportunity-actions)\.ts$/,
+  /^tests\/(moderation-review|published-management|lifecycle|accounts-saved)\.test\.ts$/,
   /^proxy\.ts$/,
 ];
 const ASSISTANT = [/^app\/api\/assistant\//, /^lib\/assistant\//, /^tests\/assistant\.test\.ts$/];

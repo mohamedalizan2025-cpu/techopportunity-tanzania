@@ -3,7 +3,11 @@
 import { redirect } from "next/navigation";
 import { createSupabaseAuthServerClient } from "./supabase-auth";
 import { getModerationAccess } from "./moderation";
-import { sanitizeNextPath, type LoginState } from "../staff-form-state";
+import {
+  postLoginDestination,
+  sanitizeNextPath,
+  type LoginState,
+} from "../staff-form-state";
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "Invalid email or password.",
@@ -13,7 +17,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     "Too many attempts. Please wait a moment and try again.",
 };
 
-export async function logInAction(
+export async function authenticateAction(
   _previousState: LoginState,
   formData: FormData
 ): Promise<LoginState> {
@@ -25,10 +29,17 @@ export async function logInAction(
     typeof formData.get("password") === "string"
       ? (formData.get("password") as string)
       : "";
+  const mode = formData.get("mode") === "sign-up" ? "sign-up" : "sign-in";
   const nextPath = sanitizeNextPath(formData.get("next"));
 
   if (email === "" || password === "") {
     return { status: "error", message: "Enter your email and password." };
+  }
+  if (mode === "sign-up" && password.length < 8) {
+    return {
+      status: "error",
+      message: "Use a password with at least 8 characters.",
+    };
   }
 
   let supabase;
@@ -42,10 +53,27 @@ export async function logInAction(
     };
   }
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  if (mode === "sign-up") {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      return {
+        status: "error",
+        message:
+          AUTH_ERROR_MESSAGES[error.code ?? ""] ??
+          "The account could not be created. Please check the details and try again.",
+      };
+    }
+    if (!data.session) {
+      return {
+        status: "success",
+        message:
+          "Check your email to confirm the account, then return here to sign in.",
+      };
+    }
+    redirect(postLoginDestination(nextPath, false));
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     return {
@@ -55,9 +83,7 @@ export async function logInAction(
   }
 
   const access = await getModerationAccess();
-  const target = access.ok ? (nextPath ?? "/moderation") : "/";
-
-  redirect(target);
+  redirect(postLoginDestination(nextPath, access.ok));
 }
 
 export async function logOutAction(): Promise<void> {

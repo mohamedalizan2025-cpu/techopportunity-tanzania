@@ -1,7 +1,10 @@
 import type { Opportunity, OpportunityCategory } from "../types";
 import { OPPORTUNITY_CATEGORIES } from "../types";
 import { triageBucketOf, type TriageBucket } from "../triage-bucket";
-import { createSupabaseAuthServerClient } from "./supabase-auth";
+import {
+  createSupabaseAuthServerClient,
+  getAuthenticatedUser,
+} from "./supabase-auth";
 import {
   OPPORTUNITY_SELECT,
   mapOpportunityRow,
@@ -26,49 +29,20 @@ export type ModerationAccessResult =
   | { ok: true; staff: StaffContext }
   | { ok: false; reason: "unauthenticated" | "forbidden" };
 
-async function readStaffProfile(
-  client: StaffContext["client"],
-  userId: string
-): Promise<{ role: string; display_name: string | null } | null> {
-  const { data, error } = await client
-    .from("profiles")
-    .select("role, display_name")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (error) return null;
-  return (data as unknown as { role: string; display_name: string | null }) ?? null;
-}
-
 export async function getModerationAccess(): Promise<ModerationAccessResult> {
-  let client;
-  try {
-    client = await createSupabaseAuthServerClient();
-  } catch {
-    return { ok: false, reason: "unauthenticated" };
-  }
-
-  const { data: claimsData, error: claimsError } =
-    await client.auth.getClaims();
-  const claims = claimsError ? null : (claimsData?.claims ?? null);
-  const userId = (claims?.sub as string | undefined) ?? null;
-
-  if (!userId) {
-    return { ok: false, reason: "unauthenticated" };
-  }
-
-  const profile = await readStaffProfile(client, userId);
-  if (!profile || !["moderator", "admin"].includes(profile.role)) {
+  const user = await getAuthenticatedUser();
+  if (!user) return { ok: false, reason: "unauthenticated" };
+  if (user.role !== "moderator" && user.role !== "admin") {
     return { ok: false, reason: "forbidden" };
   }
 
   return {
     ok: true,
     staff: {
-      client,
-      userId,
-      displayName: profile.display_name,
-      email: (claims?.email as string | undefined) ?? null,
+      client: user.client,
+      userId: user.userId,
+      displayName: user.displayName,
+      email: user.email,
     },
   };
 }

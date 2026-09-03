@@ -141,13 +141,15 @@ const BROWSE_QUERY_KEYS = new Set([
   "sort",
 ]);
 
-/** Accept only an internal homepage result URL; external/open redirects fail closed. */
+/** Accept only an internal homepage result URL or the protected saved list. */
 export function sanitizeBrowseReturnHref(raw: string | null | undefined): string {
   if (!raw || raw.length > 600) return BROWSE_RETURN_FALLBACK;
   try {
     const base = "https://browse.invalid";
     const parsed = new URL(raw, base);
-    if (parsed.origin !== base || parsed.pathname !== "/") return BROWSE_RETURN_FALLBACK;
+    if (parsed.origin !== base) return BROWSE_RETURN_FALLBACK;
+    if (parsed.pathname === "/saved") return "/saved";
+    if (parsed.pathname !== "/") return BROWSE_RETURN_FALLBACK;
     const safe = new URLSearchParams();
     for (const [key, value] of parsed.searchParams) {
       if (BROWSE_QUERY_KEYS.has(key) && value.length <= 120 && !safe.has(key)) {

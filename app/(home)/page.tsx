@@ -6,6 +6,8 @@ import {
 } from "@/components/opportunity-card";
 import { OpportunityFilters, buildHref } from "@/components/opportunity-filters";
 import { listLiveCategories } from "@/lib/data/categories";
+import { listSavedOpportunityIds } from "@/lib/data/saved-opportunities";
+import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 import {
   getPublicBrowseData,
   parseDeadlineFilter,
@@ -62,11 +64,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const region = sanitizeFilterValue(params.region);
   const deadline = parseDeadlineFilter(params.deadline);
 
-  const [browseData, liveCategories] = await Promise.all([
+  const [browseData, liveCategories, user] = await Promise.all([
     getPublicBrowseData({ category, sort, q, city, region, deadline }),
     listLiveCategories(),
+    getAuthenticatedUser(),
   ]);
   const { opportunities, locations } = browseData;
+  const savedIds = user ? await listSavedOpportunityIds(user) : new Set<string>();
 
   const isFiltered =
     category !== null ||
@@ -255,7 +259,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             ) : (
               <ul className="grid gap-5 md:grid-cols-2">
                 {opportunities.map((opportunity) => (
-                  <li key={opportunity.id}><OpportunityCard opportunity={opportunity} now={now} returnHref={browseHref} /></li>
+                  <li key={opportunity.id}>
+                    <OpportunityCard
+                      opportunity={opportunity}
+                      now={now}
+                      returnHref={browseHref}
+                      isSaved={savedIds.has(opportunity.id)}
+                      isAuthenticated={user !== null}
+                    />
+                  </li>
                 ))}
               </ul>
             )}

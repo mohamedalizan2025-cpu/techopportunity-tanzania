@@ -1,0 +1,126 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { EmptyState } from "@/components/empty-state";
+import { OpportunityCard } from "@/components/opportunity-card";
+import { SaveOpportunityControl } from "@/components/save-opportunity-control";
+import { listSavedOpportunities } from "@/lib/data/saved-opportunities";
+import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
+import { formatSavedDate } from "@/lib/saved-opportunity-state";
+
+export const metadata: Metadata = {
+  title: "Saved opportunities | TechOpportunity Tanzania",
+  description: "Your private list of saved opportunities.",
+  robots: { index: false, follow: false },
+};
+
+export default async function SavedOpportunitiesPage() {
+  const user = await getAuthenticatedUser();
+  if (!user) redirect("/login?next=%2Fsaved");
+
+  const result = await listSavedOpportunities(user);
+  const signedInAs = user.displayName ?? user.email ?? "your account";
+
+  return (
+    <main id="main-content" tabIndex={-1} className="flex-1 bg-[var(--background)]">
+      <section className="border-b border-[var(--line)] bg-[var(--hero)]">
+        <div className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
+            Your account
+          </p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl">
+            Saved opportunities
+          </h1>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
+            Revisit opportunities you saved while browsing. Only you can see this list.
+          </p>
+          <p className="mt-3 break-words text-xs text-[var(--subtle)]">
+            Signed in as {signedInAs}
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="saved-list-heading">
+        <div className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 id="saved-list-heading" className="text-2xl font-semibold text-[var(--foreground)]">
+                Your saved list
+              </h2>
+              {result.available ? (
+                <p role="status" className="mt-2 text-sm text-[var(--muted)]">
+                  {result.entries.length} {result.entries.length === 1 ? "saved opportunity" : "saved opportunities"}
+                </p>
+              ) : null}
+            </div>
+            <Link
+              href="/#opportunities"
+              className="inline-flex min-h-11 w-fit items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            >
+              Browse opportunities
+            </Link>
+          </div>
+
+          {!result.available ? (
+            <div role="alert" className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              Saved opportunities are temporarily unavailable. Your public browsing experience is unaffected.
+            </div>
+          ) : result.entries.length === 0 ? (
+            <div className="mt-8">
+              <EmptyState
+                title="You haven't saved any opportunities yet"
+                message="Browse opportunities and save the ones you want to revisit."
+                actionHref="/#opportunities"
+                actionLabel="Browse opportunities"
+              />
+            </div>
+          ) : (
+            <ul className="mt-8 grid gap-5 md:grid-cols-2">
+              {result.entries.map((entry) => (
+                <li key={entry.savedId}>
+                  {entry.opportunity ? (
+                    <div className="h-full">
+                      <p className="mb-2 text-xs text-[var(--subtle)]">
+                        {formatSavedDate(entry.savedAt) ?? "Saved date unavailable"}
+                      </p>
+                      <OpportunityCard
+                        opportunity={entry.opportunity}
+                        returnHref="/saved"
+                        isSaved
+                        isAuthenticated
+                      />
+                    </div>
+                  ) : (
+                    <article className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6">
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
+                        Unavailable
+                      </p>
+                      <h3 className="mt-3 text-lg font-semibold text-[var(--foreground)]">
+                        This saved opportunity is no longer publicly available
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                        Its private or removed details are not shown. You can safely remove this saved reference.
+                      </p>
+                      <p className="mt-3 text-xs text-[var(--subtle)]">
+                        {formatSavedDate(entry.savedAt) ?? "Saved date unavailable"}
+                      </p>
+                      <div className="mt-5">
+                        <SaveOpportunityControl
+                          opportunityId={entry.opportunityId}
+                          opportunityTitle="unavailable opportunity"
+                          isSaved
+                          isAuthenticated
+                          returnTo="/saved"
+                        />
+                      </div>
+                    </article>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}

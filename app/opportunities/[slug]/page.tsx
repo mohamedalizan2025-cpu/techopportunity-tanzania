@@ -3,7 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OpportunityDetail } from "@/components/opportunity-detail";
 import { getOpportunityBySlug } from "@/lib/data/opportunities";
-import { sanitizeBrowseReturnHref } from "@/lib/opportunity-presentation";
+import { listSavedOpportunityIds } from "@/lib/data/saved-opportunities";
+import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
+import {
+  opportunityHref,
+  sanitizeBrowseReturnHref,
+} from "@/lib/opportunity-presentation";
 
 export const revalidate = 60;
 
@@ -29,9 +34,22 @@ export default async function OpportunityDetailPage({ params, searchParams }: Pa
   const query = await searchParams;
   const rawReturn = Array.isArray(query.from) ? query.from[0] : query.from;
   const returnHref = sanitizeBrowseReturnHref(rawReturn);
-  const opportunity = await getOpportunityBySlug(slug);
+  const [opportunity, user] = await Promise.all([
+    getOpportunityBySlug(slug),
+    getAuthenticatedUser(),
+  ]);
 
   if (!opportunity) notFound();
+  const savedIds = user ? await listSavedOpportunityIds(user) : new Set<string>();
+  const detailHref = opportunityHref(
+    opportunity.slug,
+    rawReturn ? returnHref : undefined
+  );
+  const returnLabel = returnHref === "/saved"
+    ? "Back to saved"
+    : rawReturn
+      ? "Back to results"
+      : "All opportunities";
 
   return (
     <div className="flex flex-1 flex-col bg-[var(--background)] font-sans">
@@ -40,11 +58,16 @@ export default async function OpportunityDetailPage({ params, searchParams }: Pa
           href={returnHref}
           className="inline-flex min-h-10 items-center rounded-full px-3 text-sm font-semibold text-[var(--muted)] transition-colors hover:bg-[var(--muted-surface)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
-          <span aria-hidden="true" className="mr-2">←</span>{rawReturn ? "Back to results" : "All opportunities"}
+          <span aria-hidden="true" className="mr-2">←</span>{returnLabel}
         </Link>
 
         <div className="mt-5 rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-5 shadow-[0_20px_60px_rgba(18,48,34,0.08)] sm:p-9">
-          <OpportunityDetail opportunity={opportunity} />
+          <OpportunityDetail
+            opportunity={opportunity}
+            isSaved={savedIds.has(opportunity.id)}
+            isAuthenticated={user !== null}
+            returnTo={detailHref}
+          />
         </div>
       </main>
     </div>

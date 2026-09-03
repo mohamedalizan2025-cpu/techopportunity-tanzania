@@ -50,6 +50,12 @@ test("moderation changes select build and security coverage", () => {
   assert.equal(classifyChanges(["app/moderation/page.tsx"]).productionEvidence.required, true);
 });
 
+test("saved-account changes select build and auth security coverage", () => {
+  const plan = classifyChanges(["app/saved/page.tsx"]);
+  assert.deepEqual(selected(plan.changedFiles), ["build", "moderation-auth"]);
+  assert.equal(plan.productionEvidence.required, true);
+});
+
 test("assistant changes select build and kill-switch coverage", () => {
   assert.deepEqual(selected(["app/api/assistant/ask/route.ts"]), ["build", "assistant-kill-switch"]);
 });

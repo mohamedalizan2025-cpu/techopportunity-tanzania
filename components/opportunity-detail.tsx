@@ -1,4 +1,5 @@
 import { categoryLabel } from "@/lib/category-labels";
+import { SaveOpportunityControl } from "@/components/save-opportunity-control";
 import {
   formatAddedDate,
   formatDeadlinePresentation,
@@ -29,7 +30,17 @@ function Fact({
   );
 }
 
-export function OpportunityDetail({ opportunity }: { opportunity: Opportunity }) {
+export function OpportunityDetail({
+  opportunity,
+  isSaved = false,
+  isAuthenticated = false,
+  returnTo,
+}: {
+  opportunity: Opportunity;
+  isSaved?: boolean;
+  isAuthenticated?: boolean;
+  returnTo: string;
+}) {
   const deadline = formatDeadlinePresentation(opportunity.deadline);
   const locationLines = opportunity.location
     ? formatLocationDisplay(opportunity.location)
@@ -58,6 +69,15 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
           {opportunity.organization?.trim() || "Organizer not specified"}
         </p>
         {added ? <p className="mt-3 text-xs text-[var(--subtle)]">{added}</p> : null}
+        <div className="mt-5">
+          <SaveOpportunityControl
+            opportunityId={opportunity.id}
+            opportunityTitle={opportunity.title}
+            isSaved={isSaved}
+            isAuthenticated={isAuthenticated}
+            returnTo={returnTo}
+          />
+        </div>
       </header>
 
       <dl className="mt-8 grid gap-3 sm:grid-cols-2">

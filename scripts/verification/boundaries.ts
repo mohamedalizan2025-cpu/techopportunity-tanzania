@@ -26,6 +26,10 @@ const assistantRoute = read("app/api/assistant/ask/route.ts");
 const discoveryWorkflow = read(".github/workflows/discovery.yml");
 const healthWorkflow = read(".github/workflows/discovery-health.yml");
 const verificationWorkflow = read(".github/workflows/verification.yml");
+const savedMigration = read("supabase/migrations/0011_saved_opportunities.sql");
+const savedAction = read("lib/data/saved-opportunity-actions.ts");
+const savedData = read("lib/data/saved-opportunities.ts");
+const savedPage = read("app/saved/page.tsx");
 
 invariant("all discovery network acquisition crosses fetchPage", () => {
   const directFetchFiles = filesBelow("scripts/discovery")
@@ -74,6 +78,28 @@ invariant("moderation and published-management pages enforce the shared access g
     assert.match(source, /getModerationAccess\(\)/);
     assert.match(source, /redirect\(/);
   }
+});
+
+invariant("saved relationships are owner-only and never anonymous or mutable", () => {
+  assert.match(savedMigration, /alter table public\.saved_opportunities enable row level security/);
+  assert.equal((savedMigration.match(/\(select auth\.uid\(\)\) = user_id/g) ?? []).length, 3);
+  assert.match(savedMigration, /revoke all on table public\.saved_opportunities from anon/);
+  assert.match(savedMigration, /revoke update on table public\.saved_opportunities from authenticated/);
+  assert.match(savedMigration, /unique \(user_id, opportunity_id\)/);
+});
+
+invariant("saved mutations derive ownership from authenticated claims", () => {
+  assert.match(savedAction, /getAuthenticatedUser\(\)/);
+  assert.match(savedAction, /user_id: user\.userId/);
+  assert.doesNotMatch(savedAction, /formData\.get\(["']user_?id["']\)/i);
+  assert.match(savedAction, /\.eq\(["']status["'], ["']published["']\)/);
+});
+
+invariant("saved reads protect the route and suppress unpublished content", () => {
+  assert.match(savedPage, /if \(!user\) redirect\(["']\/login\?next=%2Fsaved["']\)/);
+  assert.match(savedData, /\.eq\(["']user_id["'], user\.userId\)/);
+  assert.match(savedData, /\.eq\(["']opportunity\.status["'], ["']published["']\)/);
+  assert.match(savedData, /related\?\.status === ["']published["']/);
 });
 
 invariant("discovery uses one authoritative six-hour UTC schedule and the pending-only worker", () => {

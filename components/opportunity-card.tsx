@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { categoryLabel } from "@/lib/category-labels";
+import { SaveOpportunityControl } from "@/components/save-opportunity-control";
 import {
   formatAddedDate,
   formatCardLocation,
@@ -33,10 +34,14 @@ export function OpportunityCard({
   opportunity,
   now,
   returnHref,
+  isSaved = false,
+  isAuthenticated = false,
 }: {
   opportunity: Opportunity;
   now?: Date;
   returnHref?: string;
+  isSaved?: boolean;
+  isAuthenticated?: boolean;
 }) {
   const deadline = formatDeadlinePresentation(opportunity.deadline, now);
   const place = formatCardLocation(opportunity.location);
@@ -107,8 +112,20 @@ export function OpportunityCard({
         </div>
       </dl>
 
-      <div className="mt-5 flex items-center justify-between gap-3">
-        <span className="text-xs text-[var(--subtle)]">{added}</span>
+      <div className="mt-5 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <span className="block text-xs text-[var(--subtle)]">{added}</span>
+          <div className="mt-3">
+            <SaveOpportunityControl
+              opportunityId={opportunity.id}
+              opportunityTitle={opportunity.title}
+              isSaved={isSaved}
+              isAuthenticated={isAuthenticated}
+              returnTo={returnHref ?? "/#opportunities"}
+              compact
+            />
+          </div>
+        </div>
         <span
           aria-hidden="true"
           className="text-sm font-semibold text-[var(--accent-strong)] transition-transform group-hover:translate-x-1"

@@ -1,12 +1,34 @@
 export function sanitizeNextPath(value: unknown): string | null {
   if (typeof value !== "string") return null;
+  if (value.length === 0 || value.length > 600) return null;
   if (!value.startsWith("/") || value.startsWith("//")) return null;
-  if (value.includes("\\")) return null;
-  return value;
+  if (value.includes("\\") || /[\u0000-\u001f\u007f]/.test(value)) return null;
+  try {
+    const base = "https://navigation.invalid";
+    const parsed = new URL(value, base);
+    if (parsed.origin !== base) return null;
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return null;
+  }
+}
+
+export function postLoginDestination(
+  nextPath: string | null,
+  isStaff: boolean
+): string {
+  const target = nextPath ?? "/saved";
+  const pathname = new URL(target, "https://navigation.invalid").pathname;
+  const staffOnly =
+    pathname === "/moderation" ||
+    pathname.startsWith("/moderation/") ||
+    pathname === "/published-management" ||
+    pathname.startsWith("/published-management/");
+  return staffOnly && !isStaff ? "/saved" : target;
 }
 
 export interface LoginState {
-  status: "idle" | "error";
+  status: "idle" | "success" | "error";
   message: string | null;
 }
 
