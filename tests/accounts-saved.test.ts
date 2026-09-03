@@ -4,6 +4,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { mapSavedOpportunityRows } from "../lib/data/saved-opportunities";
 import {
+  buildAuthCallbackUrl,
+  resolveSiteOrigin,
+} from "../lib/auth-redirect";
+import {
   canSaveOpportunity,
   formatSavedDate,
   isSavedOpportunityId,
@@ -56,6 +60,58 @@ test("redirect rejects an empty value", () => {
 });
 test("redirect rejects excessive length", () => {
   assert.equal(sanitizeNextPath(`/${"a".repeat(700)}`), null);
+});
+test("configured production site origin is normalized", () => {
+  assert.equal(resolveSiteOrigin({
+    NEXT_PUBLIC_SITE_URL: "https://techopportunity-tanzania.vercel.app/",
+    NODE_ENV: "production",
+  }), "https://techopportunity-tanzania.vercel.app");
+});
+test("Vercel production URL is a safe canonical fallback", () => {
+  assert.equal(resolveSiteOrigin({
+    VERCEL_PROJECT_PRODUCTION_URL: "techopportunity-tanzania.vercel.app",
+    NODE_ENV: "production",
+  }), "https://techopportunity-tanzania.vercel.app");
+});
+test("production site origin rejects insecure non-local HTTP", () => {
+  assert.equal(resolveSiteOrigin({
+    NEXT_PUBLIC_SITE_URL: "http://evil.example",
+    VERCEL_PROJECT_PRODUCTION_URL: "techopportunity-tanzania.vercel.app",
+    NODE_ENV: "production",
+  }), null);
+});
+test("production site origin rejects credentials and paths", () => {
+  assert.equal(resolveSiteOrigin({
+    NEXT_PUBLIC_SITE_URL: "https://user:pass@example.org/path",
+    NODE_ENV: "production",
+  }), null);
+});
+test("production site origin fails closed when unconfigured", () => {
+  assert.equal(resolveSiteOrigin({ NODE_ENV: "production" }), null);
+});
+test("local development gets only the loopback fallback", () => {
+  assert.equal(resolveSiteOrigin({ NODE_ENV: "development" }), "http://localhost:3000");
+});
+test("confirmation callback preserves a safe public return", () => {
+  assert.equal(buildAuthCallbackUrl(
+    "/opportunities/public-example?from=%2F%3Fq%3DAI",
+    {
+      NEXT_PUBLIC_SITE_URL: "https://techopportunity-tanzania.vercel.app",
+      NODE_ENV: "production",
+    }
+  ), "https://techopportunity-tanzania.vercel.app/auth/callback?next=%2Fopportunities%2Fpublic-example%3Ffrom%3D%252F%253Fq%253DAI");
+});
+test("confirmation callback neutralizes an external return", () => {
+  assert.equal(buildAuthCallbackUrl("https://evil.example", {
+    VERCEL_PROJECT_PRODUCTION_URL: "techopportunity-tanzania.vercel.app",
+    NODE_ENV: "production",
+  }), "https://techopportunity-tanzania.vercel.app/auth/callback?next=%2Fsaved");
+});
+test("ordinary confirmation callback cannot target staff routes", () => {
+  assert.equal(buildAuthCallbackUrl("/moderation?bucket=2", {
+    VERCEL_PROJECT_PRODUCTION_URL: "techopportunity-tanzania.vercel.app",
+    NODE_ENV: "production",
+  }), "https://techopportunity-tanzania.vercel.app/auth/callback?next=%2Fsaved");
 });
 test("ordinary login defaults to saved opportunities", () => {
   assert.equal(postLoginDestination(null, false), "/saved");
@@ -230,6 +286,8 @@ const root = process.cwd();
 const read = (file: string) => readFileSync(join(root, file), "utf8");
 const migration = read("supabase/migrations/0011_saved_opportunities.sql");
 const authAction = read("lib/data/auth-actions.ts");
+const authCallback = read("app/auth/callback/route.ts");
+const authRedirect = read("lib/auth-redirect.ts");
 const savedAction = read("lib/data/saved-opportunity-actions.ts");
 const savedData = read("lib/data/saved-opportunities.ts");
 const loginPage = read("app/login/page.tsx");
@@ -319,6 +377,21 @@ test("minimum password length applies only to account creation", () => {
 });
 test("email confirmation is handled honestly", () => {
   assert.match(authAction, /Check your email to confirm the account/);
+});
+test("signup supplies the validated email callback", () => {
+  assert.match(authAction, /buildAuthCallbackUrl\(nextPath\)/);
+  assert.match(authAction, /options: \{ emailRedirectTo \}/);
+});
+test("confirmation callback exchanges a PKCE code for a cookie session", () => {
+  assert.match(authCallback, /exchangeCodeForSession\(code\)/);
+  assert.match(authCallback, /sanitizeNextPath/);
+});
+test("callback origin never comes from request headers", () => {
+  assert.doesNotMatch(authRedirect, /request\.headers|headers\(\)|x-forwarded-host/i);
+});
+test("confirmation failures are shown without provider details", () => {
+  assert.match(loginPage, /That confirmation link is invalid or expired/);
+  assert.doesNotMatch(authCallback, /error\.message/);
 });
 test("sign out invalidates the Supabase session", () => {
   assert.match(authAction, /supabase\.auth\.signOut\(\)/);

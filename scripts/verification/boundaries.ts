@@ -30,6 +30,9 @@ const savedMigration = read("supabase/migrations/0011_saved_opportunities.sql");
 const savedAction = read("lib/data/saved-opportunity-actions.ts");
 const savedData = read("lib/data/saved-opportunities.ts");
 const savedPage = read("app/saved/page.tsx");
+const authAction = read("lib/data/auth-actions.ts");
+const authCallback = read("app/auth/callback/route.ts");
+const authRedirect = read("lib/auth-redirect.ts");
 
 invariant("all discovery network acquisition crosses fetchPage", () => {
   const directFetchFiles = filesBelow("scripts/discovery")
@@ -100,6 +103,14 @@ invariant("saved reads protect the route and suppress unpublished content", () =
   assert.match(savedData, /\.eq\(["']user_id["'], user\.userId\)/);
   assert.match(savedData, /\.eq\(["']opportunity\.status["'], ["']published["']\)/);
   assert.match(savedData, /related\?\.status === ["']published["']/);
+});
+
+invariant("email confirmation uses a canonical callback and safe internal destination", () => {
+  assert.match(authAction, /options: \{ emailRedirectTo \}/);
+  assert.match(authCallback, /exchangeCodeForSession\(code\)/);
+  assert.match(authCallback, /sanitizeNextPath/);
+  assert.match(authRedirect, /VERCEL_PROJECT_PRODUCTION_URL/);
+  assert.doesNotMatch(authRedirect, /request\.headers|headers\(\)|x-forwarded-host/i);
 });
 
 invariant("discovery uses one authoritative six-hour UTC schedule and the pending-only worker", () => {

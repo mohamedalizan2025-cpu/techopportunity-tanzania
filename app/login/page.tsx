@@ -11,13 +11,19 @@ export const metadata: Metadata = {
 };
 
 interface LoginPageProps {
-  searchParams: Promise<{ next?: string | string[] }>;
+  searchParams: Promise<{
+    next?: string | string[];
+    authError?: string | string[];
+  }>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const rawNext = Array.isArray(params.next) ? params.next[0] : params.next;
   const nextPath = sanitizeNextPath(rawNext);
+  const authError = Array.isArray(params.authError)
+    ? params.authError[0]
+    : params.authError;
   const user = await getAuthenticatedUser();
   if (user) {
     redirect(
@@ -50,6 +56,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
 
         <div className="mt-8 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 shadow-[0_16px_45px_rgba(18,48,34,0.08)] sm:p-7">
+          {authError === "confirmation" ? (
+            <p
+              role="alert"
+              className="mb-4 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+            >
+              That confirmation link is invalid or expired. Request a fresh email by creating the account again.
+            </p>
+          ) : null}
           <LoginForm nextPath={nextPath} />
         </div>
         <p className="mt-4 text-xs leading-5 text-[var(--subtle)]">

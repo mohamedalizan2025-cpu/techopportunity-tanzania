@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { buildAuthCallbackUrl } from "../auth-redirect";
 import { createSupabaseAuthServerClient } from "./supabase-auth";
 import { getModerationAccess } from "./moderation";
 import {
@@ -54,7 +55,20 @@ export async function authenticateAction(
   }
 
   if (mode === "sign-up") {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const emailRedirectTo = buildAuthCallbackUrl(nextPath);
+    if (!emailRedirectTo) {
+      return {
+        status: "error",
+        message:
+          "Account confirmation is temporarily unavailable. Please try again later.",
+      };
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo },
+    });
     if (error) {
       return {
         status: "error",
@@ -67,7 +81,7 @@ export async function authenticateAction(
       return {
         status: "success",
         message:
-          "Check your email to confirm the account, then return here to sign in.",
+          "Check your email to confirm the account. The fresh link will return you here and sign you in.",
       };
     }
     redirect(postLoginDestination(nextPath, false));
