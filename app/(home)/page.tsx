@@ -1,12 +1,10 @@
+import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
-import { AssistantPanel } from "@/components/assistant-panel";
 import {
-  OpportunityFilters,
-  FilterLink,
-  buildHref,
-} from "@/components/opportunity-filters";
-import { categoryLabel } from "@/lib/category-labels";
-import { buildCardMetaSegments } from "@/lib/opportunity-presentation";
+  OpportunityCard,
+  SnapshotOpportunityLink,
+} from "@/components/opportunity-card";
+import { OpportunityFilters, buildHref } from "@/components/opportunity-filters";
 import { listLiveCategories } from "@/lib/data/categories";
 import {
   listPublishedLocations,
@@ -15,12 +13,10 @@ import {
   sanitizeFilterValue,
   sanitizeSearchQuery,
 } from "@/lib/data/opportunities";
-import {
-  OPPORTUNITY_CATEGORIES,
-  type Opportunity,
-  type OpportunityCategory,
-} from "@/lib/types";
-import Link from "next/link";
+import { buildHomepageSnapshot } from "@/lib/opportunity-presentation";
+import { OPPORTUNITY_CATEGORIES, type OpportunityCategory } from "@/lib/types";
+
+export const revalidate = 60;
 
 interface HomePageProps {
   searchParams: Promise<{
@@ -43,50 +39,27 @@ function parseSort(value?: string): "deadline" | "newest" {
   return value === "newest" ? "newest" : "deadline";
 }
 
-function formatCardDeadline(iso: string | null): string {
-  // Missing deadline = unknown, never a claim that it is rolling.
-  if (!iso) return "No deadline listed";
-  return `Deadline ${new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(iso))}`;
-}
-
-function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
-  const metaSegments = buildCardMetaSegments(opportunity);
-
+function SectionHeading({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+}) {
   return (
-    <li>
-      <Link
-        href={`/opportunities/${opportunity.slug}`}
-        className="block rounded-lg border border-black/[.08] bg-white p-4 text-left transition-colors hover:border-black/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 dark:border-white/[.145] dark:bg-zinc-950 dark:hover:border-white/40 dark:focus-visible:ring-white/60"
-      >
-        <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
-          {categoryLabel(opportunity.category)}
-        </span>
-        <p className="break-words font-medium text-black dark:text-zinc-50">
-          {opportunity.title}
-        </p>
-        {metaSegments.length > 0 ? (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {metaSegments.join(" · ")}
-          </p>
-        ) : null}
-        <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
-          {formatCardDeadline(opportunity.deadline)}
-        </p>
-      </Link>
-    </li>
-  );
-}
-
-function DiscoveryHeading({ children }: { children: string }) {
-  return (
-    <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
-      {children}
-    </h2>
+    <div className="max-w-2xl">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
+        {eyebrow}
+      </p>
+      <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em] text-[var(--foreground)] sm:text-4xl">
+        {title}
+      </h2>
+      {description ? (
+        <p className="mt-3 text-base leading-7 text-[var(--muted)]">{description}</p>
+      ) : null}
+    </div>
   );
 }
 
@@ -98,129 +71,212 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const city = sanitizeFilterValue(params.city);
   const region = sanitizeFilterValue(params.region);
   const deadline = parseDeadlineFilter(params.deadline);
-  const opportunities = await listPublishedOpportunities({
-    category,
-    sort,
-    q,
-    city,
-    region,
-    deadline,
-  });
-  const locations = await listPublishedLocations();
-  // Live taxonomy: only categories with a seeded row are shown, so the UI
-  // never claims a category that the database does not currently have.
-  const liveCategories = await listLiveCategories();
+
+  const [opportunities, locations, liveCategories] = await Promise.all([
+    listPublishedOpportunities({ category, sort, q, city, region, deadline }),
+    listPublishedLocations(),
+    listLiveCategories(),
+  ]);
+
   const isFiltered =
-    category !== null || q !== null || city !== null || region !== null || deadline !== null;
+    category !== null ||
+    q !== null ||
+    city !== null ||
+    region !== null ||
+    deadline !== null;
+  const now = new Date();
+  const snapshot = isFiltered
+    ? { closingSoon: [], recentlyAdded: [] }
+    : buildHomepageSnapshot(opportunities, now);
 
   return (
-    <div className="flex flex-1 flex-col items-center bg-zinc-50 px-6 font-sans dark:bg-black">
-      <main id="main-content" tabIndex={-1} className="flex w-full max-w-3xl flex-col items-center gap-10 py-16 text-center sm:py-24">
-        <div className="flex flex-col gap-4">
-          <h1 className="text-4xl font-semibold tracking-tight text-black sm:text-5xl dark:text-zinc-50">
-            Find opportunities you can apply for
-          </h1>
-          <p className="max-w-xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Scholarships, fellowships, grants, internships, hackathons,
-            competitions, workshops and conferences — in Tanzania and beyond.
-            Every published listing links to its official page.
-          </p>
-        </div>
+    <main id="main-content" tabIndex={-1} className="flex-1 overflow-hidden">
+      <section className="relative border-b border-[var(--line)] bg-[var(--hero)]">
+        <div
+          aria-hidden="true"
+          className="absolute -right-24 -top-20 h-72 w-72 rounded-full bg-[var(--accent-soft)] blur-3xl sm:h-96 sm:w-96"
+        />
+        <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[1.15fr_.85fr] lg:items-end lg:py-28">
+          <div>
+            <p className="inline-flex rounded-full border border-[var(--line-strong)] bg-[var(--surface)]/80 px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)] shadow-sm">
+              Opportunities for Tanzania&apos;s tech community
+            </p>
+            <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.04] tracking-[-0.055em] text-[var(--foreground)] sm:text-6xl lg:text-7xl">
+              Find your next move in technology.
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)] sm:text-xl">
+              Explore scholarships, grants, internships, fellowships, events,
+              competitions and more—curated for people building their future in tech.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a
+                href="#opportunities"
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--accent)] px-6 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(13,107,78,0.22)] transition hover:bg-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-4"
+              >
+                Browse opportunities
+              </a>
+              <Link
+                href="/?deadline=soon#opportunities"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-6 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              >
+                See what&apos;s closing soon
+              </Link>
+            </div>
+          </div>
 
-        {liveCategories.length > 0 ? (
-          <section
-            aria-label="Browse by opportunity type"
-            className="flex w-full flex-col items-center gap-3"
-          >
-            <DiscoveryHeading>Browse by type</DiscoveryHeading>
-            <ul className="flex flex-wrap justify-center gap-2">
+          <aside className="rounded-3xl border border-[var(--line)] bg-[var(--surface)]/90 p-5 shadow-[0_24px_70px_rgba(18,48,34,0.11)] backdrop-blur sm:p-7">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
+              Know before you click
+            </p>
+            <ul className="mt-5 grid gap-4 text-sm leading-6 text-[var(--muted)]">
+              <li className="flex gap-3"><span aria-hidden="true" className="mt-1 text-[var(--accent)]">✓</span><span>Deadlines are shown exactly when a date is available.</span></li>
+              <li className="flex gap-3"><span aria-hidden="true" className="mt-1 text-[var(--accent)]">✓</span><span>Location and applicant eligibility stay separate.</span></li>
+              <li className="flex gap-3"><span aria-hidden="true" className="mt-1 text-[var(--accent)]">✓</span><span>Every listing opens the source page for your own review.</span></li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      {!isFiltered ? (
+        <section aria-labelledby="snapshot-heading" className="border-b border-[var(--line)]">
+          <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div id="snapshot-heading">
+                <SectionHeading
+                  eyebrow="Live opportunity snapshot"
+                  title="Start with what matters now"
+                  description="A quick view of published opportunities from the live collection—never demo listings or invented counts."
+                />
+              </div>
+              <a href="#opportunities" className="w-fit text-sm font-semibold text-[var(--accent-strong)] underline decoration-[var(--line-strong)] underline-offset-4 hover:decoration-[var(--accent)]">
+                Browse the full list
+              </a>
+            </div>
+
+            <div className="mt-9 grid gap-5 lg:grid-cols-2">
+              <article className="rounded-2xl border border-[var(--line)] bg-[var(--muted-surface)] p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-3 px-3">
+                  <h3 className="text-lg font-semibold text-[var(--foreground)]">Closing in the next 14 days</h3>
+                  <span aria-hidden="true" className="text-xl">↘</span>
+                </div>
+                {snapshot.closingSoon.length > 0 ? (
+                  <ul className="mt-3 divide-y divide-[var(--line)]">
+                    {snapshot.closingSoon.map((opportunity) => (
+                      <li key={opportunity.id}><SnapshotOpportunityLink opportunity={opportunity} now={now} /></li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mx-3 mt-4 rounded-xl border border-dashed border-[var(--line-strong)] p-5 text-sm leading-6 text-[var(--muted)]">
+                    No published opportunities with a confirmed deadline in the next 14 days right now.
+                  </p>
+                )}
+              </article>
+
+              <article className="rounded-2xl border border-[var(--line)] bg-[var(--muted-surface)] p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-3 px-3">
+                  <h3 className="text-lg font-semibold text-[var(--foreground)]">Recently added</h3>
+                  <span aria-hidden="true" className="text-xl">↗</span>
+                </div>
+                {snapshot.recentlyAdded.length > 0 ? (
+                  <ul className="mt-3 divide-y divide-[var(--line)]">
+                    {snapshot.recentlyAdded.map((opportunity) => (
+                      <li key={opportunity.id}><SnapshotOpportunityLink opportunity={opportunity} now={now} /></li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mx-3 mt-4 rounded-xl border border-dashed border-[var(--line-strong)] p-5 text-sm leading-6 text-[var(--muted)]">
+                    No current published opportunities are available yet. New approved listings will appear here.
+                  </p>
+                )}
+              </article>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <section aria-labelledby="categories-heading" className="bg-[var(--surface)]">
+        <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
+          <div id="categories-heading">
+            <SectionHeading eyebrow="Explore by type" title="Choose the path that fits" description="Browse the platform’s live opportunity categories." />
+          </div>
+          {liveCategories.length > 0 ? (
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <li>
-                <FilterLink
-                  href={buildHref(null, sort, { q, city, region, deadline })}
-                  active={category === null}
+                <Link
+                  href={`${buildHref(null, sort, { q, city, region, deadline })}#opportunities`}
+                  className={`group flex min-h-24 items-center justify-between rounded-2xl border p-5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${category === null ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--line)] bg-[var(--background)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]"}`}
                 >
-                  All
-                </FilterLink>
+                  <span><span className="block text-xs font-bold text-[var(--subtle)]">ALL</span><span className="mt-1 block text-base font-semibold text-[var(--foreground)]">All opportunities</span></span>
+                  <span aria-hidden="true" className="text-xl text-[var(--accent-strong)] transition-transform group-hover:translate-x-1">→</span>
+                </Link>
               </li>
-              {liveCategories.map(({ slug, label }) => (
+              {liveCategories.map(({ slug, label }, index) => (
                 <li key={slug}>
-                  <FilterLink
-                    href={buildHref(slug, sort, { q, city, region, deadline })}
-                    active={category === slug}
+                  <Link
+                    href={`${buildHref(slug, sort, { q, city, region, deadline })}#opportunities`}
+                    className={`group flex min-h-24 items-center justify-between rounded-2xl border p-5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${category === slug ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--line)] bg-[var(--background)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]"}`}
                   >
-                    {label}
-                  </FilterLink>
+                    <span><span className="block text-xs font-bold text-[var(--subtle)]">{String(index + 1).padStart(2, "0")}</span><span className="mt-1 block text-base font-semibold text-[var(--foreground)]">{label}</span></span>
+                    <span aria-hidden="true" className="text-xl text-[var(--accent-strong)] transition-transform group-hover:translate-x-1">→</span>
+                  </Link>
                 </li>
               ))}
             </ul>
-          </section>
-        ) : null}
+          ) : (
+            <div className="mt-8"><EmptyState title="Categories are not available yet" message="Published opportunity categories will appear here when the live catalogue is available." /></div>
+          )}
+        </div>
+      </section>
 
-        <section
-          aria-label="Browse by deadline"
-          className="flex w-full flex-col items-center gap-3"
-        >
-          <DiscoveryHeading>By deadline</DiscoveryHeading>
-          <ul className="flex flex-wrap justify-center gap-2">
-            <li>
-              <FilterLink href="/?deadline=soon" active={deadline === "soon"}>
-                Closing soon (14 days)
-              </FilterLink>
-            </li>
-            <li>
-              <FilterLink href="/?deadline=upcoming" active={deadline === "upcoming"}>
-                Upcoming deadlines
-              </FilterLink>
-            </li>
-            <li>
-              <FilterLink href="/?deadline=rolling" active={deadline === "rolling"}>
-                No deadline listed
-              </FilterLink>
-            </li>
-          </ul>
-        </section>
+      <section id="opportunities" aria-labelledby="opportunities-heading" className="scroll-mt-20 border-y border-[var(--line)] bg-[var(--background)]">
+        <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
+          <div className="flex flex-col gap-8">
+            <div id="opportunities-heading">
+              <SectionHeading
+                eyebrow={isFiltered ? "Your results" : "Published opportunities"}
+                title={isFiltered ? "Opportunities matching your search" : "Find what moves you forward"}
+                description="Search and filter published listings. Unknown details stay clearly marked so you can make an informed choice."
+              />
+            </div>
+            <OpportunityFilters activeCategory={category} activeSort={sort} activeQuery={q} activeCity={city} activeRegion={region} activeDeadline={deadline} locations={locations} />
 
-        <OpportunityFilters
-          activeCategory={category}
-          activeSort={sort}
-          activeQuery={q}
-          activeCity={city}
-          activeRegion={region}
-          activeDeadline={deadline}
-          locations={locations}
-        />
+            {opportunities.length === 0 ? (
+              <EmptyState
+                title={isFiltered ? "No matching opportunities" : "No published opportunities yet"}
+                message={q !== null ? `No published opportunities match “${q}”. Try different keywords or clear the search.` : isFiltered ? "No published opportunities match these filters. Clear a filter or broaden your search." : "Approved opportunities will appear here as soon as they are published."}
+                actionHref={isFiltered ? "/#opportunities" : "/submit"}
+                actionLabel={isFiltered ? "Clear all filters" : "Submit an opportunity"}
+              />
+            ) : (
+              <ul className="grid gap-5 md:grid-cols-2">
+                {opportunities.map((opportunity) => (
+                  <li key={opportunity.id}><OpportunityCard opportunity={opportunity} now={now} /></li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
 
-        <AssistantPanel />
-
-        <p className="text-sm text-zinc-500 dark:text-zinc-500">
-          Know something missing?{" "}
-          <Link
-            href="/submit"
-            className="font-medium underline underline-offset-4 transition-colors hover:text-black dark:hover:text-zinc-50"
-          >
-            Submit an opportunity
-          </Link>
-        </p>
-
-        {opportunities.length === 0 ? (
-          <EmptyState
-            title={isFiltered ? "Nothing found" : "No opportunities yet"}
-            message={
-              q !== null
-                ? `No published opportunities match “${q}”. Try different keywords or clear the search.`
-                : isFiltered
-                  ? "No published opportunities match these filters. Try widening your search."
-                  : "Approved opportunities will appear here as soon as they are published."
-            }
-          />
-        ) : (
-          <ul className="flex w-full flex-col gap-3">
-            {opportunities.map((opportunity) => (
-              <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+      <section aria-labelledby="trust-heading" className="bg-[var(--surface)]">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
+          <div id="trust-heading"><SectionHeading eyebrow="Built for informed decisions" title="Useful information, honestly presented" description="We keep the path from discovery to publication deliberate, and we link you back to the source." /></div>
+          <ol className="grid gap-3 sm:grid-cols-2">
+            {[
+              ["Discover", "Find potential opportunities from selected sources."],
+              ["Verify", "Inspect the source and retain supporting evidence."],
+              ["Qualify", "Check relevance without guessing missing facts."],
+              ["Moderate & publish", "A human reviews records before they become public."],
+            ].map(([title, text], index) => (
+              <li key={title} className="rounded-2xl border border-[var(--line)] bg-[var(--background)] p-5">
+                <span className="text-xs font-bold text-[var(--accent)]">0{index + 1}</span>
+                <h3 className="mt-3 font-semibold text-[var(--foreground)]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{text}</p>
+              </li>
             ))}
-          </ul>
-        )}
-      </main>
-    </div>
+          </ol>
+        </div>
+      </section>
+    </main>
   );
 }

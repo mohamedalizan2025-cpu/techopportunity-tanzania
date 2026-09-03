@@ -1,4 +1,18 @@
 import type { Opportunity, OpportunityLocation } from "./types";
+import { deriveLifecycleState, isActionableNow } from "./lifecycle";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export interface DeadlinePresentation {
+  state: "active" | "urgent" | "expired" | "unknown";
+  label: string;
+  dateLabel: string | null;
+}
+
+export interface HomepageSnapshot {
+  closingSoon: Opportunity[];
+  recentlyAdded: Opportunity[];
+}
 
 /**
  * Country honesty gate: until owner migration 0008 (country evidence) is
@@ -24,6 +38,126 @@ export function buildCardMetaSegments(opportunity: Opportunity): string[] {
     opportunity.organization,
     placeParts.length > 0 ? placeParts.join(", ") : null,
   ].filter((segment): segment is string => segment !== null && segment.trim() !== "");
+}
+
+/** A concise place label that never includes the unevidenced country field. */
+export function formatCardLocation(
+  location: OpportunityLocation | null
+): string | null {
+  if (!location) return null;
+  const parts = [location.city, location.region].filter(
+    (part): part is string => part !== null && part.trim() !== ""
+  );
+  return parts.length > 0 ? parts.join(", ") : null;
+}
+
+function formatDate(iso: string, month: "short" | "long" = "short"): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month,
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(iso));
+}
+
+/**
+ * Public deadline copy derived only from the stored date. A missing or invalid
+ * value stays unknown; it is never relabelled as a rolling deadline.
+ */
+export function formatDeadlinePresentation(
+  deadline: string | null,
+  now: Date = new Date()
+): DeadlinePresentation {
+  const lifecycle = deriveLifecycleState(deadline, now);
+  if (lifecycle === "unknown" || !deadline) {
+    return { state: "unknown", label: "Deadline not listed", dateLabel: null };
+  }
+
+  const dateLabel = formatDate(deadline);
+  if (lifecycle === "expired") {
+    return { state: "expired", label: "Deadline passed", dateLabel };
+  }
+
+  const remainingDays = Math.max(
+    1,
+    Math.ceil((new Date(deadline).getTime() - now.getTime()) / DAY_MS)
+  );
+  if (remainingDays <= 14) {
+    return {
+      state: "urgent",
+      label: `Closes in ${remainingDays} ${remainingDays === 1 ? "day" : "days"}`,
+      dateLabel,
+    };
+  }
+
+  return { state: "active", label: "Deadline", dateLabel };
+}
+
+/** Platform freshness, intentionally described as "added" rather than updated. */
+export function formatAddedDate(createdAt: string): string | null {
+  const timestamp = Date.parse(createdAt);
+  if (!Number.isFinite(timestamp)) return null;
+  return `Added ${formatDate(createdAt)}`;
+}
+
+export function sourcePresentation(opportunity: Opportunity): string {
+  const source = opportunity.sourceName?.trim();
+  return source ? `Source: ${source}` : "Source page available";
+}
+
+/**
+ * Current production has no eligibility column (migration 0005 is owner-gated),
+ * so the only truthful public state is unknown. Keep this explicit and separate
+ * from location until evidence-backed eligibility is stored.
+ */
+export const UNKNOWN_TANZANIA_ELIGIBILITY =
+  "Tanzania eligibility not confirmed";
+
+export function opportunityHref(slug: string): string {
+  return `/opportunities/${encodeURIComponent(slug)}`;
+}
+
+export function opportunityExcerpt(description: string, limit = 180): string {
+  const normalized = description.replace(/\s+/g, " ").trim();
+  if (normalized.length <= limit) return normalized;
+  return `${normalized.slice(0, limit - 1).trimEnd()}…`;
+}
+
+/**
+ * Pure homepage selection over the already published public corpus. The status
+ * check is deliberate defence in depth and makes unpublished leakage impossible
+ * even if a future caller passes a mixed collection.
+ */
+export function buildHomepageSnapshot(
+  opportunities: Opportunity[],
+  now: Date = new Date(),
+  limit = 3
+): HomepageSnapshot {
+  const publishedActionable = opportunities.filter(
+    (opportunity) =>
+      opportunity.status === "published" &&
+      isActionableNow(opportunity.deadline, now)
+  );
+
+  const closingSoon = publishedActionable
+    .filter((opportunity) => {
+      if (!opportunity.deadline) return false;
+      const deadline = new Date(opportunity.deadline).getTime();
+      const remaining = deadline - now.getTime();
+      return Number.isFinite(deadline) && remaining > 0 && remaining <= 14 * DAY_MS;
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.deadline as string).getTime() -
+        new Date(b.deadline as string).getTime()
+    )
+    .slice(0, limit);
+
+  const recentlyAdded = [...publishedActionable]
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .slice(0, limit);
+
+  return { closingSoon, recentlyAdded };
 }
 
 /**

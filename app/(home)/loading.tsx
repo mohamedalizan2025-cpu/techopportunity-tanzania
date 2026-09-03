@@ -1,19 +1,17 @@
 export default function Loading() {
   return (
-    <div className="flex flex-1 flex-col items-center bg-zinc-50 px-6 dark:bg-black">
-      <div className="flex w-full max-w-3xl flex-col items-center gap-8 py-24" aria-busy="true" aria-live="polite">
+    <main id="main-content" className="flex flex-1 flex-col" aria-busy="true" aria-live="polite">
+      <div className="bg-[var(--hero)]">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-5 py-20 sm:px-8 sm:py-28">
         <span className="sr-only">Loading opportunities…</span>
-        <div className="h-8 w-64 animate-pulse rounded-lg bg-black/[.06] dark:bg-white/[.08]" />
-        <div className="h-10 w-full max-w-xl animate-pulse rounded-full bg-black/[.06] dark:bg-white/[.08]" />
-        <ul className="flex w-full flex-col gap-3">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <li
-              key={i}
-              className="h-20 w-full animate-pulse rounded-lg border border-transparent bg-black/[.04] dark:bg-white/[.05]"
-            />
-          ))}
-        </ul>
+        <div className="h-7 w-60 animate-pulse rounded-full bg-[var(--muted-surface)]" />
+        <div className="h-16 w-full max-w-2xl animate-pulse rounded-2xl bg-[var(--muted-surface)] sm:h-24" />
+        <div className="h-16 w-full max-w-xl animate-pulse rounded-2xl bg-[var(--muted-surface)]" />
       </div>
-    </div>
+      </div>
+      <div className="mx-auto grid w-full max-w-6xl gap-5 px-5 py-16 sm:grid-cols-2 sm:px-8">
+        {[0, 1, 2, 3].map((i) => <div key={i} className="h-72 animate-pulse rounded-2xl bg-[var(--muted-surface)]" />)}
+      </div>
+    </main>
   );
 }

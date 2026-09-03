@@ -39,7 +39,7 @@ export function buildHref(
 }
 
 const selectClasses =
-  "h-10 rounded-full border border-black/[.10] bg-white px-4 text-sm text-zinc-700 outline-none transition-colors focus:border-black/40 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-300 dark:focus:border-white/40";
+  "min-h-11 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:w-auto";
 
 export function FilterLink({
   href,
@@ -51,14 +51,15 @@ export function FilterLink({
   children: string;
 }) {
   const activeStyles =
-    "border-transparent bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc]";
+    "border-[var(--accent)] bg-[var(--accent)] text-white hover:bg-[var(--accent-strong)]";
   const inactiveStyles =
-    "border-black/[.08] bg-white text-zinc-600 hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50";
+    "border-[var(--line-strong)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent-strong)]";
 
   return (
     <Link
       href={href}
-      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+      aria-current={active ? "page" : undefined}
+      className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
         active ? activeStyles : inactiveStyles
       }`}
     >
@@ -81,13 +82,13 @@ export function OpportunityFilters({
   return (
     <nav
       aria-label="Filter opportunities"
-      className="flex w-full flex-col items-center gap-3"
+      className="flex w-full flex-col items-start gap-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 shadow-sm sm:p-5"
     >
       <form
         action="/"
         method="get"
         role="search"
-        className="flex w-full max-w-xl flex-col gap-2 sm:flex-row"
+        className="flex w-full flex-col gap-2 sm:flex-row"
       >
         {activeCategory ? (
           <input type="hidden" name="category" value={activeCategory} />
@@ -107,13 +108,13 @@ export function OpportunityFilters({
           name="q"
           defaultValue={activeQuery ?? ""}
           maxLength={120}
-          placeholder="Search title, description, city…"
+          placeholder="Search by title, skill or place…"
           aria-label="Search opportunities"
-          className="h-10 w-full rounded-full border border-black/[.10] bg-white px-4 text-sm text-black outline-none transition-colors focus:border-black/40 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-white/40"
+          className="min-h-12 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--background)] px-4 text-base text-[var(--foreground)] outline-none transition placeholder:text-[var(--subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
         />
         <button
           type="submit"
-          className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+          className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)] px-7 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
           Search
         </button>
@@ -123,7 +124,7 @@ export function OpportunityFilters({
         action="/"
         method="get"
         aria-label="Structured filters"
-        className="flex w-full max-w-xl flex-wrap items-center justify-center gap-2"
+        className="flex w-full flex-col gap-3 border-t border-[var(--line)] pt-4 sm:flex-row sm:flex-wrap sm:items-center"
       >
         {activeQuery ? <input type="hidden" name="q" value={activeQuery} /> : null}
         {activeCategory ? (
@@ -196,7 +197,7 @@ export function OpportunityFilters({
         {activeDeadline || activeCity || activeRegion ? (
           <Link
             href={buildHref(activeCategory, activeSort, { q: activeQuery })}
-            className="inline-flex h-10 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
             Clear
           </Link>
@@ -204,13 +205,15 @@ export function OpportunityFilters({
 
         <button
           type="submit"
-          className="inline-flex h-10 items-center justify-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--muted-surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           Apply
         </button>
       </form>
 
-      <ul className="flex flex-wrap justify-center gap-2">
+      <div className="flex w-full flex-col gap-2 border-t border-[var(--line)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <span className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--subtle)]">Sort by</span>
+      <ul className="flex flex-wrap gap-2">
         <li>
           <FilterLink
             href={buildHref(activeCategory, "deadline", { q: activeQuery, city: activeCity, region: activeRegion, deadline: activeDeadline })}
@@ -228,6 +231,7 @@ export function OpportunityFilters({
           </FilterLink>
         </li>
       </ul>
+      </div>
     </nav>
   );
 }
