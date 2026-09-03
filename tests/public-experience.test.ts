@@ -132,7 +132,7 @@ assert.equal(
     region: "Arusha",
     deadline: "soon",
   }),
-  "/?category=grant&sort=newest&q=climate+tech&region=Arusha&deadline=soon"
+  "/?q=climate+tech&category=grant&deadline=soon&region=Arusha&sort=newest"
 );
 
 // The live route retains its server-side published boundary and accessible landmarks.

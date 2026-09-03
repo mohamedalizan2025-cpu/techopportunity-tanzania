@@ -32,9 +32,11 @@ function MetaIcon({ children }: { children: React.ReactNode }) {
 export function OpportunityCard({
   opportunity,
   now,
+  returnHref,
 }: {
   opportunity: Opportunity;
   now?: Date;
+  returnHref?: string;
 }) {
   const deadline = formatDeadlinePresentation(opportunity.deadline, now);
   const place = formatCardLocation(opportunity.location);
@@ -56,7 +58,7 @@ export function OpportunityCard({
       <div className="mt-5 flex-1">
         <h3 className="text-xl font-semibold leading-7 tracking-[-0.02em] text-[var(--foreground)]">
           <Link
-            href={opportunityHref(opportunity.slug)}
+            href={opportunityHref(opportunity.slug, returnHref)}
             className="rounded-sm outline-none before:absolute before:inset-0 focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-4"
           >
             <span className="relative group-hover:text-[var(--accent-strong)]">
@@ -121,14 +123,16 @@ export function OpportunityCard({
 export function SnapshotOpportunityLink({
   opportunity,
   now,
+  returnHref,
 }: {
   opportunity: Opportunity;
   now?: Date;
+  returnHref?: string;
 }) {
   const deadline = formatDeadlinePresentation(opportunity.deadline, now);
   return (
     <Link
-      href={opportunityHref(opportunity.slug)}
+      href={opportunityHref(opportunity.slug, returnHref)}
       className="group flex min-h-20 items-center justify-between gap-4 rounded-xl border border-transparent px-3 py-3 transition hover:border-[var(--line)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
     >
       <span className="min-w-0">

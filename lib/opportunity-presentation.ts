@@ -100,9 +100,27 @@ export function formatAddedDate(createdAt: string): string | null {
   return `Added ${formatDate(createdAt)}`;
 }
 
+export function formatResultCount(count: number): string {
+  const safeCount = Math.max(0, Math.trunc(count));
+  return `${safeCount} ${safeCount === 1 ? "opportunity" : "opportunities"} shown`;
+}
+
 export function sourcePresentation(opportunity: Opportunity): string {
   const source = opportunity.sourceName?.trim();
   return source ? `Source: ${source}` : "Source page available";
+}
+
+export function sourceHostname(url: string): string | null {
+  try {
+    return new URL(url).hostname.replace(/^www\./i, "") || null;
+  } catch {
+    return null;
+  }
+}
+
+export function formatDiscoveredDate(discoveredAt: string | null | undefined): string | null {
+  if (!discoveredAt || !Number.isFinite(Date.parse(discoveredAt))) return null;
+  return `First found ${formatDate(discoveredAt)}`;
 }
 
 /**
@@ -113,8 +131,41 @@ export function sourcePresentation(opportunity: Opportunity): string {
 export const UNKNOWN_TANZANIA_ELIGIBILITY =
   "Tanzania eligibility not confirmed";
 
-export function opportunityHref(slug: string): string {
-  return `/opportunities/${encodeURIComponent(slug)}`;
+const BROWSE_RETURN_FALLBACK = "/#opportunities";
+const BROWSE_QUERY_KEYS = new Set([
+  "q",
+  "category",
+  "deadline",
+  "city",
+  "region",
+  "sort",
+]);
+
+/** Accept only an internal homepage result URL; external/open redirects fail closed. */
+export function sanitizeBrowseReturnHref(raw: string | null | undefined): string {
+  if (!raw || raw.length > 600) return BROWSE_RETURN_FALLBACK;
+  try {
+    const base = "https://browse.invalid";
+    const parsed = new URL(raw, base);
+    if (parsed.origin !== base || parsed.pathname !== "/") return BROWSE_RETURN_FALLBACK;
+    const safe = new URLSearchParams();
+    for (const [key, value] of parsed.searchParams) {
+      if (BROWSE_QUERY_KEYS.has(key) && value.length <= 120 && !safe.has(key)) {
+        safe.set(key, value);
+      }
+    }
+    const query = safe.toString();
+    return `/${query ? `?${query}` : ""}#opportunities`;
+  } catch {
+    return BROWSE_RETURN_FALLBACK;
+  }
+}
+
+export function opportunityHref(slug: string, returnTo?: string): string {
+  const pathname = `/opportunities/${encodeURIComponent(slug)}`;
+  if (!returnTo) return pathname;
+  const params = new URLSearchParams({ from: sanitizeBrowseReturnHref(returnTo) });
+  return `${pathname}?${params.toString()}`;
 }
 
 export function opportunityExcerpt(description: string, limit = 180): string {

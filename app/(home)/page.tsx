@@ -7,14 +7,14 @@ import {
 import { OpportunityFilters, buildHref } from "@/components/opportunity-filters";
 import { listLiveCategories } from "@/lib/data/categories";
 import {
-  listPublishedLocations,
-  listPublishedOpportunities,
+  getPublicBrowseData,
   parseDeadlineFilter,
+  parseOpportunityCategory,
+  parseOpportunitySort,
   sanitizeFilterValue,
   sanitizeSearchQuery,
 } from "@/lib/data/opportunities";
-import { buildHomepageSnapshot } from "@/lib/opportunity-presentation";
-import { OPPORTUNITY_CATEGORIES, type OpportunityCategory } from "@/lib/types";
+import { buildHomepageSnapshot, formatResultCount } from "@/lib/opportunity-presentation";
 
 export const revalidate = 60;
 
@@ -27,16 +27,6 @@ interface HomePageProps {
     region?: string;
     deadline?: string;
   }>;
-}
-
-function parseCategory(value?: string): OpportunityCategory | null {
-  return (OPPORTUNITY_CATEGORIES as readonly string[]).includes(value ?? "")
-    ? (value as OpportunityCategory)
-    : null;
-}
-
-function parseSort(value?: string): "deadline" | "newest" {
-  return value === "newest" ? "newest" : "deadline";
 }
 
 function SectionHeading({
@@ -65,18 +55,18 @@ function SectionHeading({
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const params = await searchParams;
-  const category = parseCategory(params.category);
-  const sort = parseSort(params.sort);
+  const category = parseOpportunityCategory(params.category);
   const q = sanitizeSearchQuery(params.q);
+  const sort = parseOpportunitySort(params.sort, q !== null);
   const city = sanitizeFilterValue(params.city);
   const region = sanitizeFilterValue(params.region);
   const deadline = parseDeadlineFilter(params.deadline);
 
-  const [opportunities, locations, liveCategories] = await Promise.all([
-    listPublishedOpportunities({ category, sort, q, city, region, deadline }),
-    listPublishedLocations(),
+  const [browseData, liveCategories] = await Promise.all([
+    getPublicBrowseData({ category, sort, q, city, region, deadline }),
     listLiveCategories(),
   ]);
+  const { opportunities, locations } = browseData;
 
   const isFiltered =
     category !== null ||
@@ -88,6 +78,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const snapshot = isFiltered
     ? { closingSoon: [], recentlyAdded: [] }
     : buildHomepageSnapshot(opportunities, now);
+  const browseHref = `${buildHref(category, sort, { q, city, region, deadline })}#opportunities`;
+  const resultLabel = formatResultCount(opportunities.length);
 
   return (
     <main id="main-content" tabIndex={-1} className="flex-1 overflow-hidden">
@@ -162,7 +154,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 {snapshot.closingSoon.length > 0 ? (
                   <ul className="mt-3 divide-y divide-[var(--line)]">
                     {snapshot.closingSoon.map((opportunity) => (
-                      <li key={opportunity.id}><SnapshotOpportunityLink opportunity={opportunity} now={now} /></li>
+                      <li key={opportunity.id}><SnapshotOpportunityLink opportunity={opportunity} now={now} returnHref="/#opportunities" /></li>
                     ))}
                   </ul>
                 ) : (
@@ -180,7 +172,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 {snapshot.recentlyAdded.length > 0 ? (
                   <ul className="mt-3 divide-y divide-[var(--line)]">
                     {snapshot.recentlyAdded.map((opportunity) => (
-                      <li key={opportunity.id}><SnapshotOpportunityLink opportunity={opportunity} now={now} /></li>
+                      <li key={opportunity.id}><SnapshotOpportunityLink opportunity={opportunity} now={now} returnHref="/#opportunities" /></li>
                     ))}
                   </ul>
                 ) : (
@@ -240,6 +232,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </div>
             <OpportunityFilters activeCategory={category} activeSort={sort} activeQuery={q} activeCity={city} activeRegion={region} activeDeadline={deadline} locations={locations} />
 
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <p role="status" aria-live="polite" className="text-sm font-semibold text-[var(--foreground)]">
+                {resultLabel}
+              </p>
+              <p className="text-xs text-[var(--subtle)]">
+                {sort === "relevance"
+                  ? "Ordered by deterministic word match"
+                  : sort === "newest"
+                    ? "Newest additions first"
+                    : "Upcoming deadlines first; unknown dates follow"}
+              </p>
+            </div>
+
             {opportunities.length === 0 ? (
               <EmptyState
                 title={isFiltered ? "No matching opportunities" : "No published opportunities yet"}
@@ -250,7 +255,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             ) : (
               <ul className="grid gap-5 md:grid-cols-2">
                 {opportunities.map((opportunity) => (
-                  <li key={opportunity.id}><OpportunityCard opportunity={opportunity} now={now} /></li>
+                  <li key={opportunity.id}><OpportunityCard opportunity={opportunity} now={now} returnHref={browseHref} /></li>
                 ))}
               </ul>
             )}

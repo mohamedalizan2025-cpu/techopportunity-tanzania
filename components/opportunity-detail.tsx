@@ -2,7 +2,9 @@ import { categoryLabel } from "@/lib/category-labels";
 import {
   formatAddedDate,
   formatDeadlinePresentation,
+  formatDiscoveredDate,
   formatLocationDisplay,
+  sourceHostname,
   sourcePresentation,
   UNKNOWN_TANZANIA_ELIGIBILITY,
 } from "@/lib/opportunity-presentation";
@@ -33,6 +35,8 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
     ? formatLocationDisplay(opportunity.location)
     : ["Location not specified"];
   const added = formatAddedDate(opportunity.createdAt);
+  const discovered = formatDiscoveredDate(opportunity.discoveredAt);
+  const hostname = sourceHostname(opportunity.url);
 
   return (
     <article>
@@ -76,9 +80,11 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
         </Fact>
         <Fact label="Source">
           <span>{sourcePresentation(opportunity)}</span>
-          <span className="mt-1 block font-normal text-[var(--muted)]">
-            Review requirements on the linked page.
-          </span>
+          {hostname ? <span className="mt-1 block break-all font-normal text-[var(--muted)]">{hostname}</span> : null}
+        </Fact>
+        <Fact label="Record history">
+          <span>{discovered ?? added ?? "Date not available"}</span>
+          {discovered && added ? <span className="mt-1 block font-normal text-[var(--muted)]">{added}</span> : null}
         </Fact>
       </dl>
 
@@ -88,6 +94,15 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
         </h2>
         <p className="mt-4 whitespace-pre-line text-base leading-8 text-[var(--muted)]">
           {opportunity.description}
+        </p>
+      </section>
+
+      <section className="mt-10 rounded-2xl border border-[var(--line)] bg-[var(--background)] p-5" aria-labelledby="who-can-apply">
+        <h2 id="who-can-apply" className="text-lg font-semibold text-[var(--foreground)]">
+          Who can apply?
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+          Applicant requirements are not stored as a separate confirmed field for this listing. Read the description above and confirm eligibility on the source page.
         </p>
       </section>
 
@@ -104,8 +119,11 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
         rel="noopener noreferrer"
         className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[var(--accent)] px-7 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(13,107,78,0.2)] transition hover:bg-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-4 sm:w-auto"
       >
-        Visit source page <span aria-hidden="true" className="ml-2">↗</span>
+        Open source and application details <span aria-hidden="true" className="ml-2">↗</span>
       </a>
+      <p className="mt-3 max-w-xl text-xs leading-5 text-[var(--subtle)]">
+        This listing stores one source/details link. Confirm the application route and current requirements on that page.
+      </p>
     </article>
   );
 }
