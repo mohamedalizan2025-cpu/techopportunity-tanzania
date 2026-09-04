@@ -80,6 +80,14 @@ The optional apply path can only unpublish deterministic public test
 artifacts, requires an exact confirmation token, updates status only, and never
 deletes a row. All other reclassification remains a human moderation action.
 
+Legacy non-test published rows have a second, separate owner-gated path back to
+`pending`. It runs only after 0013 exists, targets rows whose qualification
+version and decision timestamp are still null, changes only `status`, and uses
+the exact confirmation `M31-REQUEUE-LEGACY-PUBLISHED`. This makes those records
+reviewable through the normal evidence-required moderator form; it never
+publishes or deletes them. Test quarantine and legacy requeue cannot run in the
+same invocation.
+
 ## AI readiness
 
 AI readiness is a verification result, not a feature flag. It remains NO-GO

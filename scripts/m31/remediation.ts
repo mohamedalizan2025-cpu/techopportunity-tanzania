@@ -8,6 +8,8 @@ type Bucket = "reject_noise" | "review_required" | "potentially_qualifying";
 
 const APPLY_FLAG = "--apply-test-quarantine";
 const CONFIRM = "--confirm=M31-UNPUBLISH-PUBLIC-TESTS";
+const REQUEUE_FLAG = "--apply-legacy-public-requeue";
+const REQUEUE_CONFIRM = "--confirm=M31-REQUEUE-LEGACY-PUBLISHED";
 
 async function main(): Promise<void> {
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -65,19 +67,33 @@ const bucketCounts = pendingResults.reduce<Record<Bucket, number>>((counts, row)
   return counts;
 }, { reject_noise: 0, review_required: 0, potentially_qualifying: 0 });
 const publicTests = results.filter((row) => row.status === "published" && row.testArtifact);
+const legacyPublished = results.filter((row) => row.status === "published" && !row.testArtifact);
+const applyTestQuarantine = process.argv.includes(APPLY_FLAG);
+const applyLegacyRequeue = process.argv.includes(REQUEUE_FLAG);
+if (applyTestQuarantine && applyLegacyRequeue) {
+  throw new Error("Choose one M31 remediation mutation per run.");
+}
 const report = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
-  mode: process.argv.includes(APPLY_FLAG) ? "apply-test-quarantine" : "plan-only",
+  mode: applyTestQuarantine
+    ? "apply-test-quarantine"
+    : applyLegacyRequeue
+      ? "apply-legacy-public-requeue"
+      : "plan-only",
   observedCorpusCount: results.length,
   pendingCount: pendingResults.length,
   bucketCounts,
   publicTestArtifacts: publicTests.map(({ id, title }) => ({ id, title })),
-  mutationScope: "published test artifacts -> rejected; status only; no deletes",
+  legacyPublishedReviewCandidateCount: legacyPublished.length,
+  mutationScopes: [
+    "published test artifacts -> rejected; status only; no deletes",
+    "legacy published rows with null qualification version and decision attribution -> pending; status only; no deletes",
+  ],
 };
 console.log(`M31_REMEDIATION_REPORT_JSON=${JSON.stringify(report)}`);
 
-if (process.argv.includes(APPLY_FLAG)) {
+if (applyTestQuarantine) {
   if (!process.argv.includes(CONFIRM)) {
     throw new Error(`Apply refused. Re-run with the exact confirmation ${CONFIRM}`);
   }
@@ -92,6 +108,33 @@ if (process.argv.includes(APPLY_FLAG)) {
     if ((changed ?? []).length !== 1) throw new Error(`Concurrent change refused for ${row.id}.`);
   }
   console.log(`M31_QUARANTINED_COUNT=${publicTests.length}`);
+}
+
+if (applyLegacyRequeue) {
+  if (!process.argv.includes(REQUEUE_CONFIRM)) {
+    throw new Error(`Legacy requeue refused. Re-run with the exact confirmation ${REQUEUE_CONFIRM}`);
+  }
+  const schemaProbe = await client
+    .from("opportunities")
+    .select("qualification_rule_version,decided_at")
+    .limit(1);
+  if (schemaProbe.error) {
+    throw new Error("Legacy requeue refused until forward migration 0013 is applied and visible.");
+  }
+  let requeued = 0;
+  for (const row of legacyPublished) {
+    const { data: changed, error: updateError } = await client
+      .from("opportunities")
+      .update({ status: "pending" })
+      .eq("id", row.id)
+      .eq("status", "published")
+      .is("qualification_rule_version", null)
+      .is("decided_at", null)
+      .select("id");
+    if (updateError) throw new Error(`Failed to requeue ${row.id}: ${updateError.message}`);
+    requeued += (changed ?? []).length;
+  }
+  console.log(`M31_LEGACY_REQUEUED_COUNT=${requeued}`);
 }
 }
 

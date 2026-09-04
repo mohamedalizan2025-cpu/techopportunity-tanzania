@@ -164,6 +164,11 @@ test("remediation apply mode is explicit, status-only, and never deletes", () =>
   assert.match(remediation, /--apply-test-quarantine/);
   assert.match(remediation, /--confirm=M31-UNPUBLISH-PUBLIC-TESTS/);
   assert.match(remediation, /update\(\{ status: "rejected" \}\)/);
+  assert.match(remediation, /--apply-legacy-public-requeue/);
+  assert.match(remediation, /--confirm=M31-REQUEUE-LEGACY-PUBLISHED/);
+  assert.match(remediation, /update\(\{ status: "pending" \}\)/);
+  assert.match(remediation, /\.is\("qualification_rule_version", null\)/);
+  assert.match(remediation, /Legacy requeue refused until forward migration 0013/);
   assert.doesNotMatch(remediation, /\.delete\s*\(/);
 });
 
