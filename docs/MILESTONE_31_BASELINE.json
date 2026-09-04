@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M31",
+  "capturedAt": "2026-09-03T21:15:00Z",
+  "productionMutationPerformed": false,
+  "repositoryHead": "88373fde2f156de97654e189f02db8abbc73b5b4",
+  "corpus": {
+    "total": 261,
+    "published": 19,
+    "pending": 237,
+    "rejected": 5,
+    "expiredStatus": 0,
+    "knownDeadline": 29,
+    "deadlineEvidencePresent": 0,
+    "sourceLinked": 254,
+    "sourceUrlPresent": 254,
+    "distinctEvidenceUrl": 227,
+    "eligibilitySchemaPresent": false,
+    "explicitEligibilityPresent": 0,
+    "effectiveUnknownEligibility": 261,
+    "qualificationRuleVersionPresent": 0,
+    "descriptionsEqualTitles": 187,
+    "descriptionsUnder80Characters": 161,
+    "countryDefault": "Tanzania",
+    "countryRequired": true,
+    "countryVerificationPresent": 0,
+    "recordsFailingCurrentQualificationReplay": 200,
+    "publishedFailingCurrentQualificationReplay": 14,
+    "pendingFailingCurrentQualificationReplay": 181,
+    "publishedTestOrManualRecords": 5,
+    "publishedKnownClosedRecords": 2,
+    "canonicalUrlDuplicateClusters": 2,
+    "normalizedTitleReviewPairs": 8,
+    "qualificationReplayUnknownEligibility": 248,
+    "genericInstitutionalSourceRecords": 101
+  },
+  "sourceDistribution": {
+    "Bank of Tanzania": 8,
+    "Dar es Salaam Institute of Technology": 16,
+    "Financial Sector Deepening Tanzania": 13,
+    "Higher Education Students' Loans Board": 4,
+    "ICT Commission": 4,
+    "Ifakara Health Institute": 11,
+    "Jane Goodall Institute Tanzania": 1,
+    "Ministry of Agriculture": 3,
+    "Nelson Mandela African Institution of Science and Technology": 37,
+    "OpportunitiesForAfricans": 51,
+    "OpportunityDesk": 42,
+    "Sokoine University of Agriculture": 10,
+    "State University of Zanzibar": 17,
+    "Twaweza": 4,
+    "University of Dar es Salaam": 5,
+    "University of Dodoma": 4,
+    "Vocational Education and Training Authority": 10,
+    "Youth of United Nations Association Tanzania": 14,
+    "unlinkedOrManual": 7
+  },
+  "categoryDistribution": {
+    "other": 193,
+    "fellowship": 30,
+    "grant": 17,
+    "scholarship": 8,
+    "competition": 5,
+    "conference": 4,
+    "hackathon": 2,
+    "internship": 2
+  },
+  "publishedTestOrManualTitles": [
+    "REGRESSION Alpha - Hackathon fixed deadline",
+    "REGRESSION Bravo - Scholarship rolling",
+    "hack",
+    "hackkka",
+    "PRODUCTION LINK TEST — DELETE ME"
+  ],
+  "publishedKnownClosedTitles": [
+    "PRODUCTION LINK TEST — DELETE ME",
+    "ERASMUS GLOBAL CALL FOR APPLICATIONS"
+  ],
+  "productionSchema": {
+    "present": [
+      "deadline_precision",
+      "deadline_timezone",
+      "deadline_evidence",
+      "opportunity_deadline_changes",
+      "opportunity_enrichments",
+      "saved_opportunities",
+      "user_alert_preferences",
+      "deadline_alert_events"
+    ],
+    "absent": [
+      "eligibility",
+      "eligibility_evidence",
+      "relevance_decision",
+      "relevance_evidence",
+      "qualification_rule_version",
+      "last_verified_at",
+      "decided_by",
+      "decided_at",
+      "country_verification",
+      "country_evidence",
+      "opportunity_references"
+    ]
+  },
+  "limitations": [
+    "Qualification replay reconstructed transient evidence from persisted title and description fields.",
+    "The authenticated GitHub health artifact body was unavailable; exact baseline and anomaly fields remain unknown.",
+    "Generic institutional-source count uses the nine audit-priority noisy institutional sources, not inferred DOM provenance."
+  ]
+}

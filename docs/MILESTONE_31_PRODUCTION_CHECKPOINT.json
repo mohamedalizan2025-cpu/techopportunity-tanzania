@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M31",
+  "capturedAt": "2026-09-04T03:38:29.933Z",
+  "mode": "read-only",
+  "productionMutationPerformed": false,
+  "remediationPlan": {
+    "observedCorpusCount": 261,
+    "pendingCount": 237,
+    "pendingBuckets": {
+      "reject_noise": 192,
+      "review_required": 19,
+      "potentially_qualifying": 26
+    },
+    "publicTestArtifactCount": 5,
+    "publicTestArtifactTitles": [
+      "REGRESSION Alpha - Hackathon fixed deadline",
+      "REGRESSION Bravo - Scholarship rolling",
+      "hack",
+      "hackkka",
+      "PRODUCTION LINK TEST — DELETE ME"
+    ]
+  },
+  "aiReadiness": {
+    "state": "NO_GO",
+    "schemaReady": false,
+    "schemaProbeErrorCode": "42703",
+    "reason": "M31 trust schema is not applied or not visible in the API schema cache."
+  },
+  "ownerGatesRemaining": [
+    "Review and apply migration 0013 in staging after backup.",
+    "Deploy with M31_TRUST_SCHEMA_ENABLED=true in staging and verify RLS, moderation, discovery, references, and AI readiness.",
+    "Repeat the approved migration and activation sequence in production.",
+    "Run the confirmation-gated public test quarantine; do not delete rows.",
+    "Human-review pending remediation buckets and published trust gaps."
+  ]
+}
