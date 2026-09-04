@@ -23,7 +23,7 @@ import {
   type ModerationAccessResult,
   type StaffContext,
 } from "./moderation";
-import { OPPORTUNITY_SELECT, mapOpportunityRow, type OpportunityRow } from "./opportunities";
+import { opportunitySelect, mapOpportunityRow, type OpportunityRow } from "./opportunities";
 import { UNPUBLISH_CONFIRM_TOKEN } from "../staff-form-state";
 
 /**
@@ -155,7 +155,7 @@ export async function listManagedPublishedOpportunities(): Promise<Opportunity[]
 
   const { data, error } = await access.staff.client
     .from("opportunities")
-    .select(OPPORTUNITY_SELECT)
+    .select(opportunitySelect())
     .eq("status", "published")
     .order("created_at", { ascending: true })
     .order("id", { ascending: true })
@@ -188,7 +188,7 @@ export async function getPublishedOpportunityById(id: string): Promise<Opportuni
 
   const { data, error } = await access.staff.client
     .from("opportunities")
-    .select(OPPORTUNITY_SELECT)
+    .select(opportunitySelect())
     .eq("id", id)
     .eq("status", "published")
     .maybeSingle();

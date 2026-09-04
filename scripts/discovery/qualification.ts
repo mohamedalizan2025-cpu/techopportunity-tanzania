@@ -1,4 +1,7 @@
 import type { CandidateOpportunity, SourceType } from "./types";
+import { M31_QUALIFICATION_RULE_VERSION } from "../../lib/opportunity-trust";
+
+export { M31_QUALIFICATION_RULE_VERSION };
 
 export type OpportunityRelevance = "relevant" | "ambiguous" | "not_relevant";
 export type TanzaniaAccessibility =
@@ -41,8 +44,12 @@ const TARGET_OPPORTUNITY =
 // yet still belong on a general jobs, admissions, scholarship or events site.
 // Require a positive technology/research/innovation signal; never infer fit
 // from the source's country, organization, or generic opportunity wording.
-const PRODUCT_SCOPE =
-  /\b(?:ai|artificial intelligence|machine learning|data(?: science| engineering| analytics)?|software|developers?|programming|coding|open source|computer(?: science| engineering| systems?)?|cyber(?:security)?|digital(?: health| skills?| transformation| innovation)?|technology|tech|technical|ict|information and communication systems?|engineering|stem|scientific|science|research(?:ers?| opportunities?)?|innovation|innovators?|startup|entrepreneur(?:ship|s?)?|fintech|agritech|healthtech|climatetech|robotics?|cloud computing|embedded systems?|network security|hackathons?)\b/i;
+const STRONG_PRODUCT_SCOPE =
+  /\b(?:ai|artificial intelligence|machine learning|data(?: science| engineering| analytics)?|software|developers?|programming|coding|open source|computer(?: science| engineering| systems?)?|cyber(?:security)?|digital(?: health| skills?| transformation| innovation)?|technology|tech|technical|ict|information and communication systems?|engineering|stem|innovation|innovators?|startup|entrepreneur(?:ship|s?)?|fintech|agritech|healthtech|climatetech|robotics?|cloud computing|embedded systems?|network security|hackathons?)\b/i;
+
+const RESEARCH_SIGNAL = /\b(?:scientific|science|research(?:ers?| opportunities?)?)\b/i;
+const RESEARCH_DOMAIN =
+  /\b(?:computing|computer|data|digital|engineering|energy|environment|health|medical|neuroscience|climate|technology|innovation|stem)\b/i;
 
 // Evidence-backed nationalities seen in the live inventory. This deliberately
 // stays small: broad country guessing would create false exclusions.
@@ -125,7 +132,14 @@ export function qualifyOpportunity(
     && !candidate.detailEvidence?.relevanceEvidence
     && !candidate.detailEvidence?.applicationUrl
     && !candidate.detailEvidence?.deadlineEvidence;
-  const scopeEvidence = matchedEvidence(body, [PRODUCT_SCOPE]);
+  const strongScopeEvidence = matchedEvidence(body, [STRONG_PRODUCT_SCOPE]);
+  const researchSignal = matchedEvidence(body, [RESEARCH_SIGNAL]);
+  const researchDomain = matchedEvidence(body, [RESEARCH_DOMAIN]);
+  const scopeEvidence = strongScopeEvidence ?? (
+    researchSignal && researchDomain
+      ? `${researchSignal}; ${researchDomain}`.slice(0, 240)
+      : null
+  );
   const excludedAdmission = candidate.category === "admissions"
     ? "university admissions are outside the technology-opportunity scope"
     : null;
@@ -205,6 +219,6 @@ export function qualifyOpportunity(
 }
 
 export function shouldEnterModerationQueue(qualification: OpportunityQualification): boolean {
-  return qualification.relevance !== "not_relevant"
+  return qualification.relevance === "relevant"
     && qualification.tanzaniaAccessibility !== "tanzanians_not_eligible";
 }

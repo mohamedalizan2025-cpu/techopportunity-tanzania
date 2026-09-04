@@ -36,7 +36,11 @@ function years(value: string): Set<string> {
 function coreTitleTokens(value: string): string[] {
   const withoutContext = value
     .replace(/\([^)]*\bfully funded\b[^)]*\)/gi, " ")
-    .replace(/\bfor study in\b[\s\S]*$/i, " ");
+    .replace(/\bfor study in\b[\s\S]*$/i, " ")
+    // Measured cross-source variation: one aggregator appends a trailing
+    // audience gloss after the cohort year while another keeps the canonical
+    // programme title. This is deliberately narrow, not general fuzzy merge.
+    .replace(/\bfor\s+(?:young\s+)?(?:west\s+)?african\s+(?:graduates?|professionals?|students?|youth)\b[\s\S]*$/i, " ");
   return [...new Set(withoutContext
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")

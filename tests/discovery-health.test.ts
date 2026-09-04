@@ -10,6 +10,7 @@ import {
   assessSchedule,
   buildHealthReport,
   classifyFreshness,
+  nominalDispatchLatency,
   triggerKindForEvent,
   type HealthHistory,
   type HealthObservation,
@@ -51,6 +52,7 @@ function source(overrides: Partial<SourceRunResult> = {}): SourceRunResult {
     deduplicatedCandidates: 10,
     validCandidates: 10,
     categorySkipped: 0,
+    evidencePersistenceSkipped: 0,
     insertedPending: 2,
     sourceHealthUpdated: true,
     sourceHealthError: null,
@@ -80,6 +82,7 @@ function summary(sources: SourceRunResult[], startedAt = "2026-09-01T00:00:00Z",
     insertedPending: 0,
     duplicatesSkipped: 0,
     categorySkipped: 0,
+    evidencePersistenceSkipped: 0,
     relevanceRejected: 0,
     eligibilityRejected: 0,
     eligibilityUnknown: 0,
@@ -122,6 +125,13 @@ const anomaly = (report: ReturnType<typeof buildHealthReport>, code: string) => 
 
 test("schedule is unknown without a retained scheduled run", () => {
   assert.equal(assessSchedule([], "2026-09-02T00:00:00Z").state, "unknown");
+});
+
+test("dispatch latency is measured against the nominal UTC slot", () => {
+  assert.deepEqual(nominalDispatchLatency("2026-09-03T18:19:45Z"), {
+    nominalSlot: "2026-09-03T15:00:00.000Z",
+    dispatchLatencyMinutes: 200,
+  });
 });
 
 test("schedule is on-time inside the interval plus tolerance", () => {

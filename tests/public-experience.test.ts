@@ -24,13 +24,28 @@ function opportunity(
     title: `Opportunity ${slug}`,
     category: "scholarship",
     organization: null,
-    description: "A published opportunity with real source information.",
+    description: "A published technology opportunity with a meaningful evidence-based description for Tanzanian applicants.",
     url: `https://example.org/${slug}`,
     deadline: null,
     location: null,
     imageUrl: null,
     status: "published",
     createdAt: "2026-09-01T09:00:00.000Z",
+    deadlinePrecision: "unknown",
+    deadlineEvidence: null,
+    trust: {
+      relevanceDecision: "relevant",
+      relevanceEvidence: "Explicit technology opportunity call",
+      eligibilityDecision: "tanzanians_eligible",
+      eligibilityEvidence: "Applications are open to Tanzanian applicants",
+      qualificationRuleVersion: "test-rule-v1",
+      countryVerification: "unknown",
+      countryEvidence: null,
+      lastVerifiedAt: "2026-09-03T10:00:00.000Z",
+      decidedBy: "staff-1",
+      decidedAt: "2026-09-03T10:00:00.000Z",
+      canonicalEvidenceUrl: `https://example.org/${slug}`,
+    },
     ...overrides,
   };
 }
@@ -38,6 +53,8 @@ function opportunity(
 // Live snapshot: public, actionable rows only.
 const closing = opportunity("closing", {
   deadline: "2026-09-10T12:00:00.000Z",
+  deadlinePrecision: "date",
+  deadlineEvidence: "Official page states 10 September 2026",
   createdAt: "2026-08-20T09:00:00.000Z",
 });
 const recentUnknown = opportunity("recent-unknown", {

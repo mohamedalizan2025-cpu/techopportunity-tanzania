@@ -1,6 +1,7 @@
 import type { Opportunity, OpportunityLocation } from "./types";
 import { isActionableNow } from "./lifecycle";
 import { evaluateDeadline } from "./deadline-intelligence";
+import { isFeatureEligible } from "./opportunity-trust";
 
 export interface DeadlinePresentation {
   state: "active" | "urgent" | "expired" | "unknown";
@@ -185,7 +186,8 @@ export function buildHomepageSnapshot(
   const publishedActionable = opportunities.filter(
     (opportunity) =>
       opportunity.status === "published" &&
-      isActionableNow(opportunity.deadline, now)
+      isActionableNow(opportunity.deadline, now) &&
+      isFeatureEligible(opportunity, now)
   );
 
   const closingSoon = publishedActionable

@@ -5,9 +5,15 @@ import { discoverFeedUrls, roundupInnerCandidates } from "./extract";
 import { normalizeCandidate } from "./normalize";
 import { isDuplicate, sameUrl } from "./dedupe";
 import { validateCandidate } from "./validate";
-import { qualifyOpportunity, shouldEnterModerationQueue } from "./qualification";
+import {
+  M31_QUALIFICATION_RULE_VERSION,
+  qualifyOpportunity,
+  shouldEnterModerationQueue,
+  type OpportunityQualification,
+} from "./qualification";
 import { createBoundedDetailAcquirer } from "./detail";
 import { loadActiveSources } from "./sources";
+import { sourceAcquisitionPolicy } from "./source-policy";
 import { reconcileDiscoverySummary } from "./summary";
 import type { CandidateOpportunity, DiscoverySummary, SourceRunResult } from "./types";
 
@@ -39,6 +45,7 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
     insertedPending: 0,
     duplicatesSkipped: 0,
     categorySkipped: 0,
+    evidencePersistenceSkipped: 0,
     relevanceRejected: 0,
     eligibilityRejected: 0,
     eligibilityUnknown: 0,
@@ -65,6 +72,15 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
 
   const categoryIdMap = await loadCategoryIdMap(serviceClient);
   const existingRows = await loadExistingRows(serviceClient);
+  const trustSchemaAvailable = await hasM31TrustSchema(serviceClient);
+  if (trustSchemaAvailable) {
+    existingRows.push(...await loadExistingReferenceRows(serviceClient));
+  }
+  if (!trustSchemaAvailable) {
+    console.warn(
+      "M31 trust schema is not active: discovery will evaluate sources but withhold new rows because qualification evidence cannot be persisted."
+    );
+  }
 
   for (const source of sources) {
     const detailAcquirer = createBoundedDetailAcquirer(source);
@@ -96,6 +112,7 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
       deduplicatedCandidates: 0,
       validCandidates: 0,
       categorySkipped: 0,
+      evidencePersistenceSkipped: 0,
       insertedPending: 0,
       sourceHealthUpdated: false,
       sourceHealthError: null,
@@ -103,9 +120,12 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
     };
     try {
       const html = await fetchPage(source.base_url);
+      const acquisitionPolicy = sourceAcquisitionPolicy(source);
       // Source page: every registered evidence adapter runs; each is
       // content-sniffing and yields zero candidates on foreign formats.
-      const rawCandidates = extractAllCandidates(html, source.id, source.base_url);
+      const rawCandidates = extractAllCandidates(html, source.id, source.base_url, {
+        allowGenericHtml: acquisitionPolicy.allowGenericHtml,
+      });
 
       // Advertised feeds (link rel=alternate only, capped at 2 per source)
       // carry item-level title/link/description evidence the homepage HTML
@@ -152,14 +172,15 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
             suppressedRoundupUrls.add(cand.url);
             console.log(`[${source.name}] roundup expanded: ${inner.length} opportunities from ${cand.url}`);
           } else {
-            // Decomposition found nothing reliable: the parent stays
-            // pending for the human moderator instead of being discarded.
-            expanded.push(cand);
+            // A multi-item roundup is evidence for its children, not one
+            // canonical opportunity. If decomposition cannot identify an
+            // explicit child, fail closed instead of publishing the parent.
+            sourceResult.noiseRejected += 1;
           }
         } catch (roundupError) {
           const message = roundupError instanceof Error ? roundupError.message : "roundup fetch failed";
           console.error(`[${source.name}] roundup fetch failed ${cand.url}: ${message}`);
-          expanded.push(cand);
+          sourceResult.noiseRejected += 1;
         }
       }
 
@@ -259,8 +280,13 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
           continue;
         }
 
+        if (!trustSchemaAvailable) {
+          sourceResult.evidencePersistenceSkipped += 1;
+          continue;
+        }
+
         sourceResult.validCandidates += 1;
-        const row = buildPendingRow(candidate, categoryId);
+        const row = buildPendingRow(candidate, categoryId, qualification);
         rowsToInsert.push(row);
         insertedEvidenceUrls.push(candidate.evidenceUrl ?? candidate.url);
         existingRows.push({ id: "", url: candidate.url, source_id: candidate.sourceId, title: candidate.title, deadline: candidate.deadline });
@@ -366,7 +392,68 @@ async function recordSourceResult(
   return null;
 }
 
-function buildPendingRow(candidate: CandidateOpportunity, categoryId: number) {
+async function hasM31TrustSchema(client: SupabaseClient): Promise<boolean> {
+  const { error } = await client
+    .from("opportunities")
+    .select("qualification_rule_version,relevance_decision,eligibility,country_verification")
+    .limit(1);
+  return error === null;
+}
+
+async function loadExistingReferenceRows(client: SupabaseClient) {
+  const rows: Array<{ url: string }> = [];
+  for (let page = 0; page < DEDUPE_MAX_PAGES; page += 1) {
+    const from = page * DEDUPE_PAGE_SIZE;
+    const { data, error } = await client
+      .from("opportunity_references")
+      .select("url")
+      .order("id", { ascending: true })
+      .range(from, from + DEDUPE_PAGE_SIZE - 1);
+    if (error) {
+      throw new Error(`Failed to load canonical evidence references for dedupe: ${error.message}`);
+    }
+    const batch = (data ?? []) as Array<{ url: string }>;
+    rows.push(...batch);
+    if (batch.length < DEDUPE_PAGE_SIZE) {
+      return rows.map((reference) => ({
+        id: "",
+        url: reference.url,
+        source_id: null,
+        title: null,
+        deadline: null,
+      }));
+    }
+  }
+  console.warn(
+    `Reference dedupe load hit the ${DEDUPE_MAX_PAGES * DEDUPE_PAGE_SIZE}-row scale guard — switch to DB-side dedupe.`
+  );
+  return rows.map((reference) => ({
+    id: "",
+    url: reference.url,
+    source_id: null,
+    title: null,
+    deadline: null,
+  }));
+}
+
+export function buildPendingRow(
+  candidate: CandidateOpportunity,
+  categoryId: number,
+  qualification: OpportunityQualification,
+  discoveredAt = new Date().toISOString()
+) {
+  const deadlinePrecision = candidate.detailEvidence?.deadlineKind === "rolling"
+    ? "rolling"
+    : candidate.detailEvidence?.deadlineKind === "date"
+      ? "date"
+      : candidate.deadline
+        ? "unspecified"
+        : "unknown";
+  const deadlineEvidence = candidate.detailEvidence?.deadlineEvidence ?? (
+    candidate.deadline
+      ? `Structured source value at ${candidate.sourceUrl}: ${candidate.deadline}`
+      : null
+  );
   const row: Record<string, unknown> = {
     slug: createSlug(candidate.title),
     title: candidate.title,
@@ -376,9 +463,18 @@ function buildPendingRow(candidate: CandidateOpportunity, categoryId: number) {
     url: candidate.url,
     source_url: candidate.sourceUrl,
     source_id: candidate.sourceId,
-    discovered_at: new Date().toISOString(),
+    discovered_at: discoveredAt,
     discovery_method: candidate.discoveryMethod,
     deadline: candidate.deadline,
+    deadline_precision: deadlinePrecision,
+    deadline_evidence: deadlineEvidence,
+    relevance_decision: qualification.relevance,
+    relevance_evidence: qualification.relevanceEvidence,
+    eligibility: qualification.tanzaniaAccessibility,
+    eligibility_evidence: qualification.eligibilityEvidence,
+    qualification_rule_version: M31_QUALIFICATION_RULE_VERSION,
+    country_verification: "unknown",
+    country_evidence: null,
     status: "pending",
     venue_name: candidate.venueName,
     address: candidate.address,
@@ -387,11 +483,16 @@ function buildPendingRow(candidate: CandidateOpportunity, categoryId: number) {
     submitted_by: null,
   };
   // Country is written ONLY with extracted evidence. Without evidence the
-  // field is omitted entirely: until migration 0008 (owner-gated) makes
-  // the column nullable, the DB default applies to the omitted field; after
-  // it, the row honestly carries NULL. The pipeline itself never decides.
+  // field is omitted entirely: until forward migration 0013 (owner-gated)
+  // makes the column nullable, the legacy DB default applies to the omitted
+  // field; after it, the row honestly carries NULL. The pipeline itself
+  // never invents the value.
   if (candidate.country !== null) {
     row.country = candidate.country;
+    row.country_verification = candidate.country.trim().toLowerCase() === "tanzania"
+      ? "verified_tanzania"
+      : "verified_other";
+    row.country_evidence = `Structured source country at ${candidate.sourceUrl}: ${candidate.country}`;
   }
   return row;
 }

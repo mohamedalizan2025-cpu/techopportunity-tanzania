@@ -38,6 +38,7 @@ const sourceResult = (overrides: Partial<SourceRunResult>): SourceRunResult => (
   deduplicatedCandidates: 0,
   validCandidates: 0,
   categorySkipped: 0,
+  evidencePersistenceSkipped: 0,
   insertedPending: 0,
   sourceHealthUpdated: true,
   sourceHealthError: null,
@@ -56,7 +57,7 @@ const perSource = [
     detailSucceeded: 2, detailFailures: 1, detailDeadlineFound: 1,
     detailEligibilityFound: 2, detailApplicationFound: 1,
     duplicatesSkipped: 2, deduplicatedCandidates: 4, validCandidates: 3,
-    categorySkipped: 1, insertedPending: 3,
+    categorySkipped: 1, evidencePersistenceSkipped: 2, insertedPending: 3,
   }),
   sourceResult({
     sourceId: "b", ok: false, candidatesFound: 4, noiseRejected: 1,
@@ -90,6 +91,7 @@ const emptySummary: DiscoverySummary = {
   insertedPending: 0,
   duplicatesSkipped: 0,
   categorySkipped: 0,
+  evidencePersistenceSkipped: 0,
   relevanceRejected: 0,
   eligibilityRejected: 0,
   eligibilityUnknown: 0,
@@ -113,6 +115,7 @@ assert("qualification counters reconcile exactly", summary.relevanceRejected ===
 assert("detail counters reconcile exactly", summary.detailFetches === 4 && summary.detailSucceeded === 2 && summary.detailFailures === 2);
 assert("detail evidence counters reconcile exactly", summary.detailDeadlineFound === 1 && summary.detailEligibilityFound === 2 && summary.detailApplicationFound === 1);
 assert("dedupe/category/insert stages remain distinct", summary.duplicatesSkipped === 3 && summary.deduplicatedCandidates === 5 && summary.categorySkipped === 1 && summary.validCandidates === 4 && summary.insertedPending === 3);
+assert("schema-gated evidence persistence remains visible", summary.evidencePersistenceSkipped === 2);
 assert("source-health failure is visible independently", summary.sourceHealthFailures === 1);
 assert("legacy errors remains the source-failure count", summary.errors === 1);
 

@@ -92,6 +92,7 @@ if (process.env.GITHUB_STEP_SUMMARY) {
       "",
       `- State: **${schedule.state}**`,
       `- Reason: ${schedule.reason}`,
+      `- Nominal slot / dispatch latency: ${schedule.nominalSlot ?? "unknown"} / ${schedule.dispatchLatencyMinutes === null ? "unknown" : `${schedule.dispatchLatencyMinutes} minutes`}`,
       `- Retained scheduled observations: ${scheduledObservations.length}`,
       `- Baseline: **${report.baseline.state}** (${report.baseline.observations}/${report.baseline.requiredObservations})`,
       `- Six-hour readiness: **${report.sixHourReadiness}**`,

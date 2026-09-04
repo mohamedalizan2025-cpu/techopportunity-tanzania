@@ -6,6 +6,7 @@ import {
 } from "./opportunities";
 import type { OpportunityStatus } from "../types";
 import type { SavedOpportunityEntry } from "../saved-opportunity-state";
+import { isTestOrPlaceholderOpportunity } from "../opportunity-trust";
 
 interface SavedOpportunityRow {
   id: string;
@@ -51,7 +52,12 @@ export function mapSavedOpportunityRows(
       savedAt: row.created_at,
       opportunity:
         related?.status === "published"
-          ? mapOpportunityRow(related, "published")
+          ? (() => {
+              const opportunity = mapOpportunityRow(related, "published");
+              return isTestOrPlaceholderOpportunity(opportunity)
+                ? null
+                : opportunity;
+            })()
           : null,
     };
   });

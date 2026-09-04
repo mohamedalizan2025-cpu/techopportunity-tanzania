@@ -6,7 +6,7 @@ import {
   getAuthenticatedUser,
 } from "./supabase-auth";
 import {
-  OPPORTUNITY_SELECT,
+  opportunitySelect,
   mapOpportunityRow,
   type OpportunityRow,
 } from "./opportunities";
@@ -235,7 +235,7 @@ export async function listPendingOpportunities(): Promise<Opportunity[]> {
 
   const { data, error } = await access.staff.client
     .from("opportunities")
-    .select(OPPORTUNITY_SELECT)
+    .select(opportunitySelect())
     .eq("status", "pending")
     .order("created_at", { ascending: true })
     .order("id", { ascending: true })
@@ -266,7 +266,7 @@ export async function getPendingOpportunityById(
 
   const { data, error } = await access.staff.client
     .from("opportunities")
-    .select(OPPORTUNITY_SELECT)
+    .select(opportunitySelect())
     .eq("id", id)
     .eq("status", "pending")
     .maybeSingle();

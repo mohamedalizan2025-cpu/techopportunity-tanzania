@@ -1,5 +1,6 @@
 import { OPPORTUNITY_CATEGORIES, type OpportunityCategory } from "../types";
 import { TANZANIA_REGIONS } from "../tanzania-regions";
+import type { CountryVerification } from "../opportunity-trust";
 
 /**
  * Pure parsing/validation for the moderator review form. No database access —
@@ -23,7 +24,13 @@ export interface ReviewInput {
   region: string | null;
   /** Moderator-verified country; null keeps the record honest as unknown. */
   country: string | null;
+  countryVerification: CountryVerification;
+  countryEvidence: string | null;
   deadline: string | null;
+  deadlinePrecision: "unknown" | "date" | "rolling";
+  deadlineEvidence: string | null;
+  relevanceEvidence: string;
+  eligibilityEvidence: string;
   organizationId: string | null;
 }
 
@@ -66,8 +73,11 @@ export function parseReviewInput(formData: FormData): ParseReviewResult {
   }
 
   const rawDescription = field(formData, "description").replace(/\r\n/g, "\n");
-  if (rawDescription.length < 1 || rawDescription.length > 10000) {
-    return { ok: false, message: "Description must be between 1 and 10,000 characters." };
+  if (rawDescription.length < 80 || rawDescription.length > 10000) {
+    return { ok: false, message: "Approval requires a meaningful description between 80 and 10,000 characters." };
+  }
+  if (rawDescription.replace(/\s+/g, " ").trim().toLowerCase() === title.toLowerCase()) {
+    return { ok: false, message: "The description must add evidence beyond the title." };
   }
 
   const url = field(formData, "url");
@@ -84,6 +94,20 @@ export function parseReviewInput(formData: FormData): ParseReviewResult {
   const deadline = normalizeDeadlineInput(field(formData, "deadline"));
   if (field(formData, "deadline") !== "" && deadline === null) {
     return { ok: false, message: "Deadline is not a valid date." };
+  }
+  const rawDeadlinePrecision = field(formData, "deadline_precision");
+  const deadlinePrecision = rawDeadlinePrecision === "date" || rawDeadlinePrecision === "rolling"
+    ? rawDeadlinePrecision
+    : "unknown";
+  const deadlineEvidence = cleanSingleLine(field(formData, "deadline_evidence"), 1000);
+  if (deadline !== null && deadlinePrecision !== "date") {
+    return { ok: false, message: "A known deadline must be marked as a source date." };
+  }
+  if (deadline === null && deadlinePrecision === "date") {
+    return { ok: false, message: "Date precision requires a deadline value." };
+  }
+  if ((deadline !== null || deadlinePrecision === "rolling") && deadlineEvidence === null) {
+    return { ok: false, message: "Known or rolling deadlines require exact source evidence." };
   }
 
   const venueName = cleanSingleLine(field(formData, "venue_name"), 200);
@@ -114,11 +138,47 @@ export function parseReviewInput(formData: FormData): ParseReviewResult {
   }
 
   // Country is moderator free text (worldwide scope) — bounded only, never
-  // defaulted. Empty means unknown and stores NULL once migration 0008 is
-  // applied.
+  // defaulted. Empty means unknown and stores NULL once forward migration
+  // 0013 is applied.
   const country = cleanSingleLine(field(formData, "country"), 100);
   if (field(formData, "country") !== "" && country === null) {
     return { ok: false, message: "Country is too long (max 100 characters)." };
+  }
+  const countryVerificationRaw = field(formData, "country_verification");
+  const countryVerification: CountryVerification =
+    countryVerificationRaw === "verified_tanzania" || countryVerificationRaw === "verified_other"
+      ? countryVerificationRaw
+      : "unknown";
+  const countryEvidence = cleanSingleLine(field(formData, "country_evidence"), 1000);
+  if (countryVerification === "unknown" && (country !== null || countryEvidence !== null)) {
+    return { ok: false, message: "Country text must remain empty until its source evidence is verified." };
+  }
+  if (countryVerification !== "unknown" && (country === null || countryEvidence === null)) {
+    return { ok: false, message: "A verified country requires both the country and exact evidence." };
+  }
+  if (
+    countryVerification === "verified_tanzania" &&
+    country?.toLowerCase() !== "tanzania"
+  ) {
+    return { ok: false, message: "Verified Tanzania requires country to be Tanzania." };
+  }
+  if (
+    countryVerification === "verified_other" &&
+    country?.toLowerCase() === "tanzania"
+  ) {
+    return { ok: false, message: "Use verified Tanzania for Tanzania evidence." };
+  }
+
+  const relevanceEvidence = cleanSingleLine(field(formData, "relevance_evidence"), 1000);
+  if (!relevanceEvidence || relevanceEvidence.length < 10) {
+    return { ok: false, message: "Approval requires explicit technology/research relevance evidence." };
+  }
+  if (field(formData, "eligibility") !== "tanzanians_eligible") {
+    return { ok: false, message: "Keep this record pending or reject it until Tanzanian eligibility is verified." };
+  }
+  const eligibilityEvidence = cleanSingleLine(field(formData, "eligibility_evidence"), 1000);
+  if (!eligibilityEvidence || eligibilityEvidence.length < 10) {
+    return { ok: false, message: "Approval requires exact evidence that Tanzanians may apply." };
   }
 
   const organizationRaw = field(formData, "organizationId");
@@ -142,7 +202,13 @@ export function parseReviewInput(formData: FormData): ParseReviewResult {
       city,
       region,
       country,
+      countryVerification,
+      countryEvidence,
       deadline,
+      deadlinePrecision,
+      deadlineEvidence,
+      relevanceEvidence,
+      eligibilityEvidence,
       organizationId,
     },
   };

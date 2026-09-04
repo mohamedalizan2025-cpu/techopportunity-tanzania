@@ -7,6 +7,16 @@ import {
 import { categoryLabel } from "../category-labels";
 import { deriveLifecycleState } from "../lifecycle";
 import { evaluateDeadline } from "../deadline-intelligence";
+import {
+  comparePublicTrust,
+  isAiSearchableOpportunity,
+  isTestOrPlaceholderOpportunity,
+} from "../opportunity-trust";
+import type {
+  CountryVerification,
+  EligibilityDecision,
+  RelevanceDecision,
+} from "../opportunity-trust";
 import { createSupabaseServerClient } from "./supabase-client";
 
 export type OpportunitySort = "deadline" | "newest" | "relevance";
@@ -28,7 +38,10 @@ export interface OpportunityRow {
   title: string;
   description: string;
   url: string;
+  source_url?: string | null;
   deadline: string | null;
+  deadline_precision?: "unknown" | "date" | "date_time" | "rolling" | "unspecified";
+  deadline_evidence?: string | null;
   venue_name: string | null;
   address: string | null;
   city: string | null;
@@ -43,6 +56,17 @@ export interface OpportunityRow {
   discovered_at: string | null;
   discovery_method: string | null;
   source: { name: string } | null;
+  relevance_decision?: RelevanceDecision;
+  relevance_evidence?: string | null;
+  eligibility?: EligibilityDecision;
+  eligibility_evidence?: string | null;
+  qualification_rule_version?: string | null;
+  country_verification?: CountryVerification;
+  country_evidence?: string | null;
+  last_verified_at?: string | null;
+  decided_by?: string | null;
+  decided_at?: string | null;
+  references?: Array<{ url: string; is_canonical: boolean }> | null;
 }
 
 const OPPORTUNITY_SELECT = `
@@ -51,7 +75,10 @@ const OPPORTUNITY_SELECT = `
   title,
   description,
   url,
+  source_url,
   deadline,
+  deadline_precision,
+  deadline_evidence,
   venue_name,
   address,
   city,
@@ -69,6 +96,30 @@ const OPPORTUNITY_SELECT = `
 `;
 
 export { OPPORTUNITY_SELECT };
+
+const OPPORTUNITY_TRUST_SELECT = `
+  relevance_decision,
+  relevance_evidence,
+  eligibility,
+  eligibility_evidence,
+  qualification_rule_version,
+  country_verification,
+  country_evidence,
+  last_verified_at,
+  decided_by,
+  decided_at,
+  references:opportunity_references ( url, is_canonical )
+`;
+
+export function trustSchemaEnabled(): boolean {
+  return process.env.M31_TRUST_SCHEMA_ENABLED === "true";
+}
+
+export function opportunitySelect(): string {
+  return trustSchemaEnabled()
+    ? `${OPPORTUNITY_SELECT},${OPPORTUNITY_TRUST_SELECT}`
+    : OPPORTUNITY_SELECT;
+}
 
 export function mapOpportunityRow(
   row: OpportunityRow,
@@ -89,11 +140,14 @@ export function mapOpportunityRow(
     organization: row.organization?.name ?? null,
     organizationId: row.organization?.id ?? null,
     sourceName: row.source?.name ?? null,
+    sourceUrl: row.source_url ?? null,
     discoveredAt: row.discovered_at,
     discoveryMethod: row.discovery_method,
     description: row.description,
     url: row.url,
     deadline: row.deadline,
+    deadlinePrecision: row.deadline_precision ?? "unspecified",
+    deadlineEvidence: row.deadline_evidence ?? null,
     location: hasLocation
       ? {
           venueName: row.venue_name,
@@ -108,6 +162,22 @@ export function mapOpportunityRow(
     imageUrl: row.image_url,
     status,
     createdAt: row.created_at,
+    trust: row.relevance_decision
+      ? {
+          relevanceDecision: row.relevance_decision,
+          relevanceEvidence: row.relevance_evidence ?? null,
+          eligibilityDecision: row.eligibility ?? "unknown",
+          eligibilityEvidence: row.eligibility_evidence ?? null,
+          qualificationRuleVersion: row.qualification_rule_version ?? null,
+          countryVerification: row.country_verification ?? "unknown",
+          countryEvidence: row.country_evidence ?? null,
+          lastVerifiedAt: row.last_verified_at ?? null,
+          decidedBy: row.decided_by ?? null,
+          decidedAt: row.decided_at ?? null,
+          canonicalEvidenceUrl:
+            row.references?.find((reference) => reference.is_canonical)?.url ?? null,
+        }
+      : undefined,
   };
 }
 
@@ -284,6 +354,7 @@ export function applyPublicOpportunityQuery(
 
   const matched = corpus.flatMap((opportunity) => {
     if (opportunity.status !== "published") return [];
+    if (isTestOrPlaceholderOpportunity(opportunity)) return [];
     if (query.category && opportunity.category !== query.category) return [];
     if (city && !sameText(opportunity.location?.city, city)) return [];
     if (region && !sameText(opportunity.location?.region, region)) return [];
@@ -305,6 +376,8 @@ export function applyPublicOpportunityQuery(
   });
 
   matched.sort((left, right) => {
+    const trustOrder = comparePublicTrust(left.opportunity, right.opportunity, now);
+    if (trustOrder !== 0) return trustOrder;
     if (sort === "relevance") {
       return right.score - left.score || compareDeadline(left.opportunity, right.opportunity, now);
     }
@@ -330,7 +403,7 @@ async function fetchPublishedOpportunityCorpus(): Promise<Opportunity[]> {
 
   const { data, error } = await supabase
     .from("opportunities")
-    .select(OPPORTUNITY_SELECT)
+    .select(opportunitySelect())
     .eq("status", "published")
     .order("created_at", { ascending: false })
     .limit(PUBLISHED_LIST_LIMIT);
@@ -351,6 +424,17 @@ export async function listPublishedOpportunities(
     0,
     Math.max(1, Math.min(limit, PUBLISHED_LIST_LIMIT))
   );
+}
+
+/** Future AI boundary: only fully evidenced rows can enter assistant context. */
+export async function listAiSearchableOpportunities(
+  query?: OpportunityQuery,
+  limit: number = PUBLISHED_LIST_LIMIT
+): Promise<Opportunity[]> {
+  const corpus = await fetchPublishedOpportunityCorpus();
+  return applyPublicOpportunityQuery(corpus, query)
+    .filter(isAiSearchableOpportunity)
+    .slice(0, Math.max(1, Math.min(limit, PUBLISHED_LIST_LIMIT)));
 }
 
 export async function listOrganizationOptions(): Promise<
@@ -428,7 +512,7 @@ export async function getOpportunityBySlug(
 
   const { data, error } = await supabase
     .from("opportunities")
-    .select(OPPORTUNITY_SELECT)
+    .select(opportunitySelect())
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -438,7 +522,7 @@ export async function getOpportunityBySlug(
     return null;
   }
 
-  return data
-    ? mapRowToOpportunity(data as unknown as OpportunityRow)
-    : null;
+  if (!data) return null;
+  const opportunity = mapRowToOpportunity(data as unknown as OpportunityRow);
+  return isTestOrPlaceholderOpportunity(opportunity) ? null : opportunity;
 }

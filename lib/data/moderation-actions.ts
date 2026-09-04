@@ -12,6 +12,8 @@ import {
 } from "./published-management";
 import { parseReviewInput, type ReviewInput } from "./moderation-review";
 import type { DecisionState, UnpublishState } from "../staff-form-state";
+import { M31_QUALIFICATION_RULE_VERSION } from "../opportunity-trust";
+import { trustSchemaEnabled } from "./opportunities";
 
 interface DecidedRow {
   slug: string;
@@ -53,6 +55,13 @@ export async function decideOpportunityAction(
   }
   if (rawDecision === null) {
     return { ...initial, status: "error", message: "Choose approve or reject." };
+  }
+  if (rawDecision === "approve" && !trustSchemaEnabled()) {
+    return {
+      ...initial,
+      status: "error",
+      message: "Approval is paused until the owner activates the M31 trust schema.",
+    };
   }
 
   const access = await getModerationAccess();
@@ -108,7 +117,12 @@ export async function decideOpportunityAction(
     }
   }
 
+  const decisionTime = new Date().toISOString();
   const update: Record<string, unknown> = { status: nextStatus };
+  if (trustSchemaEnabled()) {
+    update.decided_by = access.staff.userId;
+    update.decided_at = decisionTime;
+  }
   if (rawDecision === "approve" && review !== null) {
     update.title = review.title;
     update.description = review.description;
@@ -117,13 +131,18 @@ export async function decideOpportunityAction(
     update.address = review.address;
     update.city = review.city;
     update.region = review.region;
-    // Country is written ONLY when the moderator supplies one; empty means
-    // unknown. Before migration 0008 the column is not-null, so null is
-    // omitted (keeping the stored value); after it, null clears it.
-    if (review.country !== null) {
-      update.country = review.country;
-    }
+    update.country = review.country;
+    update.country_verification = review.countryVerification;
+    update.country_evidence = review.countryEvidence;
     update.deadline = review.deadline;
+    update.deadline_precision = review.deadlinePrecision;
+    update.deadline_evidence = review.deadlineEvidence;
+    update.relevance_decision = "relevant";
+    update.relevance_evidence = review.relevanceEvidence;
+    update.eligibility = "tanzanians_eligible";
+    update.eligibility_evidence = review.eligibilityEvidence;
+    update.qualification_rule_version = M31_QUALIFICATION_RULE_VERSION;
+    update.last_verified_at = decisionTime;
     update.organization_id = review.organizationId;
 
     const { data: categoryRow, error: categoryError } = await access.staff.client

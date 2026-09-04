@@ -145,6 +145,8 @@ export interface SourceRunResult {
   validCandidates: number;
   /** Valid candidates skipped only because their category seed is missing. */
   categorySkipped: number;
+  /** Qualified candidates withheld because M31 evidence columns are absent. */
+  evidencePersistenceSkipped: number;
   /** Actionable yield: rows actually inserted as pending. */
   insertedPending: number;
   /** Whether the source-registry health update itself succeeded. */
@@ -173,6 +175,7 @@ export interface DiscoverySummary {
   insertedPending: number;
   duplicatesSkipped: number;
   categorySkipped: number;
+  evidencePersistenceSkipped: number;
   relevanceRejected: number;
   eligibilityRejected: number;
   eligibilityUnknown: number;

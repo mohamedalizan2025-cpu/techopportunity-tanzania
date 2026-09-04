@@ -225,7 +225,24 @@ export function DecisionForm({
         <TextField
           label="Country (worldwide — leave empty when unverified)"
           name="country"
-          defaultValue={opportunity.location?.country ?? ""}
+          defaultValue={opportunity.trust?.countryVerification === "unknown" ? "" : opportunity.location?.country ?? ""}
+        />
+        <label className={labelClasses}>
+          Country verification
+          <select
+            name="country_verification"
+            defaultValue={opportunity.trust?.countryVerification ?? "unknown"}
+            className={`${selectClasses} mt-1.5`}
+          >
+            <option value="unknown">Unknown — do not use country as evidence</option>
+            <option value="verified_tanzania">Verified Tanzania</option>
+            <option value="verified_other">Verified other geography</option>
+          </select>
+        </label>
+        <TextField
+          label="Country evidence"
+          name="country_evidence"
+          defaultValue={opportunity.trust?.countryEvidence ?? ""}
         />
         <label className={labelClasses}>
           Region
@@ -263,6 +280,51 @@ export function DecisionForm({
           name="deadline"
           type="date"
           defaultValue={opportunity.deadline ? opportunity.deadline.slice(0, 10) : ""}
+        />
+        <label className={labelClasses}>
+          Deadline precision
+          <select
+            name="deadline_precision"
+            defaultValue={opportunity.deadline ? "date" : opportunity.deadlinePrecision === "rolling" ? "rolling" : "unknown"}
+            className={`${selectClasses} mt-1.5`}
+          >
+            <option value="unknown">Unknown</option>
+            <option value="date">Date from source</option>
+            <option value="rolling">Rolling / no fixed deadline</option>
+          </select>
+        </label>
+        <TextField
+          label="Deadline evidence"
+          name="deadline_evidence"
+          defaultValue={opportunity.deadlineEvidence ?? ""}
+        />
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-3 rounded-lg border border-black/[.08] bg-white p-4 dark:border-white/[.145] dark:bg-zinc-950">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          Publication trust gate
+        </legend>
+        <TextField
+          label="Why this is a technology/research opportunity"
+          name="relevance_evidence"
+          defaultValue={opportunity.trust?.relevanceEvidence ?? ""}
+        />
+        <label className={labelClasses}>
+          Tanzanian eligibility
+          <select
+            name="eligibility"
+            defaultValue={opportunity.trust?.eligibilityDecision ?? "unknown"}
+            className={`${selectClasses} mt-1.5`}
+          >
+            <option value="unknown">Unknown — cannot approve</option>
+            <option value="tanzanians_eligible">Verified: Tanzanians may apply</option>
+            <option value="tanzanians_not_eligible">Rejected: Tanzanians may not apply</option>
+          </select>
+        </label>
+        <TextField
+          label="Exact eligibility evidence"
+          name="eligibility_evidence"
+          defaultValue={opportunity.trust?.eligibilityEvidence ?? ""}
         />
       </fieldset>
 

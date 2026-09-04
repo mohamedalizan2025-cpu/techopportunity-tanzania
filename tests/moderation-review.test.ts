@@ -22,8 +22,13 @@ function form(fields: Record<string, string>): FormData {
 const BASE = {
   title: "Valid Opportunity Title",
   category: "hackathon",
-  description: "A description that is long enough.",
+  description: "This official programme description explains the technology focus, applicant work, and reviewable opportunity details in full.",
   url: "https://example.com/opportunity",
+  relevance_evidence: "Official page describes an applied technology opportunity.",
+  eligibility: "tanzanians_eligible",
+  eligibility_evidence: "Official eligibility section is open to all African nationals.",
+  deadline_precision: "unknown",
+  country_verification: "unknown",
 };
 
 // 1. approve with no enrichment (all optional fields absent → nulls)
@@ -45,11 +50,11 @@ const r3 = parseReviewInput(form({ ...BASE, city: "Dar es Salaam", region: "Dar 
 assert("3 location: city + canonical region accepted", r3.ok && r3.review.city === "Dar es Salaam" && r3.review.region === "Dar es Salaam");
 
 // 4. approve with deadline (date-only → deterministic UTC)
-const r4 = parseReviewInput(form({ ...BASE, deadline: "2026-10-01" }));
+const r4 = parseReviewInput(form({ ...BASE, deadline: "2026-10-01", deadline_precision: "date", deadline_evidence: "Official page deadline: 1 October 2026" }));
 assert("4 deadline normalized to UTC midnight", r4.ok && r4.review.deadline === "2026-10-01T00:00:00.000Z", JSON.stringify(r4.ok ? r4.review.deadline : r4));
 
 // 5. approve with multiple enriched fields
-const r5 = parseReviewInput(form({ ...BASE, venue_name: "Costech Building", address: "Ali Hassan Mwinyi Road", city: "Dar es Salaam", region: "Dar es Salaam", deadline: "2026-10-01", organizationId: "11111111-1111-4111-8111-111111111111" }));
+const r5 = parseReviewInput(form({ ...BASE, venue_name: "Costech Building", address: "Ali Hassan Mwinyi Road", city: "Dar es Salaam", region: "Dar es Salaam", deadline: "2026-10-01", deadline_precision: "date", deadline_evidence: "Official page deadline: 1 October 2026", organizationId: "11111111-1111-4111-8111-111111111111" }));
 assert("5 multiple enriched fields accepted", r5.ok && r5.review.venueName === "Costech Building" && r5.review.address === "Ali Hassan Mwinyi Road" && r5.review.organizationId !== null);
 
 // 6. reject path never wipes: the parser is not even invoked on rejection;
@@ -87,10 +92,19 @@ assert("extra: javascript: URL rejected", !rEx3.ok && rEx3.message.includes("htt
 const rEx4 = parseReviewInput(form({ ...BASE, region: "mjini magharibi" }));
 assert("extra: canonical region case-insensitive", rEx4.ok && r4.ok && rEx4.review.region === "Mjini Magharibi");
 
+const rE1 = parseReviewInput(form({ ...BASE, eligibility: "unknown" }));
+assert("trust: unknown eligibility cannot be approved", !rE1.ok && rE1.message.includes("eligibility"));
+const rE2 = parseReviewInput(form({ ...BASE, relevance_evidence: "short" }));
+assert("trust: weak relevance evidence cannot be approved", !rE2.ok && rE2.message.includes("relevance"));
+const rE3 = parseReviewInput(form({ ...BASE, deadline: "2026-10-01", deadline_precision: "date" }));
+assert("trust: known deadline requires source evidence", !rE3.ok && rE3.message.includes("evidence"));
+const rE4 = parseReviewInput(form({ ...BASE, description: BASE.title }));
+assert("trust: title-only description cannot be approved", !rE4.ok && rE4.message.includes("description"));
+
 // country honesty: empty stays null (never defaulted), verified value preserved
 const rC1 = parseReviewInput(form(BASE));
 assert("country: absent field stays null (no default)", rC1.ok && rC1.review.country === null);
-const rC2 = parseReviewInput(form({ ...BASE, country: "Kenya" }));
+const rC2 = parseReviewInput(form({ ...BASE, country: "Kenya", country_verification: "verified_other", country_evidence: "Official page states Nairobi, Kenya." }));
 assert("country: moderator-verified value preserved", rC2.ok && rC2.review.country === "Kenya");
 const rC3 = parseReviewInput(form({ ...BASE, country: "x".repeat(101) }));
 assert("country: over-long value rejected", !rC3.ok && rC3.message.includes("Country"));

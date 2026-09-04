@@ -111,7 +111,7 @@ assert("annual report is not relevant", report.relevance === "not_relevant");
 const news = qualifyOpportunity(candidate("DIT Alliance Showcases Horizon Fellow Program at the Trade Fair"));
 assert("reporting headline is not an opportunity", news.relevance === "not_relevant");
 const collaborationGrant = qualifyOpportunity(candidate("Call for Research Collaboration Grants 2026"));
-assert("opportunity collaboration wording is not treated as news", collaborationGrant.relevance !== "not_relevant");
+assert("generic research collaboration without a technical domain is rejected", collaborationGrant.relevance === "not_relevant");
 
 const stale = qualifyOpportunity(candidate("2016 Yale World Fellows Program"), new Date("2026-09-01T00:00:00Z"));
 assert("clearly stale dated listing is not actionable", stale.relevance === "not_relevant");
@@ -137,7 +137,7 @@ assert("software internship remains relevant", softwareInternship.relevance === 
 
 const vague = qualifyOpportunity(candidate("Digital Transformation Programme"));
 assert("vague programme remains ambiguous", vague.relevance === "ambiguous");
-assert("ambiguous record is preserved for humans", shouldEnterModerationQueue(vague));
+assert("ambiguous record is withheld until it has explicit opportunity evidence", !shouldEnterModerationQueue(vague));
 assert("ambiguous record has no invented evidence", vague.evidenceQuality === "none");
 
 const institutionalVague = qualifyOpportunity(
@@ -152,7 +152,7 @@ const aggregatorVague = qualifyOpportunity(
   new Date("2026-09-01T00:00:00Z"),
   { sourceType: "other" },
 );
-assert("aggregator ambiguity remains available to moderators", aggregatorVague.relevance === "ambiguous");
+assert("generic aggregator research wording is not sufficient product evidence", aggregatorVague.relevance === "not_relevant" && !shouldEnterModerationQueue(aggregatorVague));
 const institutionalExplicit = qualifyOpportunity(
   candidate("Call for Applications: AI Innovation Challenge 2027"),
   new Date("2026-09-01T00:00:00Z"),

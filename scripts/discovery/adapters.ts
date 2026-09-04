@@ -58,9 +58,12 @@ export const EVIDENCE_EXTRACTORS: Array<{
 export function extractAllCandidates(
   body: string,
   sourceId: string,
-  sourceUrl: string
+  sourceUrl: string,
+  options: { allowGenericHtml?: boolean } = {}
 ): RawCandidate[] {
-  return EVIDENCE_EXTRACTORS.flatMap(({ extract }) =>
+  return EVIDENCE_EXTRACTORS
+    .filter(({ family }) => family !== "html" || options.allowGenericHtml !== false)
+    .flatMap(({ extract }) =>
     extract(body, sourceId, sourceUrl)
   );
 }

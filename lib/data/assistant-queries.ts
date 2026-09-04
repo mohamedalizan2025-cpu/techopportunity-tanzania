@@ -1,5 +1,5 @@
 import type { AssistantPlan } from "../assistant/plan";
-import { listPublishedOpportunities } from "./opportunities";
+import { listAiSearchableOpportunities } from "./opportunities";
 
 /**
  * Assistant execution layer. Reuses listPublishedOpportunities() — the SAME
@@ -67,7 +67,7 @@ export function buildGroundedAnswerFromResults(
 }
 
 export async function executeAssistantPlan(plan: AssistantPlan): Promise<AssistantAnswer> {
-  const opportunities = await listPublishedOpportunities({
+  const opportunities = await listAiSearchableOpportunities({
     category: plan.category,
     sort: plan.sort,
     q: plan.q,

@@ -41,6 +41,7 @@ export function reconcileDiscoverySummary(summary: DiscoverySummary): DiscoveryS
     deduplicatedCandidates: sum(results, "deduplicatedCandidates"),
     validCandidates: sum(results, "validCandidates"),
     categorySkipped: sum(results, "categorySkipped"),
+    evidencePersistenceSkipped: sum(results, "evidencePersistenceSkipped"),
     insertedPending: sum(results, "insertedPending"),
     sourceHealthFailures: results.filter((result) => !result.sourceHealthUpdated).length,
     errors: sourcesFailed,

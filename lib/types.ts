@@ -1,3 +1,5 @@
+import type { OpportunityTrust } from "./opportunity-trust";
+
 export const OPPORTUNITY_CATEGORIES = [
   "hackathon",
   "competition",
@@ -41,13 +43,18 @@ export interface Opportunity {
   organizationId?: string | null;
   /** Discovery provenance (relational model); null unless moderator-visible context populates them. */
   sourceName?: string | null;
+  sourceUrl?: string | null;
   discoveredAt?: string | null;
   discoveryMethod?: string | null;
   description: string;
   url: string;
   deadline: string | null;
+  deadlinePrecision?: "unknown" | "date" | "date_time" | "rolling" | "unspecified";
+  deadlineEvidence?: string | null;
   location: OpportunityLocation | null;
   imageUrl: string | null;
   status: OpportunityStatus;
   createdAt: string;
+  /** M31 evidence contract. Undefined until the forward trust schema is enabled. */
+  trust?: OpportunityTrust;
 }

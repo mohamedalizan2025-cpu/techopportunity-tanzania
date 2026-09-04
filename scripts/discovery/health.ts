@@ -110,6 +110,8 @@ export interface ScheduleAssessment {
   expectedIntervalHours: number;
   toleranceHours: number;
   observedGapHours: number | null;
+  nominalSlot: string | null;
+  dispatchLatencyMinutes: number | null;
   reason: string;
 }
 
@@ -442,6 +444,31 @@ function toleranceFor(intervalHours: number): number {
   return Math.max(2, intervalHours * 0.25);
 }
 
+/** Nominal M25/M31 cron slots: 03:00, 09:00, 15:00 and 21:00 UTC. */
+export function nominalDispatchLatency(startedAt: string): {
+  nominalSlot: string | null;
+  dispatchLatencyMinutes: number | null;
+} {
+  const started = new Date(startedAt);
+  if (!Number.isFinite(started.getTime())) {
+    return { nominalSlot: null, dispatchLatencyMinutes: null };
+  }
+  const slot = new Date(started);
+  slot.setUTCMinutes(0, 0, 0);
+  const hours = [3, 9, 15, 21];
+  const sameDay = [...hours].reverse().find((hour) => hour <= started.getUTCHours());
+  if (sameDay === undefined) {
+    slot.setUTCDate(slot.getUTCDate() - 1);
+    slot.setUTCHours(21);
+  } else {
+    slot.setUTCHours(sameDay);
+  }
+  return {
+    nominalSlot: slot.toISOString(),
+    dispatchLatencyMinutes: Math.round((started.getTime() - slot.getTime()) / 60_000),
+  };
+}
+
 export function assessSchedule(
   history: HealthObservation[],
   now: string,
@@ -450,27 +477,29 @@ export function assessSchedule(
 ): ScheduleAssessment {
   const toleranceHours = toleranceFor(expectedIntervalHours);
   const nowMs = Date.parse(now);
+  const emptyTiming = { nominalSlot: null, dispatchLatencyMinutes: null };
   if (!Number.isFinite(nowMs) || expectedIntervalHours <= 0) {
-    return { state: "unknown", expectedIntervalHours, toleranceHours, observedGapHours: null, reason: "Invalid schedule inputs." };
+    return { state: "unknown", expectedIntervalHours, toleranceHours, observedGapHours: null, ...emptyTiming, reason: "Invalid schedule inputs." };
   }
   const scheduled = history
     .filter((observation) => isComparableHealthObservation(observation) && observation.identity.event === "schedule")
     .sort((a, b) => Date.parse(a.identity.startedAt) - Date.parse(b.identity.startedAt));
   const last = scheduled.at(-1);
   if (!last) {
-    return { state: "unknown", expectedIntervalHours, toleranceHours, observedGapHours: null, reason: "No retained scheduled observation exists." };
+    return { state: "unknown", expectedIntervalHours, toleranceHours, observedGapHours: null, ...emptyTiming, reason: "No retained scheduled observation exists." };
   }
+  const timing = nominalDispatchLatency(currentEvent === "schedule" ? now : last.identity.startedAt);
   const gapHours = (nowMs - Date.parse(last.identity.startedAt)) / 3_600_000;
   if (!Number.isFinite(gapHours) || gapHours < 0) {
-    return { state: "unknown", expectedIntervalHours, toleranceHours, observedGapHours: null, reason: "Scheduled timestamps are not comparable." };
+    return { state: "unknown", expectedIntervalHours, toleranceHours, observedGapHours: null, ...timing, reason: "Scheduled timestamps are not comparable." };
   }
   if (gapHours <= expectedIntervalHours + toleranceHours) {
-    return { state: "on_time", expectedIntervalHours, toleranceHours, observedGapHours: gapHours, reason: "Latest scheduled execution is inside the expected interval and tolerance." };
+    return { state: "on_time", expectedIntervalHours, toleranceHours, observedGapHours: gapHours, ...timing, reason: "Latest scheduled execution is inside the expected interval and tolerance." };
   }
   if (currentEvent === "schedule" && gapHours <= expectedIntervalHours * 2 + toleranceHours) {
-    return { state: "delayed", expectedIntervalHours, toleranceHours, observedGapHours: gapHours, reason: "This scheduled execution arrived outside tolerance but before a second full interval elapsed." };
+    return { state: "delayed", expectedIntervalHours, toleranceHours, observedGapHours: gapHours, ...timing, reason: "This scheduled execution arrived outside tolerance but before a second full interval elapsed." };
   }
-  return { state: "missed", expectedIntervalHours, toleranceHours, observedGapHours: gapHours, reason: "No scheduled execution was retained inside the expected interval and tolerance." };
+  return { state: "missed", expectedIntervalHours, toleranceHours, observedGapHours: gapHours, ...timing, reason: "No scheduled execution was retained inside the expected interval and tolerance." };
 }
 
 function deviation(value: number, baseline: MetricBaseline, moderateLow: number, moderateHigh: number, severeLow: number, severeHigh: number) {

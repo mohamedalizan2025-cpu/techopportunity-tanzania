@@ -41,6 +41,13 @@ const alertWorkflow = read(".github/workflows/deadline-alerts.yml");
 const authAction = read("lib/data/auth-actions.ts");
 const authCallback = read("app/auth/callback/route.ts");
 const authRedirect = read("lib/auth-redirect.ts");
+const m31Migration = read("supabase/migrations/0013_m31_data_trust.sql");
+const m31Trust = read("lib/opportunity-trust.ts");
+const m31AiReadiness = read("lib/ai-readiness.ts");
+const m31Remediation = read("scripts/m31/remediation.ts");
+const m31SourcePolicy = read("scripts/discovery/source-policy.ts");
+const opportunitiesData = read("lib/data/opportunities.ts");
+const moderationActions = read("lib/data/moderation-actions.ts");
 
 invariant("all discovery network acquisition crosses fetchPage", () => {
   const directFetchFiles = filesBelow("scripts/discovery")
@@ -229,6 +236,43 @@ invariant("ordinary milestone CI is read-only and credential-free", () => {
   assert.match(verificationWorkflow, /run: npm run verify/);
   assert.match(verificationWorkflow, /run: npm run build/);
   assert.doesNotMatch(verificationWorkflow, /secrets\.|SUPABASE_SERVICE_ROLE_KEY|scripts\/discovery\/index\.ts/);
+});
+
+invariant("M31 forward migration preserves rows and removes fabricated country defaults", () => {
+  assert.match(m31Migration, /alter column country drop default/);
+  assert.match(m31Migration, /add column if not exists qualification_rule_version/);
+  assert.match(m31Migration, /create table if not exists public\.opportunity_references/);
+  assert.match(m31Migration, /alter table public\.opportunity_references enable row level security/);
+  assert.doesNotMatch(m31Migration, /delete\s+from\s+public\.opportunities/i);
+  assert.doesNotMatch(m31Migration, /update\s+public\.opportunities\s+set\s+country/i);
+});
+
+invariant("M31 discovery and moderation fail closed at the trust-schema boundary", () => {
+  assert.match(runnerSource, /evidencePersistenceSkipped/);
+  assert.match(runnerSource, /qualification_rule_version/);
+  assert.match(moderationActions, /Approval is paused until the owner activates the M31 trust schema/);
+  assert.match(moderationActions, /eligibility = "tanzanians_eligible"/);
+  assert.match(moderationActions, /decided_by/);
+});
+
+invariant("M31 public and AI presentation exclude untrusted authority inputs", () => {
+  assert.match(m31Trust, /isTestOrPlaceholderOpportunity/);
+  assert.match(m31Trust, /isAiSearchableOpportunity/);
+  assert.match(opportunitiesData, /\.filter\(isAiSearchableOpportunity\)/);
+  assert.match(m31AiReadiness, /criteria\.every/);
+  assert.doesNotMatch(m31AiReadiness, /embedding|vector|openai/i);
+});
+
+invariant("M31 source hardening disables generic institutional HTML", () => {
+  assert.match(m31SourcePolicy, /GENERIC_HTML_DENY_TYPES/);
+  assert.match(m31SourcePolicy, /allowGenericHtml: false/);
+  assert.match(runnerSource, /sourceAcquisitionPolicy/);
+});
+
+invariant("M31 remediation is confirmation-gated status-only preservation", () => {
+  assert.match(m31Remediation, /--confirm=M31-UNPUBLISH-PUBLIC-TESTS/);
+  assert.match(m31Remediation, /update\(\{ status: "rejected" \}\)/);
+  assert.doesNotMatch(m31Remediation, /\.delete\s*\(/);
 });
 
 invariant("verification implementation has no database or network client", () => {

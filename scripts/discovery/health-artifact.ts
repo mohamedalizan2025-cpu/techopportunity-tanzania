@@ -69,6 +69,7 @@ function healthMarkdown(report: DiscoveryHealthReport): string {
     `- Trigger / attempt: **${report.identity.triggerKind}** / ${report.identity.runAttempt}`,
     `- Execution: **${report.execution.state}** (${report.execution.durationMs === null ? "duration unavailable" : `${report.execution.durationMs} ms`})`,
     `- Schedule: **${report.schedule.state}** (${report.schedule.reason})`,
+    `- Nominal slot / dispatch latency: **${report.schedule.nominalSlot ?? "unknown"}** / ${report.schedule.dispatchLatencyMinutes === null ? "unknown" : `${report.schedule.dispatchLatencyMinutes} minutes`}`,
     `- Sources: ${report.sourceHealth.succeeded}/${report.sourceHealth.attempted} succeeded`,
     `- Candidates / qualified / inserted pending: ${report.pipelineHealth.metrics.candidatesFound} / ${report.pipelineHealth.metrics.qualifiedCandidates} / ${report.pipelineHealth.metrics.insertedPending}`,
     `- Baseline: **${report.baseline.state}** (${report.baseline.historyDepth}/${report.baseline.requiredHistory} successful prior observations)`,
