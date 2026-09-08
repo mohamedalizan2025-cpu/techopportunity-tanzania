@@ -3,13 +3,19 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { evaluateAiReadiness } from "../lib/ai-readiness";
 import {
+  hasConsistentCountryTruth,
   hasMeaningfulDescription,
   isAiSearchableOpportunity,
   isFeatureEligible,
   isTestOrPlaceholderOpportunity,
 } from "../lib/opportunity-trust";
 import type { Opportunity } from "../lib/types";
-import { applyPublicOpportunityQuery } from "../lib/data/opportunities";
+import {
+  applyPublicOpportunityQuery,
+  mapOpportunityRow,
+  mapRowToOpportunity,
+  type OpportunityRow,
+} from "../lib/data/opportunities";
 import { extractAllCandidates } from "../scripts/discovery/adapters";
 import { sameOpportunityTitle } from "../scripts/discovery/dedupe";
 import { qualifyOpportunity, shouldEnterModerationQueue } from "../scripts/discovery/qualification";
@@ -43,6 +49,110 @@ function opportunity(overrides: Partial<Opportunity> = {}): Opportunity {
     ...overrides,
   };
 }
+
+function countryRow(overrides: Partial<OpportunityRow> = {}): OpportunityRow {
+  return {
+    id: "country-only", slug: "country-only", title: "AI engineering fellowship 2027",
+    description: opportunity().description, url: "https://official.example/fellowship",
+    source_url: "https://official.example/evidence", deadline: null,
+    deadline_precision: "unknown", deadline_evidence: null,
+    venue_name: null, address: null, city: null, region: null, country: "Tanzania",
+    latitude: null, longitude: null, image_url: null, created_at: "2026-09-04T00:00:00Z",
+    category: { slug: "fellowship" }, organization: null, source: { name: "Official source" },
+    discovered_at: null, discovery_method: "rss",
+    relevance_decision: "relevant", relevance_evidence: "Official AI engineering fellowship",
+    eligibility: "tanzanians_eligible", eligibility_evidence: "Open to all African nationals",
+    qualification_rule_version: "m31-test-v1", country_verification: "verified_tanzania",
+    country_evidence: "Official programme location: Tanzania",
+    last_verified_at: "2026-09-04T00:00:00Z", decided_by: "staff-1",
+    decided_at: "2026-09-04T00:00:00Z",
+    references: [{ url: "https://official.example/fellowship", is_canonical: true }],
+    ...overrides,
+  };
+}
+
+// Readiness uses the published-row mapper; staff/application reads also use
+// the status-aware mapper. Equivalent published input must retain identical truth.
+function mappedCountryRow(overrides: Partial<OpportunityRow> = {}): Opportunity {
+  const row = countryRow(overrides);
+  const application = mapOpportunityRow(row, "published");
+  const readiness = mapRowToOpportunity(row);
+  assert.deepEqual(readiness, application);
+  return application;
+}
+
+test("verified Tanzania country-only rows retain location and complete trust", () => {
+  const mapped = mappedCountryRow();
+  assert.deepEqual(mapped.location, {
+    venueName: null, address: null, city: null, region: null,
+    country: "Tanzania", latitude: null, longitude: null,
+  });
+  assert.equal(mapped.trust?.countryVerification, "verified_tanzania");
+  assert.equal(hasConsistentCountryTruth(mapped), true);
+  assert.equal(isFeatureEligible(mapped), true);
+  assert.equal(evaluateAiReadiness({
+    published: [mapped], featured: [mapped],
+    duplicateIntegrityPassed: true, securityBoundariesPassed: true,
+  }).state, "READY");
+});
+
+test("verified foreign country is preserved without becoming Tanzania or granting eligibility", () => {
+  const mapped = mappedCountryRow({
+    country: "Kenya", country_verification: "verified_other",
+    country_evidence: "Official programme location: Kenya",
+    eligibility: "tanzanians_not_eligible", eligibility_evidence: "Only Kenyan citizens may apply",
+  });
+  assert.equal(mapped.location?.country, "Kenya");
+  assert.equal(mapped.trust?.countryVerification, "verified_other");
+  assert.equal(hasConsistentCountryTruth(mapped), true);
+  assert.equal(isAiSearchableOpportunity(mapped), false);
+  assert.equal(hasConsistentCountryTruth({
+    ...mapped, trust: { ...mapped.trust!, countryVerification: "verified_tanzania" },
+  }), false);
+});
+
+test("unverified Tanzania text stays unverified and cannot substitute for eligibility", () => {
+  const mapped = mappedCountryRow({
+    country_verification: "unknown", country_evidence: null,
+    eligibility: "unknown", eligibility_evidence: null,
+  });
+  assert.equal(mapped.location?.country, "Tanzania");
+  assert.equal(mapped.trust?.countryVerification, "unknown");
+  assert.equal(mapped.trust?.countryEvidence, null);
+  assert.equal(mapped.trust?.eligibilityDecision, "unknown");
+  assert.equal(mapped.trust?.eligibilityEvidence, null);
+  assert.equal(isFeatureEligible(mapped), false);
+  assert.equal(isAiSearchableOpportunity(mapped), false);
+});
+
+test("country-only verified label still requires country evidence", () => {
+  const mapped = mappedCountryRow({ country_evidence: null });
+  assert.equal(mapped.location?.country, "Tanzania");
+  assert.equal(hasConsistentCountryTruth(mapped), false);
+  assert.equal(isAiSearchableOpportunity(mapped), false);
+});
+
+test("genuinely unknown location remains null without fabricated geography", () => {
+  const mapped = mappedCountryRow({
+    country: null, country_verification: "unknown", country_evidence: null,
+  });
+  assert.equal(mapped.location, null);
+  assert.equal(mapped.trust?.countryVerification, "unknown");
+  assert.equal(mapped.trust?.countryEvidence, null);
+});
+
+test("rich locations retain venue address city region country and coordinates", () => {
+  const mapped = mappedCountryRow({
+    venue_name: "Innovation Hub", address: "10 Example Road", city: "Dar es Salaam",
+    region: "Dar es Salaam", latitude: -6.8, longitude: 39.2,
+  });
+  assert.deepEqual(mapped.location, {
+    venueName: "Innovation Hub", address: "10 Example Road", city: "Dar es Salaam",
+    region: "Dar es Salaam", country: "Tanzania", latitude: -6.8, longitude: 39.2,
+  });
+  assert.equal(hasConsistentCountryTruth(mapped), true);
+  assert.equal(isAiSearchableOpportunity(mapped), true);
+});
 
 test("public contamination rule rejects measured manual artifacts", () => {
   for (const title of [

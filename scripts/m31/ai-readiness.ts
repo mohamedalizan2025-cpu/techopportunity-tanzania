@@ -2,8 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { evaluateAiReadiness } from "../../lib/ai-readiness";
 import { buildHomepageSnapshot } from "../../lib/opportunity-presentation";
 import { canonicalOpportunityUrl } from "../discovery/dedupe";
-import type { Opportunity } from "../../lib/types";
-import type { RelevanceDecision } from "../../lib/opportunity-trust";
+import { mapRowToOpportunity, type OpportunityRow } from "../../lib/data/opportunities";
 
 async function main(): Promise<void> {
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,43 +39,7 @@ if (trustProbe.error) {
 const { data, error } = await service.from("opportunities").select(trustSelect).eq("status", "published");
 if (error) throw new Error(error.message);
 
-type Row = Record<string, unknown>;
-const published: Opportunity[] = ((data ?? []) as Row[]).map((row) => {
-  const references = (row.references ?? []) as Array<{ url: string; is_canonical: boolean }>;
-  const source = row.source as { name: string } | null;
-  const category = row.category as { slug: Opportunity["category"] } | null;
-  const organization = row.organization as { id: string; name: string } | null;
-  const hasLocation = [row.venue_name, row.address, row.city, row.region, row.latitude].some((value) => value !== null);
-  return {
-    id: row.id as string, slug: row.slug as string, title: row.title as string,
-    description: row.description as string, category: category?.slug ?? "other",
-    organization: organization?.name ?? null, organizationId: organization?.id ?? null,
-    sourceName: source?.name ?? null, sourceUrl: row.source_url as string | null,
-    discoveredAt: row.discovered_at as string | null, discoveryMethod: row.discovery_method as string | null,
-    url: row.url as string, deadline: row.deadline as string | null,
-    deadlinePrecision: row.deadline_precision as Opportunity["deadlinePrecision"],
-    deadlineEvidence: row.deadline_evidence as string | null,
-    location: hasLocation ? {
-      venueName: row.venue_name as string | null, address: row.address as string | null,
-      city: row.city as string | null, region: row.region as string | null,
-      country: row.country as string | null, latitude: row.latitude as number | null,
-      longitude: row.longitude as number | null,
-    } : null,
-    imageUrl: row.image_url as string | null, status: "published", createdAt: row.created_at as string,
-    trust: {
-      relevanceDecision: row.relevance_decision as RelevanceDecision,
-      relevanceEvidence: row.relevance_evidence as string | null,
-      eligibilityDecision: row.eligibility as NonNullable<Opportunity["trust"]>["eligibilityDecision"],
-      eligibilityEvidence: row.eligibility_evidence as string | null,
-      qualificationRuleVersion: row.qualification_rule_version as string | null,
-      countryVerification: row.country_verification as NonNullable<Opportunity["trust"]>["countryVerification"],
-      countryEvidence: row.country_evidence as string | null,
-      lastVerifiedAt: row.last_verified_at as string | null,
-      decidedBy: row.decided_by as string | null, decidedAt: row.decided_at as string | null,
-      canonicalEvidenceUrl: references.find((reference) => reference.is_canonical)?.url ?? null,
-    },
-  };
-});
+const published = ((data ?? []) as unknown as OpportunityRow[]).map(mapRowToOpportunity);
 
 const canonical = published.map((item) => canonicalOpportunityUrl(item.trust?.canonicalEvidenceUrl ?? item.url));
 const duplicateIntegrityPassed = new Set(canonical).size === canonical.length;

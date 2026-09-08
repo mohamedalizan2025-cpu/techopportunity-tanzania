@@ -130,6 +130,7 @@ export function mapOpportunityRow(
     row.address !== null ||
     row.city !== null ||
     row.region !== null ||
+    row.country !== null ||
     row.latitude !== null;
 
   return {
