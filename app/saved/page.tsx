@@ -16,7 +16,7 @@ import { formatDeadlinePresentation } from "@/lib/opportunity-presentation";
 import { formatSavedDate } from "@/lib/saved-opportunity-state";
 
 export const metadata: Metadata = {
-  title: "Saved opportunities | TechOpportunity Tanzania",
+  title: "Saved opportunities | Tech Opportunity",
   description: "Your private list of saved opportunities.",
   robots: { index: false, follow: false },
 };
@@ -33,17 +33,22 @@ export default async function SavedOpportunitiesPage() {
   const signedInAs = user.displayName ?? user.email ?? "your account";
 
   return (
-    <main id="main-content" tabIndex={-1} className="flex-1 bg-[var(--background)]">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="flex-1 bg-[var(--background)]"
+    >
       <section className="border-b border-[var(--line)] bg-[var(--hero)]">
-        <div className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
             Your account
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl">
             Saved opportunities
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
-            Revisit opportunities you saved while browsing. Only you can see this list.
+            Revisit opportunities you saved while browsing. Only you can see
+            this list.
           </p>
           <p className="mt-3 break-words text-xs text-[var(--subtle)]">
             Signed in as {signedInAs}
@@ -51,76 +56,22 @@ export default async function SavedOpportunitiesPage() {
         </div>
       </section>
 
-      <section aria-labelledby="deadline-alerts-heading" className="border-b border-[var(--line)]">
-        <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">
-              Deadline intelligence
-            </p>
-            <h2 id="deadline-alerts-heading" className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
-              Alerts for saved opportunities
-            </h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--muted)]">
-              Get a private in-app alert when a saved, published opportunity is within 14 days of its known deadline, or when its deadline changes. Unknown and closed deadlines do not generate approaching alerts.
-            </p>
-            <p className="mt-2 text-xs leading-5 text-[var(--subtle)]">
-              Email delivery is not part of this milestone. An alert shown here means generated, not emailed or sent.
-            </p>
-            <div className="mt-5">
-              {alertPreference.available ? (
-                <AlertPreferenceControl enabled={alertPreference.enabled} />
-              ) : (
-                <p role="alert" className="text-sm text-amber-800 dark:text-amber-200">
-                  Deadline alert settings are temporarily unavailable.
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-base font-semibold text-[var(--foreground)]">Recent generated alerts</h3>
-            {!alertHistory.available ? (
-              <p className="mt-3 text-sm text-[var(--muted)]">Alert history is temporarily unavailable.</p>
-            ) : alertHistory.events.length === 0 ? (
-              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                No deadline alerts have been generated for your account yet.
-              </p>
-            ) : (
-              <ul className="mt-3 space-y-3">
-                {alertHistory.events.map((event) => {
-                  const deadline = formatDeadlinePresentation(event.deadline);
-                  return (
-                    <li key={event.id} className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4">
-                      <Link href={`/opportunities/${encodeURIComponent(event.opportunity.slug)}?from=%2Fsaved`} className="font-semibold text-[var(--foreground)] hover:text-[var(--accent-strong)]">
-                        {event.opportunity.title}
-                      </Link>
-                      <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                        {deadlineAlertEventLabel(event.eventType)}
-                      </p>
-                      {event.deadline ? (
-                        <p className="mt-1 text-xs text-[var(--subtle)]">
-                          {deadline.dateLabel ? `${deadline.label}: ${deadline.dateLabel}` : deadline.label}
-                        </p>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </div>
-      </section>
-
       <section aria-labelledby="saved-list-heading">
-        <div className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 id="saved-list-heading" className="text-2xl font-semibold text-[var(--foreground)]">
+              <h2
+                id="saved-list-heading"
+                className="text-2xl font-semibold text-[var(--foreground)]"
+              >
                 Your saved list
               </h2>
               {result.available ? (
                 <p role="status" className="mt-2 text-sm text-[var(--muted)]">
-                  {result.entries.length} {result.entries.length === 1 ? "saved opportunity" : "saved opportunities"}
+                  {result.entries.length}{" "}
+                  {result.entries.length === 1
+                    ? "saved opportunity"
+                    : "saved opportunities"}
                 </p>
               ) : null}
             </div>
@@ -133,8 +84,12 @@ export default async function SavedOpportunitiesPage() {
           </div>
 
           {!result.available ? (
-            <div role="alert" className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-              Saved opportunities are temporarily unavailable. Your public browsing experience is unaffected.
+            <div
+              role="alert"
+              className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+            >
+              Saved opportunities are temporarily unavailable. Your public
+              browsing experience is unaffected.
             </div>
           ) : result.entries.length === 0 ? (
             <div className="mt-8">
@@ -150,9 +105,10 @@ export default async function SavedOpportunitiesPage() {
               {result.entries.map((entry) => (
                 <li key={entry.savedId}>
                   {entry.opportunity ? (
-                    <div className="h-full">
+                    <div className="flex h-full flex-col">
                       <p className="mb-2 text-xs text-[var(--subtle)]">
-                        {formatSavedDate(entry.savedAt) ?? "Saved date unavailable"}
+                        {formatSavedDate(entry.savedAt) ??
+                          "Saved date unavailable"}
                       </p>
                       <OpportunityCard
                         opportunity={entry.opportunity}
@@ -170,10 +126,12 @@ export default async function SavedOpportunitiesPage() {
                         This saved opportunity is no longer publicly available
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                        Its private or removed details are not shown. You can safely remove this saved reference.
+                        Its private or removed details are not shown. You can
+                        safely remove this saved reference.
                       </p>
                       <p className="mt-3 text-xs text-[var(--subtle)]">
-                        {formatSavedDate(entry.savedAt) ?? "Saved date unavailable"}
+                        {formatSavedDate(entry.savedAt) ??
+                          "Saved date unavailable"}
                       </p>
                       <div className="mt-5">
                         <SaveOpportunityControl
@@ -190,6 +148,90 @@ export default async function SavedOpportunitiesPage() {
               ))}
             </ul>
           )}
+        </div>
+      </section>
+      <section
+        aria-labelledby="deadline-alerts-heading"
+        className="border-b border-[var(--line)]"
+      >
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent-strong)]">
+              Stay up to date
+            </p>
+            <h2
+              id="deadline-alerts-heading"
+              className="mt-2 text-2xl font-semibold text-[var(--foreground)]"
+            >
+              Alerts for saved opportunities
+            </h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--muted)]">
+              Get a private in-app alert when a saved, published opportunity is
+              within 14 days of its known deadline, or when its deadline
+              changes. Unknown and closed deadlines do not generate approaching
+              alerts.
+            </p>
+            <p className="mt-2 text-xs leading-5 text-[var(--subtle)]">
+              Alerts appear here in your account. They are not sent by email.
+            </p>
+            <div className="mt-5">
+              {alertPreference.available ? (
+                <AlertPreferenceControl enabled={alertPreference.enabled} />
+              ) : (
+                <p
+                  role="alert"
+                  className="text-sm text-amber-800 dark:text-amber-200"
+                >
+                  Deadline alert settings are temporarily unavailable.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-base font-semibold text-[var(--foreground)]">
+              Recent deadline alerts
+            </h3>
+            {!alertHistory.available ? (
+              <p className="mt-3 text-sm text-[var(--muted)]">
+                Alert history is temporarily unavailable.
+              </p>
+            ) : alertHistory.events.length === 0 ? (
+              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+                No deadline updates yet. Check back here for changes to saved
+                opportunities.
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {alertHistory.events.map((event) => {
+                  const deadline = formatDeadlinePresentation(event.deadline);
+                  return (
+                    <li
+                      key={event.id}
+                      className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4"
+                    >
+                      <Link
+                        href={`/opportunities/${encodeURIComponent(event.opportunity.slug)}?from=%2Fsaved`}
+                        className="font-semibold text-[var(--foreground)] hover:text-[var(--accent-strong)]"
+                      >
+                        {event.opportunity.title}
+                      </Link>
+                      <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+                        {deadlineAlertEventLabel(event.eventType)}
+                      </p>
+                      {event.deadline ? (
+                        <p className="mt-1 text-xs text-[var(--subtle)]">
+                          {deadline.dateLabel
+                            ? `${deadline.label}: ${deadline.dateLabel}`
+                            : deadline.label}
+                        </p>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
     </main>

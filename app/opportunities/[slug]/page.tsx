@@ -24,12 +24,15 @@ export async function generateMetadata({
   const opportunity = await getOpportunityBySlug(slug);
   if (!opportunity) return { title: "Opportunity not found" };
   return {
-    title: `${opportunity.title} | TechOpportunity Tanzania`,
+    title: `${opportunity.title} | Tech Opportunity`,
     description: opportunity.description.slice(0, 160),
   };
 }
 
-export default async function OpportunityDetailPage({ params, searchParams }: PageProps) {
+export default async function OpportunityDetailPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { slug } = await params;
   const query = await searchParams;
   const rawReturn = Array.isArray(query.from) ? query.from[0] : query.from;
@@ -40,28 +43,38 @@ export default async function OpportunityDetailPage({ params, searchParams }: Pa
   ]);
 
   if (!opportunity) notFound();
-  const savedIds = user ? await listSavedOpportunityIds(user) : new Set<string>();
+  const savedIds = user
+    ? await listSavedOpportunityIds(user)
+    : new Set<string>();
   const detailHref = opportunityHref(
     opportunity.slug,
-    rawReturn ? returnHref : undefined
+    rawReturn ? returnHref : undefined,
   );
-  const returnLabel = returnHref === "/saved"
-    ? "Back to saved"
-    : rawReturn
-      ? "Back to results"
-      : "All opportunities";
+  const returnLabel =
+    returnHref === "/saved"
+      ? "Back to saved"
+      : rawReturn
+        ? "Back to results"
+        : "All opportunities";
 
   return (
     <div className="flex flex-1 flex-col bg-[var(--background)] font-sans">
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-3xl flex-1 px-5 py-10 sm:px-8 sm:py-16">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="page-shell flex-1 py-6 sm:py-10"
+      >
         <Link
           href={returnHref}
-          className="inline-flex min-h-10 items-center rounded-full px-3 text-sm font-semibold text-[var(--muted)] transition-colors hover:bg-[var(--muted-surface)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-[var(--muted)] transition-colors hover:bg-[var(--muted-surface)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
-          <span aria-hidden="true" className="mr-2">←</span>{returnLabel}
+          <span aria-hidden="true" className="mr-2">
+            ←
+          </span>
+          {returnLabel}
         </Link>
 
-        <div className="mt-5 rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-5 shadow-[0_20px_60px_rgba(18,48,34,0.08)] sm:p-9">
+        <div className="mt-5">
           <OpportunityDetail
             opportunity={opportunity}
             isSaved={savedIds.has(opportunity.id)}

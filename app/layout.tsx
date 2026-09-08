@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TechOpportunity Tanzania",
+  title: "Tech Opportunity",
   description:
     "Find technology opportunities relevant to Tanzanian students, developers, founders, researchers and professionals.",
 };
@@ -32,6 +32,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
@@ -45,10 +46,27 @@ export default function RootLayout({ children }: RootLayoutProps) {
         {children}
         <footer className="border-t border-[var(--line)] bg-[var(--surface)]">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-5 py-8 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between sm:px-8">
-            <p>Tech opportunities, presented with their source and known details.</p>
+            <p>
+              <span className="font-semibold text-[var(--foreground)]">
+                Tech Opportunity
+              </span>
+              <span className="mt-1 block">
+                A clearer starting point for Tanzania’s tech community.
+              </span>
+            </p>
             <div className="flex flex-wrap gap-x-5 gap-y-2">
-              <Link href="/#opportunities" className="font-semibold hover:text-[var(--accent-strong)]">Browse</Link>
-              <Link href="/submit" className="font-semibold hover:text-[var(--accent-strong)]">Submit an opportunity</Link>
+              <Link
+                href="/#opportunities"
+                className="inline-flex min-h-11 items-center font-semibold hover:text-[var(--accent-strong)]"
+              >
+                Browse
+              </Link>
+              <Link
+                href="/submit"
+                className="inline-flex min-h-11 items-center font-semibold hover:text-[var(--accent-strong)]"
+              >
+                Submit an opportunity
+              </Link>
             </div>
           </div>
         </footer>

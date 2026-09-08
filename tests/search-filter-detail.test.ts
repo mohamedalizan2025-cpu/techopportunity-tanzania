@@ -266,8 +266,8 @@ const filters = readFileSync(join(root, "components/opportunity-filters.tsx"), "
 const detailRoute = readFileSync(join(root, "app/opportunities/[slug]/page.tsx"), "utf8");
 const detail = readFileSync(join(root, "components/opportunity-detail.tsx"), "utf8");
 const data = readFileSync(join(root, "lib/data/opportunities.ts"), "utf8");
-assert.match(home, /role="status" aria-live="polite"/);
-assert.match(filters, /<label htmlFor="opportunity-search"/);
+assert.match(home, /role="status"\s+aria-live="polite"/);
+assert.match(filters, /<label\s+htmlFor="opportunity-search"/);
 assert.match(filters, /aria-label="Opportunity filters"/);
 assert.match(filters, /aria-label={`Remove \$\{chip\.label\}`}/);
 assert.match(detailRoute, /if \(!opportunity\) notFound\(\)/);

@@ -362,11 +362,11 @@ test("login explains the public site remains public", () => {
   assert.match(loginPage, /always remain public/);
 });
 test("login form has labelled email and password", () => {
-  assert.match(loginForm, /<label htmlFor="email"/);
-  assert.match(loginForm, /<label htmlFor="password"/);
+  assert.match(loginForm, /<label\s+htmlFor="email"/);
+  assert.match(loginForm, /<label\s+htmlFor="password"/);
 });
 test("login form offers account creation", () => {
-  assert.match(loginForm, /value="sign-up"/);
+  assert.match(loginForm, /name="mode"\s+value={mode}/);
   assert.match(loginForm, /Create account/);
 });
 test("invalid authentication has an honest error", () => {
@@ -409,8 +409,8 @@ test("navigation shows sign in to anonymous users", () => {
   assert.match(header, /\/login\?next=%2Fsaved/);
 });
 test("navigation exposes saved and sign out when authenticated", () => {
-  assert.match(header, />Saved</);
-  assert.match(header, />Sign out</);
+  assert.match(header, />\s*Saved\s*</);
+  assert.match(header, />\s*Sign out\s*</);
 });
 test("staff navigation still depends on the staff role", () => {
   assert.match(header, /isStaff \?/);
