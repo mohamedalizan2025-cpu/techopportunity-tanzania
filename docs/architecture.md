@@ -1,11 +1,15 @@
 # TechOpportunity Tanzania — Architecture
 
-Status: **Operational MVP + discovery pipeline + AI scaffold** · Last updated: 2026-08-29
+**Current checkpoint and owner gates: [NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md).**
+This architecture record contains historical environment and rollout statements;
+they are not current staging evidence or authorization. AI remains NO-GO.
+
+Historical architecture status: **Operational MVP + discovery pipeline + AI scaffold** · Last updated: 2026-08-29
 
 This document explains *how the system is put together and why*. It is written
 for a student learning software architecture — implementation details live in
-the code; this file explains the decisions behind it. It is the authoritative
-source of truth for future coding agents; §12 records the architecture-
+the code; this file explains the decisions behind it. Use it for architectural
+rationale; the linked handoff is the authoritative engineering continuity record; §12 records the architecture-
 hardening decisions from the 2026-08-29 audit.
 
 ---
@@ -124,7 +128,8 @@ Why this rule matters:
 4. **Testability** — data functions can be tested or mocked independently
    of UI.
 
-Current state: connected to the `tto-staging` Supabase project. The
+Historical development setup used a project named `tto-staging`; this does not
+prove current staging isolation. See the current handoff before using any target. The
 Supabase client factory lives beside the queries in `lib/data/supabase-client.ts`,
 so even the SDK import stays inside the data layer. Reads use the anon key,
 which means Row Level Security is always in force. `mock-opportunities.ts`
@@ -134,6 +139,11 @@ remains as an offline fixture file and is not part of the real data path.
 
 ## 6. Environments
 
+The table below is the historical/intended separation model, not an inventory of
+verified current projects. As of the 2026-09-08 handoff, no trustworthy isolated
+staging environment is established. The owner intends a second Supabase Free
+project for staging; do not repurpose the existing operational project.
+
 | | Local development | Staging | Production |
 |---|---|---|---|
 | Code location | your machine | `main` branch via PR previews | `main` branch |
@@ -142,8 +152,8 @@ remains as an offline fixture file and is not part of the real data path.
 | Secrets source | `.env.local` (pointing at staging) | Vercel env vars scoped to *Preview* | Vercel env vars scoped to *Production* |
 
 Notes:
-- Local development deliberately uses the **staging** cloud database so we
-  do not need Docker or a local Postgres install.
+- The original design used a cloud development database instead of local Docker.
+  Today, independently verify project references before treating any target as staging.
 - Production data is never touched while developing features.
 - Staging gets seeded/test data; production gets real data only after you
   explicitly apply migrations there.

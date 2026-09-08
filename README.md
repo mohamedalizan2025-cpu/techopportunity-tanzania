@@ -1,4 +1,7 @@
-# TechOpportunity Tanzania
+# Tech Opportunity
+
+**Continuing development? Read [the authoritative engineering handoff](docs/NEXT_SESSION_HANDOFF.md) first.**
+M31 remains OPEN; isolated staging is not safely established. Do not treat local credentials as staging proof.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
@@ -14,7 +17,7 @@ could reuse the same Supabase backend unchanged; see
 
 - [Next.js](https://nextjs.org) 16 — App Router, TypeScript, React Server Components
 - [Tailwind CSS](https://tailwindcss.com) v4 — styling
-- [Supabase](https://supabase.com) — PostgreSQL, auth, storage *(connected: `tto-staging`)*
+- [Supabase](https://supabase.com) — PostgreSQL, auth, storage *(environment identity requires independent verification)*
 - [Vercel](https://vercel.com) — hosting *(deployed)*
 
 ## Project structure
@@ -22,7 +25,7 @@ could reuse the same Supabase backend unchanged; see
 ```text
 ├── app/               # Pages and layouts (App Router)
 │   ├── layout.tsx     # Root layout
-│   ├── page.tsx       # Home page
+│   ├── (home)/page.tsx # Home page
 │   └── globals.css    # Global styles / theme
 ├── components/        # Reusable UI components
 ├── lib/
@@ -30,9 +33,9 @@ could reuse the same Supabase backend unchanged; see
 │   └── data/          # DATA-ACCESS LAYER - all DB queries live here
 │       └── mock-opportunities.ts  # clearly-marked temporary samples
 ├── docs/
-│   └── architecture.md# Architecture decisions - start here
+│   └── architecture.md# Architecture decisions; current state in NEXT_SESSION_HANDOFF.md
 ├── public/            # Static assets
-├── scripts/discovery/ # TypeScript discovery pipeline (GitHub Actions daily)
+├── scripts/discovery/ # TypeScript discovery pipeline (GitHub Actions every six hours)
 ├── supabase/          # Migrations + source-registry seeds
 └── .env.example       # Required variable NAMES (values never committed)
 ```
@@ -52,8 +55,9 @@ npm run dev
 
 Open http://localhost:3000.
 
-With `.env.local` configured (staging credentials you enter yourself), the
-home page lists **published opportunities from the staging database**.
+With `.env.local` configured, the home page reads published opportunities from
+the configured database. **Its environment identity is not inferred from this file.**
+An isolated staging target must be established before any staging mutation.
 Without configuration it renders empty with a console warning — builds still
 pass. `lib/data/mock-opportunities.ts` remains available as an offline
 fixture and is never mixed into real results.
@@ -87,14 +91,8 @@ requirements would justify adding a separate backend service.
 
 ## Roadmap
 
-1. **MVP** — curated listings + admin moderation (done)
-   - within MVP+: interactive location maps, "Get Directions", city/region
-     filters, near-me search — data model already ready
-     (`docs/architecture.md` §11); no map SDK chosen yet
-2. **Aggregation** — scheduled discovery (done: TypeScript pipeline in
-   `scripts/discovery/`, daily GitHub Actions run, moderation-first)
-3. **Users** — accounts, saved searches, deadline digests
-4. **Intelligence** — recommendations via offline embedding jobs
-5. **Platform** — independent API service only if a concrete trigger appears
-6. **Native mobile apps** *(optional, undecided)* — would attach to the same
-   Supabase backend via official mobile SDKs; nothing to build now
+The current completed milestones, owner gates and planned roadmap are maintained
+in [NEXT_SESSION_HANDOFF.md](docs/NEXT_SESSION_HANDOFF.md). M31 rollout remains
+open; the next owner action is to establish distinct production and staging
+Supabase project identities. Do not follow historical migration or AI activation
+plans as current instructions.
