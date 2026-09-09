@@ -13,11 +13,10 @@ inheritance is disabled; only the current owner, `SYSTEM`, and local
 `Administrators` have Full Control. Do not move this directory into a synced or
 shared location without an owner-approved encryption and retention plan.
 
-`manifest.json` is the authoritative per-file inventory. It contains 53 artifact
-entries totaling 1,143,546 bytes, with a byte size, SHA-256 checksum, and
-classification for every listed artifact. The manifest itself is 18,703 bytes and
-has SHA-256
-`ac924f6f36f16e7b76878960bb3e31550311ef31b5466b27305972dcf9b4d02d`.
+`manifest.json` is the authoritative per-file inventory. It contains 61 artifact
+entries totaling 1,162,925 bytes, with a byte size, SHA-256 checksum, and
+classification for every listed artifact. The manifest itself is 21,824 bytes with SHA-256
+`49daae1ddb8674ad8d3a152cee0b01f7858eda96a5390b04b451d7eb337dd201`.
 It contains metadata only, not credentials or database rows.
 
 ### Core production recovery artifacts
@@ -55,13 +54,31 @@ and are recovery-only.
 These staging data artifacts contain only reserved-domain synthetic records. They
 are not substitutes for the private production recovery data.
 
+### Staging 0013 execution evidence
+
+| Artifact | Bytes | SHA-256 |
+|---|---:|---|
+| `staging_pre_0013_snapshot_reuse.audit` | 807 | `e9bb681d6df742249b6fa82f345b81066f73414aab0dc4b8f57dfd811774ba6f` |
+| `staging_0013_execution.audit` | 509 | `5e94000fb57db402a3d25dc8d568b5640bbcbe8e84e63b7dabbba9d3ced3a59e` |
+| `staging_0013_execution_notice.log` | 358 | `a3a69712db43bc948bdb2d30ef533372561c63ab812e5ec779cdaf10d1b2ac46` |
+| `staging_0013_post_structure.txt` | 16,213 | `25cbec981353772d9e8bf42bd3f688d40d318fccb39ac0e5c46a3bcd0a4552b7` |
+| `staging_0013_backfill_security.txt` | 797 | `827213ce4805731dd5add3e224be3d16e9de934fe5112c7f34e2594ce0c359b4` |
+| `staging_0013_negative_tests.txt` | 433 | `5932db56d72eeffe1aa3f2c80d251de1b77cc6a346f8074c25be0a023e1c3f46` |
+| `staging_0013_trigger_test.txt` | 151 | `32b8bc92d91bb4015b612430aaace2c6521fa37094e5a29c782dbb6d24d674b9` |
+| `staging_0013_final_state.txt` | 111 | `bfff1e8370843e7989f1d0f75504855c726c5211c82d9008ab673b53337b8022` |
+
+Migration 0013 was applied only to staging in one failure-stopping transaction.
+These files are verification evidence; the immutable pre-0013 schema and fixture
+artifacts above remain the rollback/reconstruction baseline. No production backup
+artifact was replaced.
+
 ## What was validated
 
 - PostgreSQL server 17.6 was exported and PostgreSQL 17.11 client tools created
   the dumps. Supabase CLI 2.117.0 behavior and scope were reviewed; the equivalent
   official PostgreSQL logical tools were used without putting a password in a
   process argument or connection string.
-- Every core file exists and is non-empty. All 53 protected artifacts have a
+- Every core file exists and is non-empty. All 61 protected artifacts have a
   SHA-256 checksum in the manifest.
 - PostgreSQL 17.11 `pg_restore --list` parses both production custom archives and
   both staging custom archives.
@@ -79,6 +96,11 @@ are not substitutes for the private production recovery data.
   from the empty project's defaults were explicitly narrowed on staging and
   reverified. The remaining raw relation-row difference is only ACL-array order;
   the privilege set is identical.
+- Staging migration 0013 was subsequently verified at 37 opportunity columns,
+  66 public constraints, 38 indexes, 25 policies, five public functions and 12
+  relevant triggers. Six synthetic opportunities produced six canonical and three
+  secondary references. Fourteen negative constraint cases and a synchronization
+  trigger behavior test passed inside transactions that were rolled back.
 
 This establishes a usable logical recovery baseline, but it is not a full private
 data restore rehearsal. No private production data was restored to staging.

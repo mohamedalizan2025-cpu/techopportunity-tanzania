@@ -6,29 +6,30 @@ evidence and do not override this file or current owner instructions.
 
 ## 1. Exact checkpoint
 
-The protected M31 recovery and staging-baseline task began from:
+The M31 staging-migration verification task began from:
 
 - branch `main`;
 - HEAD and `origin/main`
-  `32fbc859ca2ac04e6ca05d67cf552e17718e70de`;
-- commit `Complete M31 staging preflight`;
+  `89e01c499eaf389d671f6bc2fd72cf2c480f3516`;
+- commit `Establish protected M31 recovery baseline`;
 - ahead/behind `0/0` and a clean working tree.
 
-The task completed the authorized production read-only security audit and recovery
-export, established the synthetic pre-M31 staging baseline, closed the historical
-0006 compatibility uncertainty, and stopped before migration 0013. The current
-documentation commit follows that starting checkpoint; obtain its exact SHA and
-remote relationship from Git rather than resetting to the SHA above.
+The task revalidated the protected pre-M31 baseline and applied exactly unchanged
+migration 0013 to the immutable staging target in one failure-stopping transaction.
+It verified the resulting schema, backfill, constraints, trigger behavior and
+structural security, then stopped before feature-flag activation or deployment.
+The current documentation commit follows that starting checkpoint; obtain its exact
+SHA and remote relationship from Git rather than resetting to the SHA above.
 
 Current database status:
 
 **RECOVERY BASELINE ESTABLISHED**
 
-**STAGING PRE-M31 BASELINE ESTABLISHED**
+**M31 DATABASE MIGRATION VERIFIED ON STAGING**
 
-**READY TO APPLY 0013 TO STAGING**
+**0013 APPLIED SUCCESSFULLY TO STAGING**
 
-**0013 NOT APPLIED**
+**M31 FEATURE FLAG NOT ENABLED**
 
 **NO PRODUCTION AVAILABILITY CHANGES**
 
@@ -91,7 +92,7 @@ opportunities, which is compatible with per-opportunity reference uniqueness.
 Twenty-seven rows have equal canonical/source URLs and will correctly skip the
 secondary backfill. No private row content was reported.
 
-## 4. Established staging pre-M31 baseline
+## 4. Staging baseline and verified M31 database state
 
 The selected baseline is the reviewed actual production application schema, not
 historical migration replay. Migrations 0005-0009 were not replayed.
@@ -109,7 +110,7 @@ schema ACLs, enums, extensions, views, publications, and relevant relation inven
 The sole raw relation-row difference is the ordering of an equivalent three-item ACL
 array on `saved_opportunities`; effective privileges are identical.
 
-Staging currently has:
+The preserved pre-0013 snapshot has:
 
 - 10 public tables, all RLS enabled; 49 constraints; 33 indexes; 23 policies;
   four functions; six public triggers plus the custom Auth trigger;
@@ -124,32 +125,50 @@ Staging currently has:
   events.
 
 No discovery worker ran and no staging identity was needed. The staging baseline
-schema and fixture snapshots are checksummed in protected storage.
+schema and fixture snapshots remain checksummed in protected storage.
 
-## 5. Migration 0013 gate
+Migration 0013 then ran as the only SQL input through PostgreSQL 17.11 `psql` with
+`ON_ERROR_STOP=1` and `--single-transaction`, bound to the guarded staging ref. It
+added 10 opportunity columns and `opportunity_references`; staging now has 11 public
+tables, 66 constraints, 38 indexes, 25 policies, five functions and 12 relevant
+triggers. `country` is nullable with no default. All new constraints/indexes and the
+sync function/trigger match the migration.
+
+All six fixture IDs and statuses survived. Backfill created six canonical and three
+secondary references with zero duplicate-pair, canonical, URL or missing-reference
+violations. Trust/country fields have the intended honest defaults. Fourteen invalid
+constraint cases and a canonical/source synchronization behavior test passed inside
+transactions that rolled back; cleanup remained six opportunities, nine references
+and no deadline-history rows.
+
+Structural RLS/policy/grant verification passed. Anonymous and authenticated roles
+without a user session each saw only three references belonging to published
+opportunities. Actual User-A/User-B/moderator isolation and persistence remain
+explicitly unverified until the next staging-application milestone.
+
+## 5. Migration 0013 result and remaining gate
 
 [Migration 0013](../supabase/migrations/0013_m31_data_trust.sql) is unchanged with
 SHA-256
 `c67cd11086aecd563f04e86c9a665a476749c5877255e640efb61598d6e52306`.
 
-Production and staging audits establish compatible types/dependencies, no named
-object collisions, no enum-backed 0006 object, no orphaned provenance/Auth FKs, safe
-new defaults, valid URL/backfill inputs, and compatible RLS/grant implications.
-The six staging rows model six canonical and three secondary reference inserts.
+Result: **0013 APPLIED SUCCESSFULLY TO STAGING** and
+**M31 DATABASE MIGRATION VERIFIED ON STAGING**.
 
-No Supabase `db push --dry-run` was executed. Both databases lack migration history,
-and the official CLI contract says the first push creates it. The fail-closed rule
-therefore forbids using push as a preview or fabricating/repairing history. No
-password-bearing DB URL was put in process arguments and no execute-and-rollback
-simulation was used. The strongest safe preview was the exact file hash, normalized
-catalog comparison, complete named-object/type/dependency review, and production plus
-staging row-level constraint/backfill modeling.
+The direct SQL execution did not create the `supabase_migrations` schema or migration
+history table. Staging therefore has the 0013 schema but no normalized 0001-0013
+repository/remote history. Do not use broad `db push`, replay 0001-0012 or run
+`migration repair`; history normalization is a separately justified and authorized
+future infrastructure milestone.
 
-The next milestone may apply exactly the single unchanged 0013 SQL file to the
-hard-guarded staging project. It must not run the whole migration directory or replay
-0005-0009. After application, verify row/ID preservation, trust columns/defaults,
-constraints/indexes, reference backfill, RLS/grants, two-user isolation, moderator
-persistence, and application round trips. Stop before production.
+The focused M31 suite passed 17/17. The full project suite, TypeScript, ESLint, 29
+permanent boundary checks, post-gate planner and Next.js production build passed.
+No application feature flag was enabled and nothing was deployed. Production stayed
+read-only and its homepage returned HTTP 200 after staging verification.
+
+The next milestone is isolated staging-application activation and live security
+verification: enable M31 only in staging, deploy the exact verified commit, then test
+real User-A/User-B/moderator persistence and RLS boundaries. Stop before production.
 
 See [M31_STAGING_RUNBOOK.md](M31_STAGING_RUNBOOK.md) for the reusable guard and exact
 verification state.
@@ -184,7 +203,7 @@ Recent milestone anchors:
 
 ## 7. Deferred roadmap
 
-Do not begin these during the 0013 staging-application milestone:
+Do not begin these during the staging activation/live-security milestone:
 
 1. Close M31 through staging verification and a separate production decision.
 2. Clean the ambiguous/noisy corpus without manufacturing evidence.
@@ -209,6 +228,6 @@ live and unchanged. Corpus cleanup and AI remain NO-GO.
 Implementation + verification + repository hygiene + online verification where
 relevant + documentation + clean Git state = milestone closure.
 
-For the next session, the one safest action is: apply the unchanged migration 0013
-file to the freshly revalidated, hard-guarded staging project and stop for post-
-migration verification.
+For the next session, the one safest action is: enable M31 only in the isolated
+staging application environment, deploy the exact verified commit to staging, and
+run live authenticated User-A/User-B/moderator persistence and RLS regression tests.

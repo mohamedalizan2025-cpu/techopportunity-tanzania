@@ -1,16 +1,16 @@
-# M31 pre-migration staging baseline
+# M31 staging database migration verification
 
 Updated: 2026-09-09. Status:
 
-**STAGING PRE-M31 BASELINE ESTABLISHED**
+**M31 DATABASE MIGRATION VERIFIED ON STAGING**
 
-**READY TO APPLY 0013 TO STAGING**
+**0013 APPLIED SUCCESSFULLY TO STAGING**
 
-**0013 NOT APPLIED**
+**M31 FEATURE FLAG NOT ENABLED**
 
-This runbook governs the next database milestone. It does not authorize a
-production migration, feature-flag activation, corpus work, discovery execution,
-or AI work.
+This runbook records the completed staging database migration and governs the next
+isolated staging-application verification milestone. It does not authorize a
+production migration, corpus work, discovery execution, or AI work.
 
 ## Immutable environment boundary
 
@@ -163,7 +163,7 @@ historical migrations 0005-0009.
    exact production privilege sets. Effective table and column grants then matched.
 6. A separately guarded transaction loaded only synthetic fixtures.
 
-Current staging state:
+Immediately before migration 0013, staging had:
 
 - 10 public tables, all 10 with RLS; 49 constraints; 33 indexes; 23 public
   policies; four public functions; six public triggers plus the custom Auth trigger.
@@ -205,58 +205,133 @@ Intentional differences are:
 - environment-specific managed project identities, settings, and secrets are not
   cloned.
 
-## Migration 0013 compatibility and preview
+## Migration 0013 execution
 
 Migration file: [0013_m31_data_trust.sql](../supabase/migrations/0013_m31_data_trust.sql)
 
 SHA-256:
 `c67cd11086aecd563f04e86c9a665a476749c5877255e640efb61598d6e52306`
 
-Static review and both data audits confirm:
+Immediately before execution, the hard guard reconfirmed the exact staging ref,
+production exclusion, 10-table/27-column pre-M31 catalog, six fixture IDs, zero M31
+columns, absent reference table/enum, absent migration history, and all protected
+snapshot hashes. The existing protected pre-0013 schema and fixture dumps exactly
+represented that live state and were reused. The acceptance marker was recorded at
+2026-09-09 11:15:40 UTC.
 
-- all required pre-M31 columns and dependencies have compatible types;
-- no named constraint, index, policy, function, trigger, table, or enum collision
-  exists;
-- the historical 0006 enum/table objects are absent;
-- the new defaults satisfy every new trust/evidence check for existing production
-  and staging rows;
-- canonical and secondary reference inputs meet length and FK requirements;
-- cross-opportunity duplicate URLs do not violate the per-opportunity arbiter;
-- source/submission orphans are zero;
-- RLS will remain enabled, public reference reads remain limited to published
-  opportunities, staff management continues through `is_staff()`, and the explicit
-  reference-table revoke/grant sequence avoids inherited-default drift;
-- staging's six rows model six canonical reference inserts and three distinct
-  secondary reference inserts. One equal source URL is intentionally skipped.
+The migration contains only transaction-compatible PostgreSQL DDL/DML. It has no
+concurrent index, database/system command, vacuum, or other transaction-prohibited
+operation. PostgreSQL 17.11 `psql` executed exactly that one unchanged file through
+the hard-bound staging connection with `ON_ERROR_STOP=1`, `--single-transaction`,
+no interactive fallback, and a read-only repository mount. Migrations 0001-0012
+were not executed.
 
-Supabase CLI 2.117.0 exposes `db push --dry-run`, but the official CLI contract also
-states that the first `db push` creates `supabase_migrations.schema_migrations`.
-Because both audited databases lack that table, the runbook's fail-closed rule
-forbids using `db push` merely as a preview: it cannot prove only 0013 is pending
-without initializing or repairing history. A credential-bearing `--db-url` was
-also not placed in process arguments. No execute-and-rollback simulation was used.
-The strongest safe preview here is the unchanged-file hash, exact normalized catalog
-comparison, named-object audit, dependency/type review, and row-level backfill/
-constraint modeling above. See the official
-[Supabase CLI reference](https://supabase.com/docs/reference/cli/su).
+`DROP TRIGGER IF EXISTS` emitted the expected notice that the pre-M31 trigger did
+not exist. PowerShell surfaced that stderr notice before the wrapper could retain
+the native exit status. No rerun was attempted. The immediate authoritative
+read-only probe established the complete committed post-state: all 10 columns, the
+reference table and all rows, function and trigger existed together. A partial
+commit was impossible under the single transaction. Protected evidence records the
+notice and the authoritative result without credentials.
 
-**READY TO APPLY 0013 TO STAGING** means the next milestone may execute exactly the
-unchanged 0013 SQL against the guarded staging connection using failure-stop and
-transactional handling appropriate to that file. It does not authorize older
-migrations, migration-history fabrication, or production execution.
+The authoritative committed-state probe completed at 2026-09-09 11:20:34 UTC.
 
-## Next staging milestone
+Result: **0013 APPLIED SUCCESSFULLY TO STAGING**.
 
-The next operator must perform exactly one action: apply the unchanged
-`0013_m31_data_trust.sql` file to the hard-guarded staging project.
+## Post-migration schema and backfill
 
-Immediately before execution, recheck the staging ref, production exclusion,
-connection inputs, current 10-table pre-M31 state, zero M31 objects, six fixture IDs,
-and the migration SHA-256 above. Do not replay 0005-0009 and do not use the whole
-migration directory. After the single migration commits, stop and verify row/ID
-preservation, columns/defaults/nullability, constraints/indexes, reference backfill,
-RLS/grants, A-versus-B isolation with staging-only identities, moderator behavior,
-and application trust-field round trips before any production decision.
+Staging now has 11 public tables, 66 public constraints, 38 indexes, 25 public
+policies, five public functions, and 12 non-internal public/Auth/Storage triggers.
+All migration-added constraints and indexes are validated, valid, and ready.
 
-Production remains read-only. `M31_TRUST_SCHEMA_ENABLED` remains unactivated for
-this rollout. Corpus cleanup and AI remain out of scope.
+`opportunities` has 37 columns. The 10 additions match the migration exactly:
+
+- non-null `relevance_decision` defaulting to `unreviewed` and nullable
+  `relevance_evidence`;
+- non-null `eligibility` defaulting to `unknown` and nullable
+  `eligibility_evidence`;
+- nullable `qualification_rule_version`;
+- non-null `country_verification` defaulting to `unknown` and nullable
+  `country_evidence`;
+- nullable `last_verified_at`, `decided_by`, and `decided_at`, with the Auth FK and
+  paired attribution check.
+
+`country` is now nullable and has no default. All nine M31 opportunity checks match
+the file and are validated. The M31 trust listing index matches its expected
+four-column definition.
+
+`opportunity_references` has the expected eight columns, primary key, opportunity
+and Auth foreign keys, URL/source-type/label checks, `(opportunity_id, url)` unique
+constraint, one-canonical-per-opportunity partial unique index, and URL index. RLS
+is enabled and FORCE RLS is disabled. Its two policies are the published-parent
+public read and `is_staff()` management policies. Anonymous users have SELECT only;
+authenticated users have SELECT/INSERT/UPDATE/DELETE subject to RLS; service and
+owner grants remain platform-appropriate.
+
+The synchronization function is SECURITY DEFINER with `search_path=public`; its
+body and the AFTER INSERT/URL-update trigger match 0013. Supabase default ACLs leave
+explicit function EXECUTE grants for platform roles after PUBLIC is revoked, but a
+trigger-returning function cannot be invoked as an ordinary SQL function. Existing
+23 policies and their earlier access boundaries were not modified.
+
+All six opportunity IDs and their 2 published/3 pending/1 rejected statuses were
+preserved. Backfill created exactly nine references: six canonical and three
+secondary across all six opportunities. Types are two manual, four RSS, and three
+website. The equal canonical/source URL correctly produced no secondary row; null
+source URLs produced none; the shared URL across two distinct opportunities remains
+valid. There are zero duplicate pairs, zero missing/multiple canonicals, zero
+missing distinct source references, and zero invalid URLs.
+
+All six rows have `unreviewed` relevance, `unknown` eligibility, `unknown` country
+verification, null new evidence/attribution/version/verification timestamps, and
+their original country/deadline evidence. Both known deadlines retained evidence.
+
+## Constraint and trigger tests
+
+Fourteen controlled invalid cases were rejected: invalid relevance and eligibility
+states; missing eligibility/relevance evidence; blank relevance evidence; invalid
+country state and evidence relationship; malformed attribution; qualified deadline
+without evidence; empty reference URL; duplicate reference pair; second canonical;
+invalid source type; and overlong label. The enclosing transaction was rolled back.
+Cleanup remained six opportunities, nine references, and zero deadline-history rows.
+
+A separate rollback-only behavior test inserted an opportunity with distinct
+canonical/source URLs. The trigger created one canonical and one secondary RSS
+reference. Updating its canonical URL retained exactly one current canonical and
+the prior/source references as non-canonical. Rollback cleanup restored the accepted
+six-opportunity/nine-reference state.
+
+## Security verification boundary
+
+Structural RLS, policies, grants, function security/search path, and triggers are
+verified. Anonymous and authenticated-without-session role probes each saw exactly
+the three references belonging to the two published opportunities. This is not a
+claim of complete authenticated isolation. Real staging User-A/User-B/moderator
+sessions, write persistence, cross-user denial, and staff behavior remain the next
+milestone.
+
+## Application regression verification
+
+The focused M31 suite passed 17/17, including the Tanzania country-only regression.
+The full project suite passed. TypeScript, ESLint, 29 permanent boundary checks, the
+post-gate verification planner, and the Next.js 16.3.2 production build all passed.
+The build's optional category/organization fetches were unavailable in the local
+sandbox and failed closed; compilation, type checking, page generation, and route
+output completed successfully. No test mutated production.
+
+## Migration-history and next milestone
+
+Direct SQL execution did not create the `supabase_migrations` schema or
+`schema_migrations` table. Therefore staging now has the 0013 schema while no
+repository/remote migration chain is registered. Do not use broad `db push`, replay
+0001-0012, or run `migration repair` until a separate migration-history normalization
+milestone is justified and explicitly authorized.
+
+Production remained read-only and its homepage returned HTTP 200 after staging
+verification. `M31_TRUST_SCHEMA_ENABLED` remains disabled; no staging application
+was deployed.
+
+The one next action is to enable M31 only in the isolated staging application
+environment, deploy the exact verified commit to staging, and run live authenticated
+User-A/User-B/moderator persistence and RLS regression tests. Production migration,
+corpus cleanup, discovery changes, domains, profiles/CV, and AI remain out of scope.
