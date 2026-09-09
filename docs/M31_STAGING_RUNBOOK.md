@@ -4,6 +4,13 @@ Updated: 2026-09-09. Status: **STAGING BASELINE NOT ESTABLISHED - OWNER ACTION R
 This runbook supplements [NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md).
 M31 remains OPEN; AI remains NO-GO. Migration 0013 was NOT APPLIED.
 
+Resumed-session stop condition: the required host directory
+`C:\Users\hp\.tech-opportunity-secrets` did not exist. The production credential
+check failed closed before the staging file was read; the absent parent directory
+then established that neither required file was present. No connection or SQL was
+attempted. The refs in this document remain immutable allow/deny controls, not proof
+of a credential file or live database connection.
+
 ## Immutable environment boundary
 
 | Environment | Project reference | Authority for this task |
@@ -25,23 +32,27 @@ worker dispatches, account creation or backups occurred in this session.
 
 ## Verified repository and tools
 
-- Starting branch: `main`; HEAD and locally recorded origin/main:
-  `8c80a7b9aed037156fc9484c714950578db2f6c2`.
-- Starting commit: `Document current Tech Opportunity development state`.
-- Working tree initially clean. Read-only `git ls-remote --heads origin main`
-  independently returned the same SHA after network escalation succeeded.
+- Resumed-session starting branch: `main`; HEAD, local origin/main and network-
+  reported remote main: `af6a51b8948d0b42add91d0841f1da01933ac35f`.
+- Starting commit: `Document M31 staging baseline`; ahead/behind `0/0`; no staged,
+  unstaged or untracked files.
 - No applicable AGENTS.md found in the repository or checked ancestor paths.
-- Supabase CLI, psql and pg_dump were not available on PATH; no local Supabase
-  binary or cached supabase.exe was found in the inspected npm locations.
-  Consequently a Supabase CLI version could not be reported.
-- Docker client: 29.7.2. Server unavailable on the default Docker engine pipe;
-  sandbox also denied reading Docker config. No server was started.
+- Supabase CLI `2.117.0` was validated through one-shot `npx`, without adding an
+  application dependency or changing package manifests.
+- Docker Desktop was already installed and its engine was started. Client/server:
+  `29.7.2`. Official `postgres:17-bookworm` was pulled and pinned locally at digest
+  `sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0`.
+  It provides psql, pg_dump and pg_restore `17.11`.
+- The CLI validation created untracked `supabase/.temp/cli-latest` (8 bytes). Its
+  exact resolved path was checked, no repository reference existed, and it was
+  removed. The final conservative audit found no other safely removable item.
 - No `supabase/config.toml`, `supabase/.temp/project-ref`, `.supabase/project-ref`
   or `.vercel/project.json` found. No link state was changed.
 - `.env.local` contains the production API URL and application API credentials.
   Only names/presence and project ref were inspected/reported. No database password,
   database connection configuration or management token was available in inspected
-  task environment configuration; the standard Supabase token file was absent.
+  task environment configuration; the required external secrets directory and both
+  owner-specified database credential files were absent.
 - Existing `scripts/m31` contains remediation/readiness tools, not a backup or
   staging baseline tool. They were not run. No previous authoritative staging
   runbook existed. Historical temporary preparation files are not certified evidence.
@@ -67,6 +78,11 @@ Migration inventory (files are design/history, NOT proof of live application):
 | 0013 | m31_data_trust |
 
 Seed inventory: `supabase/seeds/0002_pilot_sources.sql`; not executed.
+
+The direct database hostnames for both immutable refs resolved from this machine to
+one AAAA record and no A record. Use the Dashboard-provided Session Pooler connection
+for each project unless direct IPv6 connectivity is independently verified. Verify
+the pooler host, port and username ref suffix; never infer or guess its region.
 
 ## Production read-only evidence: 2026-09-09 05:46 UTC
 
@@ -240,8 +256,11 @@ Created: **no schema, data, roles, migration-history or service backup**.
 Verified: **no backup hashes, restore test or recoverability evidence**.
 Available: the partial audit above and a proposed procedure below, not recovery.
 
-Owner action: securely provide existing database connection access for production
-read-only catalog inspection/logical export and, separately, staging administration.
+Owner action: create `C:\Users\hp\.tech-opportunity-secrets`, then create the exact
+files `production-db.env` and `staging-db.env` there with the existing database
+passwords and correct environment-specific `TECHOPP_PROJECT_REF` values. This is
+securely providing existing production read-only catalog/export access and separate
+staging administration access, not changing either project.
 Use the respective project's Dashboard Connect panel to identify the exact host,
 port, user and reference. Supply secrets through protected local/session configuration,
 never chat, Git, command transcripts or shell history. An API service-role key is
@@ -250,10 +269,8 @@ production settings to obtain access under this task's read-only authorization.
 Alternatively, the owner can perform the production exports/audit on a trusted
 machine and make the protected artifacts available locally for inspection.
 
-After access exists, prepare pinned Supabase CLI/Docker/PostgreSQL tooling in an
-isolated operations directory; record their actual versions. This tooling setup is
-agent work, not an owner approval requirement. Do not install project dependencies
-or initialize/link this application's Supabase directory for convenience.
+The pinned tooling recorded above is ready. Do not install project dependencies or
+initialize/link this application's Supabase directory for convenience.
 
 Supabase recommends CLI exports and off-site storage for Free-tier projects; Storage
 object bytes are not included in database backups. See the official
@@ -262,7 +279,9 @@ object bytes are not included in database backups. See the official
 Proposed export sequence, NOT executed:
 
 1. Create restricted, encrypted durable backup storage OUTSIDE the repository and
-   unencrypted cloud-sync folders. Do not use temporary files as durable recovery.
+   unencrypted cloud-sync folders. Proposed local convention:
+   `C:\Users\hp\.tech-opportunity-backups\<UTC timestamp>\`. Do not use temporary
+   files as durable recovery and do not place credentials in artifact names/manifests.
 2. Validate the production endpoint explicitly for the read-only export path. Run
    only dump operations; no production restore/link/migration/reset/repair.
 3. Use the installed CLI's reviewed `db dump` workflow with explicit `--db-url`
@@ -305,8 +324,8 @@ Option B requires an equally complete catalog comparison plus compensating DDL;
 there is no verified reconstruction here. No supported alternative was found.
 
 Do not execute the baseline restore until the production schema/conflict audits,
-recovery gate and staging target proof are satisfied. The current owner credential
-block stops this session before setup even though the procedural strategy is ready.
+recovery gate and staging target proof are satisfied. The missing credential files
+stop this session before database access even though tooling and procedure are ready.
 No production-equivalent DDL or fixture SQL has been fabricated from API metadata.
 
 Prepare a reviewed staging derivative of the schema export, separate from immutable
@@ -384,6 +403,14 @@ separate explicit read-only path; do not weaken this guard to accommodate them.
 No staging baseline exists, no comparison has run, and no migration preview has run.
 The API findings cannot prove production equivalence or migration readiness.
 
+Static review reconfirmed that only `0013_m31_data_trust.sql` is the intended next
+file and migrations 0005-0009 must not be replayed. It also reconfirmed the unresolved
+0006 hazard: an existing enum-backed `opportunity_references.source_type` would not
+be reconciled by 0013's `create table if not exists`, while its trigger/backfill insert
+text expressions. Same-named constraints, indexes, policies, function and trigger
+definitions also require catalog equivalence checks. These are review gates, not
+claims that production or staging actually contains the conflicting objects.
+
 After guarded restore and fixture load, compare normalized source/target catalogs
 for all relevant tables/columns/defaults/nullability, enums, validated constraints,
 index definitions/validity, policies/RLS, grants/default ACLs, function bodies/owners,
@@ -423,22 +450,19 @@ no domain, hosting, flag, Auth or worker configuration changed in this task.
 
 ## Exact next action and close
 
-**Owner securely provisions existing production database access for read-only
-catalog/export work and separate staging database access through protected local
-configuration.** No secrets in chat; no production password reset under this task.
+**Owner creates the missing protected secrets directory and the two exact credential
+files described above.** No secrets in chat; no database password reset under this task.
 Then resume the catalog/recovery gates above, not migration 0013.
 
 This session closes only the blocked-baseline documentation checkpoint, not M31 or
-the staging-baseline milestone. Documentation-only verification: inspect diff and
-links, verify secret/dump/.env hygiene and run `git diff --check`. No application,
-migration, dependency, workflow or runtime configuration changes are authorized by
-this close. Diff review, local documentation links and a check against actual local
-secret values passed; migration files remain unchanged. `git diff --check` passed.
-`npm.cmd run verify:plan -- --base 8c80a7b9aed037156fc9484c714950578db2f6c2`
+the staging-baseline milestone. No application, migration, dependency, workflow or
+runtime configuration file changed. The only cleanup was removal of the CLI-generated
+untracked marker described above. Final diff inspection found exactly these two
+documentation files. All relative links resolved; tracked-file and diff scans found
+no database password, credential-bearing PostgreSQL URI or dump/backup artifact;
+tracked `.env.example` remains a non-secret placeholder template. `git diff --check`
+passed. `npm.cmd run verify:plan -- --base af6a51b8948d0b42add91d0841f1da01933ac35f`
 classified exactly the two documentation files, selected no change-triggered gates
-and required no production evidence. Full tests/typecheck/lint/build were not run
-for this documentation-only close under the authoritative handoff exception; the
-planner's standard gates remain planned, not passed. Its lack of path-based owner
-actions does not clear the operational database-credential/recovery blocker above.
-The documentation commit is identifiable by `Document M31 staging baseline`;
-obtain its SHA and remote relationship from Git rather than embedding a self-reference.
+and required no production evidence. Full tests, typecheck, lint and build were not
+run for this documentation-only close because neither the planner nor final diff
+selected them. Migration 0013 remains unchanged and NOT APPLIED.

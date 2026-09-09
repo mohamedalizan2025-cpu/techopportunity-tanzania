@@ -10,14 +10,15 @@ Earlier contents of this handoff remain available in Git history.
 
 - Product name: **Tech Opportunity**. Historical repository/package/resource names
   such as TechOpportunity Tanzania and events finder-copilot remain unchanged.
-- Branch at staging-baseline-task start: `main`.
-- Verified starting HEAD and origin/main:
-  `8c80a7b9aed037156fc9484c714950578db2f6c2` -
-  `Document current Tech Opportunity development state`; working tree clean.
-  A network-enabled read-only `git ls-remote` independently confirmed remote main.
-- This session records a BLOCKED staging-baseline attempt, with partial production
-  read-only evidence. See [M31 staging runbook](M31_STAGING_RUNBOOK.md). No baseline,
-  backup, full catalog audit or migration execution is claimed.
+- Branch at the resumed staging-preparation start: `main`.
+- Verified starting HEAD, local origin/main and network-reported remote main:
+  `af6a51b8948d0b42add91d0841f1da01933ac35f` -
+  `Document M31 staging baseline`; ahead/behind `0/0`, working tree clean.
+- This resumed session remains BLOCKED before database access. The required host
+  directory `C:\Users\hp\.tech-opportunity-secrets` was absent, so neither protected
+  credential file nor its project reference could be validated. No database connection
+  was built and no production or staging SQL was executed. See the
+  [M31 staging runbook](M31_STAGING_RUNBOOK.md).
 - Latest completed code milestone: `4910d14b337601fe29bb1554b41cff38ec455baf` -
   `Polish Tech Opportunity UI and responsive UX`.
 - Verified before the previous documentation close: HEAD and locally recorded origin/main
@@ -26,8 +27,9 @@ Earlier contents of this handoff remain available in Git history.
   obtain the actual latest documentation HEAD and remote relationship from Git.
   Do not reset valid documentation to return to the code SHA.
 - No staging project was created, no Supabase/environment configuration changed,
-  and no migration, database mutation, cleanup or deployment was executed during
-  staging preparation or this closing task.
+  and no migration, database mutation or deployment was executed. Tooling setup
+  created and then removed its sole untracked `supabase/.temp/cli-latest` marker;
+  no tracked application file was removed.
 - The UI commit was pushed. A GitHub deployment record labeled Production for that
   SHA was observed during preparation. This is not a new runtime/security attestation.
 
@@ -160,8 +162,12 @@ The owner's immutable identities supersede older ambiguous project names:
   newly created isolated Free project. This session did not create or configure it.
 - Both projects are Free per owner. No managed backup availability is assumed.
 
-The sole actual local application environment points to PRODUCTION. No staging
-credential/configuration or CLI link was found, and no linked state was changed.
+The owner-specified protected credential directory was absent at its exact host path
+on 2026-09-09. Consequently `production-db.env` and `staging-db.env` were unavailable,
+and their `TECHOPP_PROJECT_REF` and password-presence gates could not run. The owner-
+supplied immutable refs below remain the control values, but they are not a substitute
+for credential-file and live-connection identity proof. The sole actual local
+application environment points to PRODUCTION. No CLI link was found or created.
 Encountering production in a proposed staging operation is an immediate stop.
 Owner-supplied staging identity is authoritative but live connection identity,
 emptiness and schema have not been independently verified. Production hosting and
@@ -185,12 +191,16 @@ triggers, Auth integration and migration history remain unverified. Missing trus
 columns prevented complete evidence/attribution conflict checks. No complete green
 compatibility result or actual code blocker was established.
 
-Recovery is OWNER-BLOCKED: no database connection credentials or management token
-were available in inspected task configuration; application API keys are insufficient
-for a PostgreSQL logical backup. Supabase CLI/psql/pg_dump were unavailable on PATH;
-Docker 29.7.2 client exists but its default engine is unavailable. No backup was
-created or verified; no restore rehearsal occurred. Do not reset production's
-password or change its settings to obtain access in this read-only task.
+Recovery is OWNER-BLOCKED by the absent protected files. Database tooling is now
+ready without application dependency changes: Supabase CLI `2.117.0` works through
+one-shot `npx`; Docker client/server `29.7.2` is running; and the official
+`postgres:17-bookworm` image is pinned locally at digest
+`sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0`,
+providing PostgreSQL `17.11` psql/pg_dump/pg_restore. Both direct database DNS names
+published one AAAA record and no A record from this machine, so the next session
+should prefer each Dashboard-provided Session Pooler endpoint unless verified IPv6
+connectivity makes direct mode usable. Never guess a pooler region or hostname.
+No backup was created or verified; no restore rehearsal occurred.
 
 Selected provisional baseline method: reviewed actual production schema export plus
 synthetic staging fixtures (Option A), not migration-history replay. No production
@@ -199,8 +209,11 @@ staging identities were created. Full catalog/conflict and recovery gates must
 precede baseline restore. The runbook preserves the reusable staging target guard,
 audit procedure, scope limitations, fixture strategy and verification gates.
 
-No staging backup/restore, full catalog audit, migration, flag activation, deployment,
-A/B sessions, moderator writes or trust-field round trips were completed. Prior
+No new database-level production catalog/conflict counts were obtained because the
+credential gate failed. The 261-row REST observations above remain historical partial
+evidence only. No staging backup/restore, full catalog audit, migration, flag
+activation, deployment, A/B sessions, moderator writes or trust-field round trips
+were completed. Prior
 preparation tests (17 M31, 91 account/saved, 53 deadline/alert) remain historical
 local evidence; they were not repeated for this documentation-only checkpoint.
 
@@ -234,16 +247,17 @@ local evidence; they were not repeated for this documentation-only checkpoint.
 
 ## 7. Exact next owner action and subsequent gated sequence
 
-**Owner securely provisions existing production database access for read-only
-catalog/export work and separate staging database access in protected local
-configuration.** Do not ask the owner to recreate or reidentify the supplied projects.
-Never put passwords, connection secrets, service-role keys or tokens in chat/Git.
+**Owner creates the missing `C:\Users\hp\.tech-opportunity-secrets` directory and
+places `production-db.env` and `staging-db.env` at the exact documented paths, with
+the existing database passwords and corresponding `TECHOPP_PROJECT_REF` values.**
+Do not recreate or reidentify either Supabase project, reset either password, or put
+passwords, connection strings, service-role keys or tokens in chat/Git.
 The owner may instead perform the production audit/exports on a trusted machine
 and supply protected local artifacts. Do not pretend either alternative is complete.
 
-After access exists, the agent can prepare isolated tooling, independently verify
-endpoints, complete read-only production catalog/conflict audits, create and check
-protected external recovery artifacts, and construct a reviewed schema-only staging
+After access exists, the agent can use the prepared isolated tooling, independently
+verify the credential files and endpoints, complete read-only production catalog/
+conflict audits, create and check protected external recovery artifacts, and construct a reviewed schema-only staging
 derivative with synthetic fixtures. Recheck the exact staging target before every
 consequential operation. Demonstrate staging recovery and compare relevant catalogs;
 record intentional fixture/environment differences. Never copy real production Auth
