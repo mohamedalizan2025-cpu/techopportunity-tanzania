@@ -1,515 +1,262 @@
 # M31 pre-migration staging baseline
 
-Updated: 2026-09-09. Status: **STAGING BASELINE NOT ESTABLISHED - OWNER ACTION REQUIRED**.
-This runbook supplements [NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md).
-M31 remains OPEN; AI remains NO-GO. Migration 0013 was NOT APPLIED.
+Updated: 2026-09-09. Status:
 
-Current stop condition: credential and connection identity now pass, but the host
-security review requires separate explicit owner approval before sensitive production
-security metadata or logical backup contents may be disclosed/persisted. The raw
-catalog export and detailed policy/grant/function/trigger audit were rejected before
-execution. No recovery artifact exists, so no staging mutation is allowed.
+**STAGING PRE-M31 BASELINE ESTABLISHED**
+
+**READY TO APPLY 0013 TO STAGING**
+
+**0013 NOT APPLIED**
+
+This runbook governs the next database milestone. It does not authorize a
+production migration, feature-flag activation, corpus work, discovery execution,
+or AI work.
 
 ## Immutable environment boundary
 
-| Environment | Project reference | Authority for this task |
-|---|---|---|
-| PRODUCTION | `jltuufukcwztugvojwjd` | Read-only inspection and non-mutating logical export only |
-| STAGING - Tech Opportunity Staging | `pumzofcwfjqswkiwfqty` | Baseline setup only after all gates succeed |
-
-**PRODUCTION MUST NEVER RECEIVE STAGING COMMANDS.** Never migrate, reset, repair
-migration history, restore, seed, change Auth/RLS/settings, or run workers against
-production during this task. Do not replay migrations 0005-0009. Do not inherit
-`.env.local` for staging: its project is PRODUCTION. Encountering production in a
-staging command, environment, connection, or link is an immediate stop condition.
-The explicitly targeted production read-only audit/export is a separate operation.
-
-Both Free-tier identities and live credentials were independently verified through
-strict file parsing and successful Supavisor tenant routing. Staging is live, isolated
-and empty: zero public tables, zero Auth users and no migration history. No remote
-mutations, links, deployments, Auth changes, fixture loads, worker dispatches, account
-creation or backups occurred in this session.
-
-## Verified repository and tools
-
-- Resumed-session starting branch: `main`; HEAD, local origin/main and network-
-  reported remote main: `362c1d466776254bdc8da417009f6f3232213e68`.
-- Starting commit: `Establish M31 staging recovery baseline`; ahead/behind `0/0`; no staged,
-  unstaged or untracked files.
-- No applicable AGENTS.md found in the repository or checked ancestor paths.
-- Supabase CLI `2.117.0` was validated through one-shot `npx`, without adding an
-  application dependency or changing package manifests.
-- Docker Desktop was already installed and its engine was started. Client/server:
-  `29.7.2`. Official `postgres:17-bookworm` was pulled and pinned locally at digest
-  `sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0`.
-  It provides psql, pg_dump and pg_restore `17.11`.
-- The CLI validation created untracked `supabase/.temp/cli-latest` (8 bytes). Its
-  exact resolved path was checked, no repository reference existed, and it was
-  removed. The final conservative audit found no other safely removable item.
-- No `supabase/config.toml`, `supabase/.temp/project-ref`, `.supabase/project-ref`
-  or `.vercel/project.json` found. No link state was changed.
-- `.env.local` contains the production API URL and application API credentials.
-  Only names/presence and project ref were inspected/reported. In the prior session,
-  no database password, connection configuration or management token was available;
-  the required external secrets directory and both credential files were then absent.
-- The subsequent owner-supplied credential files passed strict identity, non-empty
-  password, ambiguity and ACL checks. Their values remain outside Git and were not
-  printed. No inherited PG/DATABASE/SUPABASE variable existed.
-- Existing `scripts/m31` contains remediation/readiness tools, not a backup or
-  staging baseline tool. They were not run. No previous authoritative staging
-  runbook existed. Historical temporary preparation files are not certified evidence.
-- Tracked `.env.example` is a pre-existing placeholder template; no actual .env
-  credentials are tracked. No repository backup location is defined by policy.
-
-Migration inventory (files are design/history, NOT proof of live application):
-
-| Version | File suffix |
-|---|---|
-| 0001 | initial_schema |
-| 0002 | discovery_pipeline |
-| 0003 | enrichment_audit |
-| 0004 | admissions_category |
-| 0005 | eligibility_scope |
-| 0006 | opportunity_references |
-| 0007 | lifecycle_evidence |
-| 0008 | country_evidence |
-| 0009 | moderation_attribution |
-| 0010 | jobs_category |
-| 0011 | saved_opportunities |
-| 0012 | deadline_alerts |
-| 0013 | m31_data_trust |
-
-Seed inventory: `supabase/seeds/0002_pilot_sources.sql`; not executed.
-
-The direct database hostnames for both immutable refs resolve to one AAAA record and
-no A record; direct TCP 5432 was unreachable. AWS's current
-[public prefix manifest](https://ip-ranges.amazonaws.com/ip-ranges.json)
-mapped both IPs unambiguously to `eu-central-1`; the supported Session Pooler
-`aws-0-eu-central-1.pooler.supabase.com:5432` accepted TLS authentication for both
-distinct `postgres.<project-ref>` tenants. Both targets report PostgreSQL 17.6,
-database/user `postgres`, and managed Auth. The database-local API URL setting is
-absent and is not identity evidence.
-
-## Live database preflight: 2026-09-09 06:55 UTC
-
-Production has 10 public application tables, all with RLS enabled and FORCE RLS off:
-categories, organizations, profiles, opportunities, opportunity_sources,
-opportunity_enrichments, saved_opportunities, opportunity_deadline_changes,
-user_alert_preferences and deadline_alert_events. Opportunities has 27 columns;
-country is still NOT NULL with default Tanzania. Zero M31 trust columns exist.
-`opportunity_references` and `supabase_migrations.schema_migrations` do not exist.
-Required `auth.uid()`, `public.is_staff()` and `gen_random_uuid()` functions exist.
-Aggregate catalog counts: 49 public constraints, 33 indexes, 23 policies, four public
-functions and 11 non-internal public/Auth/Storage triggers.
-
-Detailed policy bodies, grants, function definitions and trigger definitions remain
-approval-blocked by the host security layer. A proposed raw external catalog export
-and then a hash/semantic-only security query were both rejected before execution.
-Do not describe the full security catalog as audited until explicit approval permits it.
-
-Staging's accepted pre-mutation read-only inventory: zero public tables, zero Auth
-users, no migration history and no opportunities/references. It is empty, not a
-pre-M31 production-equivalent baseline.
-
-## Production read-only evidence: 2026-09-09 05:46 UTC
-
-The audit used GET requests to the exact production HTTPS REST endpoint, checked
-the configured URL and credential project/role locally, rejected redirects, and
-printed only metadata and aggregates. No SQL/RPC function was executed. The API
-credential was used in request headers only, never printed or copied into a script.
-The audit script was temporary and outside the repository. The findings below are
-the retained evidence; future sessions must re-audit rather than rely on that file.
-
-**This is a PARTIAL audit, not an actual PostgreSQL catalog certification.**
-REST/OpenAPI schema-cache metadata does not prove indexes, complete constraints,
-RLS flags/policy bodies, grants, function bodies, triggers or migration history.
-An unexposed object is not proven absent from PostgreSQL.
-
-Exposed tables: opportunities, opportunity_sources, opportunity_enrichments,
-categories, organizations, profiles, saved_opportunities,
-opportunity_deadline_changes, user_alert_preferences and deadline_alert_events.
-`/rpc/is_staff` is advertised; its implementation/privileges were not inspected.
-`opportunity_references` is not exposed in the returned metadata.
-
-All 27 exposed opportunity columns, grouped by reported PostgreSQL format:
-
-| Format | Columns |
-|---|---|
-| uuid | id, organization_id, submitted_by, source_id |
-| smallint | category_id |
-| text | slug, title, description, url, source_url, venue_name, address, city, region, country, image_url, discovery_method, deadline_precision, deadline_timezone, deadline_evidence |
-| timestamp with time zone | deadline, created_at, updated_at, discovered_at |
-| numeric | latitude, longitude |
-| public.opportunity_status | status |
-
-API-required opportunity fields: id, slug, title, description, category_id, url,
-status, country, created_at, updated_at, deadline_precision. Treat this as metadata
-evidence; confirm NOT NULL directly in pg_attribute before constructing baseline DDL.
-Advertised defaults: id `gen_random_uuid()`, status `pending`, country `Tanzania`,
-created_at/updated_at `now()`, deadline_precision `unspecified`. Advertised status
-values: pending, published, rejected, expired.
-
-None of the ten M31-added columns is exposed: relevance_decision,
-relevance_evidence, eligibility, eligibility_evidence, qualification_rule_version,
-country_verification, country_evidence, last_verified_at, decided_by, decided_at.
-
-Source registry metadata includes UUID identity, name/base_url/source_type,
-country/region, active and health/timestamp fields. Profile metadata includes UUID
-identity, display_name, role (default user) and timestamps. Saves expose user and
-opportunity UUIDs. M30 exposes deadline history, private preference and generated
-event columns, including the false preference default and generated event default.
-Auth users, private profiles, saves, preferences and alert records were not read.
-
-## Production conflict evidence and its limits
-
-The 2026-09-09 06:55 UTC database-level repeatable-read census supersedes REST-only
-uncertainty for the following counts. It returned 261 opportunities: 237 pending,
-19 published, five rejected, zero expired; 232 null and 29 known deadlines.
-
-| Check | Count |
-|---|---:|
-| Null canonical URLs | 0 |
-| Canonical URL length outside 1-2000 | 0 |
-| Non-null source URL length outside 1-2000 | 0 |
-| Source URL equal to canonical URL (secondary insert skipped) | 27 |
-| Duplicate URL groups / excess rows | 1 / 1 |
-| Null / blank country | 0 / 0 |
-| Invalid / blank non-null deadline evidence | 0 / 0 |
-| Existing deadline semantic violations | 0 |
-| Source / submitter FK orphans | 0 / 0 |
-| Existing M31 named constraints/index/function/trigger | 0 |
-| Modeled new-default trust/evidence/attribution/deadline conflicts | 0 |
-
-The source-type backfill derives 109 RSS, seven manual and 145 website values, all
-allowed by 0013. The historical 0006 enum risk is not present in production because
-the reference table itself is absent. Existing private-table aggregate counts are
-profiles 3, saves 3, deadline history 0, alert preferences 1 and alert events 1; no
-private row content was selected or persisted.
-
-The audit fetched only ID/URL/provenance/status/country/deadline/evidence fields into
-process memory, computed counts and discarded rows on exit. It did not export
-opportunity content. Returned rows and the API exact count both equaled 261.
-Requests were paginated by ID; this is not a repeatable-read SQL snapshot.
-
-| Check | Observed count |
-|---|---:|
-| Opportunities | 261 |
-| Pending / published / rejected / expired | 237 / 19 / 5 / 0 |
-| Known / null deadlines | 29 / 232 |
-| Non-null country | 261 |
-| Null canonical opportunity URL | 0 |
-| Opportunity URL length outside 1-2000 characters | 0 |
-| Distinct non-null source URL length outside 1-2000 | 0 |
-| Duplicate opportunity URL groups | 1 |
-| Excess rows within duplicate URL groups | 1 |
-| Non-null deadline evidence outside trimmed 1-1000 | 0 |
-
-The duplicate URL is a corpus observation, not by itself an 0013 failure: the
-reference pair is unique by `(opportunity_id, url)`, and canonical uniqueness is
-per opportunity, not global URL. No URL or row identity was retained in this report.
-No row was corrected, merged, quarantined or requeued.
-
-Reference duplicate pairs, multiple canonicals, incompatible existing reference
-types/constraints and attribution foreign keys remain UNKNOWN. Eligibility,
-country/relevance evidence combinations, attribution pairing and qualified-deadline
-checks were NOT evaluated against missing API columns. Missing columns must be
-confirmed in the catalog before applying 0013 default-value reasoning. There is
-no demonstrated current code blocker, and no complete green compatibility result.
-
-### Required catalog audit (not executed)
-
-Use an explicitly production-scoped SQL connection with TLS and a read-only
-repeatable-read transaction, statement timeout and failure-stop behavior. Record
-session/server version and the externally verified project identity; `current_database()`
-alone cannot distinguish Supabase projects (both may be named postgres).
-
-```sql
-begin transaction isolation level repeatable read read only;
-set local statement_timeout = '30s';
-select current_database(), current_user, version();
-select n.nspname, c.relname, c.relkind, c.relrowsecurity, c.relforcerowsecurity,
-       c.relacl, pg_get_userbyid(c.relowner) as owner
-from pg_class c join pg_namespace n on n.oid = c.relnamespace
-where n.nspname in ('public', 'supabase_migrations')
-order by 1, 2;
-select n.nspname, c.relname, a.attname,
-       format_type(a.atttypid, a.atttypmod) as data_type,
-       a.attnotnull, a.attidentity, a.attgenerated,
-       pg_get_expr(d.adbin, d.adrelid) as default_expression
-from pg_attribute a join pg_class c on c.oid = a.attrelid
-join pg_namespace n on n.oid = c.relnamespace
-left join pg_attrdef d on d.adrelid = c.oid and d.adnum = a.attnum
-where n.nspname = 'public' and a.attnum > 0 and not a.attisdropped
-order by c.relname, a.attnum;
-select conrelid::regclass, conname, contype, convalidated,
-       pg_get_constraintdef(oid, true)
-from pg_constraint where connamespace = 'public'::regnamespace
-order by 1, 2;
-select i.indrelid::regclass, i.indexrelid::regclass, i.indisvalid, i.indisready,
-       pg_get_indexdef(i.indexrelid)
-from pg_index i join pg_class c on c.oid = i.indrelid
-where c.relnamespace = 'public'::regnamespace order by 1, 2;
-select * from pg_policies where schemaname in ('public', 'auth', 'storage')
-order by schemaname, tablename, policyname;
-select n.nspname, p.proname, pg_get_function_identity_arguments(p.oid),
-       p.prosecdef, p.proconfig, p.proacl, pg_get_userbyid(p.proowner) as owner,
-       pg_get_functiondef(p.oid)
-from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public' and p.prokind in ('f', 'p') order by 1, 2, 3;
-select t.tgrelid::regclass, t.tgname, t.tgenabled, pg_get_triggerdef(t.oid, true)
-from pg_trigger t join pg_class c on c.oid = t.tgrelid
-join pg_namespace n on n.oid = c.relnamespace
-where not t.tgisinternal and n.nspname in ('public', 'auth', 'storage')
-order by 1, 2;
-select * from information_schema.role_table_grants where table_schema = 'public';
-select * from information_schema.role_column_grants where table_schema = 'public';
-select * from pg_default_acl;
-select nspname, nspacl from pg_namespace
-where nspname in ('public', 'auth', 'storage', 'supabase_migrations');
-select n.nspname, t.typname, e.enumlabel, e.enumsortorder
-from pg_type t join pg_namespace n on n.oid = t.typnamespace
-join pg_enum e on e.enumtypid = t.oid
-where n.nspname = 'public' order by 1, 2, 4;
-select extname, extversion, extnamespace::regnamespace from pg_extension;
-select to_regclass('supabase_migrations.schema_migrations') as migration_history,
-       to_regclass('public.opportunity_references') as references_table,
-       to_regprocedure('auth.uid()') as auth_uid,
-       to_regprocedure('public.is_staff()') as staff_function,
-       to_regprocedure('gen_random_uuid()') as uuid_function;
-rollback;
-```
-
-Keep raw function definitions, trigger arguments and catalog output in restricted
-external audit storage: custom SQL can contain embedded secrets. Review/redact
-before recording evidence in Git. Inspect migration history only if it exists;
-select versions/names without publishing stored SQL indiscriminately. Do not create
-a history table or repair history to make an audit work. Also examine sequence
-definitions/ACLs, views/dependencies, custom schemas, publications and scheduled
-database jobs before deciding restore scope. Function bodies must prove is_staff
-and profile/Auth integration; advertised function names are insufficient.
-
-Within a new read-only snapshot, evaluate each actual 0013 CHECK expression against
-existing columns using `(<expression>) IS FALSE` (PostgreSQL CHECK permits NULL).
-Separately count nullable trust values that violate the intended application
-contract even if SQL would permit them. Check all lengths with `char_length` and
-`trim`, allowed values, paired attribution and auth FK orphans; retain counts only.
-For absent columns, model the exact new defaults without ALTER/UPDATE. Inspect
-existing reference column types, unique `(opportunity_id,url)` conflict arbiter,
-multi-canonical groups, duplicate pairs, URL/label lengths, source_type values,
-FKs, extra NOT NULL columns/defaults and row triggers. Check every same-named
-constraint/index/policy/function for equivalent definition, not merely existence.
-An enum-backed historical 0006 source_type is a stop for compatibility review
-because 0013 inserts text expressions and does not rebuild an existing table.
-
-## Free-tier recovery gate: EXPLICIT APPROVAL BLOCKED
-
-Created: **no schema, data, roles, migration-history or service backup**.
-Verified: **no backup hashes, restore test or recoverability evidence**.
-Available: the partial audit above and a proposed procedure below, not recovery.
-
-Owner action: explicitly approve protected external production logical backups and
-the sensitive catalog/security inspection/persistence required to validate them,
-after acknowledging that database dumps may contain private production records and
-security definitions. The destination remains outside Git under
-`C:\Users\hp\.tech-opportunity-backups\<UTC timestamp>\` with restricted access.
-No credential or dump content belongs in chat or Git.
-
-The pinned tooling recorded above is ready. Do not install project dependencies or
-initialize/link this application's Supabase directory for convenience.
-
-Supabase recommends CLI exports and off-site storage for Free-tier projects; Storage
-object bytes are not included in database backups. See the official
-[database backup scope](https://supabase.com/docs/guides/platform/backups).
-
-Proposed export sequence, NOT executed:
-
-1. Create restricted, encrypted durable backup storage OUTSIDE the repository and
-   unencrypted cloud-sync folders. Proposed local convention:
-   `C:\Users\hp\.tech-opportunity-backups\<UTC timestamp>\`. Do not use temporary
-   files as durable recovery and do not place credentials in artifact names/manifests.
-2. Validate the production endpoint explicitly for the read-only export path. Run
-   only dump operations; no production restore/link/migration/reset/repair.
-3. Use the installed CLI's reviewed `db dump` workflow with explicit `--db-url`
-   supplied securely in memory and `--file` pointing outside Git. Obtain separate
-   schema, `--data-only --use-copy`, and `--role-only` artifacts. Keep credentials
-   out of captured arguments/logs; restrict the process session. Do not print
-   `--dry-run` dump scripts containing resolved connection secrets.
-4. Export existing supabase_migrations schema/data separately if present. Inventory
-   custom auth/storage SQL separately and record actual inclusion/exclusion.
-5. Capture successful exit codes, byte sizes, SHA-256 hashes, source ref, tool/server
-   versions, UTC start/end and scope in a nonsecret manifest. Multiple dumps are
-   not automatically one consistent snapshot; document concurrent worker activity
-   and arrange a supported consistent snapshot if recovery requires it, without
-   changing production workers under this task.
-6. Inspect locally for truncation/errors and dependency completeness. Hashes alone
-   do not establish restoration. For the guarded staging schema derivative, use
-   reviewed psql input with `--single-transaction`, `ON_ERROR_STOP=1` and the exact
-   validated staging connection; never include production data/role dumps. Rehearse
-   the sanitized schema restore on guarded
-   staging and compare catalogs. A full private-data restore is a separate protected
-   recovery drill, not authorized on application staging by this task.
-
-The [official CLI backup/restore procedure](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore)
-uses separate role/schema/data exports and a failure-stopping transactional restore.
-Migration history and custom auth/storage changes require separate attention;
-custom login-role passwords need independent recovery. This task does not assume
-Auth users, encrypted values, provider configuration, Edge Function code/secrets,
-Storage files, Vercel settings or domains are recoverable from those files.
-Inventory actual scope and any encryption dependencies securely before a future
-production rollout. Never transfer production passwords, sessions or root keys to
-staging. A full production recovery procedure remains unverified until rehearsed
-within an explicitly authorized, appropriately protected recovery environment.
-
-## Selected baseline method and sanitization
-
-**Option A is selected provisionally:** derive an application schema baseline from
-the actual production catalog/export, review it, restore to isolated staging, then
-load synthetic fixtures. Historical drift makes replay from 0001 unreliable.
-Option B requires an equally complete catalog comparison plus compensating DDL;
-there is no verified reconstruction here. No supported alternative was found.
-
-Do not execute the baseline restore until the production security-definition audit,
-recovery gate and staging target proof are satisfied. Credential, connection, structural
-catalog, aggregate conflict and staging identity checks now pass; explicit approval
-for sensitive recovery/security artifacts remains the stop.
-No production-equivalent DDL or fixture SQL has been fabricated from API metadata.
-
-Prepare a reviewed staging derivative of the schema export, separate from immutable
-recovery originals. Match columns/types/defaults/constraints/indexes/RLS/policies,
-function definitions/owners/security/search paths, grants/default ACLs and triggers,
-including the production-specific Auth-to-profile trigger. Preserve managed staging
-Auth infrastructure; identify and port only verified custom integration DDL.
-Review database jobs, webhooks, FDWs and function bodies for external effects or
-production endpoints. Keep them inactive or substitute staging endpoints, recording
-each difference. Do not blindly restore production roles or their credentials.
-
-Review target default privileges before restoration: a new project's defaults can
-silently broaden grants. Make necessary staging-only ACL adjustments to achieve
-the audited production privileges and verify effective grants afterward. The
-[CLI reference](https://supabase.com/docs/reference/cli/su) documents dump scope,
-default-privilege considerations and `db push --dry-run` behavior.
-
-Load hand-authored synthetic opportunities/categories/organizations/source entries
-using reserved example domains and staging UUIDs. Sources remain inactive and no
-worker runs. Cover historical timestamps; known/null deadlines; country-only
-location with the legacy default; source_url equal/different/null; manual/RSS/web
-provenance; pending/published/rejected; and the observed shared-URL pair under two
-different opportunity IDs if the audited schema permits it. Do not add M31 evidence
-columns to manufacture a pre-M31 test. Model verified/unknown country states only
-if the actual pre-M31 schema supports them. Keep intentional invalid reference or
-evidence fixtures in a separate disposable test case, not the accepted baseline.
-
-Do not copy production Auth users/passwords/sessions, profiles, submitter identities,
-saves, private alerts/preferences, attribution identities or private opportunity
-content. Production data exports belong only in protected recovery storage and must
-never be loaded wholesale into staging. No production data was copied to staging.
-User A, User B and moderator are future staging-only identities; none was created.
-Add synthetic history/events/saves only when needed with staging-only ownership and
-normal staging mechanisms; do not bypass security/attribution constraints for realism.
-
-## Reusable staging target guard procedure
-
-This is a mandatory operational guard, not an application runtime change. It has
-not been satisfied for a live staging connection in this session.
-
-Before EACH restore, seed, DDL, history operation, worker run or configuration write:
-
-1. Read the immutable allowed target from this runbook: `pumzofcwfjqswkiwfqty`.
-   Independently inspect the staging Dashboard project's Settings/Connect identity
-   (or authenticated management project metadata); confirm the exact same ref and
-   that it differs from `jltuufukcwztugvojwjd`. A remembered CLI link is insufficient.
-2. Inspect the actual connection in memory without printing credentials. A direct
-   database host must be exactly `db.pumzofcwfjqswkiwfqty.supabase.co`; for a session
-   pooler, the verified Dashboard host/port AND user suffix
-   `.pumzofcwfjqswkiwfqty` must match. Reject ambiguous aliases, unexpected URI
-   options/service overrides and any production marker. The app/API URL, if used,
-   must be exactly `https://pumzofcwfjqswkiwfqty.supabase.co`.
-3. In an isolated operations process/directory, inspect explicit CLI arguments,
-   workdir/config/link, environment files and inherited PG*/DATABASE*/SUPABASE*
-   connection settings. Fail closed on production, unknown identity or conflicting
-   targets. Never load this repository's production `.env.local`. A lack of link
-   does not replace connection verification.
-4. Open a TLS-verified read-only connection to that exact endpoint first. Check
-   expected catalog state and server identity details against the independently
-   verified project. Never use a self-created marker table as sole identity proof.
-5. Bind the reviewed operation to those exact validated connection parameters;
-   do not resolve a default link/env again between validation and execution.
-   Record only target ref, action, input SHA-256, UTC and result. Repeat if anything
-   changes. Redact all connection secrets in errors as well as normal output.
-6. Check audit/recovery/compatibility gates separately. Identity proof alone is not
-   permission to execute 0013 or to restore private production records.
-
-For Dashboard SQL operations, recheck the project ref in the current tab URL and
-project settings immediately before Run, and inspect the entire selected SQL.
-Do not use a production SQL tab for staging. Production export tools must have a
-separate explicit read-only path; do not weaken this guard to accommodate them.
-
-## Baseline verification and 0013 compatibility gate
-
-No staging baseline exists, no comparison has run, and no migration preview has run.
-The API findings cannot prove production equivalence or migration readiness.
-
-Static review reconfirmed that only `0013_m31_data_trust.sql` is the intended next
-file and migrations 0005-0009 must not be replayed. It also reconfirmed the unresolved
-0006 hazard: an existing enum-backed `opportunity_references.source_type` would not
-be reconciled by 0013's `create table if not exists`, while its trigger/backfill insert
-text expressions. Same-named constraints, indexes, policies, function and trigger
-definitions also require catalog equivalence checks. These are review gates, not
-claims that production or staging actually contains the conflicting objects.
-
-After guarded restore and fixture load, compare normalized source/target catalogs
-for all relevant tables/columns/defaults/nullability, enums, validated constraints,
-index definitions/validity, policies/RLS, grants/default ACLs, function bodies/owners,
-search paths and triggers. Include provenance/source registry, profiles/Auth,
-saves and M30 history/preferences/events. Record intentional environment/fixture
-differences individually. Preserve staging fixture ID sets/counts and a baseline
-schema/fixture backup with a demonstrated staging-only restore path before 0013.
-
-Review [0013](../supabase/migrations/0013_m31_data_trust.sql) unchanged. Prove its
-opportunities/provenance/country/deadline prerequisites, auth.users/auth.uid(),
-public.is_staff(), UUID generator, conflict arbiter and every existing-object
-definition are compatible. IF NOT EXISTS does not reconcile drift. Review possible
-trigger interactions and row preservation; evidence checks/backfills need actual
-database execution later, not merely a list of filenames.
-
-Only after baseline proof, consider an isolated operations migration directory
-containing exactly the unchanged 0013 file, with no seeds or earlier migration
-files. First inspect existing migration history read-only and the pinned CLI's
-behavior on missing history; stop if preview would initialize metadata. If safe,
-use explicitly staging-targeted `db push --dry-run` to review pending files.
-Never preview with this repository's whole 0001-0013 directory or use --include-all,
-reset or history repair to suppress historical drift. For the handoff's explicit
-SQL procedure, review the single file and catalog prerequisites instead of inventing
-CLI history. A CLI preview does not execute constraints/backfills or prove they pass.
-Do not execute-and-rollback 0013 as a purported read-only dry run in this task.
-
-Current decision: **NOT READY TO APPLY 0013**. Default endpoint for a successful
-future baseline session is baseline plus compatibility evidence, then STOP. Applying
-0013 requires all owner-listed identity/baseline/recovery/compatibility gates and
-unambiguous authority; production migration is a separate future owner decision.
-Any actual code or migration blocker must be reported without fixing it here.
-
-Future staging hosting must explicitly set a staging NEXT_PUBLIC_SITE_URL,
-Supabase Site URL and /auth/callback allowlist; preserve production/staging Vercel
-variable and canonical URL separation. These are continuity requirements only:
-no domain, hosting, flag, Auth or worker configuration changed in this task.
-
-## Exact next action and close
-
-**Owner explicitly approves the protected production backup and sensitive catalog/
-security artifact operation described above.** Then resume the recovery gate, not
-migration 0013.
-
-This session closes only the blocked-baseline documentation checkpoint, not M31 or
-the staging-baseline milestone. No application, migration, dependency, workflow or
-runtime configuration file changed. The only cleanup was removal of the CLI-generated
-untracked marker in the prior tooling session. The current conservative hygiene audit
-found no temporary candidate or other safely removable item: NO SAFE CLEANUP REQUIRED.
-Final diff inspection found exactly these two documentation files. All relative links resolved; tracked-file and diff scans found
-no database password, credential-bearing PostgreSQL URI or dump/backup artifact;
-tracked `.env.example` remains a non-secret placeholder template. `git diff --check`
-passed. `npm.cmd run verify:plan -- --base 362c1d466776254bdc8da417009f6f3232213e68`
-classified exactly the two documentation files, selected no change-triggered gates
-and required no production evidence. Full tests, typecheck, lint and build were not
-run for this documentation-only close because neither the planner nor final diff
-selected them. Migration 0013 remains unchanged and NOT APPLIED.
+- Production, read-only: `jltuufukcwztugvojwjd`
+- Staging, the only remote mutation target: `pumzofcwfjqswkiwfqty`
+- Protected production credentials:
+  `C:\Users\hp\.tech-opportunity-secrets\production-db.env`
+- Protected staging credentials:
+  `C:\Users\hp\.tech-opportunity-secrets\staging-db.env`
+
+Repository `.env.local` is production-only and must never be used for staging.
+Do not print passwords or complete credential-bearing connection strings.
+
+Before every staging restore, migration, seed, history operation, worker run, or
+configuration write, fail closed unless all of these are true:
+
+1. The protected credential file has exactly the expected keys and its project
+   ref equals `pumzofcwfjqswkiwfqty`.
+2. That ref differs from `jltuufukcwztugvojwjd` and every other known production
+   project marker.
+3. The session-pooler username suffix is the staging ref and the reviewed endpoint
+   is the staging endpoint.
+4. No inherited `PG*`, `DATABASE*`, or `SUPABASE*` variable supplies an ambiguous
+   connection target, and repository `.env.local` is not loaded.
+5. A TLS read-only probe succeeds first and the expected staging catalog state is
+   observed.
+6. The exact reviewed input hash is recorded with target ref, UTC time, action,
+   and result, but no credential.
+
+Identity validation does not itself authorize a migration. Bind the following
+operation to the same validated parameters and repeat the guard if anything changes.
+
+## Verified tools and connectivity
+
+- Supabase CLI 2.117.0
+- Docker client/server 29.7.2
+- PostgreSQL client tools 17.11 in `postgres:17-bookworm`
+- Production and staging PostgreSQL server 17.6
+- TLS Session Pooler connectivity through the independently verified
+  `eu-central-1` endpoint
+
+Direct database hosts are IPv6-only and were unreachable from this machine. That
+network limitation does not change project identity or permit fallback to an
+ambiguous target.
+
+## Production read-only audit
+
+The owner explicitly authorized protected local recovery exports and detailed
+security-catalog inspection. Production remained read-only throughout. No DDL,
+DML, migration, Auth change, RLS change, project setting, environment setting,
+deployment, DNS change, or worker operation targeted production.
+
+At the audited snapshot:
+
+- There are 10 public application tables: `categories`, `organizations`,
+  `profiles`, `opportunities`, `opportunity_sources`,
+  `opportunity_enrichments`, `saved_opportunities`,
+  `opportunity_deadline_changes`, `user_alert_preferences`, and
+  `deadline_alert_events`.
+- All 10 have RLS enabled and FORCE RLS disabled.
+- `opportunities` has 27 pre-M31 columns. `country` is NOT NULL with the historical
+  `Tanzania` default. No M31-added trust column exists.
+- `public.opportunity_references` and the historical
+  `public.reference_source_type` enum are absent. This closes the migration `0006`
+  collision concern: migration 0013 will create its intended text-backed table,
+  rather than inheriting an incompatible enum-backed object.
+- There are 49 public constraints, 33 indexes, 23 public policies, four public
+  functions, and 11 non-internal public/Auth/Storage triggers.
+- `auth.uid()`, `public.is_staff()`, and `gen_random_uuid()` exist.
+- `supabase_migrations.schema_migrations` is absent. Do not create or repair it as
+  part of a preview.
+
+### Security definitions
+
+All 23 public policies and their commands, roles, `USING`, and `WITH CHECK`
+expressions were inspected in the protected catalog. They implement world-readable
+categories, organizations and published opportunities; submitter/staff opportunity
+visibility; staff-managed organizations/sources; staff-read enrichment and deadline
+history; and owner-scoped profiles, saves, preferences, and alert events.
+
+The four public function definitions were inspected. `handle_new_user()` inserts
+the matching profile, `is_staff()` checks the calling Auth identity's profile role,
+`record_opportunity_deadline_change()` records relevant changes, and
+`set_updated_at()` maintains timestamps. Security-definer and search-path settings
+match the restored staging definitions. The custom `auth.users` profile trigger,
+six public triggers, and four managed Storage triggers were inspected.
+
+Effective table and column grants were captured for `anon`, `authenticated`,
+`service_role`, and administrative owners. M30 private tables have narrower grants:
+authenticated users receive only the privileges required by their RLS-protected
+operations; anonymous users have none. Raw policy/function/trigger/grant definitions
+remain only in the protected audit directory.
+
+### Production data compatibility census
+
+The read-only snapshot observed 261 opportunities: 237 pending, 19 published,
+five rejected, and zero expired. There were 232 null deadlines and 29 known
+deadlines. Relevant conflict counts were all zero for:
+
+- null/empty/overlong canonical URLs and invalid source URL lengths;
+- blank or overlong non-null deadline evidence and invalid M30 deadline semantics;
+- source and submitter FK orphans;
+- blank/null country under the current pre-M31 contract;
+- same-named M31 columns, constraints, indexes, policies, function, trigger, table,
+  and enum;
+- the exact new default trust/evidence combinations modeled by 0013.
+
+One URL is shared across two distinct opportunities, producing one excess row in
+a global URL grouping. This does not conflict with 0013's per-opportunity
+`(opportunity_id, url)` uniqueness. Twenty-seven rows have `source_url = url` and
+will correctly skip the secondary-reference backfill. Derived canonical reference
+types are 109 RSS, seven manual, and 145 website. No private row values were
+reported or copied to staging.
+
+## Protected recovery gate
+
+**RECOVERY BASELINE ESTABLISHED**
+
+The protected recovery/audit directory is
+`C:\Users\hp\.tech-opportunity-backups\20260909T070944Z\`. It is outside Git with
+ACL inheritance disabled and Full Control limited to the owner, `SYSTEM`, and local
+`Administrators`. Roles, schema, data, custom Auth integration, the absent migration
+history marker, raw catalogs, custom archive lists, staging baseline artifacts,
+checksums, and audit logs are present. See
+[DATABASE_RECOVERY.md](DATABASE_RECOVERY.md) for the exact inventory, validation,
+restore ordering, and exclusions.
+
+Both production custom archives and both staging custom archives parse with
+PostgreSQL 17.11 `pg_restore --list`. The production application schema was
+rehearsed on staging. A full private production-data restore was deliberately not
+performed; staging must remain synthetic.
+
+## Staging baseline method and result
+
+The accepted method is actual reviewed production application schema, not replay of
+historical migrations 0005-0009.
+
+1. The exact staging ref was guarded and the project proved empty: no public
+   tables, no Auth users, and no migration history.
+2. The reviewed production application schema was applied transactionally while
+   preserving staging's managed Auth/Storage/platform internals.
+3. The first attempt included the immutable custom Auth trigger definition and
+   failed because its function name was unqualified after dump search-path reset.
+   The single transaction rolled back completely; staging remained empty.
+4. A staging-only derivative changed only that call to
+   `public.handle_new_user()`. The immutable recovery original was preserved. The
+   guarded retry committed successfully.
+5. Catalog comparison found four M30 private tables had inherited broad new-project
+   default grants. A staging-only transaction revoked those extras and granted the
+   exact production privilege sets. Effective table and column grants then matched.
+6. A separately guarded transaction loaded only synthetic fixtures.
+
+Current staging state:
+
+- 10 public tables, all 10 with RLS; 49 constraints; 33 indexes; 23 public
+  policies; four public functions; six public triggers plus the custom Auth trigger.
+- Zero M31 columns, no `opportunity_references`, no historical reference enum, and
+  no migration-history table.
+- One synthetic category, one synthetic organization, one inactive synthetic
+  source, and six synthetic opportunities.
+- Opportunity statuses: two published, three pending, one rejected.
+- Deadline shapes: one date, one date-time, two unknown, one rolling, one legacy
+  unspecified; both non-null deadlines have evidence.
+- URL shapes: two null source URLs, one source URL equal to canonical, three
+  distinct source URLs, and one duplicate-risk canonical URL shared by two distinct
+  opportunity IDs.
+- Location shapes include Tanzania country-only, foreign country, and no-locality
+  records. Pre-M31 `country` is NOT NULL, so an entirely null country cannot be an
+  accepted baseline fixture; the no-locality legacy case retains the historical
+  Tanzania default shape without treating it as verified evidence.
+- Zero Auth users, profiles, saves, deadline-history rows, alert preferences, and
+  alert events. No staging test identity was needed.
+- The synthetic source is inactive, and no discovery worker was run.
+
+## Production/staging structural equivalence
+
+Normalized protected catalog exports have identical row sets for all columns,
+constraints, indexes, policies, functions, triggers, effective table grants,
+effective column grants, default ACLs, schema ACLs, enums, extensions, views, and
+publications. Public/Auth/Storage table and sequence inventories match.
+
+The only raw relation-row mismatch is ACL array ordering on
+`saved_opportunities`; both sides contain the same three ACL items and effective
+grant rows are exactly equal. This is not a privilege difference.
+
+Intentional differences are:
+
+- production contains real operational/private data; staging contains only six
+  synthetic opportunities and no private identities or user data;
+- staging fixture source is inactive;
+- the staging Auth trigger file has the necessary schema-qualified function call;
+- environment-specific managed project identities, settings, and secrets are not
+  cloned.
+
+## Migration 0013 compatibility and preview
+
+Migration file: [0013_m31_data_trust.sql](../supabase/migrations/0013_m31_data_trust.sql)
+
+SHA-256:
+`c67cd11086aecd563f04e86c9a665a476749c5877255e640efb61598d6e52306`
+
+Static review and both data audits confirm:
+
+- all required pre-M31 columns and dependencies have compatible types;
+- no named constraint, index, policy, function, trigger, table, or enum collision
+  exists;
+- the historical 0006 enum/table objects are absent;
+- the new defaults satisfy every new trust/evidence check for existing production
+  and staging rows;
+- canonical and secondary reference inputs meet length and FK requirements;
+- cross-opportunity duplicate URLs do not violate the per-opportunity arbiter;
+- source/submission orphans are zero;
+- RLS will remain enabled, public reference reads remain limited to published
+  opportunities, staff management continues through `is_staff()`, and the explicit
+  reference-table revoke/grant sequence avoids inherited-default drift;
+- staging's six rows model six canonical reference inserts and three distinct
+  secondary reference inserts. One equal source URL is intentionally skipped.
+
+Supabase CLI 2.117.0 exposes `db push --dry-run`, but the official CLI contract also
+states that the first `db push` creates `supabase_migrations.schema_migrations`.
+Because both audited databases lack that table, the runbook's fail-closed rule
+forbids using `db push` merely as a preview: it cannot prove only 0013 is pending
+without initializing or repairing history. A credential-bearing `--db-url` was
+also not placed in process arguments. No execute-and-rollback simulation was used.
+The strongest safe preview here is the unchanged-file hash, exact normalized catalog
+comparison, named-object audit, dependency/type review, and row-level backfill/
+constraint modeling above. See the official
+[Supabase CLI reference](https://supabase.com/docs/reference/cli/su).
+
+**READY TO APPLY 0013 TO STAGING** means the next milestone may execute exactly the
+unchanged 0013 SQL against the guarded staging connection using failure-stop and
+transactional handling appropriate to that file. It does not authorize older
+migrations, migration-history fabrication, or production execution.
+
+## Next staging milestone
+
+The next operator must perform exactly one action: apply the unchanged
+`0013_m31_data_trust.sql` file to the hard-guarded staging project.
+
+Immediately before execution, recheck the staging ref, production exclusion,
+connection inputs, current 10-table pre-M31 state, zero M31 objects, six fixture IDs,
+and the migration SHA-256 above. Do not replay 0005-0009 and do not use the whole
+migration directory. After the single migration commits, stop and verify row/ID
+preservation, columns/defaults/nullability, constraints/indexes, reference backfill,
+RLS/grants, A-versus-B isolation with staging-only identities, moderator behavior,
+and application trust-field round trips before any production decision.
+
+Production remains read-only. `M31_TRUST_SCHEMA_ENABLED` remains unactivated for
+this rollout. Corpus cleanup and AI remain out of scope.
