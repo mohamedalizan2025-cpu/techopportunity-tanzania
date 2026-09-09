@@ -12,12 +12,13 @@ Earlier contents of this handoff remain available in Git history.
   such as TechOpportunity Tanzania and events finder-copilot remain unchanged.
 - Branch at the resumed staging-preparation start: `main`.
 - Verified starting HEAD, local origin/main and network-reported remote main:
-  `af6a51b8948d0b42add91d0841f1da01933ac35f` -
-  `Document M31 staging baseline`; ahead/behind `0/0`, working tree clean.
-- This resumed session remains BLOCKED before database access. The required host
-  directory `C:\Users\hp\.tech-opportunity-secrets` was absent, so neither protected
-  credential file nor its project reference could be validated. No database connection
-  was built and no production or staging SQL was executed. See the
+  `362c1d466776254bdc8da417009f6f3232213e68` -
+  `Establish M31 staging recovery baseline`; ahead/behind `0/0`, working tree clean.
+- This resumed session verified both protected credentials and live database
+  connections, completed a real production structural/aggregate preflight, and proved
+  staging is empty. It stopped before recovery export and staging mutation because
+  the host security review requires separate explicit owner approval to disclose/
+  persist sensitive production security metadata and backup contents. See the
   [M31 staging runbook](M31_STAGING_RUNBOOK.md).
 - Latest completed code milestone: `4910d14b337601fe29bb1554b41cff38ec455baf` -
   `Polish Tech Opportunity UI and responsive UX`.
@@ -151,9 +152,9 @@ historical schema-readiness error `42703` and NO_GO status. Its corpus counts ar
 historical observations, not a current census. See [M31 design](MILESTONE_31_DATA_TRUST.md)
 for the forward-only migration and evidence contract; this handoff governs the next action.
 
-## 6. Exact stopping point: identities supplied, database access/recovery blocked
+## 6. Exact stopping point: access verified; protected recovery export approval blocked
 
-**STAGING BASELINE NOT ESTABLISHED - OWNER ACTION REQUIRED**
+**STAGING BASELINE NOT ESTABLISHED - EXPLICIT OWNER APPROVAL REQUIRED**
 
 The owner's immutable identities supersede older ambiguous project names:
 
@@ -162,16 +163,17 @@ The owner's immutable identities supersede older ambiguous project names:
   newly created isolated Free project. This session did not create or configure it.
 - Both projects are Free per owner. No managed backup availability is assumed.
 
-The owner-specified protected credential directory was absent at its exact host path
-on 2026-09-09. Consequently `production-db.env` and `staging-db.env` were unavailable,
-and their `TECHOPP_PROJECT_REF` and password-presence gates could not run. The owner-
-supplied immutable refs below remain the control values, but they are not a substitute
-for credential-file and live-connection identity proof. The sole actual local
-application environment points to PRODUCTION. No CLI link was found or created.
-Encountering production in a proposed staging operation is an immediate stop.
-Owner-supplied staging identity is authoritative but live connection identity,
-emptiness and schema have not been independently verified. Production hosting and
-worker settings were not reconfigured or independently re-audited this session.
+Both exact external credential files now exist. Strict parsing found exactly the two
+required keys, unambiguous lines, the correct environment-specific refs, non-empty
+passwords and no broad writable ACL. No password was printed or persisted. No inherited
+PG/DATABASE/SUPABASE connection variable was present; repository `.env.local` remains
+production-only and was not loaded. Both direct database hosts are IPv6-only and were
+unreachable on port 5432 from this machine. AWS's current public range manifest mapped
+both addresses unambiguously to `eu-central-1`; TLS authentication succeeded through
+the supported `aws-0-eu-central-1.pooler.supabase.com:5432` Session Pooler with the
+distinct `postgres.<project-ref>` tenant usernames. Both databases report PostgreSQL
+17.6, database/user `postgres`, and the managed Auth schema. The optional API-URL
+database setting is absent, so it is not used as identity evidence.
 
 A production read-only REST metadata/aggregate audit succeeded at 2026-09-09 05:46 UTC
 after network escalation. URL and credential ref were checked before GET requests;
@@ -191,16 +193,45 @@ triggers, Auth integration and migration history remain unverified. Missing trus
 columns prevented complete evidence/attribution conflict checks. No complete green
 compatibility result or actual code blocker was established.
 
-Recovery is OWNER-BLOCKED by the absent protected files. Database tooling is now
-ready without application dependency changes: Supabase CLI `2.117.0` works through
+Database tooling remains ready without application dependency changes: Supabase CLI `2.117.0` works through
 one-shot `npx`; Docker client/server `29.7.2` is running; and the official
 `postgres:17-bookworm` image is pinned locally at digest
 `sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0`,
-providing PostgreSQL `17.11` psql/pg_dump/pg_restore. Both direct database DNS names
-published one AAAA record and no A record from this machine, so the next session
-should prefer each Dashboard-provided Session Pooler endpoint unless verified IPv6
-connectivity makes direct mode usable. Never guess a pooler region or hostname.
-No backup was created or verified; no restore rehearsal occurred.
+providing PostgreSQL `17.11` psql/pg_dump/pg_restore.
+
+The real production database has 10 public application tables, all with RLS enabled
+and FORCE RLS disabled: categories, organizations, profiles, opportunities,
+opportunity_sources, opportunity_enrichments, saved_opportunities,
+opportunity_deadline_changes, user_alert_preferences and deadline_alert_events.
+Opportunities has the 27 previously API-observed columns; country remains NOT NULL
+with default Tanzania. No M31 trust column, opportunity_references table, M31 named
+constraint/index/function/trigger, or `supabase_migrations.schema_migrations` table
+exists. `auth.uid()`, `public.is_staff()` and `gen_random_uuid()` exist. Aggregate
+catalog counts are 49 public constraints, 33 indexes, 23 policies, four public
+functions and 11 non-internal public/Auth/Storage triggers. Detailed policy/grant/
+function/trigger definitions were not disclosed because the host security review
+blocked that sensitive metadata without separate explicit approval.
+
+The read-only 0013 census observed 261 opportunities (237 pending, 19 published,
+five rejected, zero expired; 232 null and 29 known deadlines). Invalid/null canonical
+URL lengths, invalid source URL lengths, invalid/blank deadline evidence, deadline
+semantic violations, source orphans and submitter orphans were all zero. One duplicated
+URL group has one excess row but does not violate per-opportunity reference uniqueness.
+Twenty-seven rows have source_url equal to url and will be skipped by the secondary
+backfill; derived source types are 109 RSS, seven manual and 145 website. Because all
+M31 fields/objects are absent, the exact new defaults model zero relevance, eligibility,
+country-verification, attribution and qualified-deadline conflicts. Private table
+aggregate counts are profiles 3, saves 3, deadline changes 0, alert preferences 1 and
+alert events 1; no private row content was read or copied.
+
+Staging authentication and the hard target guard passed. A read-only transaction
+proved zero public tables, no migration history, no Auth users and no opportunity/
+reference structures. It is isolated and empty, not production-equivalent.
+
+Recovery remains blocked: the host security reviewer rejected both external raw
+catalog persistence and detailed security-metadata disclosure, before either command
+started, pending separate explicit owner approval after disclosure of the risk. No
+schema/data/roles/migration-history backup, checksum or restore rehearsal exists.
 
 Selected provisional baseline method: reviewed actual production schema export plus
 synthetic staging fixtures (Option A), not migration-history replay. No production
@@ -209,11 +240,10 @@ staging identities were created. Full catalog/conflict and recovery gates must
 precede baseline restore. The runbook preserves the reusable staging target guard,
 audit procedure, scope limitations, fixture strategy and verification gates.
 
-No new database-level production catalog/conflict counts were obtained because the
-credential gate failed. The 261-row REST observations above remain historical partial
-evidence only. No staging backup/restore, full catalog audit, migration, flag
+No staging backup/restore, full security-definition audit, migration, flag
 activation, deployment, A/B sessions, moderator writes or trust-field round trips
-were completed. Prior
+were completed. All database queries used failure-stop read-only transactions and
+ended with ROLLBACK (or safely aborted on the absent migration-history table). Prior
 preparation tests (17 M31, 91 account/saved, 53 deadline/alert) remain historical
 local evidence; they were not repeated for this documentation-only checkpoint.
 
@@ -247,18 +277,17 @@ local evidence; they were not repeated for this documentation-only checkpoint.
 
 ## 7. Exact next owner action and subsequent gated sequence
 
-**Owner creates the missing `C:\Users\hp\.tech-opportunity-secrets` directory and
-places `production-db.env` and `staging-db.env` at the exact documented paths, with
-the existing database passwords and corresponding `TECHOPP_PROJECT_REF` values.**
-Do not recreate or reidentify either Supabase project, reset either password, or put
-passwords, connection strings, service-role keys or tokens in chat/Git.
-The owner may instead perform the production audit/exports on a trusted machine
-and supply protected local artifacts. Do not pretend either alternative is complete.
+**Owner explicitly approves creation of protected external production logical backup
+artifacts and inspection/persistence of the sensitive catalog/security metadata needed
+to validate them, acknowledging that dumps may contain private production data and
+security definitions.** The approved destination remains
+`C:\Users\hp\.tech-opportunity-backups\<UTC timestamp>\`, outside Git, with restricted
+access. No password, connection string or dump content should be placed in chat/Git.
 
-After access exists, the agent can use the prepared isolated tooling, independently
-verify the credential files and endpoints, complete read-only production catalog/
-conflict audits, create and check protected external recovery artifacts, and construct a reviewed schema-only staging
-derivative with synthetic fixtures. Recheck the exact staging target before every
+After approval, the agent can use the verified connections and prepared tooling to
+complete the sensitive security-definition audit, create and validate protected
+recovery artifacts, and construct a reviewed schema-only staging derivative with
+synthetic fixtures. Recheck the exact staging target before every
 consequential operation. Demonstrate staging recovery and compare relevant catalogs;
 record intentional fixture/environment differences. Never copy real production Auth
 users or private user data into staging. Follow [M31_STAGING_RUNBOOK.md](M31_STAGING_RUNBOOK.md).

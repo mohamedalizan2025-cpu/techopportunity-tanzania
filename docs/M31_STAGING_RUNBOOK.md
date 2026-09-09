@@ -4,12 +4,11 @@ Updated: 2026-09-09. Status: **STAGING BASELINE NOT ESTABLISHED - OWNER ACTION R
 This runbook supplements [NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md).
 M31 remains OPEN; AI remains NO-GO. Migration 0013 was NOT APPLIED.
 
-Resumed-session stop condition: the required host directory
-`C:\Users\hp\.tech-opportunity-secrets` did not exist. The production credential
-check failed closed before the staging file was read; the absent parent directory
-then established that neither required file was present. No connection or SQL was
-attempted. The refs in this document remain immutable allow/deny controls, not proof
-of a credential file or live database connection.
+Current stop condition: credential and connection identity now pass, but the host
+security review requires separate explicit owner approval before sensitive production
+security metadata or logical backup contents may be disclosed/persisted. The raw
+catalog export and detailed policy/grant/function/trigger audit were rejected before
+execution. No recovery artifact exists, so no staging mutation is allowed.
 
 ## Immutable environment boundary
 
@@ -25,16 +24,17 @@ production during this task. Do not replay migrations 0005-0009. Do not inherit
 staging command, environment, connection, or link is an immediate stop condition.
 The explicitly targeted production read-only audit/export is a separate operation.
 
-Both Free-tier identities and staging's new/isolated status were supplied by the
-owner. Staging's live identity, schema and emptiness have NOT been independently
-verified. No remote mutations, links, deployments, Auth changes, fixture loads,
-worker dispatches, account creation or backups occurred in this session.
+Both Free-tier identities and live credentials were independently verified through
+strict file parsing and successful Supavisor tenant routing. Staging is live, isolated
+and empty: zero public tables, zero Auth users and no migration history. No remote
+mutations, links, deployments, Auth changes, fixture loads, worker dispatches, account
+creation or backups occurred in this session.
 
 ## Verified repository and tools
 
 - Resumed-session starting branch: `main`; HEAD, local origin/main and network-
-  reported remote main: `af6a51b8948d0b42add91d0841f1da01933ac35f`.
-- Starting commit: `Document M31 staging baseline`; ahead/behind `0/0`; no staged,
+  reported remote main: `362c1d466776254bdc8da417009f6f3232213e68`.
+- Starting commit: `Establish M31 staging recovery baseline`; ahead/behind `0/0`; no staged,
   unstaged or untracked files.
 - No applicable AGENTS.md found in the repository or checked ancestor paths.
 - Supabase CLI `2.117.0` was validated through one-shot `npx`, without adding an
@@ -49,10 +49,12 @@ worker dispatches, account creation or backups occurred in this session.
 - No `supabase/config.toml`, `supabase/.temp/project-ref`, `.supabase/project-ref`
   or `.vercel/project.json` found. No link state was changed.
 - `.env.local` contains the production API URL and application API credentials.
-  Only names/presence and project ref were inspected/reported. No database password,
-  database connection configuration or management token was available in inspected
-  task environment configuration; the required external secrets directory and both
-  owner-specified database credential files were absent.
+  Only names/presence and project ref were inspected/reported. In the prior session,
+  no database password, connection configuration or management token was available;
+  the required external secrets directory and both credential files were then absent.
+- The subsequent owner-supplied credential files passed strict identity, non-empty
+  password, ambiguity and ACL checks. Their values remain outside Git and were not
+  printed. No inherited PG/DATABASE/SUPABASE variable existed.
 - Existing `scripts/m31` contains remediation/readiness tools, not a backup or
   staging baseline tool. They were not run. No previous authoritative staging
   runbook existed. Historical temporary preparation files are not certified evidence.
@@ -79,10 +81,35 @@ Migration inventory (files are design/history, NOT proof of live application):
 
 Seed inventory: `supabase/seeds/0002_pilot_sources.sql`; not executed.
 
-The direct database hostnames for both immutable refs resolved from this machine to
-one AAAA record and no A record. Use the Dashboard-provided Session Pooler connection
-for each project unless direct IPv6 connectivity is independently verified. Verify
-the pooler host, port and username ref suffix; never infer or guess its region.
+The direct database hostnames for both immutable refs resolve to one AAAA record and
+no A record; direct TCP 5432 was unreachable. AWS's current
+[public prefix manifest](https://ip-ranges.amazonaws.com/ip-ranges.json)
+mapped both IPs unambiguously to `eu-central-1`; the supported Session Pooler
+`aws-0-eu-central-1.pooler.supabase.com:5432` accepted TLS authentication for both
+distinct `postgres.<project-ref>` tenants. Both targets report PostgreSQL 17.6,
+database/user `postgres`, and managed Auth. The database-local API URL setting is
+absent and is not identity evidence.
+
+## Live database preflight: 2026-09-09 06:55 UTC
+
+Production has 10 public application tables, all with RLS enabled and FORCE RLS off:
+categories, organizations, profiles, opportunities, opportunity_sources,
+opportunity_enrichments, saved_opportunities, opportunity_deadline_changes,
+user_alert_preferences and deadline_alert_events. Opportunities has 27 columns;
+country is still NOT NULL with default Tanzania. Zero M31 trust columns exist.
+`opportunity_references` and `supabase_migrations.schema_migrations` do not exist.
+Required `auth.uid()`, `public.is_staff()` and `gen_random_uuid()` functions exist.
+Aggregate catalog counts: 49 public constraints, 33 indexes, 23 policies, four public
+functions and 11 non-internal public/Auth/Storage triggers.
+
+Detailed policy bodies, grants, function definitions and trigger definitions remain
+approval-blocked by the host security layer. A proposed raw external catalog export
+and then a hash/semantic-only security query were both rejected before execution.
+Do not describe the full security catalog as audited until explicit approval permits it.
+
+Staging's accepted pre-mutation read-only inventory: zero public tables, zero Auth
+users, no migration history and no opportunities/references. It is empty, not a
+pre-M31 production-equivalent baseline.
 
 ## Production read-only evidence: 2026-09-09 05:46 UTC
 
@@ -134,6 +161,30 @@ event columns, including the false preference default and generated event defaul
 Auth users, private profiles, saves, preferences and alert records were not read.
 
 ## Production conflict evidence and its limits
+
+The 2026-09-09 06:55 UTC database-level repeatable-read census supersedes REST-only
+uncertainty for the following counts. It returned 261 opportunities: 237 pending,
+19 published, five rejected, zero expired; 232 null and 29 known deadlines.
+
+| Check | Count |
+|---|---:|
+| Null canonical URLs | 0 |
+| Canonical URL length outside 1-2000 | 0 |
+| Non-null source URL length outside 1-2000 | 0 |
+| Source URL equal to canonical URL (secondary insert skipped) | 27 |
+| Duplicate URL groups / excess rows | 1 / 1 |
+| Null / blank country | 0 / 0 |
+| Invalid / blank non-null deadline evidence | 0 / 0 |
+| Existing deadline semantic violations | 0 |
+| Source / submitter FK orphans | 0 / 0 |
+| Existing M31 named constraints/index/function/trigger | 0 |
+| Modeled new-default trust/evidence/attribution/deadline conflicts | 0 |
+
+The source-type backfill derives 109 RSS, seven manual and 145 website values, all
+allowed by 0013. The historical 0006 enum risk is not present in production because
+the reference table itself is absent. Existing private-table aggregate counts are
+profiles 3, saves 3, deadline history 0, alert preferences 1 and alert events 1; no
+private row content was selected or persisted.
 
 The audit fetched only ID/URL/provenance/status/country/deadline/evidence fields into
 process memory, computed counts and discarded rows on exit. It did not export
@@ -250,24 +301,18 @@ constraint/index/policy/function for equivalent definition, not merely existence
 An enum-backed historical 0006 source_type is a stop for compatibility review
 because 0013 inserts text expressions and does not rebuild an existing table.
 
-## Free-tier recovery gate: OWNER-BLOCKED
+## Free-tier recovery gate: EXPLICIT APPROVAL BLOCKED
 
 Created: **no schema, data, roles, migration-history or service backup**.
 Verified: **no backup hashes, restore test or recoverability evidence**.
 Available: the partial audit above and a proposed procedure below, not recovery.
 
-Owner action: create `C:\Users\hp\.tech-opportunity-secrets`, then create the exact
-files `production-db.env` and `staging-db.env` there with the existing database
-passwords and correct environment-specific `TECHOPP_PROJECT_REF` values. This is
-securely providing existing production read-only catalog/export access and separate
-staging administration access, not changing either project.
-Use the respective project's Dashboard Connect panel to identify the exact host,
-port, user and reference. Supply secrets through protected local/session configuration,
-never chat, Git, command transcripts or shell history. An API service-role key is
-not a PostgreSQL database password. Do not reset the production password or change
-production settings to obtain access under this task's read-only authorization.
-Alternatively, the owner can perform the production exports/audit on a trusted
-machine and make the protected artifacts available locally for inspection.
+Owner action: explicitly approve protected external production logical backups and
+the sensitive catalog/security inspection/persistence required to validate them,
+after acknowledging that database dumps may contain private production records and
+security definitions. The destination remains outside Git under
+`C:\Users\hp\.tech-opportunity-backups\<UTC timestamp>\` with restricted access.
+No credential or dump content belongs in chat or Git.
 
 The pinned tooling recorded above is ready. Do not install project dependencies or
 initialize/link this application's Supabase directory for convenience.
@@ -323,9 +368,10 @@ load synthetic fixtures. Historical drift makes replay from 0001 unreliable.
 Option B requires an equally complete catalog comparison plus compensating DDL;
 there is no verified reconstruction here. No supported alternative was found.
 
-Do not execute the baseline restore until the production schema/conflict audits,
-recovery gate and staging target proof are satisfied. The missing credential files
-stop this session before database access even though tooling and procedure are ready.
+Do not execute the baseline restore until the production security-definition audit,
+recovery gate and staging target proof are satisfied. Credential, connection, structural
+catalog, aggregate conflict and staging identity checks now pass; explicit approval
+for sensitive recovery/security artifacts remains the stop.
 No production-equivalent DDL or fixture SQL has been fabricated from API metadata.
 
 Prepare a reviewed staging derivative of the schema export, separate from immutable
@@ -450,18 +496,19 @@ no domain, hosting, flag, Auth or worker configuration changed in this task.
 
 ## Exact next action and close
 
-**Owner creates the missing protected secrets directory and the two exact credential
-files described above.** No secrets in chat; no database password reset under this task.
-Then resume the catalog/recovery gates above, not migration 0013.
+**Owner explicitly approves the protected production backup and sensitive catalog/
+security artifact operation described above.** Then resume the recovery gate, not
+migration 0013.
 
 This session closes only the blocked-baseline documentation checkpoint, not M31 or
 the staging-baseline milestone. No application, migration, dependency, workflow or
 runtime configuration file changed. The only cleanup was removal of the CLI-generated
-untracked marker described above. Final diff inspection found exactly these two
-documentation files. All relative links resolved; tracked-file and diff scans found
+untracked marker in the prior tooling session. The current conservative hygiene audit
+found no temporary candidate or other safely removable item: NO SAFE CLEANUP REQUIRED.
+Final diff inspection found exactly these two documentation files. All relative links resolved; tracked-file and diff scans found
 no database password, credential-bearing PostgreSQL URI or dump/backup artifact;
 tracked `.env.example` remains a non-secret placeholder template. `git diff --check`
-passed. `npm.cmd run verify:plan -- --base af6a51b8948d0b42add91d0841f1da01933ac35f`
+passed. `npm.cmd run verify:plan -- --base 362c1d466776254bdc8da417009f6f3232213e68`
 classified exactly the two documentation files, selected no change-triggered gates
 and required no production evidence. Full tests, typecheck, lint and build were not
 run for this documentation-only close because neither the planner nor final diff
