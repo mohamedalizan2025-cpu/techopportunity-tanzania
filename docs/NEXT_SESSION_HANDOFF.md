@@ -1,6 +1,6 @@
 # Tech Opportunity - Authoritative Engineering Continuity
 
-Updated: 2026-09-08. Read this document FIRST when continuing development.
+Updated: 2026-09-09. Read this document FIRST when continuing development.
 This is the single authoritative engineering continuity record. Architecture and
 milestone documents provide supporting detail and historical evidence; older
 operational instructions do not override this checkpoint or current owner instructions.
@@ -10,12 +10,19 @@ Earlier contents of this handoff remain available in Git history.
 
 - Product name: **Tech Opportunity**. Historical repository/package/resource names
   such as TechOpportunity Tanzania and events finder-copilot remain unchanged.
-- Branch at closing-task start: `main`.
+- Branch at staging-baseline-task start: `main`.
+- Verified starting HEAD and origin/main:
+  `8c80a7b9aed037156fc9484c714950578db2f6c2` -
+  `Document current Tech Opportunity development state`; working tree clean.
+  A network-enabled read-only `git ls-remote` independently confirmed remote main.
+- This session records a BLOCKED staging-baseline attempt, with partial production
+  read-only evidence. See [M31 staging runbook](M31_STAGING_RUNBOOK.md). No baseline,
+  backup, full catalog audit or migration execution is claimed.
 - Latest completed code milestone: `4910d14b337601fe29bb1554b41cff38ec455baf` -
   `Polish Tech Opportunity UI and responsive UX`.
-- Verified before this documentation edit: HEAD and locally recorded origin/main
+- Verified before the previous documentation close: HEAD and locally recorded origin/main
   both equal that SHA, ahead/behind `0/0`, working tree clean.
-- This closing change is documentation only. Its commit follows the code checkpoint;
+- This change is documentation only. Its commit follows the prior documentation checkpoint;
   obtain the actual latest documentation HEAD and remote relationship from Git.
   Do not reset valid documentation to return to the code SHA.
 - No staging project was created, no Supabase/environment configuration changed,
@@ -142,34 +149,60 @@ historical schema-readiness error `42703` and NO_GO status. Its corpus counts ar
 historical observations, not a current census. See [M31 design](MILESTONE_31_DATA_TRUST.md)
 for the forward-only migration and evidence contract; this handoff governs the next action.
 
-## 6. Exact stopping point: no safely established staging target
+## 6. Exact stopping point: identities supplied, database access/recovery blocked
 
-Latest investigation classification:
+**STAGING BASELINE NOT ESTABLISHED - OWNER ACTION REQUIRED**
 
-**NO TRUSTWORTHY STAGING ENVIRONMENT**
+The owner's immutable identities supersede older ambiguous project names:
 
-**STAGING TARGET NOT SAFELY IDENTIFIED**
+- **PRODUCTION = `jltuufukcwztugvojwjd`**. Read-only audit/export only in this task.
+- **STAGING = `pumzofcwfjqswkiwfqty`**, Tech Opportunity Staging. Owner reports a
+  newly created isolated Free project. This session did not create or configure it.
+- Both projects are Free per owner. No managed backup availability is assumed.
 
-One local Supabase target was configured, but no separate staging/preview env file,
-Supabase project link/config, Vercel project link or staging-specific workflow was
-found. Returned GitHub deployment records were labeled Production. Historical docs
-call the development project tto-staging, while later records describe the operational
-application/corpus as production. Neither a project name nor `.env.local` proves identity.
-The existing Supabase environment must remain untouched until separation is established.
-No secrets or local project credentials belong in this record.
+The sole actual local application environment points to PRODUCTION. No staging
+credential/configuration or CLI link was found, and no linked state was changed.
+Encountering production in a proposed staging operation is an immediate stop.
+Owner-supplied staging identity is authoritative but live connection identity,
+emptiness and schema have not been independently verified. Production hosting and
+worker settings were not reconfigured or independently re-audited this session.
 
-Owner-provided constraint: Supabase Free tier. Intended solution: a **second isolated
-free Supabase project**, named **Tech Opportunity Staging**, rather than changing or
-repurposing the existing production project. This project has not been created or
-configured in this session. Do not assume free-project quota or availability; the owner
-must confirm it in their account, with no unapproved paid upgrade.
+A production read-only REST metadata/aggregate audit succeeded at 2026-09-09 05:46 UTC
+after network escalation. URL and credential ref were checked before GET requests;
+no RPC or mutation was issued, no secrets printed and no raw rows persisted.
+Observed 261 opportunities: 237 pending, 19 published, 5 rejected; 29 known and
+232 null deadlines; all 261 have country text. One duplicated opportunity URL
+group has one excess row; this alone does not violate per-opportunity reference
+uniqueness. Canonical/source URL length and non-null trimmed deadline-evidence
+length conflict counts were zero. This is a point-in-time API observation, not a
+transactionally consistent SQL audit or current future census.
 
-No staging backup/restore, actual catalog audit, migration, flag activation, deployment,
-public/anonymous/security requests, A/B account sessions, moderator writes or trust-field
-round trips were completed. Local preparation tests passed: 17 M31, 91 account/saved,
-and 53 deadline/alert tests. Those are local source/behavior tests, not live RLS proof.
-A remote follow-up identity lookup was blocked by automatic approval review's account
-usage limit. That tool limitation does not prove anything about infrastructure state.
+REST metadata exposes provenance, profiles/saves and M30 history/preferences/events;
+country is API-required with default Tanzania. No M31-added columns or
+opportunity_references are exposed. Their actual catalog absence is NOT established.
+RLS flags/policy bodies, grants, constraints/index definitions, function bodies,
+triggers, Auth integration and migration history remain unverified. Missing trust
+columns prevented complete evidence/attribution conflict checks. No complete green
+compatibility result or actual code blocker was established.
+
+Recovery is OWNER-BLOCKED: no database connection credentials or management token
+were available in inspected task configuration; application API keys are insufficient
+for a PostgreSQL logical backup. Supabase CLI/psql/pg_dump were unavailable on PATH;
+Docker 29.7.2 client exists but its default engine is unavailable. No backup was
+created or verified; no restore rehearsal occurred. Do not reset production's
+password or change its settings to obtain access in this read-only task.
+
+Selected provisional baseline method: reviewed actual production schema export plus
+synthetic staging fixtures (Option A), not migration-history replay. No production
+private users/profiles/saves/preferences/alerts were copied, and no fixtures or
+staging identities were created. Full catalog/conflict and recovery gates must
+precede baseline restore. The runbook preserves the reusable staging target guard,
+audit procedure, scope limitations, fixture strategy and verification gates.
+
+No staging backup/restore, full catalog audit, migration, flag activation, deployment,
+A/B sessions, moderator writes or trust-field round trips were completed. Prior
+preparation tests (17 M31, 91 account/saved, 53 deadline/alert) remain historical
+local evidence; they were not repeated for this documentation-only checkpoint.
 
 ### Preparation findings to carry forward
 
@@ -201,20 +234,26 @@ usage limit. That tool limitation does not prove anything about infrastructure s
 
 ## 7. Exact next owner action and subsequent gated sequence
 
-The next session begins with the OWNER's environment identity work, not code changes:
+**Owner securely provisions existing production database access for read-only
+catalog/export work and separate staging database access in protected local
+configuration.** Do not ask the owner to recreate or reidentify the supplied projects.
+Never put passwords, connection secrets, service-role keys or tokens in chat/Git.
+The owner may instead perform the production audit/exports on a trusted machine
+and supply protected local artifacts. Do not pretend either alternative is complete.
 
-1. Identify the existing production Supabase project reference and operational targets.
-2. Create/identify a separate **Tech Opportunity Staging** Supabase Free project.
-3. Record its nonsecret staging project reference.
-4. Confirm production and staging references are different; verify hosting/worker scopes.
-5. Keep service-role keys, database passwords, tokens and other secrets out of documentation
-   and chat. Supply any needed access through securely scoped environment configuration.
-6. Establish a recoverable staging baseline and demonstrate the recovery procedure.
-7. Only then continue M31 staging compatibility checks and the migration process.
+After access exists, the agent can prepare isolated tooling, independently verify
+endpoints, complete read-only production catalog/conflict audits, create and check
+protected external recovery artifacts, and construct a reviewed schema-only staging
+derivative with synthetic fixtures. Recheck the exact staging target before every
+consequential operation. Demonstrate staging recovery and compare relevant catalogs;
+record intentional fixture/environment differences. Never copy real production Auth
+users or private user data into staging. Follow [M31_STAGING_RUNBOOK.md](M31_STAGING_RUNBOOK.md).
 
-After identity/recovery gates, audit actual staging schema and data compatibility. Apply
-ONLY unchanged `0013_m31_data_trust.sql` through the supported owner SQL procedure if all
-prerequisites pass; never replay 0005-0009 or use a blanket migrate/reset operation.
+The default task endpoint remains **baseline plus compatibility evidence, then STOP**.
+Current recommendation is **NOT READY TO APPLY 0013**. After all owner-listed gates
+pass and execution authority is unambiguous, a subsequent migration step may apply
+ONLY unchanged `0013_m31_data_trust.sql` through the supported owner SQL procedure;
+never replay 0005-0009 or use a blanket migrate/reset operation.
 Verify fields, constraints, canonical references/backfill, functions/triggers, RLS/grants
 and preservation of rows before enabling the staging flag. Deploy the intended verified
 code checkpoint with staging-only variables and explicit staging auth origin.
@@ -320,6 +359,8 @@ commits. Read relevant implementation and [verification contract](VERIFICATION_C
 Use appropriately scoped checks. This documentation-only close requires status/diff review,
 link/secret hygiene and `git diff --check`, not an expensive engineering suite.
 
-At this boundary: no new milestone, staging provisioning, migration, production mutation,
-corpus cleanup, schedule change, geographic grouping, domain/hosting work or AI is authorized.
-Stop after documenting/committing the close; the next action is the owner identity gate above.
+At this boundary: the current owner request authorized gated pre-M31 staging baseline
+preparation, but database access/recovery gates prevented its execution. Stop after
+documenting this blocked checkpoint. No migration, production mutation, corpus cleanup,
+schedule change, geographic grouping, domain/hosting work or AI activation occurred.
+M31 remains OPEN, the staging baseline remains BLOCKED, and AI remains NO-GO.
