@@ -33,6 +33,14 @@ Current database status:
 
 **NO PRODUCTION AVAILABILITY CHANGES**
 
+The live-application milestone is paused before provider configuration. A local
+`staging` branch exists at the verified checkpoint
+`d7ecfafff46e76d524af08dd678ffd3d7d0be308`; it has not been pushed or deployed.
+The Vercel device login completed locally before the close request was processed,
+but no Vercel project was linked or changed. Supabase provider authorization did
+not complete. No staging environment variable, Supabase Auth setting, database
+row/schema, feature flag, or deployment was changed.
+
 ## 2. Immutable production/staging boundary
 
 - Production: `jltuufukcwztugvojwjd` — read-only until a separate future owner
@@ -228,6 +236,7 @@ live and unchanged. Corpus cleanup and AI remain NO-GO.
 Implementation + verification + repository hygiene + online verification where
 relevant + documentation + clean Git state = milestone closure.
 
-For the next session, the one safest action is: enable M31 only in the isolated
-staging application environment, deploy the exact verified commit to staging, and
-run live authenticated User-A/User-B/moderator persistence and RLS regression tests.
+For the next session, the one safest action is: resume provider authorization for
+the Vercel/Supabase staging deployment, prove the branch-scoped Preview uses only
+`pumzofcwfjqswkiwfqty`, and then continue M31 live staging verification. Do not
+push or deploy until that isolation is proven.
