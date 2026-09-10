@@ -140,10 +140,15 @@ export function hasConsistentCountryTruth(opportunity: Opportunity): boolean {
     : country !== "tanzania";
 }
 
-export function isAiSearchableOpportunity(opportunity: Opportunity): boolean {
+export function isAiSearchableOpportunity(opportunity: Opportunity): boolean;
+export function isAiSearchableOpportunity(opportunity: Opportunity, now: Date): boolean;
+export function isAiSearchableOpportunity(
+  opportunity: Opportunity,
+  now = new Date()
+): boolean {
   const trust = opportunity.trust;
   if (!trust || opportunity.status !== "published") return false;
-  if (isTestOrPlaceholderOpportunity(opportunity) || isKnownClosed(opportunity)) return false;
+  if (isTestOrPlaceholderOpportunity(opportunity) || isKnownClosed(opportunity, now)) return false;
   if (!hasMeaningfulDescription(opportunity)) return false;
   if (trust.relevanceDecision !== "relevant" || !trust.relevanceEvidence) return false;
   if (
@@ -171,7 +176,7 @@ export function publicQualityBand(
   ) {
     return "excluded";
   }
-  if (isAiSearchableOpportunity(opportunity)) return "trusted";
+  if (isAiSearchableOpportunity(opportunity, now)) return "trusted";
   return "reviewable";
 }
 
