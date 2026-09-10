@@ -6,11 +6,11 @@ evidence and do not override this file or current owner instructions.
 
 ## 1. Exact checkpoint
 
-Remote `main` remains at
-`58e900e626021346ac0a773db3264c1b2f3a488b` (`Fix deterministic trust deadline
-evaluation`). Remote `staging` now exists and contains the live-staging work above
-that checkpoint. Obtain the final staging SHA from Git; do not reset to a historical
-SHA in this document.
+Remote `main` and remote `staging` are both at
+`45283545f466a0a4470d5cc9fc6e03e0f38cdbec`. Stage 1 of production activation
+fast-forwarded `main` to that exact release without rewriting history. The GitHub
+Milestone verification and Discovery sync workflows completed successfully, the
+exact production deployment is Ready, and production returned HTTP 200.
 
 The existing Vercel project now has an ordinary protected Preview for branch
 `staging` at
@@ -35,7 +35,9 @@ Current database status:
 
 **M31 LIVE APPLICATION VERIFIED ON STAGING**
 
-**NO PRODUCTION AVAILABILITY CHANGES**
+**M31 PRODUCTION STAGE 1 COMPLETE - CODE PROMOTED, DATABASE/FLAG UNCHANGED**
+
+**PRODUCTION HEALTHY; M31 DATABASE MIGRATIONS NOT APPLIED; M31 FLAG ABSENT**
 
 Real staging-only User A, User B, and Moderator accounts proved Auth, callback
 origin, session persistence, logout, saves, public visibility, references,
@@ -61,10 +63,10 @@ or rerun, and migration history was not normalized.
 
 ## 2. Immutable production/staging boundary
 
-- Production: `jltuufukcwztugvojwjd` — read-only until a separate future owner
+- Production: `jltuufukcwztugvojwjd` — read-only until explicit Stage 2 owner
   authorization.
-- Staging: `pumzofcwfjqswkiwfqty` — the only permitted remote database mutation
-  target for the next milestone.
+- Staging: `pumzofcwfjqswkiwfqty` — verified M31 evidence environment; no further
+  staging mutation is part of the next step.
 - Repository `.env.local` is production-only and must never be loaded for staging.
 - Protected credentials remain outside Git under
   `C:\Users\hp\.tech-opportunity-secrets\`.
@@ -189,13 +191,17 @@ future infrastructure milestone.
 
 The live staging application and country-audit correction are verified. The focused
 M31 suite has 18 tests; full-verification evidence remains 705 tests, TypeScript,
-ESLint, 29 boundaries, and the post-gate migration review. Production stayed
-read-only, its M31 flag was not changed, and production activation remains
-prohibited until a separate decision.
+ESLint, 29 boundaries, and the post-gate migration review. Stage 1 promoted the
+exact release to production `main`; its GitHub verification and Discovery sync both
+passed. A closing read-only production probe still found zero M31 trust columns, no
+`opportunity_references`, and the original five-field enrichment constraint.
+Production HTTP returned 200 and `M31_TRUST_SCHEMA_ENABLED` remained absent.
 
-The next action is a separate owner go/no-go review of the documented production M31
-rollout plan. Do not apply any production migration or enable its flag without that
-new authorization.
+The exact next step is:
+
+`Stage 2 M31 production activation: fresh protected production backup → apply 0013 → verify → apply 0014 → verify → enable M31 production flag → redeploy exact release SHA → minimum smoke tests → documentation/cleanup.`
+
+Stage 2 requires separate explicit owner authorization.
 
 See [M31_STAGING_RUNBOOK.md](M31_STAGING_RUNBOOK.md) for the reusable guard and exact
 verification state.
@@ -255,6 +261,8 @@ remains live and unchanged. Corpus cleanup and AI remain NO-GO.
 Implementation + verification + repository hygiene + online verification where
 relevant + documentation + clean Git state = milestone closure.
 
-For the next session, the one safest action is: conduct a separate owner go/no-go
-review for production M31 activation using the completed staging evidence. Do not
-apply a production migration or flag change during that review.
+For the next session, the exact next step is:
+
+`Stage 2 M31 production activation: fresh protected production backup → apply 0013 → verify → apply 0014 → verify → enable M31 production flag → redeploy exact release SHA → minimum smoke tests → documentation/cleanup.`
+
+Do not begin without separate explicit owner authorization.
