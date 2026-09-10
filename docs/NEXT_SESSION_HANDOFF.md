@@ -31,25 +31,33 @@ Current database status:
 
 **M31 FEATURE FLAG ENABLED ON STAGING PREVIEW ONLY**
 
-**M31 LIVE APPLICATION BLOCKED ON COUNTRY ENRICHMENT AUDIT FIX**
+**M31 COUNTRY AUDIT FIX VERIFIED ON STAGING**
+
+**M31 LIVE APPLICATION VERIFIED ON STAGING**
 
 **NO PRODUCTION AVAILABILITY CHANGES**
 
-Real staging-only User A, User B, and Moderator accounts were created with strong
-credentials stored outside Git in protected local secret storage. Live browser and
-database checks passed for Auth, callback origin, session persistence, logout,
-saves, public visibility, references, cross-user RLS denial, Moderator access,
-M31 trust persistence, and moderator attribution. Synthetic staging fixtures remain
-available for the blocked retest; no production identity or data was copied.
+Real staging-only User A, User B, and Moderator accounts proved Auth, callback
+origin, session persistence, logout, saves, public visibility, references,
+cross-user RLS denial, Moderator access, M31 trust persistence, and moderator
+attribution. A final country-changing Moderator action proved the enrichment audit
+path. All temporary identities, profiles, opportunities, references, audits, saves,
+category fixture, credentials, and local test state were then removed. No production
+identity or data was copied.
 
-The one live defect is proven: the Moderator successfully persists authoritative
-M31 country/relevance/eligibility/deadline evidence and `decided_by`/`decided_at`,
-but the older `opportunity_enrichments_field_check` rejects the best-effort
-`country` audit row. Vercel logged that exact check-constraint violation.
+The live defect was the older `opportunity_enrichments_field_check`, which rejected
+the application's existing `country` audit row. Vercel logged that exact constraint
+violation while authoritative M31 evidence and `decided_by`/`decided_at` still
+persisted.
 [Migration 0014](../supabase/migrations/0014_m31_country_enrichment_audit.sql)
-contains the smallest forward fix and has a focused regression test, but it has NOT
-been applied because the execution safety gate requires explicit owner approval for
-that staging database change. Migration 0013 was not edited or rerun.
+is the smallest forward fix. The owner explicitly authorized only that file; its
+SHA-256 was verified as
+`428a84738d2fa3bff2e1117f6938c2de0cc0ae7084fea2a4511837e7ad851b74`
+and it was applied atomically only to staging. The resulting validated constraint
+allows `country`. One fresh Moderator action produced exactly one
+`moderator-review` audit row recording `Kenya` to `Tanzania` with matching evidence;
+the opportunity's `decided_by` matched the Moderator. Migration 0013 was not edited
+or rerun, and migration history was not normalized.
 
 ## 2. Immutable production/staging boundary
 
@@ -179,16 +187,15 @@ repository/remote history. Do not use broad `db push`, replay 0001-0012 or run
 `migration repair`; history normalization is a separately justified and authorized
 future infrastructure milestone.
 
-The live application verification reached the final staging-only schema correction.
-The focused M31 suite now has 18 tests. Final full-verification results for the
-current staging commit are recorded in the staging runbook. Production stayed
+The live staging application and country-audit correction are verified. The focused
+M31 suite has 18 tests; full-verification evidence remains 705 tests, TypeScript,
+ESLint, 29 boundaries, and the post-gate migration review. Production stayed
 read-only, its M31 flag was not changed, and production activation remains
-prohibited.
+prohibited until a separate decision.
 
-The next action is to authorize and apply only migration 0014 to
-`pumzofcwfjqswkiwfqty`, then repeat one country-changing Moderator action and confirm
-the enrichment audit row. Do not run 0013, broad `db push`, migration repair, or any
-production write.
+The next action is a separate owner go/no-go review of the documented production M31
+rollout plan. Do not apply any production migration or enable its flag without that
+new authorization.
 
 See [M31_STAGING_RUNBOOK.md](M31_STAGING_RUNBOOK.md) for the reusable guard and exact
 verification state.
@@ -248,7 +255,6 @@ remains live and unchanged. Corpus cleanup and AI remain NO-GO.
 Implementation + verification + repository hygiene + online verification where
 relevant + documentation + clean Git state = milestone closure.
 
-For the next session, the one safest action is: after explicit owner authorization,
-apply only `0014_m31_country_enrichment_audit.sql` to guarded staging project
-`pumzofcwfjqswkiwfqty` and repeat the single Moderator country-audit persistence
-check. Do not touch production.
+For the next session, the one safest action is: conduct a separate owner go/no-go
+review for production M31 activation using the completed staging evidence. Do not
+apply a production migration or flag change during that review.

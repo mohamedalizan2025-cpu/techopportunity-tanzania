@@ -8,7 +8,9 @@ Updated: 2026-09-10. Status:
 
 **M31 FEATURE FLAG ENABLED ON STAGING PREVIEW ONLY**
 
-**LIVE APPLICATION VERIFICATION BLOCKED ON STAGING 0014 APPLICATION**
+**M31 COUNTRY AUDIT FIX VERIFIED ON STAGING**
+
+**M31 LIVE APPLICATION VERIFIED ON STAGING**
 
 This runbook records the completed staging database migration and governs the next
 isolated staging-application verification milestone. It does not authorize a
@@ -363,9 +365,11 @@ not queried or changed.
 
 Three tagged synthetic staging-only identities were created: User A, User B, and
 Moderator. The Moderator uses the existing `profiles.role = 'moderator'` model.
-Strong credentials remain in the protected external secret directory only because
-the blocked country-audit retest still requires them. No production user was copied.
-Four additional staging-only opportunities and one save exercised the live paths.
+No production user was copied. Four initial staging-only opportunities and one save
+exercised the live paths. A fifth fresh opportunity later exercised the corrected
+country audit. All five opportunities, three identities, profiles, references,
+audits, saves, the test-only category, credentials, and local state were removed
+after verification.
 
 The deployed browser checks passed:
 
@@ -389,7 +393,7 @@ rule `m31-2026-09-04-v1`, `last_verified_at`, and paired Moderator attribution. 
 canonical reference persisted. The country-only Tanzania row remained visible and
 no pending/rejected fixture leaked.
 
-### Proven blocker and forward fix
+### Proven defect and verified forward fix
 
 The Moderator update succeeded, but Vercel emitted one info-level message:
 
@@ -403,13 +407,36 @@ must not be silently lost.
 
 [Migration 0014](../supabase/migrations/0014_m31_country_enrichment_audit.sql) is the
 smallest forward-only correction: it adds only `country` to that existing check and
-does not modify opportunity rows. Migration 0013 is unchanged and was not rerun. The
-focused test verifies the new constraint input and absence of opportunity DML.
+does not modify opportunity rows. Its reviewed SHA-256 is
+`428a84738d2fa3bff2e1117f6938c2de0cc0ae7084fea2a4511837e7ad851b74`.
+The owner authorized only that exact file. The hard guard confirmed branch
+`staging`, clean HEAD `117fb6eee9a956ceff283b68a30b07e504b4fccf`, linked staging
+project `pumzofcwfjqswkiwfqty`, unlinked production, and the expected old five-field
+constraint. Explicit `BEGIN`/`COMMIT` made the two DDL statements atomic. Execution
+completed successfully; migration 0013 was not rerun and no migration history was
+created, repaired, or normalized.
 
-Application of 0014 to staging was refused by the execution safety gate because the
-active authority did not permit another staging database/migration change. It is
-therefore committed as a reviewed pending migration, not represented as live. Do not
-use broad `db push`, replay earlier migrations, or normalize migration history.
+The post-write catalog probe found one validated
+`opportunity_enrichments_field_check` allowing `venue_name`, `address`, `city`,
+`region`, `country`, and `deadline`. One fresh pending fixture started with country
+`Kenya`. A single Moderator submission through the deployed Preview changed it to
+verified `Tanzania` and returned HTTP 200 with zero browser page/console errors.
+Exactly one audit row persisted with field `country`, previous value `Kenya`, new
+value `Tanzania`, method `moderator-review`, and the matching canonical evidence URL.
+The opportunity's `decided_by` matched the Moderator and its paired timestamp/trust
+evidence persisted.
+
+The Moderator could read the audit row. User A could not read or insert one; User B
+could not update it. User A's save remained visible to User A and invisible to User
+B. After the proof, explicit-ID cleanup removed all five live-test opportunities and
+three tagged users. Cascaded reference, audit, save, and profile counts were zero,
+and the test-only category was removed. The original protected six-opportunity
+recovery baseline was not targeted.
+
+The current Ready Preview deployment reported no error-, warning-, or info-level log
+entries after the corrected action; the earlier constraint message did not recur.
+Do not use broad `db push`, replay earlier migrations, or normalize migration
+history.
 
 Regression result for this checkpoint: 705 project tests passed, including 18 M31
 tests and the previously completed 20 public-experience assertions, 11 lifecycle
@@ -419,9 +446,9 @@ the verification planner correctly did not select another production build.
 
 Temporary Playwright harnesses, Supabase/Vercel link caches, response headers, the
 Vercel bypass cookie, and the injected local `VERCEL_OIDC_TOKEN` line were removed.
-No secret, dump, backup, generated cache, or test credential is tracked by Git.
+The temporary protected test credential/state files were also deleted. No secret,
+dump, backup, generated cache, or test credential is tracked by Git.
 
-The one next action is: after explicit owner authorization, apply only migration 0014
-to guarded staging project `pumzofcwfjqswkiwfqty`, then approve one fresh synthetic
-country-changing record and verify its `moderator-review` audit row. Stop before any
-production M31 activation.
+The one next action is: conduct a separate owner go/no-go review for production M31
+activation using this completed staging evidence. Do not apply any production
+migration or enable the production flag during that review.
