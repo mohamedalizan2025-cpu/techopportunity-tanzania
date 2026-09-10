@@ -1,25 +1,25 @@
 # Tech Opportunity - authoritative engineering continuity
 
-Updated: 2026-09-09. Read this document first when continuing development. It is
+Updated: 2026-09-10. Read this document first when continuing development. It is
 the current operational checkpoint; older milestone records remain historical
 evidence and do not override this file or current owner instructions.
 
 ## 1. Exact checkpoint
 
-The M31 staging-migration verification task began from:
+Remote `main` remains at
+`58e900e626021346ac0a773db3264c1b2f3a488b` (`Fix deterministic trust deadline
+evaluation`). Remote `staging` now exists and contains the live-staging work above
+that checkpoint. Obtain the final staging SHA from Git; do not reset to a historical
+SHA in this document.
 
-- branch `main`;
-- HEAD and `origin/main`
-  `89e01c499eaf389d671f6bc2fd72cf2c480f3516`;
-- commit `Establish protected M31 recovery baseline`;
-- ahead/behind `0/0` and a clean working tree.
-
-The task revalidated the protected pre-M31 baseline and applied exactly unchanged
-migration 0013 to the immutable staging target in one failure-stopping transaction.
-It verified the resulting schema, backfill, constraints, trigger behavior and
-structural security, then stopped before feature-flag activation or deployment.
-The current documentation commit follows that starting checkpoint; obtain its exact
-SHA and remote relationship from Git rather than resetting to the SHA above.
+The existing Vercel project now has an ordinary protected Preview for branch
+`staging` at
+`https://techopportunity-tanzania-git-staging-techopportunity.vercel.app`.
+Branch-only Config variables are `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`, and
+`M31_TRUST_SCHEMA_ENABLED`. They target staging and enable M31 only there. No
+service-role key is stored in Vercel. Supabase Auth on staging has the exact Preview
+Site URL and `/auth/callback` allow-list entry.
 
 Current database status:
 
@@ -29,17 +29,27 @@ Current database status:
 
 **0013 APPLIED SUCCESSFULLY TO STAGING**
 
-**M31 FEATURE FLAG NOT ENABLED**
+**M31 FEATURE FLAG ENABLED ON STAGING PREVIEW ONLY**
+
+**M31 LIVE APPLICATION BLOCKED ON COUNTRY ENRICHMENT AUDIT FIX**
 
 **NO PRODUCTION AVAILABILITY CHANGES**
 
-The live-application milestone is paused before provider configuration. A local
-`staging` branch exists at the verified checkpoint
-`d7ecfafff46e76d524af08dd678ffd3d7d0be308`; it has not been pushed or deployed.
-The Vercel device login completed locally before the close request was processed,
-but no Vercel project was linked or changed. Supabase provider authorization did
-not complete. No staging environment variable, Supabase Auth setting, database
-row/schema, feature flag, or deployment was changed.
+Real staging-only User A, User B, and Moderator accounts were created with strong
+credentials stored outside Git in protected local secret storage. Live browser and
+database checks passed for Auth, callback origin, session persistence, logout,
+saves, public visibility, references, cross-user RLS denial, Moderator access,
+M31 trust persistence, and moderator attribution. Synthetic staging fixtures remain
+available for the blocked retest; no production identity or data was copied.
+
+The one live defect is proven: the Moderator successfully persists authoritative
+M31 country/relevance/eligibility/deadline evidence and `decided_by`/`decided_at`,
+but the older `opportunity_enrichments_field_check` rejects the best-effort
+`country` audit row. Vercel logged that exact check-constraint violation.
+[Migration 0014](../supabase/migrations/0014_m31_country_enrichment_audit.sql)
+contains the smallest forward fix and has a focused regression test, but it has NOT
+been applied because the execution safety gate requires explicit owner approval for
+that staging database change. Migration 0013 was not edited or rerun.
 
 ## 2. Immutable production/staging boundary
 
@@ -169,14 +179,16 @@ repository/remote history. Do not use broad `db push`, replay 0001-0012 or run
 `migration repair`; history normalization is a separately justified and authorized
 future infrastructure milestone.
 
-The focused M31 suite passed 17/17. The full project suite, TypeScript, ESLint, 29
-permanent boundary checks, post-gate planner and Next.js production build passed.
-No application feature flag was enabled and nothing was deployed. Production stayed
-read-only and its homepage returned HTTP 200 after staging verification.
+The live application verification reached the final staging-only schema correction.
+The focused M31 suite now has 18 tests. Final full-verification results for the
+current staging commit are recorded in the staging runbook. Production stayed
+read-only, its M31 flag was not changed, and production activation remains
+prohibited.
 
-The next milestone is isolated staging-application activation and live security
-verification: enable M31 only in staging, deploy the exact verified commit, then test
-real User-A/User-B/moderator persistence and RLS boundaries. Stop before production.
+The next action is to authorize and apply only migration 0014 to
+`pumzofcwfjqswkiwfqty`, then repeat one country-changing Moderator action and confirm
+the enrichment audit row. Do not run 0013, broad `db push`, migration repair, or any
+production write.
 
 See [M31_STAGING_RUNBOOK.md](M31_STAGING_RUNBOOK.md) for the reusable guard and exact
 verification state.
@@ -228,15 +240,15 @@ Do not begin these during the staging activation/live-security milestone:
    the trusted corpus.
 10. Build toward commercial, institutional, hackathon, and showcase strength.
 
-`M31_TRUST_SCHEMA_ENABLED` remains unactivated for this rollout. Production remains
-live and unchanged. Corpus cleanup and AI remain NO-GO.
+`M31_TRUST_SCHEMA_ENABLED` is active only for the `staging` Preview. Production
+remains live and unchanged. Corpus cleanup and AI remain NO-GO.
 
 ## 8. Permanent closure rule
 
 Implementation + verification + repository hygiene + online verification where
 relevant + documentation + clean Git state = milestone closure.
 
-For the next session, the one safest action is: resume provider authorization for
-the Vercel/Supabase staging deployment, prove the branch-scoped Preview uses only
-`pumzofcwfjqswkiwfqty`, and then continue M31 live staging verification. Do not
-push or deploy until that isolation is proven.
+For the next session, the one safest action is: after explicit owner authorization,
+apply only `0014_m31_country_enrichment_audit.sql` to guarded staging project
+`pumzofcwfjqswkiwfqty` and repeat the single Moderator country-audit persistence
+check. Do not touch production.

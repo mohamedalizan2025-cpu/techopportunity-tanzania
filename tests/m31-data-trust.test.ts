@@ -269,6 +269,13 @@ test("forward migration preserves rows and removes the unsafe country default", 
   assert.doesNotMatch(migration, /update\s+public\.opportunities\s+set\s+country/i);
 });
 
+test("country moderator corrections remain compatible with enrichment auditing", () => {
+  const migration = readFileSync(join(process.cwd(), "supabase/migrations/0014_m31_country_enrichment_audit.sql"), "utf8");
+  assert.match(migration, /opportunity_enrichments_field_check/);
+  assert.match(migration, /'country'/);
+  assert.doesNotMatch(migration, /(?:insert|update|delete)\s+(?:into|from)?\s*public\.opportunities/i);
+});
+
 test("remediation apply mode is explicit, status-only, and never deletes", () => {
   const remediation = readFileSync(join(process.cwd(), "scripts/m31/remediation.ts"), "utf8");
   assert.match(remediation, /--apply-test-quarantine/);
