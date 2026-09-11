@@ -1,71 +1,71 @@
 # Current engineering handoff
 
-Updated: 2026-09-11. This is the focused continuity record. Read
-[ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-11. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
-## Current state
+## Current verified state
 
-- M31 Data Trust is closed in staging and production.
 - Production code remains `45283545f466a0a4470d5cc9fc6e03e0f38cdbec`
-  (`main`/`origin/main`). The documentation consolidation continues only on
-  `staging`, from base `31aa02cf1402e08c84dda52cfa0d957576179bec`.
-- Production Supabase ref: `jltuufukcwztugvojwjd`.
-- Isolated staging Supabase ref: `pumzofcwfjqswkiwfqty`.
-- Migrations 0013 and 0014 are active in production and staging.
-- `M31_TRUST_SCHEMA_ENABLED` is active in Vercel Production and in the protected
-  branch-scoped staging Preview. No service-role key is stored in Vercel.
-- Production contains the M31 trust/reference model. The post-activation discovery
-  run preserved canonical-reference coverage.
-- Staging live Auth, save, RLS isolation, moderation, trust persistence,
-  attribution, and country-audit flows passed with synthetic fixtures; all temporary
-  identities and rows were removed.
-- AI has a disabled scaffold only. No provider, key, SDK, embeddings, or vector
-  store is operational.
+  (`main`/`origin/main`). Product planning documentation is on `staging`.
+- Production Supabase: `jltuufukcwztugvojwjd`; isolated staging Supabase:
+  `pumzofcwfjqswkiwfqty`.
+- M31 is closed; migrations 0013/0014 and the M31 flag are active in production and
+  staging. Do not restart M31 without a specific regression/recovery task.
+- AI remains operationally disabled.
+- The Product Quality & Differentiation corpus audit and cleanup plan is complete.
+  It made no database, registry, schedule, schema, environment, or provider change.
 
-The closed activation evidence is in
-[M31_STAGING_RUNBOOK.md](M31_STAGING_RUNBOOK.md). Do not restart that runbook unless
-a specific M31 regression or recovery task is authorized.
+## Verified corpus checkpoint
 
-## Environment and recovery facts
+At `2026-09-11T19:21:21Z`, a production-target-guarded SELECT-only audit found:
+
+- 271 opportunities: 247 pending, 19 published, five rejected;
+- 501 M31 references, with exactly one canonical reference per opportunity;
+- 10 deterministic test artifacts: three pending, five published, two rejected;
+- pending signals: 192 reject-noise, 21 review-required, 34 potentially qualifying;
+- all 19 published rows predate M31 trust decisions; five are test artifacts and 14
+  are the legitimate legacy re-review cohort;
+- 29 sources: 18 active and 11 inactive; the two aggregators provide 33/34
+  potentially qualifying pending rows and all 21 review-required rows;
+- all 271 country-verification values are unknown, so National/International cannot
+  be honestly backfilled; and
+- `other` contains 196/271 rows, so taxonomy refinement is justified after cleanup.
+
+The six-hour schedule remains unchanged. The mature pre-activation baseline has a
+high relevance-rejection rate and the first post-activation manual run added 10
+pending rows; collect natural post-activation scheduled evidence instead of polling
+or increasing cadence now.
+
+Full findings, semantics, batches, and verification rules:
+[CORPUS_QUALITY_PLAN.md](CORPUS_QUALITY_PLAN.md).
+
+## Exact next milestone
+
+**Product Quality & Differentiation — Corpus Cleanup Batch 1: Deterministic
+Test-Artifact Quarantine**
+
+Expected fresh-preflight scope: keep all 271 rows and 501 references; change only
+the status of the three pending and five published deterministic test artifacts to
+`rejected`. Delete nothing and do not alter trust/evidence/source fields or unrelated
+rows. Expected status counts are 244 pending, 14 published, and 13 rejected if the
+baseline has not changed.
+
+This is a production mutation and is blocked until the owner explicitly authorizes
+that exact bounded status-only cohort. Re-audit immediately before execution and
+fail closed if IDs/counts/statuses differ. Create a protected checksummed pre-change
+status manifest outside Git and retain a precise rollback transition.
+
+Do not begin legacy-publication re-review, pending-noise cleanup, source changes,
+geography/taxonomy implementation, or cadence work in Batch 1.
+
+## Continuing constraints
 
 - Repository `.env.local` is production-only and must never be used for staging.
-- Protected credentials remain outside Git under
-  `C:\Users\hp\.tech-opportunity-secrets\`.
-- The fresh protected pre-M31 production recovery set is outside Git at
-  `C:\Users\hp\.tech-opportunity-backups\20260911T182628Z\`.
-- The earlier `20260909T070944Z` set remains historical staging/recovery evidence.
-- Production migration history is intentionally absent. Do not use broad `db push`,
-  replay 0001–0012, or run migration repair without a separately reviewed plan.
-
-Recovery inventory, limitations, and restore order are authoritative in
-[DATABASE_RECOVERY.md](DATABASE_RECOVERY.md).
-
-## Exact next task
-
-Begin **Tech Opportunity Product Quality & Differentiation — Corpus Audit and
-Cleanup Planning**.
-
-This next task is planning and read-only audit work:
-
-1. measure corpus noise, stale/test records, duplicates, evidence gaps, eligibility
-   ambiguity, and legacy-publication risk;
-2. assess source credibility and useful yield;
-3. propose National / International semantics and a useful opportunity taxonomy;
-4. define reversible cleanup batches, owner gates, and before/after verification;
-5. assess discovery cadence only from measured freshness, source behavior,
-   moderation capacity, reliability, and infrastructure constraints.
-
-Do not clean production rows, change the registry or schedule, apply schema, enable
-AI, or change infrastructure during the planning milestone. The product intent and
-later phases are in [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md).
-
-## Genuine open constraints
-
-- No controlled production Moderator account was available during M31 activation;
-  authenticated write/isolation proof was completed on isolated staging instead.
-- Database recovery is a verified logical baseline, not a full private-data restore
-  rehearsal. Storage object bytes, provider secrets/settings, DNS, and off-device
-  encrypted recovery remain separate gaps.
-- Production migration-history normalization is deferred and must not be improvised.
-
-There is no blocker to the read-only corpus audit and cleanup-planning milestone.
+- Protected credentials and recovery artifacts remain outside Git. Recovery details
+  are authoritative in [DATABASE_RECOVERY.md](DATABASE_RECOVERY.md).
+- Production migration history remains deliberately unnormalized; do not use broad
+  `db push`, replay 0001–0012, or migration repair.
+- No controlled production Moderator account was available during M31 activation.
+- The read-only audit exposed a tooling hazard: `scripts/discovery/inspect-live.ts`
+  claims to be read-only but performs a reversible insert/delete probe. Do not use
+  it for a no-write audit until that behavior or label is corrected in a separately
+  scoped change.

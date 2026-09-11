@@ -32,8 +32,10 @@ listing volume.
 
 ## Immediate phase: Product Quality & Differentiation
 
-The next milestone is planning and audit work only. It must not silently mutate the
-corpus, registry, schedule, schema, infrastructure, or production configuration.
+The corpus audit and cleanup-planning milestone was completed on 2026-09-11. Its
+verified baseline and execution batches are in
+[CORPUS_QUALITY_PLAN.md](CORPUS_QUALITY_PLAN.md). Execution must not silently mutate
+the corpus, registry, schedule, schema, infrastructure, or production configuration.
 
 1. Audit the current corpus and define a bounded cleanup plan: test artifacts,
    obvious noise, stale entries, duplicate candidates, missing evidence, ambiguous

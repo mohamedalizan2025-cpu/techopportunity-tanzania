@@ -45,7 +45,9 @@ write merely to start the app. Environment identity and mutation rules are below
 - [Engineering rules](docs/ENGINEERING_RULES.md) — permanent security, data,
   verification, and milestone rules.
 - [Product roadmap](docs/PRODUCT_ROADMAP.md) — product direction and the next
-  approved planning phase.
+  approved product phase.
+- [Corpus quality plan](docs/CORPUS_QUALITY_PLAN.md) — verified corpus/source
+  baseline and reversible cleanup sequence.
 - [Architecture](docs/architecture.md) — current system shape and invariants.
 - [Current handoff](docs/NEXT_SESSION_HANDOFF.md) — the focused operational
   checkpoint for the next session.
