@@ -1,7 +1,8 @@
 # Corpus quality and cleanup plan
 
-Status: planning baseline completed 2026-09-11. No corpus, source-registry,
-schedule, schema, environment, or infrastructure mutation was performed.
+Status: planning baseline completed and Batch 1 test-artifact quarantine verified
+2026-09-11. No row was deleted and no source-registry, schedule, schema,
+environment, or infrastructure change was performed.
 
 This is the execution plan for Product Quality & Differentiation. Permanent
 direction remains in [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md); all execution must
@@ -203,25 +204,63 @@ Faster polling is not a substitute for useful sources or moderator capacity.
 
 ## Reversible execution sequence
 
-### Batch 1 — deterministic test-artifact quarantine (exact next milestone)
+### Batch 1 — deterministic test-artifact quarantine (completed)
 
-- Re-audit and freeze the exact cohort immediately before mutation.
-- Expected baseline: 10 test artifacts; two already rejected; three pending and five
-  published require `status -> rejected`.
-- Change status only. Delete nothing and do not rewrite trust, evidence, references,
-  timestamps, source links, or unrelated rows.
-- Extend/reuse the guarded remediation path with an exact confirmation and
-  concurrency checks; do not issue ad-hoc broad SQL.
-- Requires explicit owner authorization for the bounded production mutation.
+The owner authorized exactly eight non-rejected deterministic test artifacts. A
+fresh production-ref guard matched 271 opportunities, 501 references, status counts
+247/19/5, and the expected 3-pending/5-published cohort. No Discovery Sync was
+active. A protected manifest was created before the writes, and each update required
+the exact ID, original status, and original `updated_at` value.
 
-Expected post-state if the fresh preflight still matches: 271 total, 244 pending, 14
-published, 13 rejected, zero non-rejected test artifacts, and 501 references.
+| ID | Title | Transition |
+|---|---|---|
+| `24f4731b-ffd6-4bb6-9f11-b73d09a27e09` | hack | published → rejected |
+| `3f88a89f-a9d6-4821-9772-6f217792d301` | REGRESSION Bravo - Scholarship rolling | published → rejected |
+| `47a4cc61-5515-4949-bb0f-7d5b160d6853` | Institution | pending → rejected |
+| `566c4c88-9b68-4b05-a8c6-c113f282f245` | PRODUCTION LINK TEST — DELETE ME | published → rejected |
+| `5d81461a-eb3e-4d81-b1db-3636747c75c5` | E-Mrejesho | pending → rejected |
+| `95ad7a97-8717-4cc5-aa20-c879fde571ac` | hackkka | published → rejected |
+| `9d39f04d-d1f9-4797-8c7c-2f106cbfddd1` | Noticeboard | pending → rejected |
+| `f1d24fc8-e5d5-442f-be5a-6feac14aa49a` | REGRESSION Alpha - Hackathon fixed deadline | published → rejected |
 
-### Batch 2 — legitimate published corpus re-review
+Verified post-state: 271 opportunities; 244 pending, 14 published, 13 rejected;
+501 references; all 10 deterministic test artifacts rejected. The opportunity-ID,
+non-status/non-automatic-`updated_at` field, complete-reference-row, and non-target
+status hashes match the pre-change state. Production returned HTTP 200 and none of
+the quarantined markers rendered on the homepage.
 
-- Review the 14 legacy publications in small per-ID batches, strongest/current
-  opportunities first.
-- Keep a useful public inventory online; never requeue all 14 simultaneously.
+Protected evidence is outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260911T194524Z-pqd-batch1\`.
+Input SHA-256: `9721ae8deda4b1b3ba559d901f1468c6284534ffb869ea47864598fbf5bdd58f`.
+Artifact SHA-256 values:
+
+- `pre_change_manifest.json`: `f664eee8275093f8e9db1d0968fe6c0a949a6fbd795b93691d036ad828eebc56`
+- `post_change_result.json`: `5681f6455e5f46868f9c5daa0c31c9e685a2d2c349d322197e299b8b6b5891b0`
+- `post_change_verification.json`: `e52e64c50689873a62f7ca7b396d20b63d0e7a0ca89ae1e2f9274fc7d58384d9`
+
+The first post-change result recorded `verified:false` because its non-target hash
+mistakenly derived the exclusion set from the post-state, where no non-rejected
+targets remained. It is retained rather than rewritten. The corrected read-only
+verification uses the immutable target IDs from the protected pre-change manifest
+and records `verified:true`; every substantive before/after invariant also matched
+in the first result.
+
+### Batch 2A — legitimate published re-review triage (exact next milestone)
+
+- Audit the 14 remaining publications read-only, strongest/current opportunities
+  first, using organizer/official evidence rather than aggregator authority.
+- Record deadline state/evidence, meaningful-description quality, relevance,
+  Tanzanian eligibility, country/geographic-scope evidence, canonical/application
+  evidence, and duplicate signals.
+- Produce small per-ID execution cohorts and select the first cohort without
+  changing any row. Keep the public product online.
+- Confirm the production Moderator path/account requirement and request exact
+  mutation authority only after the first cohort is evidence-complete.
+
+### Batch 2B — bounded legitimate publication re-review execution
+
+- Re-review the 14 legacy publications only through the small cohorts selected by
+  Batch 2A; never requeue all 14 simultaneously.
 - Record relevance, Tanzanian eligibility, deadline semantics, country/scope,
   meaningful description, canonical/application evidence, decision attribution,
   and last verification before republishing.
@@ -267,13 +306,15 @@ integrity, RLS/public behavior, affected moderation flows, application availabil
 secret/dump exclusion, documentation, and clean Git state. Roll back only from the
 protected pre-change manifest if a declared invariant fails.
 
-The current recovery baseline is sufficient for this read-only planning milestone;
-no new backup was created because no external state changed. Follow
+The read-only planning milestone used the established recovery baseline. Batch 1
+added the protected checksummed status manifest and post-change evidence documented
+above, because production status changed. Follow
 [DATABASE_RECOVERY.md](DATABASE_RECOVERY.md) for broader recovery.
 
 ## Explicit non-goals
 
-This plan does not authorize corpus mutation, deletion, source activation or
-deactivation, schema or category changes, National/International UI, schedule
-changes, migration-history repair, AI, infrastructure, Auth, Vercel, or Supabase
-configuration changes.
+Apart from the completed, explicitly authorized Batch 1 status transitions, this
+plan does not authorize further corpus mutation or any deletion, source activation
+or deactivation, schema/category change, National/International UI, schedule change,
+migration-history repair, AI, infrastructure, Auth, Vercel, or Supabase
+configuration change.
