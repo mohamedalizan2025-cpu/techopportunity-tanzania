@@ -1,16 +1,18 @@
 # Tech Opportunity - authoritative engineering continuity
 
-Updated: 2026-09-10. Read this document first when continuing development. It is
+Updated: 2026-09-11. Read this document first when continuing development. It is
 the current operational checkpoint; older milestone records remain historical
 evidence and do not override this file or current owner instructions.
 
 ## 1. Exact checkpoint
 
-Remote `main` and remote `staging` are both at
-`45283545f466a0a4470d5cc9fc6e03e0f38cdbec`. Stage 1 of production activation
-fast-forwarded `main` to that exact release without rewriting history. The GitHub
-Milestone verification and Discovery sync workflows completed successfully, the
-exact production deployment is Ready, and production returned HTTP 200.
+Production `origin/main` remains at the exact authorized code SHA
+`45283545f466a0a4470d5cc9fc6e03e0f38cdbec`. The activation began from clean
+`staging`/`origin/staging` SHA
+`00e92569b1ce6db2a95676b607213b3a1b15ea5b`; only this continuity documentation
+advances `staging`. No production code commit was created. Vercel redeployed the
+existing production artifact as `dpl_DesgGyWGsQqVEF9hJiqLPRJwki8p`, which is Ready
+and owns the canonical production alias.
 
 The existing Vercel project now has an ordinary protected Preview for branch
 `staging` at
@@ -35,9 +37,15 @@ Current database status:
 
 **M31 LIVE APPLICATION VERIFIED ON STAGING**
 
-**M31 PRODUCTION STAGE 1 COMPLETE - CODE PROMOTED, DATABASE/FLAG UNCHANGED**
+**FRESH PRODUCTION RECOVERY SNAPSHOT VERIFIED**
 
-**PRODUCTION HEALTHY; M31 DATABASE MIGRATIONS NOT APPLIED; M31 FLAG ABSENT**
+**0013 PRODUCTION SUCCESS**
+
+**0014 PRODUCTION SUCCESS**
+
+**M31 PRODUCTION FLAG ENABLED**
+
+**M31 CLOSED**
 
 Real staging-only User A, User B, and Moderator accounts proved Auth, callback
 origin, session persistence, logout, saves, public visibility, references,
@@ -63,15 +71,15 @@ or rerun, and migration history was not normalized.
 
 ## 2. Immutable production/staging boundary
 
-- Production: `jltuufukcwztugvojwjd` — read-only until explicit Stage 2 owner
-  authorization.
-- Staging: `pumzofcwfjqswkiwfqty` — verified M31 evidence environment; no further
-  staging mutation is part of the next step.
+- Production: `jltuufukcwztugvojwjd` - M31 schema and runtime active. Future
+  mutations still require their own bounded authorization.
+- Staging: `pumzofcwfjqswkiwfqty` - isolated verified M31 evidence environment.
 - Repository `.env.local` is production-only and must never be loaded for staging.
 - Protected credentials remain outside Git under
   `C:\Users\hp\.tech-opportunity-secrets\`.
-- Protected recovery/security artifacts remain outside Git under
-  `C:\Users\hp\.tech-opportunity-backups\20260909T070944Z\`.
+- The fresh protected production recovery/evidence set is outside Git at
+  `C:\Users\hp\.tech-opportunity-backups\20260911T182628Z\`. The earlier
+  `20260909T070944Z` baseline remains historical recovery evidence.
 
 Before every staging write, require the exact staging ref, prove it differs from the
 production ref, validate the connection inputs and endpoint, run a read-only state
@@ -86,8 +94,9 @@ staging.
 
 The owner explicitly authorized a protected local logical recovery backup that may
 contain private production rows and protected raw security-definition exports.
-Production remained strictly read-only. No production data/schema/Auth/RLS/project,
-Vercel, environment, DNS, deployment, or worker mutation occurred.
+During the 2026-09-09 baseline, production remained strictly read-only. No
+production data/schema/Auth/RLS/project, Vercel, environment, DNS, deployment, or
+worker mutation occurred.
 
 The protected set includes roles, schema and data in logical formats; custom Auth
 integration; an explicit absent migration-history marker; 16 production security
@@ -171,37 +180,46 @@ and no deadline-history rows.
 
 Structural RLS/policy/grant verification passed. Anonymous and authenticated roles
 without a user session each saw only three references belonging to published
-opportunities. Actual User-A/User-B/moderator isolation and persistence remain
-explicitly unverified until the next staging-application milestone.
+opportunities. At that database-only checkpoint, actual User-A/User-B/moderator
+isolation and persistence were not yet verified. The subsequent live staging
+checkpoint recorded above verified those paths and removed its fixtures.
 
-## 5. Migration 0013 result and remaining gate
+## 5. M31 production activation result
 
 [Migration 0013](../supabase/migrations/0013_m31_data_trust.sql) is unchanged with
 SHA-256
 `c67cd11086aecd563f04e86c9a665a476749c5877255e640efb61598d6e52306`.
 
-Result: **0013 APPLIED SUCCESSFULLY TO STAGING** and
-**M31 DATABASE MIGRATION VERIFIED ON STAGING**.
+Production 0013 and 0014 were applied only to the independently guarded production
+ref using PostgreSQL failure-stop transactions. Migration 0014 remains unchanged at
+SHA-256
+`428a84738d2fa3bff2e1117f6938c2de0cc0ae7084fea2a4511837e7ad851b74`.
 
-The direct SQL execution did not create the `supabase_migrations` schema or migration
-history table. Staging therefore has the 0013 schema but no normalized 0001-0013
-repository/remote history. Do not use broad `db push`, replay 0001-0012 or run
-`migration repair`; history normalization is a separately justified and authorized
-future infrastructure milestone.
+Production now has 11 public tables, 37 opportunity columns, 66 constraints, 38
+indexes, 25 policies, five public functions, and 12 relevant non-internal triggers.
+All 261 pre-migration opportunities and their statuses survived. The 0013 backfill
+created 488 references: 261 canonical and 227 secondary, with zero missing canonical,
+duplicate pair, invalid URL, invalid source type, or orphan violations. All
+historical trust values received honest `unreviewed`/`unknown` defaults.
 
-The live staging application and country-audit correction are verified. The focused
-M31 suite has 18 tests; full-verification evidence remains 705 tests, TypeScript,
-ESLint, 29 boundaries, and the post-gate migration review. Stage 1 promoted the
-exact release to production `main`; its GitHub verification and Discovery sync both
-passed. A closing read-only production probe still found zero M31 trust columns, no
-`opportunity_references`, and the original five-field enrichment constraint.
-Production HTTP returned 200 and `M31_TRUST_SCHEMA_ENABLED` remained absent.
+The validated enrichment constraint permits exactly `venue_name`, `address`,
+`city`, `region`, `country`, and `deadline`. Migration history remains deliberately
+absent and unnormalized; do not use broad `db push`, replay 0001-0012, or run
+`migration repair` without a separate future authorization.
 
-The exact next step is:
+`M31_TRUST_SCHEMA_ENABLED` is a Production-only Vercel Config value and remains
+enabled on the isolated staging Preview. The exact release deployment is Ready.
+Homepage, listing, search, filters, published detail, M31 trust rendering, and
+pending/rejected non-exposure passed. Login and unauthenticated saved/moderation
+redirects passed. No controlled production account was safely available, so no
+authenticated or Moderator production write was manufactured; the complete live
+write and cross-user isolation proof remains the cleaned staging evidence.
 
-`Stage 2 M31 production activation: fresh protected production backup → apply 0013 → verify → apply 0014 → verify → enable M31 production flag → redeploy exact release SHA → minimum smoke tests → documentation/cleanup.`
-
-Stage 2 requires separate explicit owner authorization.
+Manual production Discovery sync run `34634893955` succeeded on the exact release
+SHA after activation. It added 10 ordinary pending candidates and the M31 trigger
+kept zero missing canonical references. A single bounded Vercel runtime-log review
+found seven request records and zero fatal, error, warning, 5xx, or M31 security
+matches.
 
 See [M31_STAGING_RUNBOOK.md](M31_STAGING_RUNBOOK.md) for the reusable guard and exact
 verification state.
@@ -219,9 +237,9 @@ The trusted discovery flow is:
 Acquisition protections, source-specific extraction, qualification evidence,
 pending-only discovery, moderation, public search/filter/detail UX, accounts, saved
 opportunities, deadline intelligence, private in-app alert preferences/events,
-discovery health, and credential-free milestone verification exist. M31 application
-code and rollout gates exist, but its database migration and runtime activation do
-not. AI scaffolding does not authorize operational AI.
+discovery health, and credential-free milestone verification exist. M31 application,
+database, trust-reference, and production rollout gates are active. AI scaffolding
+does not authorize operational AI.
 
 Recent milestone anchors:
 
@@ -236,33 +254,32 @@ Recent milestone anchors:
 
 ## 7. Deferred roadmap
 
-Do not begin these during the staging activation/live-security milestone:
+The immediate next phase is product quality and differentiation. Do not begin it as
+part of M31 closure:
 
-1. Close M31 through staging verification and a separate production decision.
-2. Clean the ambiguous/noisy corpus without manufacturing evidence.
-3. Strengthen the authoritative source policy and registry.
-4. Formalize opportunity taxonomy.
-5. Use National / International as the primary geographic grouping.
-6. Review the six-hour discovery cadence toward two hours, and later possibly one
+1. Clean the ambiguous/noisy corpus without manufacturing evidence.
+2. Strengthen publication authority, source credibility rules, and the registry.
+3. Use National / International as the primary geographic grouping, with real
+   participation evidence for International opportunities.
+4. Formalize a useful opportunity taxonomy.
+5. Review the six-hour discovery cadence toward two hours, and later possibly one
    hour or source-specific cadence, only from measured value and infrastructure limits.
-7. Claim an eligible GitHub Student Developer Pack custom-domain benefit before
+6. Claim an eligible GitHub Student Developer Pack custom-domain benefit before
    paying for a domain; keep Vercel unless a later infrastructure audit justifies a
    change.
-8. Launch a trusted normal-use discovery product before personalization.
-9. Add structured profiles and an optional CV, then explainable personalized AI over
+7. Launch a trusted normal-use discovery product before personalization.
+8. Add structured profiles and an optional CV, then explainable personalized AI over
    the trusted corpus.
-10. Build toward commercial, institutional, hackathon, and showcase strength.
+9. Build toward commercial, institutional, hackathon, and showcase strength.
 
-`M31_TRUST_SCHEMA_ENABLED` is active only for the `staging` Preview. Production
-remains live and unchanged. Corpus cleanup and AI remain NO-GO.
+`M31_TRUST_SCHEMA_ENABLED` is active in Production and on the branch-scoped staging
+Preview. M31 is closed. Corpus cleanup and AI were not started in this activation.
 
 ## 8. Permanent closure rule
 
 Implementation + verification + repository hygiene + online verification where
 relevant + documentation + clean Git state = milestone closure.
 
-For the next session, the exact next step is:
+For the next session, the exact next phase is:
 
-`Stage 2 M31 production activation: fresh protected production backup → apply 0013 → verify → apply 0014 → verify → enable M31 production flag → redeploy exact release SHA → minimum smoke tests → documentation/cleanup.`
-
-Do not begin without separate explicit owner authorization.
+`BEGIN TECH OPPORTUNITY PRODUCT QUALITY & DIFFERENTIATION: corpus cleanup -> source credibility -> National/International -> taxonomy -> discovery quality/cadence.`

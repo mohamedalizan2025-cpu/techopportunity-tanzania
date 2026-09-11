@@ -1,6 +1,8 @@
 # M31 staging database migration verification
 
-Updated: 2026-09-10. Status:
+Updated: 2026-09-11. Status:
+
+**M31 CLOSED**
 
 **M31 DATABASE MIGRATION VERIFIED ON STAGING**
 
@@ -12,14 +14,15 @@ Updated: 2026-09-10. Status:
 
 **M31 LIVE APPLICATION VERIFIED ON STAGING**
 
-This runbook records the completed staging database migration and governs the next
-isolated staging-application verification milestone. It does not authorize a
-production migration, corpus work, discovery execution, or AI work.
+This runbook preserves the completed staging proof and the later owner-authorized
+production activation record. Its original staging sections did not themselves
+authorize production. Corpus redesign, discovery-frequency changes, and AI remain
+outside M31.
 
 ## Immutable environment boundary
 
-- Production, read-only: `jltuufukcwztugvojwjd`
-- Staging, the only remote mutation target: `pumzofcwfjqswkiwfqty`
+- Production, M31 active: `jltuufukcwztugvojwjd`
+- Staging, isolated M31 evidence environment: `pumzofcwfjqswkiwfqty`
 - Protected production credentials:
   `C:\Users\hp\.tech-opportunity-secrets\production-db.env`
 - Protected staging credentials:
@@ -63,9 +66,9 @@ ambiguous target.
 ## Production read-only audit
 
 The owner explicitly authorized protected local recovery exports and detailed
-security-catalog inspection. Production remained read-only throughout. No DDL,
-DML, migration, Auth change, RLS change, project setting, environment setting,
-deployment, DNS change, or worker operation targeted production.
+security-catalog inspection. Production remained read-only throughout that audit.
+No DDL, DML, migration, Auth change, RLS change, project setting, environment
+setting, deployment, DNS change, or worker operation targeted production.
 
 At the audited snapshot:
 
@@ -331,9 +334,9 @@ repository/remote migration chain is registered. Do not use broad `db push`, rep
 0001-0012, or run `migration repair` until a separate migration-history normalization
 milestone is justified and explicitly authorized.
 
-Production remained read-only and its homepage returned HTTP 200 after staging
-verification. `M31_TRUST_SCHEMA_ENABLED` remains disabled; no staging application
-was deployed.
+At that staging checkpoint, production remained read-only and its homepage returned
+HTTP 200 after staging verification. `M31_TRUST_SCHEMA_ENABLED` remained disabled;
+no staging application was deployed at that database-only point.
 
 ## Live staging application checkpoint (2026-09-10)
 
@@ -449,6 +452,48 @@ Vercel bypass cookie, and the injected local `VERCEL_OIDC_TOKEN` line were remov
 The temporary protected test credential/state files were also deleted. No secret,
 dump, backup, generated cache, or test credential is tracked by Git.
 
-The one next action is: conduct a separate owner go/no-go review for production M31
-activation using this completed staging evidence. Do not apply any production
-migration or enable the production flag during that review.
+## Production activation closure (2026-09-11)
+
+The owner separately authorized the bounded production release. Every database
+mutation independently proved target `jltuufukcwztugvojwjd` and excluded staging
+`pumzofcwfjqswkiwfqty`. Immediately before each migration, no Discovery sync was
+active. The immutable migration hashes were:
+
+- 0013: `c67cd11086aecd563f04e86c9a665a476749c5877255e640efb61598d6e52306`
+- 0014: `428a84738d2fa3bff2e1117f6938c2de0cc0ae7084fea2a4511837e7ad851b74`
+
+A fresh ACL-restricted pre-mutation logical recovery set was verified at
+`C:\Users\hp\.tech-opportunity-backups\20260911T182628Z\`. Both custom archives
+parse, all artifacts are non-zero and checksummed, and the protected text scan found
+no credential pattern.
+
+0013 committed successfully. Production retained all 261 opportunities (237
+pending, 19 published, five rejected), added the expected 10 columns and nine
+validated constraints, and produced 488 references (261 canonical, 227 secondary).
+Catalog totals match staging: 11 tables, 37 opportunity columns, 66 constraints, 38
+indexes, 25 policies, five functions, and 12 relevant triggers. Reference integrity,
+RLS, policies, grants, the security-definer sync function, and trigger passed.
+
+0014 committed successfully. Exactly one validated
+`opportunity_enrichments_field_check` permits only `venue_name`, `address`, `city`,
+`region`, `country`, and `deadline`. No unrelated catalog count changed. Migration
+history remains absent and normalization is still deferred.
+
+Vercel Production alone received `M31_TRUST_SCHEMA_ENABLED=true`; Preview settings
+were not changed. The exact source artifact associated with production code SHA
+`45283545f466a0a4470d5cc9fc6e03e0f38cdbec` was redeployed as
+`dpl_DesgGyWGsQqVEF9hJiqLPRJwki8p`, reached Ready, and owns the canonical alias.
+Public list/search/filter/detail and non-public leakage checks passed. Login and
+unauthenticated route guards passed. No controlled production account was safely
+available, so no production Moderator action or synthetic fixture was manufactured;
+the staging authenticated write/isolation proof remains authoritative.
+
+Post-schema production Discovery sync run `34634893955` completed successfully on
+the exact release SHA. Ten normal pending discoveries increased the final observed
+state to 271 opportunities and 501 references, with zero missing canonical
+references. The bounded runtime-log review found no error, warning, 5xx, missing
+column, RLS/Auth, reference, or moderation persistence issue.
+
+Result: **M31 CLOSED**. The next phase is Tech Opportunity Product Quality &
+Differentiation, beginning with corpus cleanup and source credibility; do not mix
+that work into this activation.

@@ -1,23 +1,51 @@
 # Tech Opportunity database recovery baseline
 
-Status: **RECOVERY BASELINE ESTABLISHED** on 2026-09-09. This document is a
+Status: **FRESH PRODUCTION RECOVERY SNAPSHOT VERIFIED** on 2026-09-11. This document is a
 non-secret operating guide. The backup contents and raw security catalogs are not
 stored in Git.
 
 ## Protected location and handling
 
-The current recovery set is in the external local directory
-`C:\Users\hp\.tech-opportunity-backups\20260909T070944Z\`. The directory is
-outside the repository and outside the application environment files. Windows ACL
+The current M31 pre-mutation recovery and activation evidence set is in the external
+local directory `C:\Users\hp\.tech-opportunity-backups\20260911T182628Z\`. The
+earlier `20260909T070944Z` recovery/staging baseline is retained as historical
+evidence. Both directories are outside the repository and outside the application
+environment files. Windows ACL
 inheritance is disabled; only the current owner, `SYSTEM`, and local
 `Administrators` have Full Control. Do not move this directory into a synced or
 shared location without an owner-approved encryption and retention plan.
 
-`manifest.json` is the authoritative per-file inventory. It contains 61 artifact
-entries totaling 1,162,925 bytes, with a byte size, SHA-256 checksum, and
-classification for every listed artifact. The manifest itself is 21,824 bytes with SHA-256
-`49daae1ddb8674ad8d3a152cee0b01f7858eda96a5390b04b451d7eb337dd201`.
-It contains metadata only, not credentials or database rows.
+The fresh `manifest.json` is the authoritative 12-file inventory. Its 12 listed
+artifacts total 476,692 bytes; the manifest is 4,332 bytes with SHA-256
+`561ab581fe103cd6bf48403e68690cd37926379ab6bbf5eb0528013427bfb497`.
+It records the pre-mutation timestamp `2026-09-11T18:26:28Z`, file sizes,
+classifications, and checksums, but no credentials or database rows. Both custom
+archives parse with PostgreSQL 17 tooling, all artifacts are non-zero, and the
+credential-pattern scan returned zero matches.
+
+### Fresh M31 production recovery artifacts
+
+| Artifact | Bytes | SHA-256 |
+|---|---:|---|
+| `production_roles.sql` | 578 | `4e22e4943aa53d937b4c29c32db0a6c4ee616a64b9cbe64fcb86f5a6934ac9dc` |
+| `production_schema.sql` | 39,904 | `dff9eebe417f16612f20ce700ac77cdb18ea393cba68d382a18702b6bc11626e` |
+| `production_schema.dump` | 57,273 | `cafc6bd87a68f5c17170d393a73c18d22a84f4fe760b20cd6db7fe5e1ff71385` |
+| `production_schema.list` | 10,023 | `2123c7e26db0a642bd9c6336eabd41b3b2402eb6eb6217c05f19d6ead5159950` |
+| `production_data.sql` | 278,770 | `a9a81e08d21ba5b411ba88070659f91fb85d72cb12caaa33e8bef1bd68fa1852` |
+| `production_data.dump` | 84,880 | `d51fbd3c4fa4ec8837c494050bd8b4b3683eb9de94a008d1c656feb023628f50` |
+| `production_data.list` | 3,139 | `c89bfd91b87b390e0a628fb7113b0859a5103b240ac602bc11e46c7a966ee0b0` |
+| `production_custom_auth_integration.sql` | 112 | `7d80c3c96d8457f989290729a71bb1a9a2e9c31bfc50433155a7607461740dbe` |
+| `production_migration_history.txt` | 71 | `312716cb567c4b57f69d8ff0f934dfd1ea15b20b6ae75bfbd47b73a4d54afec7` |
+| `production_m31_execution.audit` | 755 | `da0d06c8142ba18d9aaf608075d02e970f929226e96541424d1bd3fae0f75868` |
+| `production_m31_post_migration_verification.txt` | 335 | `bd70298ec00f779d290924e85219aebb82bd3530057a52a501b10c3c360512de` |
+| `production_m31_application_verification.txt` | 852 | `3f2d9142ee5644c201f4af249c7be45c6869c08121b12c78d30d68f28b79b43a` |
+
+The schema and data archives are the fresh pre-0013/0014 recovery point. The three
+M31 evidence files were added after migration/deployment and do not alter that
+snapshot. The role export contains settings/parameter grants only, no password or
+`CREATE ROLE` statement.
+
+### Historical 2026-09-09 baseline
 
 ### Core production recovery artifacts
 
@@ -141,9 +169,13 @@ before every write.
    schema compatibility and required encryption/signing dependencies first.
    Storage object metadata does not include the underlying object bytes.
 9. The production `supabase_migrations.schema_migrations` table was absent at
-   audit time. Preserve that fact; do not fabricate, repair, or mark migration
-   history during recovery. Reconcile migration tracking only through a separately
-   reviewed owner-approved plan after the recovered schema is proven.
+   both the fresh pre-mutation snapshot and the completed M31 activation. Preserve
+   that fact; do not fabricate, repair, or mark migration history during recovery.
+   The fresh schema/data archives predate 0013/0014, so a recovery targeting the
+   current production contract must first prove the restored pre-M31 state, then
+   apply the exact checksummed 0013 followed by 0014 using the same bounded process.
+   Reconcile migration tracking only through a separately reviewed owner-approved
+   plan after the recovered schema is proven.
 10. Re-run catalog, RLS/grant, function/trigger, row-count, FK-orphan, Auth flow,
     and application smoke checks. Verify Storage objects against a separate object
     backup. Keep the recovery environment isolated until all checks pass.
