@@ -1,4 +1,4 @@
-# M31 staging database migration verification
+# M31 staging and production activation record
 
 Updated: 2026-09-11. Status:
 
@@ -14,10 +14,11 @@ Updated: 2026-09-11. Status:
 
 **M31 LIVE APPLICATION VERIFIED ON STAGING**
 
-This runbook preserves the completed staging proof and the later owner-authorized
-production activation record. Its original staging sections did not themselves
-authorize production. Corpus redesign, discovery-frequency changes, and AI remain
-outside M31.
+This historical/operational record preserves the completed staging proof and the
+later owner-authorized production activation. **Do not restart it as the next
+milestone** unless a specific regression, recovery, or M31 audit is authorized. Its
+original staging sections did not themselves authorize production. Corpus redesign,
+discovery-frequency changes, and AI remain outside M31.
 
 ## Immutable environment boundary
 

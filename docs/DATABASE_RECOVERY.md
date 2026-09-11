@@ -4,6 +4,10 @@ Status: **FRESH PRODUCTION RECOVERY SNAPSHOT VERIFIED** on 2026-09-11. This docu
 non-secret operating guide. The backup contents and raw security catalogs are not
 stored in Git.
 
+Environment identities: production `jltuufukcwztugvojwjd`; isolated staging
+`pumzofcwfjqswkiwfqty`. Never infer a restore target from a filename or credential
+file alone; verify it independently before any write.
+
 ## Protected location and handling
 
 The current M31 pre-mutation recovery and activation evidence set is in the external

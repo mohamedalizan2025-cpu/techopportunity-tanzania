@@ -1,5 +1,8 @@
 # AI Opportunity Assistant — Architecture Design
 
+Classification: retained specialized design reference, not an active roadmap or
+authorization. Product sequencing is in [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md).
+
 Status: **SCAFFOLD IMPLEMENTED · PROVIDER DISABLED** · Prepared 2026-08-27,
 status corrected 2026-08-29 after the architecture audit. The route handler,
 strict plan contract, grounded execution, fallback, kill switch and rate

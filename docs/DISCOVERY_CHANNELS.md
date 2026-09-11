@@ -1,5 +1,9 @@
 # Multi-Channel Discovery Audit (2026-02 — evidence-based, NOT implemented)
 
+Classification: retained historical source research. It is not the live source
+registry, a current external-platform guarantee, or permission to add a connector.
+Re-verify provider terms and access before any future implementation.
+
 Status: **AUDIT ONLY**. No connector code was added. Every external channel
 below was checked against its CURRENT official developer documentation where
 reachable from this environment, per the no-stale-memory rule.

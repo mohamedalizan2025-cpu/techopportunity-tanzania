@@ -1,5 +1,10 @@
 # Milestone 31 — Data trust architecture
 
+Status: **CLOSED** on 2026-09-11. This is a retained historical design record,
+not an active rollout plan. Current operational state is in
+[NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md); completed activation evidence is
+in [M31_STAGING_RUNBOOK.md](M31_STAGING_RUNBOOK.md).
+
 M31 is a forward-only trust repair. M30 remains closed. Migrations 0005–0009
 remain historical designs and must not be replayed blindly against a production
 database that already contains the M30/0012 schema.
@@ -95,7 +100,7 @@ until every critical corpus, evidence, country, attribution, duplicate, and
 security condition is genuinely satisfied. Missing data fails closed; no
 threshold can be weakened to manufacture a green report.
 
-The current production result is intentionally `NO_GO`: 0013 is not applied,
-published trust/evidence is incomplete, and the public test rows have not yet
-been owner-quarantined. The verifier exits non-zero until every row-level and
-security criterion passes.
+The pre-activation production result was intentionally `NO_GO`. Migration 0013 and
+the bounded 0014 country-audit fix are now active in production and staging, and M31
+is closed. AI readiness remains an independent verification result: operational AI
+is still disabled and missing evidence must continue to fail closed.
