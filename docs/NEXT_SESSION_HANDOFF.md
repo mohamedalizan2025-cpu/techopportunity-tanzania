@@ -14,8 +14,11 @@ Updated: 2026-09-13. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   Batch 2A legacy-publication triage, and the two-record Batch 2B1 production
   re-review are complete.
 - Sahara and AAS now satisfy the current M31 publication contract through the
-  authenticated production Moderator path. The other 12 legacy published rows
-  remain outside the completed authorization and were not touched.
+  authenticated production Moderator path and remain published.
+- Batch 2B2 stopped fail-closed when a concurrent six-row unpublish sequence
+  included three authorized records and three explicitly out-of-scope records.
+  Production is now 246 pending / 8 published / 19 rejected / 0 expired = 273
+  opportunities with 505 references.
 - Sources, discovery cadence, taxonomy, geography logic, schema, migrations, Auth,
   Vercel configuration, and unrelated infrastructure were not changed.
 
@@ -254,23 +257,58 @@ Final read-only HTTP smoke checks returned 200 for the homepage and both exact p
 detail routes. Anonymous access to the Sahara published re-review route returned 307
 to `/login`; the authenticated Moderator boundary remains required.
 
+## Batch 2B2 fail-closed production result
+
+The pre-write manifest at `2026-09-12T21:55:30Z` verified the production project,
+authenticated sole-Moderator browser session, all six exact authorized IDs still
+published, 273 opportunity IDs, 505 reference rows, and counts of 246 pending / 14
+published / 13 rejected / 0 expired. Fresh official/current evidence remained
+decisive for all six; the evidence matrix is in
+[CORPUS_QUALITY_PLAN.md](CORPUS_QUALITY_PLAN.md).
+
+Immediately before the automated first unpublish click could execute, the page
+refreshed from 14 to 8 live records. Read-only database checks found exactly six
+status transitions between `22:08:43Z` and `22:08:54Z`:
+
+- authorized and now rejected: `98559cb8-183e-482f-972e-ad3b7b3636ba` (SUZA HEET
+  news), `f6a0f5eb-5fcb-4692-a3b0-f9d621013d73` (UDSM homepage), and
+  `3710047a-e8b9-4a9f-a17d-cf39e304ee89` (FSD Tanzania article);
+- explicitly out of scope and now rejected:
+  `22222c92-9790-4cc6-8f11-66a18d50038e` (IEM),
+  `14c76d7b-8d70-4a4a-9131-0ab91697e2c9` (ERASMUS+ KA171), and
+  `21dae9a3-991b-48a6-8ab4-7448d1bdc883` (VETA 2027 intake); and
+- untouched and still published: `fdfe3e70-848a-4ceb-a1b8-4cb949826aca`
+  (Ogilvy), `9d967b53-ed32-49f8-a7c5-46f389299d78` (AIJC), and
+  `1b3649a0-b694-4475-8ed8-2ce0582482e6` (30-job aggregate).
+
+Execution stopped before any further UI mutation. All 273 opportunity IDs and all
+505 full reference rows remain intact; authorized-target references/audits are
+unchanged; Sahara and AAS remain exact, published M31 controls. The six hidden
+routes return 404. The remaining Batch 2B2 routes, Sahara, AAS, and the homepage
+return 200. The existing unpublish workflow changes only status plus automatic
+`updated_at`; it creates no enrichment audit and stores no row-level actor, so the
+signed-in Moderator page does not prove who initiated the concurrent actions.
+
+Protected evidence is outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260912T215416Z-pqd-batch2b2\`; ACL
+inheritance is disabled. Manifest SHA-256:
+`A0610EFDB39DFC885D19A77DEE378A7954AAE88CDBF28B757C78F206C595E7BB`.
+Incident-report SHA-256:
+`04888C90DAE743CA77F035D53241502E94D915A4C9D3FE9FDC93B1F7F1250C71`.
+
 ## Exact next milestone
 
-**Corpus Cleanup Batch 2B2 — Decisive Legacy-Publication Withhold Cohort.**
+**Batch 2B2 Fail-Closed Incident Resolution — Three Out-of-Scope Unpublishes.**
 
-This is the bounded six-record cohort already classified with high confidence as
-non-opportunities, explicitly excluded, or otherwise decisively unsuitable. It
-requires fresh exact-ID production mutation authorization before any status change:
-
-- `98559cb8-183e-482f-972e-ad3b7b3636ba`
-- `fdfe3e70-848a-4ceb-a1b8-4cb949826aca`
-- `9d967b53-ed32-49f8-a7c5-46f389299d78`
-- `f6a0f5eb-5fcb-4692-a3b0-f9d621013d73`
-- `1b3649a0-b694-4475-8ed8-2ce0582482e6`
-- `3710047a-e8b9-4a9f-a17d-cf39e304ee89`
-
-Do not include the three expired-call rows, the three evidence-acquisition rows,
-or any pending row. Do not begin Batch 2B2 without that explicit authorization.
+Scope is only `22222c92-9790-4cc6-8f11-66a18d50038e`,
+`14c76d7b-8d70-4a4a-9131-0ab91697e2c9`, and
+`21dae9a3-991b-48a6-8ab4-7448d1bdc883`. Obtain an explicit owner decision either
+to restore their exact pre-incident published state through a safe authenticated
+recovery path, or to accept their current withheld state after record-specific
+evidence review. There is currently no authenticated `rejected → published`
+recovery action; do not bypass Auth or impersonate via service role. Re-baseline
+after the authorized outcome, then separately authorize continuation for Ogilvy,
+AIJC, and the 30-job aggregate. Do not begin Batch 3.
 
 ## Continuing constraints
 

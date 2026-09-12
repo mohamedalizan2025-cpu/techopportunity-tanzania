@@ -3,9 +3,10 @@
 Status: planning baseline, Batch 1 test-artifact quarantine, read-only Batch 2A
 legacy-publication triage, the attributable published re-review blocker resolution,
 its smallest production promotion, and the exact two-record Batch 2B1 production
-re-review are completed through 2026-09-13. No production row or reference was
-deleted and no source-registry, schedule, schema, migration, or
-infrastructure-configuration change was performed.
+re-review are completed through 2026-09-13. Batch 2B2 stopped fail-closed after a
+concurrent six-row unpublish sequence included three out-of-scope records. No
+production row or reference was deleted and no source-registry, schedule, schema,
+migration, or infrastructure-configuration change was performed.
 
 This is the execution plan for Product Quality & Differentiation. Permanent
 direction remains in [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md); all execution must
@@ -422,7 +423,7 @@ Writes remain bounded by the recorded authorization and recovery/identity gates:
    `ef8defbb-80ea-483a-94a3-194d2637177b`. Existing authorization is limited to
    these two IDs. Both were processed sequentially through the authenticated
    production Moderator path and independently verified; neither was taken offline.
-2. **Batch 2B2 — decisive withhold cohort (exact next milestone):**
+2. **Batch 2B2 — decisive withhold cohort (interrupted 2026-09-13):**
    `98559cb8-183e-482f-972e-ad3b7b3636ba`,
    `fdfe3e70-848a-4ceb-a1b8-4cb949826aca`,
    `9d967b53-ed32-49f8-a7c5-46f389299d78`,
@@ -499,14 +500,63 @@ Writes remain bounded by the recorded authorization and recovery/identity gates:
 - Final HTTP smoke checks returned 200 for the homepage and both exact public detail
   routes; anonymous published re-review access returned 307 to sign-in.
 
-### Batch 2B2 — decisive legacy-publication withhold cohort (exact next milestone)
+### Batch 2B2 — decisive legacy-publication withhold cohort (stopped fail-closed)
 
-- Scope is only the six exact IDs listed in the future-cohorts section above.
-- Obtain fresh explicit mutation authorization for those six IDs before any write.
-- Re-check current status and decisive evidence, create a protected manifest, and
-  use the existing protected unpublish path one record at a time.
-- Do not include the expired-call cohort, evidence-acquisition cohort, or pending
-  corpus. Stop after Batch 2B2; do not begin Batch 3.
+At `2026-09-12T21:55:30Z`, a protected production manifest confirmed all six exact
+authorized IDs were still `published`, the signed-in browser identity was the sole
+production Moderator, and the baseline was 273 opportunities / 505 references with
+246 pending / 14 published / 13 rejected / 0 expired. Fresh evidence still supported
+the documented decisions:
+
+| ID | Evidence decision | Result at stop |
+|---|---|---|
+| `98559cb8-183e-482f-972e-ad3b7b3636ba` | [Official SUZA article](https://suza.ac.tz/?p=19692) is news about a ministerial HEET construction inspection, not an application opportunity. | `published → rejected` |
+| `fdfe3e70-848a-4ceb-a1b8-4cb949826aca` | [Official Ogilvy programme](https://og.ogilvy.co.za/) is closed; its [official FAQ](https://og.ogilvy.co.za/faq.php) restricts applicants to South African citizens and confirms the 7 September 2026 close. | Unchanged `published` |
+| `9d967b53-ed32-49f8-a7c5-46f389299d78` | [Official AIJC call](https://aijc.africa/fellowship-applications-open-for-francophone-investigative-journalists/) lists 21 eligible Francophone countries, excluding Tanzania, and a passed 4 September deadline; it is journalism rather than a technology opportunity. | Unchanged `published` |
+| `f6a0f5eb-5fcb-4692-a3b0-f9d621013d73` | [Official UDSM homepage](https://www.udsm.ac.tz/) is an institution-level index with separate announcements, not one discrete application opportunity. | `published → rejected` |
+| `1b3649a0-b694-4475-8ed8-2ce0582482e6` | [Source page](https://opportunitydesk.org/2026/08/27/30-hot-job-opportunities-accross-various-sectors-currently-open-august-27-2026/) is an aggregate of 30 unrelated jobs with different employers, eligibility, links, and deadlines, not one opportunity. | Unchanged `published` |
+| `3710047a-e8b9-4a9f-a17d-cf39e304ee89` | [Official FSD Tanzania article](https://www.fsdt.or.tz/2024/11/29/digital-financial-services-and-financial-technology-in-tanzania/) is sector analysis, not an application opportunity. | `published → rejected` |
+
+Immediately before the automated first unpublish click could execute, the management
+page refreshed from 14 to 8 live records. Database timestamps then established that
+six status transitions had occurred from `22:08:43Z` through `22:08:54Z`. Three were
+authorized Batch 2B2 records above; three were explicitly out of scope:
+
+- `22222c92-9790-4cc6-8f11-66a18d50038e` — Master of Innovation and
+  Entrepreneurship Management (IEM), evidence-acquisition cohort;
+- `14c76d7b-8d70-4a4a-9131-0ab91697e2c9` — ERASMUS+ KA171 SMS, expired-call
+  cohort; and
+- `21dae9a3-991b-48a6-8ab4-7448d1bdc883` — VETA 2027 intake notice,
+  evidence-acquisition cohort.
+
+The execution stopped immediately; Ogilvy, AIJC, and the 30-job aggregate were not
+touched. Production is now 246 pending / 8 published / 19 rejected / 0 expired.
+All 273 opportunity IDs and all 505 complete reference rows remain unchanged, the
+six authorized target references and enrichment rows are unchanged, and Sahara and
+AAS remain exact M31-compliant published controls. The six hidden detail routes
+return 404; the three remaining Batch 2B2 routes, Sahara, AAS, and the homepage
+return 200. The existing unpublish contract records a status change plus automatic
+`updated_at` only; it creates no enrichment audit row and stores no row-level actor,
+so the authenticated page context cannot prove which person initiated this
+concurrent sequence.
+
+Protected evidence is outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260912T215416Z-pqd-batch2b2\` with ACL
+inheritance disabled. The pre-change manifest SHA-256 is
+`A0610EFDB39DFC885D19A77DEE378A7954AAE88CDBF28B757C78F206C595E7BB`; the
+fail-closed incident report SHA-256 is
+`04888C90DAE743CA77F035D53241502E94D915A4C9D3FE9FDC93B1F7F1250C71`.
+
+### Exact next milestone — Batch 2B2 fail-closed incident resolution
+
+Resolve only the three out-of-scope transitions listed above. This is owner-gated:
+obtain explicit authorization either to restore their exact pre-incident published
+state through a safe authenticated recovery path, or to accept their current
+withheld state after record-specific evidence review. The product currently has no
+authenticated `rejected → published` recovery action; do not bypass Auth or use
+service-role impersonation. Re-baseline production after the authorized decision.
+Only then may a separately authorized continuation process the three untouched
+Batch 2B2 IDs one at a time. Do not begin Batch 3.
 
 ### Batch 3 — salvage priority pending rows
 
