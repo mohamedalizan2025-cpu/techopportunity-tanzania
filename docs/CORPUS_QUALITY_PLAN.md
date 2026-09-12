@@ -457,7 +457,12 @@ Writes remain bounded by the recorded authorization and recovery/identity gates:
 - A target-guarded anonymous SELECT bound to production ref
   `jltuufukcwztugvojwjd` confirmed Sahara and AAS remain published in their original
   legacy unreviewed/unknown/unattributed state with null M31 evidence/decision fields,
-  unchanged `updated_at`, and two references each. No corpus write was attempted.
+  unchanged `updated_at`, and two references each. No moderation/corpus mutation was
+  attempted.
+- The required `package.json` test registration matched the existing discovery
+  workflow's production-sensitive push filter. Completed run `34691899256` reported
+  18 sources attempted / 17 succeeded / 1 isolated failure, 10 qualified candidates,
+  and `insertedPending: 0`; therefore that automatic run also left the corpus intact.
 - The prior Ready Vercel deployment and protected database recovery artifacts remain
   available. Temporary production-smoke tooling was removed.
 

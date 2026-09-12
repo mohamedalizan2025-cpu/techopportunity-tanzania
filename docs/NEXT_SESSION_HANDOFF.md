@@ -195,6 +195,13 @@ Minimum read-only production smoke checks passed:
   unpublish, user isolation, and unrelated-row protection remain proved by the exact
   code's staging live matrix and production-bound automated gates.
 
+Because the required test registration changed `package.json`, the repository's
+existing discovery-sensitive path filter also started production Discovery sync run
+`34691899256`. Its retained machine-readable result identifies a `push` event, 18
+sources attempted / 17 succeeded / 1 isolated failure, 10 qualified candidates, and
+`insertedPending: 0`. The run completed successfully and independently confirms that
+the promotion inserted no pending corpus row.
+
 The promotion was code-only: Sahara, AAS, the other 12 published rows, and the
 pending corpus were not mutated.
 
