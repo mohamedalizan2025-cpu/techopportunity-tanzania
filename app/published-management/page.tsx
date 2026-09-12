@@ -27,8 +27,8 @@ const signOutButtonClasses =
 /**
  * Staff-only published-record list (Milestone 14). Same authorization
  * boundary as the moderation queue, deliberately minimal: one line per live
- * public record and one per-record unpublish action. No dashboards, no bulk
- * selection, no new status vocabulary.
+ * public record and explicit per-record re-review/unpublish actions. No
+ * dashboards, no bulk selection, no new status vocabulary.
  */
 export default async function PublishedManagementPage() {
   const access = await getModerationAccess();
@@ -106,7 +106,9 @@ export default async function PublishedManagementPage() {
               deletes the row: discovery source, URL, timestamps and the title
               stay intact for audit. An unpublished record is not publicly
               readable and does not re-enter the pending review queue — this
-              interface offers no re-publish button by design.
+              interface offers no re-publish button by design. Re-review keeps
+              a record live only after the complete current trust contract
+              passes again.
             </p>
             <ul className="mt-4 flex flex-col gap-3">
               {published.map((opportunity) => (
@@ -140,7 +142,15 @@ export default async function PublishedManagementPage() {
                         View public page ↗
                       </Link>
                     </div>
-                    <UnpublishControl id={opportunity.id} title={opportunity.title} />
+                    <div className="flex flex-col items-end gap-2">
+                      <Link
+                        href={`/moderation/${opportunity.id}?mode=published`}
+                        className="inline-flex h-9 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+                      >
+                        Re-review evidence
+                      </Link>
+                      <UnpublishControl id={opportunity.id} title={opportunity.title} />
+                    </div>
                   </div>
                 </li>
               ))}

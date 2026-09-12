@@ -15,6 +15,7 @@ import {
   queueFilterQuery,
 } from "@/lib/data/moderation";
 import { listOrganizationOptions } from "@/lib/data/opportunities";
+import { getPublishedOpportunityById } from "@/lib/data/published-management";
 import { formatLocationDisplay } from "@/lib/opportunity-presentation";
 import { TRIAGE_BUCKET_LABEL, triageBucketOf } from "@/lib/triage-bucket";
 import { DecisionForm } from "../decision-form";
@@ -31,16 +32,24 @@ interface ReviewPageProps {
 
 export default async function ModerationReviewPage({ params, searchParams }: ReviewPageProps) {
   const { id } = await params;
+  const rawSearchParams = await searchParams;
+  const modeParam = Array.isArray(rawSearchParams.mode)
+    ? rawSearchParams.mode[0]
+    : rawSearchParams.mode;
+  const isPublishedReview = modeParam === "published";
   // Queue view filter (bucket/source), carried forward from the queue link
   // so "next in queue" stays inside the batch the moderator chose.
-  const filter = parseQueueFilter(await searchParams);
+  const filter = parseQueueFilter(rawSearchParams);
   const filterQuery = queueFilterQuery(filter);
-  const queueHref = `/moderation${filterQuery}`;
+  const queueHref = isPublishedReview
+    ? "/published-management"
+    : `/moderation${filterQuery}`;
   const access = await getModerationAccess();
 
   if (!access.ok) {
     if (access.reason === "unauthenticated") {
-      redirect(`/login?next=${encodeURIComponent(`/moderation/${id}`)}`);
+      const next = `/moderation/${id}${isPublishedReview ? "?mode=published" : ""}`;
+      redirect(`/login?next=${encodeURIComponent(next)}`);
     }
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-zinc-50 px-6 py-24 text-center font-sans dark:bg-black">
@@ -72,29 +81,32 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
           href={queueHref}
           className="text-sm font-medium underline underline-offset-4 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
         >
-          ← Back to queue
+          ← Back to {isPublishedReview ? "published records" : "queue"}
         </Link>
       </div>
     );
   }
 
-  const opportunity = await getPendingOpportunityById(id);
+  const opportunity = isPublishedReview
+    ? await getPublishedOpportunityById(id)
+    : await getPendingOpportunityById(id);
 
   if (!opportunity) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-zinc-50 px-6 py-24 font-sans dark:bg-black">
         <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
-          No longer pending
+          {isPublishedReview ? "No longer published" : "No longer pending"}
         </h1>
         <p className="max-w-md text-center text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-          This submission was not found in the pending queue — it may already
-          have been reviewed.
+          {isPublishedReview
+            ? "This opportunity is no longer published — it may have been unpublished while you were reviewing it."
+            : "This submission was not found in the pending queue — it may already have been reviewed."}
         </p>
         <Link
           href={queueHref}
           className="text-sm font-medium underline underline-offset-4 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
         >
-          ← Back to queue
+          ← Back to {isPublishedReview ? "published records" : "queue"}
         </Link>
       </div>
     );
@@ -102,8 +114,12 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
 
   const organizations = await listOrganizationOptions();
   const auditStatus = await getEnrichmentAuditStatus();
-  const navigation = await getQueueNavigation(id, filter);
-  const nextHref = navigation.nextId ? `/moderation/${navigation.nextId}${filterQuery}` : null;
+  const navigation = isPublishedReview
+    ? { position: null, total: 0, nextId: null }
+    : await getQueueNavigation(id, filter);
+  const nextHref = navigation.nextId
+    ? `/moderation/${navigation.nextId}${filterQuery}`
+    : null;
   const categoryOptions = await listReviewCategoryOptions(
     opportunity.category,
     categoryLabel
@@ -130,7 +146,7 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
               href={queueHref}
               className="text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
             >
-              ← Moderation queue
+              ← {isPublishedReview ? "Published records" : "Moderation queue"}
             </Link>
             {navigation.position !== null ? (
               <span className="rounded-full border border-black/[.08] bg-white px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400">
@@ -193,8 +209,9 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
             </div>
           </dl>
           <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-500">
-            Facts below were discovered automatically and may be wrong —
-            verify them against the official page before approving.
+              {isPublishedReview
+                ? "Re-check every trust field against current official evidence before keeping this record published."
+                : "Facts below were discovered automatically and may be wrong — verify them against the official page before approving."}
           </p>
         </section>
 
@@ -233,7 +250,7 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
 
         <section className="mt-10 border-t border-black/[.08] pt-8 dark:border-white/[.145]">
           <h2 className="text-lg font-semibold text-black dark:text-zinc-50">
-            Decision
+            {isPublishedReview ? "Published opportunity re-review" : "Decision"}
           </h2>
           {!auditStatus.active ? (
             <p
@@ -252,6 +269,7 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
               nextHref={nextHref}
               queueHref={queueHref}
               categoryOptions={categoryOptions}
+              mode={isPublishedReview ? "published" : "pending"}
             />
           </div>
         </section>
