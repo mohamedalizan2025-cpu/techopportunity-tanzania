@@ -1,6 +1,10 @@
-import { OPPORTUNITY_CATEGORIES, type OpportunityCategory } from "../types";
+import { OPPORTUNITY_CATEGORIES, type Opportunity, type OpportunityCategory } from "../types";
 import { TANZANIA_REGIONS } from "../tanzania-regions";
-import type { CountryVerification } from "../opportunity-trust";
+import {
+  isAiSearchableOpportunity,
+  M31_QUALIFICATION_RULE_VERSION,
+  type CountryVerification,
+} from "../opportunity-trust";
 
 /**
  * Pure parsing/validation for the moderator review form. No database access —
@@ -37,6 +41,15 @@ export interface ReviewInput {
 export type ParseReviewResult =
   | { ok: true; review: ReviewInput }
   | { ok: false; message: string };
+
+export interface ReviewAuditRow {
+  opportunity_id: string;
+  field: "venue_name" | "address" | "city" | "region" | "country" | "deadline";
+  previous_value: string | null;
+  new_value: string;
+  evidence_url: string;
+  method: "moderator-review";
+}
 
 function field(formData: FormData, name: string): string {
   const raw = formData.get(name);
@@ -212,4 +225,132 @@ export function parseReviewInput(formData: FormData): ParseReviewResult {
       organizationId,
     },
   };
+}
+
+/**
+ * The one evidence-complete payload shared by initial approval and published
+ * re-review. Status is deliberately fixed to `published`; callers add their
+ * own exact current-status/concurrency guard before executing it.
+ */
+export function reviewedOpportunityUpdate(
+  review: ReviewInput,
+  moderatorId: string,
+  decisionTime: string,
+  categoryId: number
+): Record<string, unknown> {
+  return {
+    status: "published",
+    title: review.title,
+    description: review.description,
+    url: review.url,
+    venue_name: review.venueName,
+    address: review.address,
+    city: review.city,
+    region: review.region,
+    country: review.country,
+    country_verification: review.countryVerification,
+    country_evidence: review.countryEvidence,
+    deadline: review.deadline,
+    deadline_precision: review.deadlinePrecision,
+    deadline_evidence: review.deadlineEvidence,
+    relevance_decision: "relevant",
+    relevance_evidence: review.relevanceEvidence,
+    eligibility: "tanzanians_eligible",
+    eligibility_evidence: review.eligibilityEvidence,
+    qualification_rule_version: M31_QUALIFICATION_RULE_VERSION,
+    last_verified_at: decisionTime,
+    organization_id: review.organizationId,
+    category_id: categoryId,
+    decided_by: moderatorId,
+    decided_at: decisionTime,
+  };
+}
+
+/** Existing field-level audit contract, reused by both review paths. */
+export function reviewAuditRows(
+  current: Opportunity,
+  review: ReviewInput
+): ReviewAuditRow[] {
+  const fields: Array<{
+    field: ReviewAuditRow["field"];
+    before: string | null;
+    after: string | null;
+  }> = [
+    { field: "venue_name", before: current.location?.venueName ?? null, after: review.venueName },
+    { field: "address", before: current.location?.address ?? null, after: review.address },
+    { field: "city", before: current.location?.city ?? null, after: review.city },
+    { field: "region", before: current.location?.region ?? null, after: review.region },
+    { field: "country", before: current.location?.country ?? null, after: review.country },
+    { field: "deadline", before: current.deadline ?? null, after: review.deadline },
+  ];
+
+  return fields.flatMap(({ field, before, after }) =>
+    (before ?? null) === (after ?? null)
+      ? []
+      : [{
+          opportunity_id: current.id,
+          field,
+          previous_value: before,
+          new_value: after ?? "",
+          evidence_url: current.url,
+          method: "moderator-review" as const,
+        }]
+  );
+}
+
+/**
+ * Published re-review has a stronger fail-closed gate than legacy initial
+ * approval: construct the exact post-review domain record and run the existing
+ * M31 publication predicate before any database write.
+ */
+export function satisfiesPublishedReviewContract(
+  current: Opportunity,
+  review: ReviewInput,
+  moderatorId: string,
+  decisionTime: string,
+  now = new Date()
+): boolean {
+  const reviewed: Opportunity = {
+    ...current,
+    title: review.title,
+    category: review.category,
+    description: review.description,
+    url: review.url,
+    organizationId: review.organizationId,
+    deadline: review.deadline,
+    deadlinePrecision: review.deadlinePrecision,
+    deadlineEvidence: review.deadlineEvidence,
+    location:
+      review.venueName !== null ||
+      review.address !== null ||
+      review.city !== null ||
+      review.region !== null ||
+      review.country !== null
+        ? {
+            venueName: review.venueName,
+            address: review.address,
+            city: review.city,
+            region: review.region,
+            country: review.country,
+            latitude: current.location?.latitude ?? null,
+            longitude: current.location?.longitude ?? null,
+          }
+        : null,
+    status: "published",
+    trust: {
+      relevanceDecision: "relevant",
+      relevanceEvidence: review.relevanceEvidence,
+      eligibilityDecision: "tanzanians_eligible",
+      eligibilityEvidence: review.eligibilityEvidence,
+      qualificationRuleVersion: M31_QUALIFICATION_RULE_VERSION,
+      countryVerification: review.countryVerification,
+      countryEvidence: review.countryEvidence,
+      lastVerifiedAt: decisionTime,
+      decidedBy: moderatorId,
+      decidedAt: decisionTime,
+      canonicalEvidenceUrl: review.url,
+    },
+  };
+
+  return isAiSearchableOpportunity(reviewed, now);
 }

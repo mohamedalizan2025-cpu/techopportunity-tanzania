@@ -1,7 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getModerationAccess, getPendingOpportunityById, isValidOpportunityId } from "./moderation";
+import {
+  getModerationAccess,
+  getPendingOpportunityById,
+  isValidOpportunityId,
+  type StaffContext,
+} from "./moderation";
 import {
   evaluateUnpublishPermission,
   evaluateUnpublishTarget,
@@ -10,24 +15,114 @@ import {
   unpublishDenialMessage,
   unpublishUpdatePayload,
 } from "./published-management";
-import { parseReviewInput, type ReviewInput } from "./moderation-review";
+import {
+  parseReviewInput,
+  reviewAuditRows,
+  reviewedOpportunityUpdate,
+  satisfiesPublishedReviewContract,
+  type ReviewInput,
+} from "./moderation-review";
 import type { DecisionState, UnpublishState } from "../staff-form-state";
-import { M31_QUALIFICATION_RULE_VERSION } from "../opportunity-trust";
 import { trustSchemaEnabled } from "./opportunities";
+import type { Opportunity } from "../types";
 
 interface DecidedRow {
   slug: string;
   title: string;
 }
 
-const AUDITABLE_FIELDS: Array<{ field: string; previous: keyof ReviewInput; next: keyof ReviewInput }> = [
-  { field: "venue_name", previous: "venueName", next: "venueName" },
-  { field: "address", previous: "address", next: "address" },
-  { field: "city", previous: "city", next: "city" },
-  { field: "region", previous: "region", next: "region" },
-  { field: "country", previous: "country", next: "country" },
-  { field: "deadline", previous: "deadline", next: "deadline" },
-];
+type ReviewSaveResult =
+  | { ok: true; row: DecidedRow }
+  | { ok: false; reason: "organization" | "category" | "write" | "stale" };
+
+async function saveApprovedReview({
+  staff,
+  current,
+  review,
+  expectedStatus,
+  expectedDecisionAt,
+  decisionTime,
+}: {
+  staff: StaffContext;
+  current: Opportunity;
+  review: ReviewInput;
+  expectedStatus: "pending" | "published";
+  /** Undefined preserves the existing pending-approval query contract. */
+  expectedDecisionAt?: string | null;
+  decisionTime: string;
+}): Promise<ReviewSaveResult> {
+  if (review.organizationId !== null) {
+    const { data: org, error: orgError } = await staff.client
+      .from("organizations")
+      .select("id")
+      .eq("id", review.organizationId)
+      .maybeSingle();
+    if (orgError || !org) {
+      console.error(
+        "[lib/data] Organization attachment lookup failed:",
+        orgError?.message ?? "not found"
+      );
+      return { ok: false, reason: "organization" };
+    }
+  }
+
+  const { data: categoryRow, error: categoryError } = await staff.client
+    .from("categories")
+    .select("id")
+    .eq("slug", review.category)
+    .maybeSingle();
+  if (categoryError || !categoryRow) {
+    console.error(
+      "[lib/data] Category lookup failed:",
+      categoryError?.message ?? "not found"
+    );
+    return { ok: false, reason: "category" };
+  }
+
+  const update = reviewedOpportunityUpdate(
+    review,
+    staff.userId,
+    decisionTime,
+    (categoryRow as unknown as { id: number }).id
+  );
+  let request = staff.client
+    .from("opportunities")
+    .update(update)
+    .eq("id", current.id)
+    .eq("status", expectedStatus);
+  if (expectedDecisionAt !== undefined) {
+    request = expectedDecisionAt === null
+      ? request.is("decided_at", null)
+      : request.eq("decided_at", expectedDecisionAt);
+  }
+  const { data, error } = await request.select("slug,title");
+
+  if (error) {
+    console.error("[lib/data] Failed to save opportunity review:", error.message);
+    return { ok: false, reason: "write" };
+  }
+  const rows = (data ?? []) as unknown as DecidedRow[];
+  if (rows.length === 0) return { ok: false, reason: "stale" };
+
+  const auditRows = reviewAuditRows(current, review);
+  if (auditRows.length > 0) {
+    const { error: auditError } = await staff.client
+      .from("opportunity_enrichments")
+      .insert(auditRows);
+    if (auditError) {
+      console.info("[lib/data] Enrichment audit not recorded:", auditError.message);
+    }
+  }
+
+  return { ok: true, row: rows[0] };
+}
+
+function reviewSaveError(reason: Exclude<ReviewSaveResult, { ok: true }>["reason"]): string {
+  if (reason === "organization") return "Selected organization could not be verified.";
+  if (reason === "category") return "Selected category could not be verified.";
+  if (reason === "stale") return "This record changed during review. Reload it before trying again.";
+  return "The decision could not be saved. Please try again.";
+}
 
 export async function decideOpportunityAction(
   _previousState: DecisionState,
@@ -100,61 +195,35 @@ export async function decideOpportunityAction(
     review = parsed.review;
   }
 
-  const organizationId = review?.organizationId ?? null;
-
-  if (organizationId !== null) {
-    const { data: org, error: orgError } = await access.staff.client
-      .from("organizations")
-      .select("id")
-      .eq("id", organizationId)
-      .maybeSingle();
-    if (orgError || !org) {
-      console.error(
-        "[lib/data] Organization attachment lookup failed:",
-        orgError?.message ?? "not found"
-      );
-      return { ...initial, status: "error", message: "Selected organization could not be verified." };
+  const decisionTime = new Date().toISOString();
+  if (rawDecision === "approve" && review !== null) {
+    const saved = await saveApprovedReview({
+      staff: access.staff,
+      current,
+      review,
+      expectedStatus: "pending",
+      decisionTime,
+    });
+    if (!saved.ok) {
+      return { ...initial, status: "error", message: reviewSaveError(saved.reason) };
     }
+
+    revalidatePath("/moderation");
+    revalidatePath("/");
+    revalidatePath(`/opportunities/${saved.row.slug}`);
+    return {
+      status: "success",
+      message: "Approved — the opportunity is now publicly visible.",
+      decision: "approve",
+      decidedTitle: saved.row.title,
+      decidedSlug: saved.row.slug,
+    };
   }
 
-  const decisionTime = new Date().toISOString();
   const update: Record<string, unknown> = { status: nextStatus };
   if (trustSchemaEnabled()) {
     update.decided_by = access.staff.userId;
     update.decided_at = decisionTime;
-  }
-  if (rawDecision === "approve" && review !== null) {
-    update.title = review.title;
-    update.description = review.description;
-    update.url = review.url;
-    update.venue_name = review.venueName;
-    update.address = review.address;
-    update.city = review.city;
-    update.region = review.region;
-    update.country = review.country;
-    update.country_verification = review.countryVerification;
-    update.country_evidence = review.countryEvidence;
-    update.deadline = review.deadline;
-    update.deadline_precision = review.deadlinePrecision;
-    update.deadline_evidence = review.deadlineEvidence;
-    update.relevance_decision = "relevant";
-    update.relevance_evidence = review.relevanceEvidence;
-    update.eligibility = "tanzanians_eligible";
-    update.eligibility_evidence = review.eligibilityEvidence;
-    update.qualification_rule_version = M31_QUALIFICATION_RULE_VERSION;
-    update.last_verified_at = decisionTime;
-    update.organization_id = review.organizationId;
-
-    const { data: categoryRow, error: categoryError } = await access.staff.client
-      .from("categories")
-      .select("id")
-      .eq("slug", review.category)
-      .maybeSingle();
-    if (categoryError || !categoryRow) {
-      console.error("[lib/data] Category lookup failed:", categoryError?.message ?? "not found");
-      return { ...initial, status: "error", message: "Selected category could not be verified." };
-    }
-    update.category_id = (categoryRow as unknown as { id: number }).id;
   }
 
   const { data, error } = await access.staff.client
@@ -185,59 +254,117 @@ export async function decideOpportunityAction(
 
   const { slug, title } = rows[0];
 
-  // Field-level audit for moderator enrichment (best-effort; the audit table
-  // exists only after migration 0003 — its absence never blocks moderation).
-  if (rawDecision === "approve" && review !== null) {
-    // Pre-decision snapshot for the "previous" audit column. Location
-    // fields live nested under location on the mapped record; reading them
-    // flat (the old behavior) always recorded null as the previous value.
-    const previousValues: Record<string, unknown> = {
-      venueName: current.location?.venueName ?? null,
-      address: current.location?.address ?? null,
-      city: current.location?.city ?? null,
-      region: current.location?.region ?? null,
-      country: current.location?.country ?? null,
-      deadline: current.deadline ?? null,
-    };
-    const auditRows = AUDITABLE_FIELDS.map(({ field, previous, next }) => {
-      const before = previousValues[previous];
-      const after = review[next];
-      if ((before ?? null) === (after ?? null)) return null;
-      return {
-        opportunity_id: rawId,
-        field,
-        previous_value: before ?? null,
-        new_value: after ?? "",
-        evidence_url: current.url,
-        method: "moderator-review",
-      };
-    }).filter((row): row is NonNullable<typeof row> => row !== null);
-    if (auditRows.length > 0) {
-      const { error: auditError } = await access.staff.client
-        .from("opportunity_enrichments")
-        .insert(auditRows);
-      if (auditError) {
-        console.info(
-          "[lib/data] Enrichment audit not recorded:",
-          auditError.message
-        );
-      }
-    }
-  }
-
   revalidatePath("/moderation");
   revalidatePath("/");
   revalidatePath(`/opportunities/${slug}`);
 
   return {
     status: "success",
-    message:
-      rawDecision === "approve"
-        ? "Approved — the opportunity is now publicly visible."
-        : "Rejected — the submission stays hidden from the public site.",
-    decision: rawDecision,
+    message: "Rejected — the submission stays hidden from the public site.",
+    decision: "reject",
     decidedTitle: title,
     decidedSlug: slug,
+  };
+}
+
+/**
+ * Refresh the evidence and attribution of one already-published opportunity.
+ * Authentication, parsing, payload construction and audit semantics are shared
+ * with initial approval; the published status and prior decision timestamp are
+ * both guarded so this path cannot publish another record or clobber a newer
+ * staff review.
+ */
+export async function rereviewPublishedOpportunityAction(
+  _previousState: DecisionState,
+  formData: FormData
+): Promise<DecisionState> {
+  const initial: DecisionState = {
+    status: "idle",
+    message: null,
+    decision: null,
+    decidedTitle: null,
+    decidedSlug: null,
+  };
+  const rawId =
+    typeof formData.get("opportunityId") === "string"
+      ? (formData.get("opportunityId") as string)
+      : "";
+
+  if (!isValidOpportunityId(rawId)) {
+    return { ...initial, status: "error", message: "Invalid submission reference." };
+  }
+  if (!trustSchemaEnabled()) {
+    return {
+      ...initial,
+      status: "error",
+      message: "Re-review is paused until the owner activates the M31 trust schema.",
+    };
+  }
+
+  const access = await getModerationAccess();
+  if (!access.ok) {
+    return {
+      ...initial,
+      status: "error",
+      message:
+        access.reason === "unauthenticated"
+          ? "Your session has expired. Please sign in again."
+          : "You do not have permission to moderate submissions.",
+    };
+  }
+
+  const current = await getPublishedOpportunityById(rawId);
+  if (!current) {
+    return {
+      ...initial,
+      status: "error",
+      message: "This opportunity is no longer published — reload before reviewing it.",
+    };
+  }
+  const parsed = parseReviewInput(formData);
+  if (!parsed.ok) return { ...initial, status: "error", message: parsed.message };
+
+  const now = new Date();
+  const decisionTime = now.toISOString();
+  if (
+    !satisfiesPublishedReviewContract(
+      current,
+      parsed.review,
+      access.staff.userId,
+      decisionTime,
+      now
+    )
+  ) {
+    return {
+      ...initial,
+      status: "error",
+      message:
+        "This review does not satisfy the current publication contract. Verify every required field and confirm the opportunity is still open.",
+    };
+  }
+
+  const saved = await saveApprovedReview({
+    staff: access.staff,
+    current,
+    review: parsed.review,
+    expectedStatus: "published",
+    expectedDecisionAt: current.trust?.decidedAt ?? null,
+    decisionTime,
+  });
+  if (!saved.ok) {
+    return { ...initial, status: "error", message: reviewSaveError(saved.reason) };
+  }
+
+  revalidatePath("/published-management");
+  revalidatePath(`/moderation/${rawId}`);
+  revalidatePath("/");
+  revalidatePath(`/opportunities/${saved.row.slug}`);
+  return {
+    status: "success",
+    message: "Re-review saved — this opportunity still satisfies the publication contract.",
+    decision: "approve",
+    decidedTitle: saved.row.title,
+    decidedSlug: saved.row.slug,
   };
 }
 

@@ -3,8 +3,14 @@
  * Database-side guarantees (pending guard, staff authorization, double-decision
  * protection) are enforced by the server action + RLS and verified separately.
  */
-import { parseReviewInput } from "../lib/data/moderation-review";
+import {
+  parseReviewInput,
+  reviewAuditRows,
+  reviewedOpportunityUpdate,
+  satisfiesPublishedReviewContract,
+} from "../lib/data/moderation-review";
 import { nextPendingAfter } from "../lib/data/moderation";
+import type { Opportunity } from "../lib/types";
 
 let passed = 0;
 let failed = 0;
@@ -29,6 +35,46 @@ const BASE = {
   eligibility_evidence: "Official eligibility section is open to all African nationals.",
   deadline_precision: "unknown",
   country_verification: "unknown",
+};
+
+const PUBLISHED: Opportunity = {
+  id: "22222222-2222-4222-8222-222222222222",
+  slug: "published-review-fixture",
+  title: "Legacy published opportunity",
+  category: "hackathon",
+  description: "A sufficiently detailed legacy opportunity description that now requires a fresh evidence review.",
+  url: "https://legacy.example/opportunity",
+  deadline: null,
+  deadlinePrecision: "unknown",
+  deadlineEvidence: null,
+  location: {
+    venueName: null,
+    address: null,
+    city: "Nairobi",
+    region: null,
+    country: "Kenya",
+    latitude: null,
+    longitude: null,
+  },
+  imageUrl: null,
+  status: "published",
+  createdAt: "2026-01-01T00:00:00.000Z",
+  organization: null,
+  sourceName: "Synthetic official source",
+  discoveryMethod: "website",
+  trust: {
+    relevanceDecision: "unreviewed",
+    relevanceEvidence: null,
+    eligibilityDecision: "unknown",
+    eligibilityEvidence: null,
+    qualificationRuleVersion: null,
+    countryVerification: "unknown",
+    countryEvidence: null,
+    lastVerifiedAt: null,
+    decidedBy: null,
+    decidedAt: null,
+    canonicalEvidenceUrl: "https://legacy.example/opportunity",
+  },
 };
 
 // 1. approve with no enrichment (all optional fields absent → nulls)
@@ -116,6 +162,71 @@ assert("next-in-queue: mid item advances", nextPendingAfter(QUEUE, "a") === "b")
 assert("next-in-queue: last item yields null", nextPendingAfter(QUEUE, "c") === null);
 assert("next-in-queue: decided/unknown id yields null", nextPendingAfter(QUEUE, "zz") === null);
 assert("next-in-queue: empty queue yields null", nextPendingAfter([], "a") === null);
+
+// Published re-review reuses the parsed review and the M31 publication predicate.
+if (r1.ok) {
+  const decisionTime = "2026-09-12T12:00:00.000Z";
+  assert(
+    "published re-review: complete current evidence passes the M31 contract",
+    satisfiesPublishedReviewContract(
+      PUBLISHED,
+      r1.review,
+      "moderator-1",
+      decisionTime,
+      new Date(decisionTime)
+    )
+  );
+  const payload = reviewedOpportunityUpdate(r1.review, "moderator-1", decisionTime, 7);
+  assert(
+    "published re-review: payload keeps published and persists trust attribution",
+    payload.status === "published" &&
+      payload.relevance_decision === "relevant" &&
+      payload.eligibility === "tanzanians_eligible" &&
+      payload.qualification_rule_version === "m31-2026-09-04-v1" &&
+      payload.last_verified_at === decisionTime &&
+      payload.decided_by === "moderator-1" &&
+      payload.decided_at === decisionTime
+  );
+  assert(
+    "published re-review: provenance is structurally absent from the payload",
+    ["id", "source_id", "source_url", "discovered_at", "discovery_method", "submitted_by"]
+      .every((field) => !(field in payload))
+  );
+}
+
+if (r4.ok) {
+  assert(
+    "published re-review: a closed opportunity fails the current publication contract",
+    !satisfiesPublishedReviewContract(
+      PUBLISHED,
+      r4.review,
+      "moderator-1",
+      "2026-10-02T00:00:00.000Z",
+      new Date("2026-10-02T00:00:00.000Z")
+    )
+  );
+}
+
+const audited = parseReviewInput(form({
+  ...BASE,
+  city: "Dar es Salaam",
+  country: "Tanzania",
+  country_verification: "verified_tanzania",
+  country_evidence: "Official page states that the venue is in Dar es Salaam, Tanzania.",
+}));
+if (audited.ok) {
+  const rows = reviewAuditRows(PUBLISHED, audited.review);
+  assert(
+    "published re-review: changed geography produces existing moderator-review audit rows",
+    rows.some((row) =>
+      row.field === "country" &&
+      row.previous_value === "Kenya" &&
+      row.new_value === "Tanzania" &&
+      row.evidence_url === PUBLISHED.url &&
+      row.method === "moderator-review"
+    )
+  );
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;

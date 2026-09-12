@@ -2,7 +2,10 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { decideOpportunityAction } from "@/lib/data/moderation-actions";
+import {
+  decideOpportunityAction,
+  rereviewPublishedOpportunityAction,
+} from "@/lib/data/moderation-actions";
 import type { ModerationCategoryOption } from "@/lib/data/moderation";
 import { initialDecisionState } from "@/lib/staff-form-state";
 import {
@@ -69,6 +72,7 @@ export function DecisionForm({
   nextHref,
   queueHref,
   categoryOptions,
+  mode = "pending",
 }: {
   opportunity: Opportunity;
   organizations: OrganizationOption[];
@@ -78,9 +82,12 @@ export function DecisionForm({
   /** Queue href preserving the active filter. */
   queueHref: string;
   categoryOptions: ModerationCategoryOption[];
+  mode?: "pending" | "published";
 }) {
   const [state, formAction, isPending] = useActionState(
-    decideOpportunityAction,
+    mode === "published"
+      ? rereviewPublishedOpportunityAction
+      : decideOpportunityAction,
     initialDecisionState
   );
 
@@ -94,7 +101,7 @@ export function DecisionForm({
           </span>
         </p>
         <div className="flex flex-wrap gap-3">
-          {nextHref ? (
+          {mode === "pending" && nextHref ? (
             <Link
               href={nextHref}
               autoFocus
@@ -111,7 +118,7 @@ export function DecisionForm({
                 : "inline-flex h-10 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
             }
           >
-            Back to queue
+            {mode === "published" ? "Back to published records" : "Back to queue"}
           </Link>
           {state.decision === "approve" && state.decidedSlug ? (
             <Link
@@ -334,29 +341,35 @@ export function DecisionForm({
         <button
           type="submit"
           form="decision-form"
-          name="decision"
-          value="approve"
+          name={mode === "pending" ? "decision" : undefined}
+          value={mode === "pending" ? "approve" : undefined}
           disabled={isPending}
           className="inline-flex h-11 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-colors hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-[#ccc]"
         >
-          {isPending ? "Working…" : "Save review & approve"}
+          {isPending
+            ? "Working…"
+            : mode === "published"
+              ? "Save verified re-review"
+              : "Save review & approve"}
         </button>
-        <button
-          type="submit"
-          form="decision-form"
-          name="decision"
-          value="reject"
-          disabled={isPending}
-          className="inline-flex h-11 items-center justify-center rounded-full border border-black/[.10] bg-white px-6 text-sm font-medium text-zinc-600 transition-colors hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:text-red-300"
-        >
-          Reject (keeps record as discovered)
-        </button>
+        {mode === "pending" ? (
+          <button
+            type="submit"
+            form="decision-form"
+            name="decision"
+            value="reject"
+            disabled={isPending}
+            className="inline-flex h-11 items-center justify-center rounded-full border border-black/[.10] bg-white px-6 text-sm font-medium text-zinc-600 transition-colors hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:text-red-300"
+          >
+            Reject (keeps record as discovered)
+          </button>
+        ) : null}
       </div>
 
       <p className="text-xs text-zinc-500 dark:text-zinc-500">
-        Corrections are saved only when approving. Rejecting keeps the record
-        exactly as discovered. Leave a field empty when the official source
-        does not confirm it — unknown stays unknown.
+        {mode === "published"
+          ? "This action keeps the record published only when the complete current trust contract passes. Use the separate unpublish control when evidence is insufficient."
+          : "Corrections are saved only when approving. Rejecting keeps the record exactly as discovered. Leave a field empty when the official source does not confirm it — unknown stays unknown."}
       </p>
     </form>
   );

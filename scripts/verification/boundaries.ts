@@ -48,6 +48,7 @@ const m31Remediation = read("scripts/m31/remediation.ts");
 const m31SourcePolicy = read("scripts/discovery/source-policy.ts");
 const opportunitiesData = read("lib/data/opportunities.ts");
 const moderationActions = read("lib/data/moderation-actions.ts");
+const moderationReview = read("lib/data/moderation-review.ts");
 
 invariant("all discovery network acquisition crosses fetchPage", () => {
   const directFetchFiles = filesBelow("scripts/discovery")
@@ -251,8 +252,9 @@ invariant("M31 discovery and moderation fail closed at the trust-schema boundary
   assert.match(runnerSource, /evidencePersistenceSkipped/);
   assert.match(runnerSource, /qualification_rule_version/);
   assert.match(moderationActions, /Approval is paused until the owner activates the M31 trust schema/);
-  assert.match(moderationActions, /eligibility = "tanzanians_eligible"/);
-  assert.match(moderationActions, /decided_by/);
+  assert.match(moderationActions, /reviewedOpportunityUpdate/);
+  assert.match(moderationReview, /eligibility: "tanzanians_eligible"/);
+  assert.match(moderationReview, /decided_by/);
 });
 
 invariant("M31 public and AI presentation exclude untrusted authority inputs", () => {
