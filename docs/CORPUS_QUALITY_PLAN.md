@@ -1,8 +1,9 @@
 # Corpus quality and cleanup plan
 
-Status: planning baseline completed and Batch 1 test-artifact quarantine verified
-2026-09-11. No row was deleted and no source-registry, schedule, schema,
-environment, or infrastructure change was performed.
+Status: planning baseline, Batch 1 test-artifact quarantine, and read-only Batch 2A
+legacy-publication triage completed through 2026-09-12. No Batch 2A row was
+changed; no row was deleted and no source-registry, schedule, schema, environment,
+or infrastructure change was performed.
 
 This is the execution plan for Product Quality & Differentiation. Permanent
 direction remains in [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md); all execution must
@@ -245,26 +246,93 @@ verification uses the immutable target IDs from the protected pre-change manifes
 and records `verified:true`; every substantive before/after invariant also matched
 in the first result.
 
-### Batch 2A — legitimate published re-review triage (exact next milestone)
+### Batch 2A — legitimate published re-review triage (completed read-only)
 
-- Audit the 14 remaining publications read-only, strongest/current opportunities
-  first, using organizer/official evidence rather than aggregator authority.
-- Record deadline state/evidence, meaningful-description quality, relevance,
-  Tanzanian eligibility, country/geographic-scope evidence, canonical/application
-  evidence, and duplicate signals.
-- Produce small per-ID execution cohorts and select the first cohort without
-  changing any row. Keep the public product online.
-- Confirm the production Moderator path/account requirement and request exact
-  mutation authority only after the first cohort is evidence-complete.
+At 2026-09-12, a target-guarded anonymous SELECT confirmed exactly 14 published
+rows in production ref `jltuufukcwztugvojwjd`. All remain `unreviewed`, with
+unknown stored eligibility and country verification, null qualification version,
+null last verification, no M31 decision attribution, and no stored deadline
+evidence. Existing references, current organizer pages, official evidence
+documents, and official application destinations were inspected without changing
+production.
 
-### Batch 2B — bounded legitimate publication re-review execution
+The closure snapshot observed 246 pending / 14 published / 13 rejected = 273
+opportunities and 503 references. This is two additional pending rows and two
+additional references since Batch 1, consistent with independent discovery growth;
+the published cohort stayed at the same 14 exact IDs with the same 27 references
+and unchanged legacy trust state. Batch 2A used SELECT operations only.
 
-- Re-review the 14 legacy publications only through the small cohorts selected by
-  Batch 2A; never requeue all 14 simultaneously.
-- Record relevance, Tanzanian eligibility, deadline semantics, country/scope,
-  meaningful description, canonical/application evidence, decision attribution,
-  and last verification before republishing.
-- Passed-deadline rows are handled first and must not be republished as active.
+Evidence confidence measures confidence in the recommendation, not permission to
+publish or mutate. **High** means direct organizer/official evidence or a decisive
+non-opportunity shape; **medium** still depends on incomplete or discovery-only
+evidence. Source authority follows the A-D model above. `Supported` eligibility
+requires explicit evidence encompassing Tanzanians; organizer location and generic
+global language were not used as substitutes.
+
+| ID / title | Reality, fit, and Tanzania eligibility | Evidence and application trust | Recommendation / confidence | Exact missing evidence |
+|---|---|---|---|---|
+| `156b20a2-2cb4-4783-ac9b-518225890ee3` — Sahara CodeSwitch Africa Challenge 2026 | Real, current, high-value voice-AI builder challenge. **Supported**: Intron explicitly opens it to builders across Africa and the diaspora. | Stored Opportunity Desk page is C; linked [Intron organizer page](https://www.intron.io/compete/) is A, links registration, and gives a 15 September 2026 deadline. | **Re-review first** / high. | Meaningful description; organizer canonical URL; exact relevance, eligibility, deadline, application and scope evidence; moderator attribution. |
+| `ef8defbb-80ea-483a-94a3-194d2637177b` — 16th AAS Biennial Scientific Conference 2026 | Real, current science/technology conference and call for abstracts in Dar es Salaam. **Supported**: official evidence includes Africa-based student delegates and broad researcher/innovator participation. | SUZA partner page and [official circular](https://suza.ac.tz/wp-content/uploads/2026/08/16AAS-Conference-Second-Circur_fin-1.pdf) are B/A; the circular names official AAS/COSTECH routes, a 30 September abstract deadline, and 15–18 December conference dates. | **Re-review first** / high. | Meaningful description; actionable deadline/evidence; organizer/application canonical URL; exact scope evidence; moderator attribution. |
+| `01042eca-d009-44b2-b86a-16d1cc3901dd` — YSP Global Policy Brief Competition 2026 | Plausible and research/policy relevant, but organizer identity is unconfirmed. **Unsupported**: inspected text gives ages 16–30 only; “global” is not Tanzania evidence. | Opportunity Desk is C; both information and application lead to one Google Form. The 15 October deadline is not independently organizer-verified. | **Withhold pending stronger evidence** / medium. | Organizer-owned identity/page, rules, accountable contact, explicit eligible geography/nationalities, and proof the form belongs to the organizer. |
+| `21dae9a3-991b-48a6-8ab4-7448d1bdc883` — VETA long-course intake January 2027 | Real VETA intake, but one record mixes technical and non-technical courses. **Unknown**: official Tanzanian provenance and Swahili wording do not prove applicant eligibility. | Official VETA page is A and trustworthy; the stored row has no direct application destination, deadline, or deadline evidence. | **Withhold pending stronger evidence** / medium. | Current advert/application document, closing date, applicant rules, one specific technical course/cohort, location, and direct application route. |
+| `22222c92-9790-4cc6-8f11-66a18d50038e` — Master of Innovation and Entrepreneurship Management | Real accredited NM-AIST programme, but a standing course page rather than a current bounded call. **Unsupported**: the page does not establish current Tanzanian applicant eligibility. | NM-AIST page/prospectus are A; trustworthy programme information, but no verified current application path or intake deadline. | **Withhold pending stronger evidence** / high. | Current intake notice, application window/link, eligibility, deadline evidence, and justification that general degree admission belongs in product scope. |
+| `a6855dd9-1748-4a47-b794-91ec5fe2fae3` — ERASMUS GLOBAL CALL FOR APPLICATIONS | Real SUZA-hosted call, but the stored 15 July 2026 deadline is passed and technology scope is absent. **Unknown**: the available page shell does not expose participant rules. | SUZA is A/B authority; its page delegates facts to a download. The stored deadline has no M31 evidence. | **Withhold** / medium. | Exact call document, disciplines, SUZA/Tanzanian criteria, official application route, and deadline evidence; a future cohort must be open. |
+| `e0c271f4-75df-424f-bcd6-49228c0bd7d9` — Twaweza website design consultancy | Real and technology relevant. **Unsupported**: the official page has experience requirements but no applicant geography; East African operations are not eligibility evidence. | [Official Twaweza page](https://twaweza.org/consultancy-opportunity-website-design-and-development/) is A and uses official-domain email; its 12 July 2026 deadline is passed. | **Withhold** / high. | No evidence can make this call current; a new call needs explicit eligibility and a new deadline. |
+| `fdfe3e70-848a-4ceb-a1b8-4cb949826aca` — Ogilvy South Africa 2027 graduate programme | Real, but closed and unavailable to Tanzanians. **Excluded** by South African applicant criteria. | Stored Opportunities For Africans page is C; Ogilvy's official application site corroborated the programme and 7 September 2026 deadline, now passed. | **Withhold** / high. | None: exclusion and expiry are decisive. |
+| `9d967b53-ed32-49f8-a7c5-46f389299d78` — AIJC Francophone Fellowships 2026 | Real journalism fellowship, but not technology-focused and closed. **Excluded**: exact eligible-country list omits Tanzania. | Stored aggregator is C; [AIJC organizer evidence](https://aijc.africa/) corroborates it. The 4 September deadline is passed. | **Withhold** / high. | None: scope failure, exclusion, and expiry are decisive. |
+| `14c76d7b-8d70-4a4a-9131-0ab91697e2c9` — ERASMUS+ KA171 SUZA nominations | Real student mobility call, but closed and not explicitly technology-scoped. **Supported, restricted** to current SUZA students. | [Official SUZA notice](https://suza.ac.tz/?p=19005) is A/B, gives an official coordinator route and 24 April 2026 deadline, now passed. | **Withhold** / high. | No evidence can make this cohort current; a future call must also show technology/research relevance. |
+| `98559cb8-183e-482f-972e-ad3b7b3636ba` — SUZA minister inspects HEET projects | Genuine official news, not an application opportunity. **Unsupported**: no applicant cohort exists. | [Official SUZA article](https://suza.ac.tz/?p=19692) is credible reporting, not an application URL, and has no applicant deadline. | **Withhold** / high. | None: institutional news is not an opportunity candidate. |
+| `f6a0f5eb-5fcb-4692-a3b0-f9d621013d73` — UNIVERSITY OF DAR ES SALAAM | Genuine institution homepage, not a discrete opportunity. **Unsupported** for this record: no applicant cohort is identified. | Official UDSM domain is A and trustworthy, but neither a specific opportunity nor its application route; no record-level deadline. | **Withhold** / high. | None; separately discovered UDSM calls require their own records and evidence. |
+| `1b3649a0-b694-4475-8ed8-2ce0582482e6` — 30 Hot Job Opportunities roundup | Real aggregator article, but 30 unrelated jobs are not one opportunity. **Unsupported**: eligibility varies per job. | Opportunity Desk is C; no single organizer, application URL, or deadline applies to the stored row. | **Withhold** / high. | None for the aggregate; qualifying jobs require separate organizer-level records. |
+| `3710047a-e8b9-4a9f-a17d-cf39e304ee89` — Digital Financial Services and Financial Technology in Tanzania | Real, credible fintech analysis, not an application opportunity. **Unsupported**: no applicant cohort exists. | [Official FSD Tanzania article](https://www.fsdt.or.tz/2024/11/29/digital-financial-services-and-financial-technology-in-tanzania/) is A/B research content, not an application action, and has no deadline. | **Withhold** / high. | None: evergreen sector analysis is not an opportunity candidate. |
+
+Triage totals: zero untouched rows meet the complete M31 publication contract; two
+are high-confidence current re-review candidates and twelve should be withheld
+unless/until their stated evidence gap is resolved. Eligibility is supported for
+three, excluded for two, unsupported for seven, and unknown for two. Recommendation
+confidence is high for 11 and medium for three. These are planning findings only;
+all 14 remained published at Batch 2A close.
+
+No conservative duplicate identity was established among the 14. Shared aggregator
+or institutional base URLs are source overlap, not duplicate proof.
+
+#### Exact future cohorts requiring explicit mutation authorization
+
+Any write to these IDs requires new exact owner authorization and the recovery and
+identity gates below:
+
+1. **Batch 2B1 — current high-value re-review (exact next milestone):**
+   `156b20a2-2cb4-4783-ac9b-518225890ee3` and
+   `ef8defbb-80ea-483a-94a3-194d2637177b`. Unpublish one to pending, complete
+   moderator review from primary evidence, verify, then process the second; never
+   take both public records offline simultaneously.
+2. **Decisive withhold cohort:** `98559cb8-183e-482f-972e-ad3b7b3636ba`,
+   `fdfe3e70-848a-4ceb-a1b8-4cb949826aca`,
+   `9d967b53-ed32-49f8-a7c5-46f389299d78`,
+   `f6a0f5eb-5fcb-4692-a3b0-f9d621013d73`,
+   `1b3649a0-b694-4475-8ed8-2ce0582482e6`, and
+   `3710047a-e8b9-4a9f-a17d-cf39e304ee89`.
+3. **Expired call cohort:** `a6855dd9-1748-4a47-b794-91ec5fe2fae3`,
+   `e0c271f4-75df-424f-bcd6-49228c0bd7d9`, and
+   `14c76d7b-8d70-4a4a-9131-0ab91697e2c9`.
+4. **Evidence-acquisition cohort:** `01042eca-d009-44b2-b86a-16d1cc3901dd`,
+   `21dae9a3-991b-48a6-8ab4-7448d1bdc883`, and
+   `22222c92-9790-4cc6-8f11-66a18d50038e`. Do not request mutation until the
+   missing evidence is obtained or the owner explicitly authorizes withholding
+   based on insufficiency.
+
+### Batch 2B1 — current high-value publication re-review execution (exact next milestone)
+
+- Obtain explicit authorization for only the two exact IDs and confirm a controlled
+  production Moderator account/path is available.
+- Create a protected pre-change manifest and use the production/staging identity,
+  concurrency, and no-overlap gates. Do not use the all-legacy requeue path.
+- Process Sahara first and AAS second, one at a time: published → pending through
+  protected unpublish, evidence-complete moderator approval, and post-change proof
+  before touching the second ID.
+- Preserve every reference and provenance field. If canonical URLs change, retain
+  prior aggregator/partner URLs as non-canonical references.
+- Stop after these two records; the other 12 require separate authorization.
 
 ### Batch 3 — salvage priority pending rows
 

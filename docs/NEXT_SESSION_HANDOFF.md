@@ -1,6 +1,6 @@
 # Current engineering handoff
 
-Updated: 2026-09-11. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-12. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
 ## Current verified state
 
@@ -10,7 +10,8 @@ Updated: 2026-09-11. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   `pumzofcwfjqswkiwfqty`.
 - M31 is closed; migrations 0013/0014 and the M31 flag remain active. AI remains
   operationally disabled.
-- Product Quality & Differentiation planning and Corpus Cleanup Batch 1 are complete.
+- Product Quality & Differentiation planning, Corpus Cleanup Batch 1, and read-only
+  Batch 2A legacy-publication triage are complete.
 - Sources, discovery cadence, taxonomy, geography logic, schema, migrations, Auth,
   Vercel, and infrastructure were not changed.
 
@@ -37,25 +38,58 @@ Protected Batch 1 evidence is outside Git at
 inheritance is disabled. The pre-change manifest supports exact status rollback;
 do not copy it into Git or an unprotected location.
 
+## Batch 2A verified read-only result
+
+On 2026-09-12, a target-guarded anonymous production SELECT confirmed the same 14
+published legacy rows. All remain `unreviewed`; stored eligibility and country
+verification are unknown, qualification/verification/attribution fields are null,
+and no row has M31 deadline evidence. Organizer pages, official documents,
+application destinations, deadlines, and eligibility language were inspected. No
+production record, status, trust field, reference, schema, or configuration changed.
+The closure snapshot was 246 pending / 14 published / 13 rejected = 273
+opportunities and 503 references. The two-row/two-reference increase since Batch 1
+was independent discovery growth; the 14 published IDs and their 27 references
+remained the same.
+
+The exact per-ID findings and evidence links are in
+[CORPUS_QUALITY_PLAN.md](CORPUS_QUALITY_PLAN.md). Summary:
+
+- two high-confidence current candidates should be re-reviewed first: Sahara
+  CodeSwitch Africa Challenge and the 16th AAS Scientific Conference;
+- the other 12 should be withheld unless/until their documented evidence gaps are
+  resolved: six decisive non-opportunity/excluded records, three expired calls,
+  and three evidence-acquisition records;
+- eligibility is supported for three, excluded for two, unsupported for seven, and
+  still unknown for two;
+- recommendation confidence is high for 11 and medium for three; and
+- no duplicate identity was established among the 14.
+
+These are triage recommendations, not moderation decisions. All 14 are still
+published and every future write requires exact authorization.
+
 ## Exact next milestone
 
-**Product Quality & Differentiation — Corpus Cleanup Batch 2A: Legitimate Published
-Re-review Triage**
+**Product Quality & Differentiation — Corpus Cleanup Batch 2B1: Current High-Value
+Publication Re-review Execution**
 
-This is read-only planning over the 14 remaining legitimate legacy publications:
+This milestone is owner-gated and not yet authorized. Its only proposed targets are:
 
-1. verify organizer/official evidence, deadline state, relevance, Tanzanian
-   eligibility, geography evidence, descriptions, application/canonical URLs, and
-   duplicate signals;
-2. rank current/high-value opportunities first;
-3. define small exact-ID re-review cohorts that keep a useful public inventory
-   online; and
-4. select the first execution cohort and document its Moderator/authorization and
-   recovery gates.
+1. `156b20a2-2cb4-4783-ac9b-518225890ee3` — Sahara CodeSwitch Africa Challenge
+   2026; then
+2. `ef8defbb-80ea-483a-94a3-194d2637177b` — 16th AAS Biennial Scientific
+   Conference 2026.
 
-Do not change any row in Batch 2A. Do not run the existing all-legacy requeue path,
-re-review all 14 at once, reject the 189 remaining likely-noise pending signals,
-change sources/cadence/taxonomy/geography, or begin AI.
+Before any write, obtain explicit exact-ID authorization and confirm a controlled
+production Moderator path/account. Create protected recovery evidence, prove target
+identity and no overlapping operation, and process only one row at a time:
+published → pending through protected unpublish, evidence-complete moderator
+approval, and post-change proof before touching the second row. Preserve every
+reference/provenance field; retain prior aggregator/partner URLs as non-canonical
+references if the canonical URL is corrected.
+
+Do not run the all-legacy requeue path, touch the other 12 triaged rows, reject the
+189 likely-noise pending signals, change sources/cadence/taxonomy/geography, or begin
+AI. Stop after the two exact records.
 
 ## Continuing constraints
 
@@ -64,6 +98,6 @@ change sources/cadence/taxonomy/geography, or begin AI.
 - Production migration history remains deliberately unnormalized; no broad
   `db push`, replay 0001–0012, or migration repair.
 - No controlled production Moderator account was available during M31 activation;
-  Batch 2A must verify the path needed for a later bounded re-review execution.
+  Batch 2B1 must confirm one before any re-review write.
 - `scripts/discovery/inspect-live.ts` performs a reversible insert/delete probe
   despite its old read-only label. Do not use it for a no-write audit.
