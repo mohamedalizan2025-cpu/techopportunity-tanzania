@@ -1,260 +1,227 @@
-# Tech Opportunity - authoritative engineering continuity
+# Current engineering handoff
 
-Updated: 2026-09-10. Read this document first when continuing development. It is
-the current operational checkpoint; older milestone records remain historical
-evidence and do not override this file or current owner instructions.
+Updated: 2026-09-12. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
-## 1. Exact checkpoint
+## Current verified state
 
-Remote `main` remains at
-`58e900e626021346ac0a773db3264c1b2f3a488b` (`Fix deterministic trust deadline
-evaluation`). Remote `staging` now exists and contains the live-staging work above
-that checkpoint. Obtain the final staging SHA from Git; do not reset to a historical
-SHA in this document.
+- Production runtime code is `070c32fb07f147a79626d9e7988767c5f476f373`
+  (`main`/`origin/main` before this closure-only documentation commit).
+- Production Supabase: `jltuufukcwztugvojwjd`; isolated staging Supabase:
+  `pumzofcwfjqswkiwfqty`.
+- M31 is closed; migrations 0013/0014 and the M31 flag remain active. AI remains
+  operationally disabled.
+- Product Quality & Differentiation planning, Corpus Cleanup Batch 1, and read-only
+  Batch 2A legacy-publication triage are complete.
+- Batch 2B1 reached its production pre-write gate on 2026-09-12 and stopped
+  fail-closed; neither authorized row was mutated. The missing attributable
+  published-record re-review capability has now been implemented, verified on
+  isolated staging, and promoted to production without a corpus write.
+- Sources, discovery cadence, taxonomy, geography logic, schema, migrations, Auth,
+  Vercel configuration, and unrelated infrastructure were not changed.
 
-The existing Vercel project now has an ordinary protected Preview for branch
-`staging` at
-`https://techopportunity-tanzania-git-staging-techopportunity.vercel.app`.
-Branch-only Config variables are `NEXT_PUBLIC_SUPABASE_URL`,
-`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`, and
-`M31_TRUST_SCHEMA_ENABLED`. They target staging and enable M31 only there. No
-service-role key is stored in Vercel. Supabase Auth on staging has the exact Preview
-Site URL and `/auth/callback` allow-list entry.
+## Batch 1 verified result
 
-Current database status:
+At `2026-09-11T19:49:31Z`, the authorized deterministic test-artifact quarantine
+was independently verified:
 
-**RECOVERY BASELINE ESTABLISHED**
+- eight exact records changed status only: three pending and five published became
+  rejected;
+- opportunity status counts changed from 247 pending / 19 published / 5 rejected to
+  244 pending / 14 published / 13 rejected;
+- all 271 opportunity IDs and all 501 complete reference rows were preserved;
+- all non-status/non-automatic-`updated_at` opportunity fields were unchanged;
+- all 263 non-target statuses were unchanged;
+- all 10 known deterministic test artifacts are now rejected; and
+- production returned HTTP 200 with no quarantined marker rendered on the homepage.
 
-**M31 DATABASE MIGRATION VERIFIED ON STAGING**
+The exact IDs/titles, before/after hashes, transparent verifier correction, recovery
+path, and checksums are in [CORPUS_QUALITY_PLAN.md](CORPUS_QUALITY_PLAN.md).
 
-**0013 APPLIED SUCCESSFULLY TO STAGING**
+Protected Batch 1 evidence is outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260911T194524Z-pqd-batch1\`. ACL
+inheritance is disabled. The pre-change manifest supports exact status rollback;
+do not copy it into Git or an unprotected location.
 
-**M31 FEATURE FLAG ENABLED ON STAGING PREVIEW ONLY**
+## Batch 2A verified read-only result
 
-**M31 COUNTRY AUDIT FIX VERIFIED ON STAGING**
+On 2026-09-12, a target-guarded anonymous production SELECT confirmed the same 14
+published legacy rows. All remain `unreviewed`; stored eligibility and country
+verification are unknown, qualification/verification/attribution fields are null,
+and no row has M31 deadline evidence. Organizer pages, official documents,
+application destinations, deadlines, and eligibility language were inspected. No
+production record, status, trust field, reference, schema, or configuration changed.
+The closure snapshot was 246 pending / 14 published / 13 rejected = 273
+opportunities and 503 references. The two-row/two-reference increase since Batch 1
+was independent discovery growth; the 14 published IDs and their 27 references
+remained the same.
 
-**M31 LIVE APPLICATION VERIFIED ON STAGING**
+The exact per-ID findings and evidence links are in
+[CORPUS_QUALITY_PLAN.md](CORPUS_QUALITY_PLAN.md). Summary:
 
-**NO PRODUCTION AVAILABILITY CHANGES**
+- two high-confidence current candidates should be re-reviewed first: Sahara
+  CodeSwitch Africa Challenge and the 16th AAS Scientific Conference;
+- the other 12 should be withheld unless/until their documented evidence gaps are
+  resolved: six decisive non-opportunity/excluded records, three expired calls,
+  and three evidence-acquisition records;
+- eligibility is supported for three, excluded for two, unsupported for seven, and
+  still unknown for two;
+- recommendation confidence is high for 11 and medium for three; and
+- no duplicate identity was established among the 14.
 
-Real staging-only User A, User B, and Moderator accounts proved Auth, callback
-origin, session persistence, logout, saves, public visibility, references,
-cross-user RLS denial, Moderator access, M31 trust persistence, and moderator
-attribution. A final country-changing Moderator action proved the enrichment audit
-path. All temporary identities, profiles, opportunities, references, audits, saves,
-category fixture, credentials, and local test state were then removed. No production
-identity or data was copied.
+These are triage recommendations, not moderation decisions. All 14 are still
+published and every future write requires exact authorization.
 
-The live defect was the older `opportunity_enrichments_field_check`, which rejected
-the application's existing `country` audit row. Vercel logged that exact constraint
-violation while authoritative M31 evidence and `decided_by`/`decided_at` still
-persisted.
-[Migration 0014](../supabase/migrations/0014_m31_country_enrichment_audit.sql)
-is the smallest forward fix. The owner explicitly authorized only that file; its
-SHA-256 was verified as
-`428a84738d2fa3bff2e1117f6938c2de0cc0ae7084fea2a4511837e7ad851b74`
-and it was applied atomically only to staging. The resulting validated constraint
-allows `country`. One fresh Moderator action produced exactly one
-`moderator-review` audit row recording `Kenya` to `Tanzania` with matching evidence;
-the opportunity's `decided_by` matched the Moderator. Migration 0013 was not edited
-or rerun, and migration history was not normalized.
+## Batch 2B1 fail-closed pre-write result
 
-## 2. Immutable production/staging boundary
+At `2026-09-12T03:30:12Z`, a target-guarded service SELECT and an independent
+anonymous SELECT verified production ref `jltuufukcwztugvojwjd`, both exact target
+IDs, and their still-published state. Production remained 246 pending / 14 published
+/ 13 rejected / 0 expired = 273 opportunities with 503 references. Both records
+remain in their legacy unreviewed/unknown/unattributed state with null qualification,
+verification, and deadline-evidence fields; each retains two references. The other
+12 published rows were not touched.
 
-- Production: `jltuufukcwztugvojwjd` — read-only until a separate future owner
-  authorization.
-- Staging: `pumzofcwfjqswkiwfqty` — the only permitted remote database mutation
-  target for the next milestone.
-- Repository `.env.local` is production-only and must never be loaded for staging.
-- Protected credentials remain outside Git under
-  `C:\Users\hp\.tech-opportunity-secrets\`.
-- Protected recovery/security artifacts remain outside Git under
-  `C:\Users\hp\.tech-opportunity-backups\20260909T070944Z\`.
+Current primary evidence still supports the planned trust decisions: the official
+Intron challenge page explicitly opens Sahara to builders across Africa and the
+diaspora, requires a voice-AI build/benchmark submission, and gives 15 September
+2026; the official AAS event site and SUZA-hosted circular support the science,
+technology and innovation scope, Tanzanian/African participation, Dar es Salaam
+venue, official registration/abstract routes, and 30 September 2026 abstract
+deadline. Neither target yet satisfies the M31 publication contract because none of
+those findings has been written through an attributable Moderator decision.
 
-Before every staging write, require the exact staging ref, prove it differs from the
-production ref, validate the connection inputs and endpoint, run a read-only state
-probe, bind the next operation to those same parameters, and record only a non-secret
-target/input-hash/result audit marker. Fail closed on ambiguity.
+The write was refused for two independent safety reasons:
 
-Never print passwords or full credential-bearing connection strings. Never copy
-production data, identities, sessions, profiles, saves, preferences, or alerts to
-staging.
+- the implemented protected unpublish path is `published → rejected` and status
+  only, whereas M31 approval accepts only `pending`; the previously documented
+  `published → pending → approve` transition does not exist; and
+- exactly one production Moderator profile exists, but no controlled authenticated
+  Moderator session was available. The in-app browser had no browser surface and
+  Windows Computer Use could not connect to its native helper. Using the service
+  role to stamp that Moderator's ID would be impersonation, not valid attribution.
 
-## 3. Recovery and production security evidence
+No production write, reference change, schema/configuration change, rollback, or
+backup artifact occurred. The recovery baseline remains intact. Temporary read-only
+preflight tooling was removed. Production homepage and both exact public detail
+routes returned HTTP 200.
 
-The owner explicitly authorized a protected local logical recovery backup that may
-contain private production rows and protected raw security-definition exports.
-Production remained strictly read-only. No production data/schema/Auth/RLS/project,
-Vercel, environment, DNS, deployment, or worker mutation occurred.
+## Published re-review blocker resolution
 
-The protected set includes roles, schema and data in logical formats; custom Auth
-integration; an explicit absent migration-history marker; 16 production security
-catalog exports; archive listings; checksums; and staging baseline evidence. Windows
-ACL inheritance is disabled, with Full Control limited to the owner, `SYSTEM`, and
-local `Administrators`. All custom archives parse with PostgreSQL 17.11. The
-application schema restore was rehearsed on guarded staging; private production data
-was not restored there.
+Commit `558e41d` on `staging` adds the smallest permanent transition that was
+missing: an authenticated Moderator can reopen the existing review form for one
+currently published row, submit the same evidence fields and parser used by pending
+approval, and save only when the complete current M31 publication predicate passes.
+The write remains `published → published`, is guarded by exact ID, current
+`published` status, and prior `decided_at`, and records the authenticated user's ID
+plus one decision/verification timestamp. Existing reference and provenance fields
+are not part of the payload. Pending approval and protected unpublish remain
+separate actions.
 
-See [DATABASE_RECOVERY.md](DATABASE_RECOVERY.md) for the artifact sizes/checksums,
-restore order, security handling, and exclusions.
+No migration, table, role, dependency, service-role shortcut, or second moderation
+system was added. The page and action both use `getModerationAccess()` and the
+request-scoped Supabase Auth/RLS client. Ordinary authenticated users see the
+existing restricted page; anonymous users are redirected to sign-in; both were
+also refused when the re-review action itself was submitted.
 
-Production audit summary:
+The exact commit deployed successfully to isolated staging as Vercel deployment
+`dpl_HDB1kESr5Wbir5JgcjGmJoLb2tsX`. A staging-only live matrix used three disposable
+local-domain Auth identities and five disposable opportunities. It proved:
 
-- 10 public application tables, all with RLS enabled and FORCE RLS disabled;
-- 27 pre-M31 `opportunities` columns; historical non-null `country` with Tanzania
-  default;
-- 49 public constraints, 33 indexes, 23 public policies, four public functions,
-  and 11 non-internal public/Auth/Storage triggers;
-- actual RLS predicates/checks, grants, function bodies/search paths/security modes,
-  trigger definitions, constraints, and indexes inspected in protected storage;
-- `auth.uid()`, `public.is_staff()`, and `gen_random_uuid()` present;
-- no M31 column/object, no `opportunity_references`, no historical reference enum,
-  and no `supabase_migrations.schema_migrations` table.
+- Moderator access returned 200; anonymous access redirected with 307 and ordinary
+  user access rendered the restricted page;
+- incomplete eligibility evidence caused no write;
+- an evidence-complete published re-review remained published and persisted M31
+  relevance, Tanzanian eligibility, verified geography, deadline/application
+  evidence, qualification version, the exact Moderator ID, and paired
+  `decided_at`/`last_verified_at` values;
+- six applicable `moderator-review` enrichment rows persisted (venue, address,
+  city, region, country, and deadline) and the canonical reference count stayed one;
+- the pending approval path still published and attributed its disposable row;
+- the existing published-management page remained staff-only and available, and
+  the protected unpublish status payload/RLS transition still changed only
+  `status` (plus automatic `updated_at`) while retaining audit data;
+- User A/User B isolation remained intact: User A saw one own save while
+  User B saw zero; ordinary/anonymous direct opportunity writes returned zero rows;
+  and an unrelated sentinel row was byte-for-byte unchanged.
 
-The production compatibility census observed 261 opportunities: 237 pending,
-19 published, five rejected, 232 null deadlines, and 29 known deadlines. All actual
-0013 input/constraint conflict counts were zero. One URL is shared by two distinct
-opportunities, which is compatible with per-opportunity reference uniqueness.
-Twenty-seven rows have equal canonical/source URLs and will correctly skip the
-secondary backfill. No private row content was reported.
+All disposable staging rows, references, enrichment rows, saves, Auth users,
+profiles, and the temporary category were removed. The staging baseline returned
+to 6 opportunities / 9 references / 0 Auth users / 0 profiles / 0 saves; opportunity
+hash `ab054f0594a72fce6eea4823feb3625a` and reference hash
+`585a8bd3bf8f39fcc11e00f67d596b3b` matched their pre-test values. Generated
+build/link/rule files, transient credentials, and verification scripts were removed.
+The established recovery artifacts were not changed.
 
-## 4. Staging baseline and verified M31 database state
+## Published re-review production promotion
 
-The selected baseline is the reviewed actual production application schema, not
-historical migration replay. Migrations 0005-0009 were not replayed.
+The staging-to-production audit proved that all scoped runtime/test/boundary files
+were identical between production `45283545f466a0a4470d5cc9fc6e03e0f38cdbec`
+and the parent of staging capability commit `558e41d`. Cherry-picking that one commit
+therefore produced the exact production capability commit
+`070c32fb07f147a79626d9e7988767c5f476f373` with only these nine files:
 
-The first transactional schema attempt failed safely on an unqualified custom Auth
-trigger function and rolled back completely. The successful attempt used a
-staging-only derivative qualified as `public.handle_new_user()` while preserving the
-immutable recovery original. Four M30 private tables initially inherited broader
-new-project defaults; staging-only revokes/grants aligned them exactly with
-production.
+- `app/moderation/[id]/page.tsx`, `app/moderation/decision-form.tsx`, and
+  `app/published-management/page.tsx`;
+- `lib/data/moderation-actions.ts` and `lib/data/moderation-review.ts`;
+- `tests/moderation-review.test.ts`, `tests/published-rereview.test.ts`, and
+  `scripts/verification/boundaries.ts`; and
+- the test-command registration in `package.json`.
 
-Normalized production/staging catalogs now match for columns, constraints, indexes,
-RLS policies, functions, triggers, effective table/column grants, default ACLs,
-schema ACLs, enums, extensions, views, publications, and relevant relation inventory.
-The sole raw relation-row difference is the ordering of an equivalent three-item ACL
-array on `saved_opportunities`; effective privileges are identical.
+No staging-only verifier, generated artifact, dependency/lockfile change, migration,
+schema/RLS change, workflow, source/discovery change, or corpus data accompanied the
+promotion. `verify:ci` passed locally, including every test suite, typecheck, lint,
+29/29 boundaries, and the planned moderation-auth gate. The production build passed
+after the sandbox-only Google Fonts network restriction was removed. GitHub
+Milestone verification run `34691899295` passed for the exact runtime SHA.
 
-The preserved pre-0013 snapshot has:
+Vercel completed GitHub production deployment `6409251328` at
+`2026-09-12T11:46:23Z`; its immutable URL is
+`https://techopportunity-tanzania-rhkwdllft-techopportunity.vercel.app`, and the
+canonical production alias serves the same successful deployment. The prior Ready
+deployment `dpl_DesgGyWGsQqVEF9hJiqLPRJwki8p` remains the application rollback point;
+the protected database recovery baselines and verified manifest were not modified.
 
-- 10 public tables, all RLS enabled; 49 constraints; 33 indexes; 23 policies;
-  four functions; six public triggers plus the custom Auth trigger;
-- zero M31 columns, no reference table/enum, and no migration-history table;
-- one synthetic category, one synthetic organization, one inactive source, and six
-  synthetic opportunities;
-- two published, three pending, and one rejected opportunity;
-- date/date-time/unknown/rolling/legacy deadline cases, country-only/foreign/
-  no-locality cases, source URL equal/different/null cases, and one duplicate-risk
-  shared URL across distinct opportunity IDs;
-- zero Auth users, profiles, saves, deadline history, alert preferences, and alert
-  events.
+Minimum read-only production smoke checks passed:
 
-No discovery worker ran and no staging identity was needed. The staging baseline
-schema and fixture snapshots remain checksummed in protected storage.
+- the homepage, Sahara detail, and AAS detail each returned HTTP 200;
+- anonymous access to Sahara's `mode=published` moderation route returned 307 to
+  sign-in, and anonymous published-management access did the same;
+- a target-guarded anonymous SELECT independently bound to production ref
+  `jltuufukcwztugvojwjd` found both exact records still `published`, `unreviewed`,
+  eligibility/country verification `unknown`, all M31 evidence/decision fields null,
+  original `updated_at` values intact, and two references each; and
+- no production Moderator action was attempted. Moderator-only execution, normal-user
+  and anonymous denial, attribution/audit persistence, pending approval, protected
+  unpublish, user isolation, and unrelated-row protection remain proved by the exact
+  code's staging live matrix and production-bound automated gates.
 
-Migration 0013 then ran as the only SQL input through PostgreSQL 17.11 `psql` with
-`ON_ERROR_STOP=1` and `--single-transaction`, bound to the guarded staging ref. It
-added 10 opportunity columns and `opportunity_references`; staging now has 11 public
-tables, 66 constraints, 38 indexes, 25 policies, five functions and 12 relevant
-triggers. `country` is nullable with no default. All new constraints/indexes and the
-sync function/trigger match the migration.
+The promotion was code-only: Sahara, AAS, the other 12 published rows, and the
+pending corpus were not mutated.
 
-All six fixture IDs and statuses survived. Backfill created six canonical and three
-secondary references with zero duplicate-pair, canonical, URL or missing-reference
-violations. Trust/country fields have the intended honest defaults. Fourteen invalid
-constraint cases and a canonical/source synchronization behavior test passed inside
-transactions that rolled back; cleanup remained six opportunities, nine references
-and no deadline-history rows.
+## Exact next milestone
 
-Structural RLS/policy/grant verification passed. Anonymous and authenticated roles
-without a user session each saw only three references belonging to published
-opportunities. Actual User-A/User-B/moderator isolation and persistence remain
-explicitly unverified until the next staging-application milestone.
+**Corpus Cleanup Batch 2B1 — Sahara re-review first, then AAS.**
 
-## 5. Migration 0013 result and remaining gate
+The milestone remains limited to Sahara
+`156b20a2-2cb4-4783-ac9b-518225890ee3` first and AAS
+`ef8defbb-80ea-483a-94a3-194d2637177b` second. It still requires a
+controlled authenticated production Moderator session, fresh evidence and target
+checks, protected recovery evidence, one-row-at-a-time verification, and the existing
+explicit two-ID authorization. Never use the service role to impersonate a reviewer.
 
-[Migration 0013](../supabase/migrations/0013_m31_data_trust.sql) is unchanged with
-SHA-256
-`c67cd11086aecd563f04e86c9a665a476749c5877255e640efb61598d6e52306`.
+Do not run the all-legacy requeue path, touch the other 12 triaged rows, reject the
+189 likely-noise pending signals, change sources/cadence/taxonomy/geography, or begin
+AI. Stop after the two exact records.
 
-Result: **0013 APPLIED SUCCESSFULLY TO STAGING** and
-**M31 DATABASE MIGRATION VERIFIED ON STAGING**.
+## Continuing constraints
 
-The direct SQL execution did not create the `supabase_migrations` schema or migration
-history table. Staging therefore has the 0013 schema but no normalized 0001-0013
-repository/remote history. Do not use broad `db push`, replay 0001-0012 or run
-`migration repair`; history normalization is a separately justified and authorized
-future infrastructure milestone.
-
-The live staging application and country-audit correction are verified. The focused
-M31 suite has 18 tests; full-verification evidence remains 705 tests, TypeScript,
-ESLint, 29 boundaries, and the post-gate migration review. Production stayed
-read-only, its M31 flag was not changed, and production activation remains
-prohibited until a separate decision.
-
-The next action is a separate owner go/no-go review of the documented production M31
-rollout plan. Do not apply any production migration or enable its flag without that
-new authorization.
-
-See [M31_STAGING_RUNBOOK.md](M31_STAGING_RUNBOOK.md) for the reusable guard and exact
-verification state.
-
-## 6. Product architecture and established implementation
-
-Tech Opportunity is a Next.js App Router, React, TypeScript, Tailwind, Supabase
-PostgreSQL/Auth/RLS, and Vercel application. Its data boundary remains
-`UI -> lib/data/* -> Supabase`.
-
-The trusted discovery flow is:
-
-`source -> controlled fetch -> normalize -> deterministic qualification -> evidence -> dedupe -> pending -> human moderation -> published`
-
-Acquisition protections, source-specific extraction, qualification evidence,
-pending-only discovery, moderation, public search/filter/detail UX, accounts, saved
-opportunities, deadline intelligence, private in-app alert preferences/events,
-discovery health, and credential-free milestone verification exist. M31 application
-code and rollout gates exist, but its database migration and runtime activation do
-not. AI scaffolding does not authorize operational AI.
-
-Recent milestone anchors:
-
-| Commit | Established work |
-|---|---|
-| `88373fd` | M30 deadline intelligence and alerts |
-| `56e2b26` | M31 evidence-first trust implementation |
-| `5ade6f1` | M31 legacy publication re-review gate |
-| `fcfc514` | Country-only trust mapping fix |
-| `4910d14` | UI/UX product polish |
-| `32fbc85` | M31 staging preflight and owner authorization gate |
-
-## 7. Deferred roadmap
-
-Do not begin these during the staging activation/live-security milestone:
-
-1. Close M31 through staging verification and a separate production decision.
-2. Clean the ambiguous/noisy corpus without manufacturing evidence.
-3. Strengthen the authoritative source policy and registry.
-4. Formalize opportunity taxonomy.
-5. Use National / International as the primary geographic grouping.
-6. Review the six-hour discovery cadence toward two hours, and later possibly one
-   hour or source-specific cadence, only from measured value and infrastructure limits.
-7. Claim an eligible GitHub Student Developer Pack custom-domain benefit before
-   paying for a domain; keep Vercel unless a later infrastructure audit justifies a
-   change.
-8. Launch a trusted normal-use discovery product before personalization.
-9. Add structured profiles and an optional CV, then explainable personalized AI over
-   the trusted corpus.
-10. Build toward commercial, institutional, hackathon, and showcase strength.
-
-`M31_TRUST_SCHEMA_ENABLED` is active only for the `staging` Preview. Production
-remains live and unchanged. Corpus cleanup and AI remain NO-GO.
-
-## 8. Permanent closure rule
-
-Implementation + verification + repository hygiene + online verification where
-relevant + documentation + clean Git state = milestone closure.
-
-For the next session, the one safest action is: conduct a separate owner go/no-go
-review for production M31 activation using the completed staging evidence. Do not
-apply a production migration or flag change during that review.
+- Repository `.env.local` is production-only and must never be used for staging.
+- Recovery details remain authoritative in [DATABASE_RECOVERY.md](DATABASE_RECOVERY.md).
+- Production migration history remains deliberately unnormalized; no broad
+  `db push`, replay 0001–0012, or migration repair.
+- One production Moderator profile exists, but no controlled authenticated session
+  was available during the Batch 2B1 attempt. A profile row is not authorization to
+  impersonate its user through the service role. Batch 2B1 must establish that
+  controlled session separately.
+- `scripts/discovery/inspect-live.ts` performs a reversible insert/delete probe
+  despite its old read-only label. Do not use it for a no-write audit.
