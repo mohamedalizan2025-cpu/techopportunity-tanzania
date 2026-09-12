@@ -1,6 +1,6 @@
 # Current engineering handoff
 
-Updated: 2026-09-12. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-13. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
 ## Current verified state
 
@@ -10,12 +10,12 @@ Updated: 2026-09-12. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   `pumzofcwfjqswkiwfqty`.
 - M31 is closed; migrations 0013/0014 and the M31 flag remain active. AI remains
   operationally disabled.
-- Product Quality & Differentiation planning, Corpus Cleanup Batch 1, and read-only
-  Batch 2A legacy-publication triage are complete.
-- Batch 2B1 reached its production pre-write gate on 2026-09-12 and stopped
-  fail-closed; neither authorized row was mutated. The missing attributable
-  published-record re-review capability has now been implemented, verified on
-  isolated staging, and promoted to production without a corpus write.
+- Product Quality & Differentiation planning, Corpus Cleanup Batch 1, read-only
+  Batch 2A legacy-publication triage, and the two-record Batch 2B1 production
+  re-review are complete.
+- Sahara and AAS now satisfy the current M31 publication contract through the
+  authenticated production Moderator path. The other 12 legacy published rows
+  remain outside the completed authorization and were not touched.
 - Sources, discovery cadence, taxonomy, geography logic, schema, migrations, Auth,
   Vercel configuration, and unrelated infrastructure were not changed.
 
@@ -205,20 +205,72 @@ the promotion inserted no pending corpus row.
 The promotion was code-only: Sahara, AAS, the other 12 published rows, and the
 pending corpus were not mutated.
 
+## Batch 2B1 production execution
+
+At `2026-09-12T21:27:22Z`, the authenticated production Moderator re-reviewed
+Sahara `156b20a2-2cb4-4783-ac9b-518225890ee3`; an independent protected check
+passed before AAS was opened. At `2026-09-12T21:36:17Z`, the same authenticated
+Moderator re-reviewed AAS `ef8defbb-80ea-483a-94a3-194d2637177b`. Both remained
+`published` only after the complete current M31 contract passed.
+
+- **Sahara:** the unsupported legacy `country = Tanzania` value was cleared.
+  Country verification remains `unknown`, all location fields remain null, and no
+  country evidence was invented. The official Intron page is now canonical; it
+  supports voice-AI build/benchmark relevance, eligibility for builders across
+  Africa and the diaspora, and the sourced 15 September 2026 deadline.
+- **AAS:** the official AAS event site is now canonical. The official site and
+  SUZA-hosted circular support the science/technology/innovation scope, eligibility
+  for African participants, JNICC on Shaaban Robert Street in Dar es Salaam,
+  verified Tanzania geography, and the 30 September 2026 abstract deadline.
+- Both rows store `relevant`, `tanzanians_eligible`, rule
+  `m31-2026-09-04-v1`, paired `decided_at`/`last_verified_at`, and exact Moderator
+  `decided_by = 1caee695-3a00-43e7-85a4-79db4067ba0d`.
+- Seven expected `moderator-review` audit rows persist: Sahara country and deadline;
+  AAS venue, address, city, region, and deadline. Their evidence URLs retain the
+  pre-review canonical pages by the existing audit contract.
+- The M31 reference trigger retained all 503 pre-change rows, demoted each old
+  canonical to non-canonical, and appended exactly two official canonical rows,
+  both attributed to the Moderator. Final references are 505.
+
+Production remains 273 opportunities: 246 pending / 14 published / 13 rejected /
+0 expired. The opportunity-ID-set hash remains
+`e83809e7c360328e848afb145064f3ab4ea12c2a976fd6d28110278da1c98b12`; all 271
+non-target opportunity rows retain hash
+`831736c7c61dec1415c401b983fafe3af797267bf623ef06a047edeec7c01f02`.
+No row or reference was deleted and no unrelated opportunity changed.
+
+Protected recovery and verification evidence is outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260912T210306Z-pqd-batch2b1\`.
+It contains the full pre-change manifest and post-Sahara/final verification reports.
+ACL inheritance remains disabled; do not copy these artifacts into Git or an
+unprotected location. The previous Ready application deployment remains the code
+rollback point; the database manifest preserves the exact pre-change target state.
+The protected manifest SHA-256 is
+`0BF0CA1F9B32637F1D9F52B9859456F7D4E40D6FAC6A7F49E9EF27684685F28F`; the
+final verification SHA-256 is
+`7229DA562485C517F6B5BCF6386884A362A2C5FBF1F42746C22DC89F53348911`.
+
+Final read-only HTTP smoke checks returned 200 for the homepage and both exact public
+detail routes. Anonymous access to the Sahara published re-review route returned 307
+to `/login`; the authenticated Moderator boundary remains required.
+
 ## Exact next milestone
 
-**Corpus Cleanup Batch 2B1 — Sahara re-review first, then AAS.**
+**Corpus Cleanup Batch 2B2 — Decisive Legacy-Publication Withhold Cohort.**
 
-The milestone remains limited to Sahara
-`156b20a2-2cb4-4783-ac9b-518225890ee3` first and AAS
-`ef8defbb-80ea-483a-94a3-194d2637177b` second. It still requires a
-controlled authenticated production Moderator session, fresh evidence and target
-checks, protected recovery evidence, one-row-at-a-time verification, and the existing
-explicit two-ID authorization. Never use the service role to impersonate a reviewer.
+This is the bounded six-record cohort already classified with high confidence as
+non-opportunities, explicitly excluded, or otherwise decisively unsuitable. It
+requires fresh exact-ID production mutation authorization before any status change:
 
-Do not run the all-legacy requeue path, touch the other 12 triaged rows, reject the
-189 likely-noise pending signals, change sources/cadence/taxonomy/geography, or begin
-AI. Stop after the two exact records.
+- `98559cb8-183e-482f-972e-ad3b7b3636ba`
+- `fdfe3e70-848a-4ceb-a1b8-4cb949826aca`
+- `9d967b53-ed32-49f8-a7c5-46f389299d78`
+- `f6a0f5eb-5fcb-4692-a3b0-f9d621013d73`
+- `1b3649a0-b694-4475-8ed8-2ce0582482e6`
+- `3710047a-e8b9-4a9f-a17d-cf39e304ee89`
+
+Do not include the three expired-call rows, the three evidence-acquisition rows,
+or any pending row. Do not begin Batch 2B2 without that explicit authorization.
 
 ## Continuing constraints
 
@@ -226,9 +278,7 @@ AI. Stop after the two exact records.
 - Recovery details remain authoritative in [DATABASE_RECOVERY.md](DATABASE_RECOVERY.md).
 - Production migration history remains deliberately unnormalized; no broad
   `db push`, replay 0001–0012, or migration repair.
-- One production Moderator profile exists, but no controlled authenticated session
-  was available during the Batch 2B1 attempt. A profile row is not authorization to
-  impersonate its user through the service role. Batch 2B1 must establish that
-  controlled session separately.
+- One production Moderator profile exists. Batch 2B1 proved the authenticated
+  browser path; a profile row still never authorizes service-role impersonation.
 - `scripts/discovery/inspect-live.ts` performs a reversible insert/delete probe
   despite its old read-only label. Do not use it for a no-write audit.

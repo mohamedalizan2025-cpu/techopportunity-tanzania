@@ -1,12 +1,11 @@
 # Corpus quality and cleanup plan
 
 Status: planning baseline, Batch 1 test-artifact quarantine, read-only Batch 2A
-legacy-publication triage, and the attributable published re-review blocker
-resolution and smallest production promotion are completed through 2026-09-12.
-The new path is verified on isolated staging and deployed to production. No
-Batch 2A/2B1 corpus row was changed; no production row was deleted and no
-source-registry, schedule, schema, migration, or infrastructure-configuration change
-was performed.
+legacy-publication triage, the attributable published re-review blocker resolution,
+its smallest production promotion, and the exact two-record Batch 2B1 production
+re-review are completed through 2026-09-13. No production row or reference was
+deleted and no source-registry, schedule, schema, migration, or
+infrastructure-configuration change was performed.
 
 This is the execution plan for Product Quality & Differentiation. Permanent
 direction remains in [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md); all execution must
@@ -418,13 +417,13 @@ were removed.
 
 Writes remain bounded by the recorded authorization and recovery/identity gates:
 
-1. **Batch 2B1 — current high-value re-review:**
+1. **Batch 2B1 — current high-value re-review (completed 2026-09-13):**
    `156b20a2-2cb4-4783-ac9b-518225890ee3` and
    `ef8defbb-80ea-483a-94a3-194d2637177b`. Existing authorization is limited to
-   these two IDs. The transition is deployed and tested, but a controlled
-   authenticated production Moderator session is still required. Process Sahara,
-   verify, and then process AAS; never take both public records offline simultaneously.
-2. **Decisive withhold cohort:** `98559cb8-183e-482f-972e-ad3b7b3636ba`,
+   these two IDs. Both were processed sequentially through the authenticated
+   production Moderator path and independently verified; neither was taken offline.
+2. **Batch 2B2 — decisive withhold cohort (exact next milestone):**
+   `98559cb8-183e-482f-972e-ad3b7b3636ba`,
    `fdfe3e70-848a-4ceb-a1b8-4cb949826aca`,
    `9d967b53-ed32-49f8-a7c5-46f389299d78`,
    `f6a0f5eb-5fcb-4692-a3b0-f9d621013d73`,
@@ -466,21 +465,48 @@ Writes remain bounded by the recorded authorization and recovery/identity gates:
 - The prior Ready Vercel deployment and protected database recovery artifacts remain
   available. Temporary production-smoke tooling was removed.
 
-### Batch 2B1 — Sahara re-review first, then AAS (exact next milestone)
+### Batch 2B1 — Sahara re-review first, then AAS (completed)
 
-- Use the existing exact two-ID authorization and establish a controlled,
-  authenticated production Moderator session. The profile's existence alone is not
-  a usable or attributable session; never substitute service-role impersonation.
-- Confirm the production deployment exposes the staged, tested published re-review
-  path before any corpus write.
-- Create a protected pre-change manifest and use the production/staging identity,
-  concurrency, and no-overlap gates. Do not use the all-legacy requeue path.
-- Process Sahara first and AAS second, one at a time through the validated path, with
-  evidence-complete moderator review and post-change proof before touching the second
-  ID.
-- Preserve every reference and provenance field. If canonical URLs change, retain
-  prior aggregator/partner URLs as non-canonical references.
-- Stop after these two records; the other 12 require separate authorization.
+- A protected pre-change manifest bound the write to production ref
+  `jltuufukcwztugvojwjd`, the two authorized IDs, and Moderator
+  `1caee695-3a00-43e7-85a4-79db4067ba0d`. The baseline was 273 opportunities,
+  503 references, and 246 pending / 14 published / 13 rejected / 0 expired.
+- Sahara was re-reviewed first. It remains published with verified technical
+  relevance, Africa-wide Tanzanian eligibility, official Intron canonical URL,
+  15 September 2026 sourced deadline, and M31 attribution. The unsupported legacy
+  Tanzania country was cleared; country verification remains unknown and no location
+  claim was invented. Independent verification passed before AAS was opened.
+- AAS was then re-reviewed. It remains published with verified science/technology
+  relevance, Tanzanian eligibility, official AAS canonical URL, verified JNICC /
+  Shaaban Robert Street / Dar es Salaam / Tanzania geography, 30 September 2026
+  abstract deadline, and M31 attribution.
+- Both rows store rule `m31-2026-09-04-v1`; `decided_by` is the authenticated
+  Moderator and each `decided_at` exactly matches `last_verified_at`.
+- Seven applicable `moderator-review` rows persist: Sahara country and deadline;
+  AAS venue, address, city, region, and deadline. The existing audit contract records
+  the pre-review canonical evidence URL for those field changes.
+- All 503 prior reference rows remain. The canonical-reference trigger demoted only
+  the two previous canonical flags and appended the official Intron and AAS pages as
+  exact Moderator-attributed canonicals, producing 505 references.
+- Final counts remain 273 opportunities and 246 pending / 14 published / 13 rejected
+  / 0 expired. The opportunity-ID-set hash remains
+  `e83809e7c360328e848afb145064f3ab4ea12c2a976fd6d28110278da1c98b12`; the
+  271 non-target rows retain hash
+  `831736c7c61dec1415c401b983fafe3af797267bf623ef06a047edeec7c01f02`.
+  No unrelated opportunity changed and nothing was deleted.
+- Protected pre/post evidence is outside Git at
+  `C:\Users\hp\.tech-opportunity-backups\20260912T210306Z-pqd-batch2b1\`.
+- Final HTTP smoke checks returned 200 for the homepage and both exact public detail
+  routes; anonymous published re-review access returned 307 to sign-in.
+
+### Batch 2B2 — decisive legacy-publication withhold cohort (exact next milestone)
+
+- Scope is only the six exact IDs listed in the future-cohorts section above.
+- Obtain fresh explicit mutation authorization for those six IDs before any write.
+- Re-check current status and decisive evidence, create a protected manifest, and
+  use the existing protected unpublish path one record at a time.
+- Do not include the expired-call cohort, evidence-acquisition cohort, or pending
+  corpus. Stop after Batch 2B2; do not begin Batch 3.
 
 ### Batch 3 — salvage priority pending rows
 
@@ -523,14 +549,14 @@ secret/dump exclusion, documentation, and clean Git state. Roll back only from t
 protected pre-change manifest if a declared invariant fails.
 
 The read-only planning milestone used the established recovery baseline. Batch 1
-added the protected checksummed status manifest and post-change evidence documented
-above, because production status changed. Follow
+added a protected checksummed status manifest; Batch 2B1 added a protected full-row,
+reference, and audit manifest plus sequential post-change reports. Follow
 [DATABASE_RECOVERY.md](DATABASE_RECOVERY.md) for broader recovery.
 
 ## Explicit non-goals
 
-Apart from the completed, explicitly authorized Batch 1 status transitions, this
-plan does not authorize further corpus mutation or any deletion, source activation
-or deactivation, schema/category change, National/International UI, schedule change,
-migration-history repair, AI, infrastructure, Auth, Vercel, or Supabase
-configuration change.
+Apart from the completed, explicitly authorized Batch 1 status transitions and
+Batch 2B1 two-record trust re-review, this plan does not authorize further corpus
+mutation or any deletion, source activation or deactivation, schema/category change,
+National/International UI, schedule change, migration-history repair, AI,
+infrastructure, Auth, Vercel, or Supabase configuration change.
