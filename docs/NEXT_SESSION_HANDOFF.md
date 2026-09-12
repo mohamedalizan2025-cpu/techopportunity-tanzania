@@ -12,6 +12,9 @@ Updated: 2026-09-12. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   operationally disabled.
 - Product Quality & Differentiation planning, Corpus Cleanup Batch 1, and read-only
   Batch 2A legacy-publication triage are complete.
+- Batch 2B1 reached its production pre-write gate on 2026-09-12 and stopped
+  fail-closed; neither authorized row was mutated. The exact blocker and current
+  evidence are recorded below and in the corpus plan.
 - Sources, discovery cadence, taxonomy, geography logic, schema, migrations, Auth,
   Vercel, and infrastructure were not changed.
 
@@ -67,25 +70,62 @@ The exact per-ID findings and evidence links are in
 These are triage recommendations, not moderation decisions. All 14 are still
 published and every future write requires exact authorization.
 
+## Batch 2B1 fail-closed pre-write result
+
+At `2026-09-12T03:30:12Z`, a target-guarded service SELECT and an independent
+anonymous SELECT verified production ref `jltuufukcwztugvojwjd`, both exact target
+IDs, and their still-published state. Production remained 246 pending / 14 published
+/ 13 rejected / 0 expired = 273 opportunities with 503 references. Both records
+remain in their legacy unreviewed/unknown/unattributed state with null qualification,
+verification, and deadline-evidence fields; each retains two references. The other
+12 published rows were not touched.
+
+Current primary evidence still supports the planned trust decisions: the official
+Intron challenge page explicitly opens Sahara to builders across Africa and the
+diaspora, requires a voice-AI build/benchmark submission, and gives 15 September
+2026; the official AAS event site and SUZA-hosted circular support the science,
+technology and innovation scope, Tanzanian/African participation, Dar es Salaam
+venue, official registration/abstract routes, and 30 September 2026 abstract
+deadline. Neither target yet satisfies the M31 publication contract because none of
+those findings has been written through an attributable Moderator decision.
+
+The write was refused for two independent safety reasons:
+
+- the implemented protected unpublish path is `published → rejected` and status
+  only, whereas M31 approval accepts only `pending`; the previously documented
+  `published → pending → approve` transition does not exist; and
+- exactly one production Moderator profile exists, but no controlled authenticated
+  Moderator session was available. The in-app browser had no browser surface and
+  Windows Computer Use could not connect to its native helper. Using the service
+  role to stamp that Moderator's ID would be impersonation, not valid attribution.
+
+No production write, reference change, schema/configuration change, rollback, or
+backup artifact occurred. The recovery baseline remains intact. Temporary read-only
+preflight tooling was removed. Production homepage and both exact public detail
+routes returned HTTP 200.
+
 ## Exact next milestone
 
 **Product Quality & Differentiation — Corpus Cleanup Batch 2B1: Current High-Value
 Publication Re-review Execution**
 
-This milestone is owner-gated and not yet authorized. Its only proposed targets are:
+This milestone remains incomplete at its write gate. Its only permitted targets are:
 
 1. `156b20a2-2cb4-4783-ac9b-518225890ee3` — Sahara CodeSwitch Africa Challenge
    2026; then
 2. `ef8defbb-80ea-483a-94a3-194d2637177b` — 16th AAS Biennial Scientific
    Conference 2026.
 
-Before any write, obtain explicit exact-ID authorization and confirm a controlled
-production Moderator path/account. Create protected recovery evidence, prove target
-identity and no overlapping operation, and process only one row at a time:
-published → pending through protected unpublish, evidence-complete moderator
-approval, and post-change proof before touching the second row. Preserve every
-reference/provenance field; retain prior aggregator/partner URLs as non-canonical
-references if the canonical URL is corrected.
+Before another write attempt, reconfirm exact-ID authorization, establish a
+controlled authenticated production Moderator session, and confirm an implemented,
+tested published-record re-review transition. The current reject-only unpublish plus
+pending-only approval actions do not provide the previously described transition;
+do not bridge the gap with service-role impersonation or an undocumented status
+write. Then create fresh protected recovery evidence, prove target identity and no
+overlapping operation, and process only one row at a time with full post-change proof
+before touching the second. Preserve every reference/provenance field and retain
+prior aggregator/partner URLs as non-canonical references if the canonical URL is
+corrected.
 
 Do not run the all-legacy requeue path, touch the other 12 triaged rows, reject the
 189 likely-noise pending signals, change sources/cadence/taxonomy/geography, or begin
@@ -97,7 +137,8 @@ AI. Stop after the two exact records.
 - Recovery details remain authoritative in [DATABASE_RECOVERY.md](DATABASE_RECOVERY.md).
 - Production migration history remains deliberately unnormalized; no broad
   `db push`, replay 0001–0012, or migration repair.
-- No controlled production Moderator account was available during M31 activation;
-  Batch 2B1 must confirm one before any re-review write.
+- One production Moderator profile exists, but no controlled authenticated session
+  was available during the Batch 2B1 attempt. A profile row is not authorization to
+  impersonate its user through the service role.
 - `scripts/discovery/inspect-live.ts` performs a reversible insert/delete probe
   despite its old read-only label. Do not use it for a no-write audit.

@@ -296,6 +296,67 @@ all 14 remained published at Batch 2A close.
 No conservative duplicate identity was established among the 14. Shared aggregator
 or institutional base URLs are source overlap, not duplicate proof.
 
+### Batch 2B1 pre-write execution gate — stopped fail-closed
+
+At `2026-09-12T03:30:12Z`, the exact two-ID authorization was received and a
+read-only preflight was completed against production ref
+`jltuufukcwztugvojwjd`. The URL host and service JWT independently matched that
+ref, the service credential carried the `service_role` claim, and an anonymous
+query independently returned both exact targets as published. Production held 273
+opportunities (246 pending / 14 published / 13 rejected / 0 expired) and 503
+references. Exactly one staff profile had the `moderator` role and none had the
+`admin` role.
+
+Both target rows still had their Batch 2A legacy state: published, unreviewed,
+eligibility unknown, country verification unknown, null qualification and last
+verification values, no M31 decision attribution, and no deadline evidence. Sahara
+had two references and AAS had two references. The opportunity-ID-set hash was
+`e83809e7c360328e848afb145064f3ab4ea12c2a976fd6d28110278da1c98b12`, the
+reference-ID-set hash was
+`1c2c6ced28ac653ce6b8767c487d68672fafe9e5f87e9a928e92f1b0fa0c339a`, and the
+271-row non-target snapshot hash was
+`831736c7c61dec1415c401b983fafe3af797267bf623ef06a047edeec7c01f02`.
+
+Fresh evidence still supports both proposed re-reviews:
+
+- Sahara's [official Intron challenge page](https://www.intron.io/compete/) names
+  the CodeSwitch Africa Challenge, the voice-AI build/benchmark task, a USD 10,000
+  prize pool, eligibility for builders across Africa and the diaspora, solo/team
+  participation, and the 15 September 2026 registration/final-submission date. Its
+  registration control leads from the organizer page to the application form. This
+  supports technology relevance, Tanzanian eligibility, a date-precision deadline,
+  and an organizer-owned canonical evidence/application route. It does not support
+  the legacy fabricated Tanzania country value; country must remain evidence-labelled
+  unknown with no country evidence for this online Africa-wide challenge.
+- The current [official AAS event site](https://events.aasciences.africa/) confirms
+  the 16th conference, 15–18 December 2026 in Dar es Salaam, its science,
+  technology and innovation focus, and official registration and abstract controls.
+  The [official SUZA-hosted conference circular](https://suza.ac.tz/wp-content/uploads/2026/08/16AAS-Conference-Second-Circur_fin-1.pdf)
+  gives the JNICC/Shaaban Robert Street venue, a 30 September 2026 abstract deadline,
+  broad researcher/innovator participation, an Africa-based student category, and
+  the official COSTECH abstract route. Together these support relevance, Tanzanian
+  eligibility, verified Tanzania location, a date-precision deadline, and trusted
+  application routes.
+
+No write was attempted. Source truth exposed a hard execution conflict: the current
+protected published-management action performs `published → rejected` and writes
+status only, while the M31 approval action accepts only `pending` rows. Therefore the
+documented `published → pending → approve` sequence does not exist. The in-app
+browser reported no available browser, Windows Computer Use could not connect to its
+native helper, and no authenticated Moderator session or credential is present in
+the repository environment. A service-role update attributed to the sole Moderator
+would impersonate a human decision and bypass the required Moderator boundary, so it
+was deliberately refused.
+
+Consequently both rows and all references are unchanged, neither row yet satisfies
+the M31 publication contract, and Batch 2B1 is not complete. No rollback manifest was
+needed because the write gate never opened; the established recovery baseline remains
+untouched. Temporary preflight tooling must be removed before closure. Batch 2B1 may
+resume only after a controlled authenticated production Moderator session and a
+tested, explicitly authorized published-record re-review transition are available.
+Do not reinterpret the current reject-only unpublish action as a pending requeue and
+do not substitute service-role impersonation.
+
 #### Exact future cohorts requiring explicit mutation authorization
 
 Any write to these IDs requires new exact owner authorization and the recovery and
@@ -303,9 +364,10 @@ identity gates below:
 
 1. **Batch 2B1 — current high-value re-review (exact next milestone):**
    `156b20a2-2cb4-4783-ac9b-518225890ee3` and
-   `ef8defbb-80ea-483a-94a3-194d2637177b`. Unpublish one to pending, complete
-   moderator review from primary evidence, verify, then process the second; never
-   take both public records offline simultaneously.
+   `ef8defbb-80ea-483a-94a3-194d2637177b`. This remains blocked until a controlled
+   authenticated Moderator session and an implemented, tested published-record
+   re-review transition are available. Then process Sahara, verify, and process AAS;
+   never take both public records offline simultaneously.
 2. **Decisive withhold cohort:** `98559cb8-183e-482f-972e-ad3b7b3636ba`,
    `fdfe3e70-848a-4ceb-a1b8-4cb949826aca`,
    `9d967b53-ed32-49f8-a7c5-46f389299d78`,
@@ -321,15 +383,20 @@ identity gates below:
    missing evidence is obtained or the owner explicitly authorizes withholding
    based on insufficiency.
 
-### Batch 2B1 — current high-value publication re-review execution (exact next milestone)
+### Batch 2B1 — current high-value publication re-review execution (exact next milestone; blocked at write gate)
 
-- Obtain explicit authorization for only the two exact IDs and confirm a controlled
-  production Moderator account/path is available.
+- Reconfirm explicit authorization for only the two exact IDs and establish a
+  controlled, authenticated production Moderator session. The profile's existence
+  alone is not a usable or attributable session.
+- Confirm an implemented and tested transition that actually supports published
+  re-review. The current unpublish action targets `rejected`, not `pending`, and the
+  approval action accepts only `pending`; do not bridge this gap with a service-role
+  impersonation or an undocumented status write.
 - Create a protected pre-change manifest and use the production/staging identity,
   concurrency, and no-overlap gates. Do not use the all-legacy requeue path.
-- Process Sahara first and AAS second, one at a time: published → pending through
-  protected unpublish, evidence-complete moderator approval, and post-change proof
-  before touching the second ID.
+- Process Sahara first and AAS second, one at a time through the validated path, with
+  evidence-complete moderator review and post-change proof before touching the second
+  ID.
 - Preserve every reference and provenance field. If canonical URLs change, retain
   prior aggregator/partner URLs as non-canonical references.
 - Stop after these two records; the other 12 require separate authorization.
