@@ -1,8 +1,10 @@
 # Corpus quality and cleanup plan
 
-Status: planning baseline, Batch 1 test-artifact quarantine, and read-only Batch 2A
-legacy-publication triage completed through 2026-09-12. No Batch 2A row was
-changed; no row was deleted and no source-registry, schedule, schema, environment,
+Status: planning baseline, Batch 1 test-artifact quarantine, read-only Batch 2A
+legacy-publication triage, and the attributable published re-review blocker
+resolution are completed through 2026-09-12. The new path is verified on isolated
+staging only and is not deployed to production. No Batch 2A/2B1 corpus row was
+changed; no production row was deleted and no source-registry, schedule, schema,
 or infrastructure change was performed.
 
 This is the execution plan for Product Quality & Differentiation. Permanent
@@ -357,17 +359,71 @@ tested, explicitly authorized published-record re-review transition are availabl
 Do not reinterpret the current reject-only unpublish action as a pending requeue and
 do not substitute service-role impersonation.
 
+### Published re-review capability — blocker resolved on staging
+
+Root cause was an application transition gap, not a schema defect. The pending
+decision action selected and updated only `pending` rows, while published management
+offered only the protected status-only `published → rejected` action. Consequently
+there was no authenticated, attributable way to refresh evidence on a row that still
+qualified and should remain published.
+
+Staging commit `558e41d` extends the existing architecture rather than adding a new
+one:
+
+- the existing M31 parser, category/organization checks, evidence payload, field
+  audit generation, Auth/RLS staff context, and public publication predicate are
+  reused;
+- published mode loads one exact `published` ID and exposes the same review form
+  without a reject button;
+- before any write, the exact proposed post-review record must pass
+  `isAiSearchableOpportunity`; then the update requires the same ID, current
+  `published` status, and unchanged previous `decided_at` value;
+- `status` remains `published`, authenticated `staff.userId` becomes `decided_by`,
+  and one timestamp is used for `decided_at` and `last_verified_at`; and
+- references, discovery provenance, source attribution, submission attribution, and
+  other unrelated fields are absent from the update payload.
+
+No migration, schema/RLS change, role change, dependency, service credential, or
+generic workflow abstraction was required. Pending approval and protected unpublish
+remain independent actions.
+
+The exact commit reached Ready on isolated staging deployment
+`dpl_HDB1kESr5Wbir5JgcjGmJoLb2tsX`. Three disposable local-domain identities
+(User A, User B, Moderator) and five tagged opportunities proved the live boundary:
+
+- Moderator re-review access 200; anonymous access 307 to sign-in; ordinary user
+  access restricted; ordinary and anonymous action submissions made no change;
+- incomplete eligibility evidence made no change;
+- evidence-complete re-review kept the row published and persisted relevance,
+  eligibility, geography, deadline/application evidence, M31 rule version, exact
+  Moderator attribution, and paired timestamps;
+- six applicable enrichment audit rows persisted and the canonical reference count
+  was unchanged;
+- pending approval still produced an attributed publication;
+- User A/User B save isolation and ordinary/anonymous opportunity-update denial
+  remained intact; and an unrelated sentinel did not change;
+- published management remained staff-only; its existing unpublish payload and live
+  Moderator RLS transition changed only status (plus automatic `updated_at`) and
+  retained audit data. The 43-assertion protected-unpublish suite also remained green.
+
+All disposable data and Auth identities were deleted after verification. Staging
+returned to 6 opportunities, 9 references, and zero Auth users/profiles/saves. The
+pre/post opportunity hash was `ab054f0594a72fce6eea4823feb3625a`; the pre/post
+reference hash was `585a8bd3bf8f39fcc11e00f67d596b3b`. No recovery rollback was
+needed, and all transient scripts, credentials, link metadata, and generated files
+were removed.
+
 #### Exact future cohorts requiring explicit mutation authorization
 
-Any write to these IDs requires new exact owner authorization and the recovery and
-identity gates below:
+Writes remain bounded by the recorded authorization and recovery/identity gates:
 
-1. **Batch 2B1 — current high-value re-review (exact next milestone):**
+1. **Batch 2B1 — current high-value re-review (after production promotion):**
    `156b20a2-2cb4-4783-ac9b-518225890ee3` and
-   `ef8defbb-80ea-483a-94a3-194d2637177b`. This remains blocked until a controlled
-   authenticated Moderator session and an implemented, tested published-record
-   re-review transition are available. Then process Sahara, verify, and process AAS;
-   never take both public records offline simultaneously.
+   `ef8defbb-80ea-483a-94a3-194d2637177b`. Existing authorization is limited to
+   these two IDs. The transition is staged and tested, but production promotion and a
+   controlled authenticated Moderator session are still required. Then process
+   Sahara, verify, and process AAS; never take both public records offline
+   simultaneously.
 2. **Decisive withhold cohort:** `98559cb8-183e-482f-972e-ad3b7b3636ba`,
    `fdfe3e70-848a-4ceb-a1b8-4cb949826aca`,
    `9d967b53-ed32-49f8-a7c5-46f389299d78`,
@@ -383,15 +439,24 @@ identity gates below:
    missing evidence is obtained or the owner explicitly authorizes withholding
    based on insufficiency.
 
-### Batch 2B1 — current high-value publication re-review execution (exact next milestone; blocked at write gate)
+### Published re-review capability — production promotion (exact next milestone)
 
-- Reconfirm explicit authorization for only the two exact IDs and establish a
-  controlled, authenticated production Moderator session. The profile's existence
-  alone is not a usable or attributable session.
-- Confirm an implemented and tested transition that actually supports published
-  re-review. The current unpublish action targets `rejected`, not `pending`, and the
-  approval action accepts only `pending`; do not bridge this gap with a service-role
-  impersonation or an undocumented status write.
+- Promote only commit `558e41d` plus its closure documentation through the normal
+  production path; perform no corpus mutation.
+- Reconfirm production identity and deployed SHA, preserve the current deployment as
+  rollback, and run normal availability plus anonymous/ordinary/staff boundary smoke
+  checks.
+- Do not add or modify migrations: staging proved the current schema and RLS are
+  sufficient.
+- Stop after promotion. Batch 2B1 is the next separate milestone.
+
+### Batch 2B1 — current high-value publication re-review execution (following milestone)
+
+- Use the existing exact two-ID authorization and establish a controlled,
+  authenticated production Moderator session. The profile's existence alone is not
+  a usable or attributable session; never substitute service-role impersonation.
+- Confirm the production deployment exposes the staged, tested published re-review
+  path before any corpus write.
 - Create a protected pre-change manifest and use the production/staging identity,
   concurrency, and no-overlap gates. Do not use the all-legacy requeue path.
 - Process Sahara first and AAS second, one at a time through the validated path, with

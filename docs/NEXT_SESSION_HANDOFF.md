@@ -13,8 +13,9 @@ Updated: 2026-09-12. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 - Product Quality & Differentiation planning, Corpus Cleanup Batch 1, and read-only
   Batch 2A legacy-publication triage are complete.
 - Batch 2B1 reached its production pre-write gate on 2026-09-12 and stopped
-  fail-closed; neither authorized row was mutated. The exact blocker and current
-  evidence are recorded below and in the corpus plan.
+  fail-closed; neither authorized row was mutated. The missing attributable
+  published-record re-review capability has now been implemented and verified on
+  isolated staging, but has not been promoted to production.
 - Sources, discovery cadence, taxonomy, geography logic, schema, migrations, Auth,
   Vercel, and infrastructure were not changed.
 
@@ -104,28 +105,70 @@ backup artifact occurred. The recovery baseline remains intact. Temporary read-o
 preflight tooling was removed. Production homepage and both exact public detail
 routes returned HTTP 200.
 
+## Published re-review blocker resolution
+
+Commit `558e41d` on `staging` adds the smallest permanent transition that was
+missing: an authenticated Moderator can reopen the existing review form for one
+currently published row, submit the same evidence fields and parser used by pending
+approval, and save only when the complete current M31 publication predicate passes.
+The write remains `published → published`, is guarded by exact ID, current
+`published` status, and prior `decided_at`, and records the authenticated user's ID
+plus one decision/verification timestamp. Existing reference and provenance fields
+are not part of the payload. Pending approval and protected unpublish remain
+separate actions.
+
+No migration, table, role, dependency, service-role shortcut, or second moderation
+system was added. The page and action both use `getModerationAccess()` and the
+request-scoped Supabase Auth/RLS client. Ordinary authenticated users see the
+existing restricted page; anonymous users are redirected to sign-in; both were
+also refused when the re-review action itself was submitted.
+
+The exact commit deployed successfully to isolated staging as Vercel deployment
+`dpl_HDB1kESr5Wbir5JgcjGmJoLb2tsX`. A staging-only live matrix used three disposable
+local-domain Auth identities and five disposable opportunities. It proved:
+
+- Moderator access returned 200; anonymous access redirected with 307 and ordinary
+  user access rendered the restricted page;
+- incomplete eligibility evidence caused no write;
+- an evidence-complete published re-review remained published and persisted M31
+  relevance, Tanzanian eligibility, verified geography, deadline/application
+  evidence, qualification version, the exact Moderator ID, and paired
+  `decided_at`/`last_verified_at` values;
+- six applicable `moderator-review` enrichment rows persisted (venue, address,
+  city, region, country, and deadline) and the canonical reference count stayed one;
+- the pending approval path still published and attributed its disposable row;
+- the existing published-management page remained staff-only and available, and
+  the protected unpublish status payload/RLS transition still changed only
+  `status` (plus automatic `updated_at`) while retaining audit data;
+- User A/User B isolation remained intact: User A saw one own save while
+  User B saw zero; ordinary/anonymous direct opportunity writes returned zero rows;
+  and an unrelated sentinel row was byte-for-byte unchanged.
+
+All disposable staging rows, references, enrichment rows, saves, Auth users,
+profiles, and the temporary category were removed. The staging baseline returned
+to 6 opportunities / 9 references / 0 Auth users / 0 profiles / 0 saves; opportunity
+hash `ab054f0594a72fce6eea4823feb3625a` and reference hash
+`585a8bd3bf8f39fcc11e00f67d596b3b` matched their pre-test values. Generated
+build/link/rule files, transient credentials, and verification scripts were removed.
+The established recovery artifacts were not changed.
+
 ## Exact next milestone
 
-**Product Quality & Differentiation — Corpus Cleanup Batch 2B1: Current High-Value
-Publication Re-review Execution**
+**Published Opportunity Re-review Capability — Smallest Production Promotion**
 
-This milestone remains incomplete at its write gate. Its only permitted targets are:
+Promote only commit `558e41d` plus this closure documentation through the normal
+production path. Reconfirm the production target and deployment SHA, run the normal
+production smoke/auth boundary checks, and make no corpus write during promotion.
+Do not create or modify migrations: staging proved the current schema/RLS is
+sufficient. Preserve the currently live production deployment as the rollback point.
 
-1. `156b20a2-2cb4-4783-ac9b-518225890ee3` — Sahara CodeSwitch Africa Challenge
-   2026; then
-2. `ef8defbb-80ea-483a-94a3-194d2637177b` — 16th AAS Biennial Scientific
-   Conference 2026.
-
-Before another write attempt, reconfirm exact-ID authorization, establish a
-controlled authenticated production Moderator session, and confirm an implemented,
-tested published-record re-review transition. The current reject-only unpublish plus
-pending-only approval actions do not provide the previously described transition;
-do not bridge the gap with service-role impersonation or an undocumented status
-write. Then create fresh protected recovery evidence, prove target identity and no
-overlapping operation, and process only one row at a time with full post-change proof
-before touching the second. Preserve every reference/provenance field and retain
-prior aggregator/partner URLs as non-canonical references if the canonical URL is
-corrected.
+After successful promotion, the following milestone is **Corpus Cleanup Batch 2B1
+— Current High-Value Publication Re-review Execution**, still limited to Sahara
+`156b20a2-2cb4-4783-ac9b-518225890ee3` first and AAS
+`ef8defbb-80ea-483a-94a3-194d2637177b` second. That later mutation still requires a
+controlled authenticated production Moderator session, fresh evidence and target
+checks, protected recovery evidence, one-row-at-a-time verification, and the existing
+explicit two-ID authorization. Never use the service role to impersonate a reviewer.
 
 Do not run the all-legacy requeue path, touch the other 12 triaged rows, reject the
 189 likely-noise pending signals, change sources/cadence/taxonomy/geography, or begin
@@ -139,6 +182,7 @@ AI. Stop after the two exact records.
   `db push`, replay 0001–0012, or migration repair.
 - One production Moderator profile exists, but no controlled authenticated session
   was available during the Batch 2B1 attempt. A profile row is not authorization to
-  impersonate its user through the service role.
+  impersonate its user through the service role. Production promotion is code-only;
+  Batch 2B1 must still establish that session separately.
 - `scripts/discovery/inspect-live.ts` performs a reversible insert/delete probe
   despite its old read-only label. Do not use it for a no-write audit.
