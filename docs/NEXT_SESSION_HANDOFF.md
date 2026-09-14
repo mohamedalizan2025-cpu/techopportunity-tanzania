@@ -30,8 +30,9 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 - Published Unpublish Attribution Hardening is promoted in production. The push also
   triggered existing Discovery sync run `34841308578`, which added exactly two
   pending rows and two references. Read-only reconciliation found both unsuitable
-  for retention, but neither was mutated without explicit authorization. Current
-  production is therefore 252 pending /
+  for retention. Their subsequently authorized resolution stopped before the first
+  mutation because the existing pending-rejection path cannot persist a reason.
+  Current production is therefore 252 pending /
   8 published / 19 rejected / 0 expired = 279 opportunities, 511 references, and
   8 enrichment rows; no status audit exists because no production unpublish ran.
 - Sources, discovery cadence, taxonomy, geography logic, production Auth, and
@@ -516,11 +517,46 @@ matrix, and unchanged legacy moderation paths. Fresh public checks returned 200
 for the homepage, Sahara, and AAS and 307-to-login for anonymous moderation and
 published management. No RPC or production mutation was used in this milestone.
 
+## Production promotion corpus-delta resolution — stopped before mutation
+
+The owner explicitly authorized rejection of only
+`61ebe91c-2eb4-41e5-a051-f3efc9aa5873` and
+`f821f312-18f3-4a0a-8436-e541a9884db3`, one at a time through the authenticated
+Moderator path, with an attributable reason for each. Preflight at
+`2026-09-14T14:43:10.965Z` independently bound to production ref
+`jltuufukcwztugvojwjd` and confirmed both remain `pending`, with null
+`decided_by`/`decided_at`, no audit rows, their exact original timestamps, and one
+preserved reference each. The older CFJ duplicate remains pending; Sahara and AAS
+remain published and M31-compliant. All 279 opportunity rows and 511 reference rows
+were byte-identical to the protected final deployment snapshot.
+
+Execution stopped before the first action because the deployed pending-rejection
+contract cannot satisfy the owner's required reason audit:
+
+- `decideOpportunityAction` accepts only ID plus approve/reject intent for a
+  rejection and writes `status`, `decided_by`, and `decided_at`; it accepts and
+  persists no rejection reason;
+- the deployed Moderator form exposes no rejection-reason control; and
+- migration 0015's reason-bearing status audit is deliberately constrained to
+  `published → rejected` with method `moderator-unpublish`, so it cannot truthfully
+  represent a `pending → rejected` decision.
+
+Using the current UI would record actor/time but silently discard the owner's exact
+reason. Reusing the published-unpublish audit would violate its database constraint
+and semantics. No service-role impersonation or alternate write path was used. No
+production row, reference, audit, schema, configuration, or recovery artifact was
+changed. The existing protected recovery set remains intact, and temporary
+read-only tooling plus the agent-created browser tab were removed. Its manifest
+still hashes to
+`CC4CA53597F12285CFAB87781CD1BA776B4995E0010B1CC9BBA1A0734982EB83` and ACL
+inheritance remains disabled. Fresh homepage, Sahara, and AAS checks each returned
+HTTP 200.
+
 ## Ordered near-term roadmap
 
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
-1. **Published Unpublish Attribution Hardening** *(production promoted; reconciliation complete read-only, two-record resolution owner-gated)*
+1. **Published Unpublish Attribution Hardening** *(production promoted; two-record resolution blocked on pending-rejection reason attribution)*
 2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
    - multi-select
    - select-all-visible
@@ -539,17 +575,18 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 
 ## Exact next milestone
 
-**Published Unpublish Attribution Hardening — Production Promotion Corpus-Delta Resolution.**
+**Pending Rejection Attribution Hardening — Staging Implementation.**
 
-Obtain explicit owner authorization, then resolve only exact pending opportunities
-`61ebe91c-2eb4-41e5-a051-f3efc9aa5873` and
-`f821f312-18f3-4a0a-8436-e541a9884db3`, both created by push-triggered Discovery
-sync run `34841308578`. If authorized, reject those two pending rows through the
-existing authenticated Moderator path with attributable reasons; preserve both
-references and prove all non-target rows byte-identical. Do not infer that this
-handoff authorizes the write. Do not modify the earlier CFJ duplicate, unpublish or
-re-review any published record, resume Batch 2B2, begin bulk moderation, or start
-any later roadmap priority during that resolution milestone.
+Implement and verify in isolated staging the smallest permanent extension of the
+existing authenticated Moderator pending-rejection path so one exact
+`pending → rejected` decision atomically records the authenticated actor, exact
+opportunity ID, previous/resulting status, bounded rejection reason, and decision
+timestamp in the existing moderation/audit architecture. Preserve pending approval,
+published re-review, and published unpublish unchanged; deny anonymous, ordinary,
+and service-role impersonation; exact-target and concurrency guard the transition;
+and prove unrelated rows/references cannot change. Do not promote to production or
+resume the two authorized production rejections within that staging milestone. Do
+not implement bulk moderation, discovery changes, or any later roadmap priority.
 
 ## Continuing constraints
 

@@ -57,9 +57,12 @@ Priority 1 was promoted to production on 2026-09-14. Its bounded fail-closed
 reconciliation found both automatic pending inserts unsuitable for retention: one
 is a same-cohort duplicate and out of product scope; the other conflates two AWARD
 programs and carries Tanzania-excluding evidence under the wrong identity. They
-remain pending until the owner explicitly authorizes a two-record resolution. No
-later priority was implemented during attribution hardening, promotion, or
-reconciliation.
+remain pending. The owner authorized their rejection, but execution stopped before
+the first mutation because the existing pending-rejection path records actor/time
+without a reason and the 0015 reason audit is intentionally restricted to published
+unpublishes. Priority 1 therefore requires one bounded pending-rejection attribution
+hardening milestone before the exact two-record resolution can resume. No later
+priority was implemented.
 
 ## Product Quality & Differentiation direction
 

@@ -643,6 +643,31 @@ above through the authenticated Moderator path with attributable reasons, retain
 their references, and prove non-target immutability. Do not modify the pre-existing
 CFJ duplicate, touch any published record, or begin a later roadmap item.
 
+### Production Promotion Corpus-Delta Resolution — preflight blocker
+
+The owner authorized rejection of the two exact pending rows with attributable
+reasons. A production-bound preflight at `2026-09-14T14:43:10.965Z` confirmed both
+are still pending, have null decision attribution, no audits, unchanged timestamps,
+and one reference each. All 279 opportunity rows and 511 reference rows remained
+byte-identical to the protected final deployment snapshot; the older CFJ duplicate
+remained pending and the two M31 controls remained published and compliant.
+
+No mutation was attempted. The current authenticated pending-reject action persists
+`status`, `decided_by`, and `decided_at`, but accepts no reason and inserts no
+reason-bearing audit. The deployed form likewise has no reason input. Migration
+0015's status-audit constraint truthfully permits only `published → rejected`
+`moderator-unpublish` entries, so it cannot be reused for these pending decisions.
+Proceeding would silently fail the explicit reason-attribution requirement. The
+existing protected recovery manifest retained its documented SHA-256 and protected
+ACL, while fresh homepage, Sahara, and AAS checks each returned HTTP 200.
+
+### Exact next milestone — Pending Rejection Attribution Hardening — Staging Implementation
+
+Implement the smallest atomic, reason-bearing extension of the existing
+authenticated single-record pending-rejection path and verify it in isolated
+staging. Preserve every other moderation path and stop before production promotion
+or resuming the two-record corpus-delta resolution.
+
 ### Batch 3 — salvage priority pending rows
 
 - Review the 34 potentially qualifying rows before spending effort on likely noise.
