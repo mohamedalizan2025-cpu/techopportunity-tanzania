@@ -125,6 +125,38 @@ invariant("pending rejection is reason-bearing, atomic, exact-target and authent
   assert.match(pendingRejectionMigration, /grant execute on function public\.reject_pending_opportunity\(uuid, text\)\s+to authenticated/);
 });
 
+invariant("bulk rejection reuses the single-record attributable path only", () => {
+  assert.match(moderationActions, /export async function bulkRejectPendingAction/);
+  assert.match(moderationActions, /const access = await getModerationAccess\(\)/);
+  assert.match(moderationActions, /parseBulkRejectIds\(formData\.getAll\("opportunityId"\)\)/);
+  assert.match(moderationActions, /BULK_REJECT_MAX_ITEMS/);
+  assert.match(moderationActions, /access\.staff\.client[\s\S]*\.rpc\("reject_pending_opportunity"/);
+  const bulkBody = moderationActions.slice(
+    moderationActions.indexOf("export async function bulkRejectPendingAction"),
+    moderationActions.indexOf("export async function rereviewPublishedOpportunityAction")
+  );
+  assert.ok(bulkBody.length > 0);
+  assert.doesNotMatch(bulkBody, /"approve"/);
+  assert.doesNotMatch(bulkBody, /\.from\("opportunities"\)\s*\.update/);
+  assert.doesNotMatch(bulkBody, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
+  const migrationFiles = filesBelow("supabase/migrations");
+  const bulkMigrations = migrationFiles.filter((file) => /bulk/i.test(file));
+  assert.deepEqual(bulkMigrations, []);
+});
+
+invariant("bulk queue aids stay honest view-only filters", () => {
+  const moderationData = read("lib/data/moderation.ts");
+  const bulkPanel = read("app/moderation/queue-bulk-panel.tsx");
+  const queuePage = read("app/moderation/page.tsx");
+  assert.match(moderationData, /isAmbiguousQueueItem/);
+  assert.match(queuePage, /isAmbiguousQueueItem/);
+  assert.match(queuePage, /QueueBulkPanel/);
+  assert.match(bulkPanel, /bulkRejectPendingAction/);
+  assert.match(bulkPanel, /name="confirm"[\s\S]*value=\{BULK_REJECT_CONFIRM_TOKEN\}/);
+  assert.doesNotMatch(bulkPanel, /\.rpc\(/);
+  assert.doesNotMatch(bulkPanel, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
+});
+
 invariant("saved relationships are owner-only and never anonymous or mutable", () => {
   assert.match(savedMigration, /alter table public\.saved_opportunities enable row level security/);
   assert.equal((savedMigration.match(/\(select auth\.uid\(\)\) = user_id/g) ?? []).length, 3);

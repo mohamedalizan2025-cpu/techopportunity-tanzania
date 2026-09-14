@@ -74,22 +74,22 @@ const news = row({ id: "n", category: "other", title: "WAZIRI AKAGUA MIRADI", so
 const actionable = row({ id: "a", category: "other", title: "Call for Applications", sourceName: "Twaweza" });
 
 assert("match: empty filter matches everything", matchesQueueFilter(news, EMPTY_QUEUE_FILTER));
-assert("match: bucket 2 selects scholarship", matchesQueueFilter(scholarship, { bucket: 2, sourceName: null }));
-assert("match: bucket 8 selects news-heuristic row", matchesQueueFilter(news, { bucket: 8, sourceName: null }));
-assert("match: bucket 8 does not select actionable row", !matchesQueueFilter(actionable, { bucket: 8, sourceName: null }));
+assert("match: bucket 2 selects scholarship", matchesQueueFilter(scholarship, { bucket: 2, sourceName: null, q: null, flag: null }));
+assert("match: bucket 8 selects news-heuristic row", matchesQueueFilter(news, { bucket: 8, sourceName: null, q: null, flag: null }));
+assert("match: bucket 8 does not select actionable row", !matchesQueueFilter(actionable, { bucket: 8, sourceName: null, q: null, flag: null }));
 assert(
   "match: source filter requires exact sourceName",
-  matchesQueueFilter(news, { bucket: null, sourceName: "Twaweza" }) &&
-    !matchesQueueFilter(scholarship, { bucket: null, sourceName: "Twaweza" })
+  matchesQueueFilter(news, { bucket: null, sourceName: "Twaweza", q: null, flag: null }) &&
+    !matchesQueueFilter(scholarship, { bucket: null, sourceName: "Twaweza", q: null, flag: null })
 );
 assert(
   "match: source filter does not match null sourceName",
-  !matchesQueueFilter(row({ sourceName: null }), { bucket: null, sourceName: "Twaweza" })
+  !matchesQueueFilter(row({ sourceName: null }), { bucket: null, sourceName: "Twaweza", q: null, flag: null })
 );
 assert(
   "match: bucket AND source must both hold",
-  !matchesQueueFilter(scholarship, { bucket: 2, sourceName: "Twaweza" }) &&
-    matchesQueueFilter(scholarship, { bucket: 2, sourceName: "OpportunityDesk" })
+  !matchesQueueFilter(scholarship, { bucket: 2, sourceName: "Twaweza", q: null, flag: null }) &&
+    matchesQueueFilter(scholarship, { bucket: 2, sourceName: "OpportunityDesk", q: null, flag: null })
 );
 
 // --- filterPendingQueue: order preserved, rows only removed ------------------
@@ -97,9 +97,9 @@ assert(
 const queue = [actionable, scholarship, news];
 const emptyFilterResult = filterPendingQueue(queue, EMPTY_QUEUE_FILTER);
 assert("filter: empty filter is a no-op (same rows, same order)", emptyFilterResult === queue);
-const bucket8 = filterPendingQueue(queue, { bucket: 8, sourceName: null });
+const bucket8 = filterPendingQueue(queue, { bucket: 8, sourceName: null, q: null, flag: null });
 assert("filter: bucket 8 yields exactly the news-heuristic row", bucket8.length === 1 && bucket8[0].id === "n");
-const twaweza = filterPendingQueue(queue, { bucket: null, sourceName: "Twaweza" });
+const twaweza = filterPendingQueue(queue, { bucket: null, sourceName: "Twaweza", q: null, flag: null });
 assert(
   "filter: deterministic order preserved inside a source filter",
   twaweza.length === 2 && twaweza[0].id === "a" && twaweza[1].id === "n"
@@ -108,14 +108,14 @@ assert(
 // --- queueFilterQuery: round-trip through the URL ----------------------------
 
 assert("query: empty filter produces no suffix", queueFilterQuery(EMPTY_QUEUE_FILTER) === "");
-assert("query: bucket only", queueFilterQuery({ bucket: 5, sourceName: null }) === "?bucket=5");
+assert("query: bucket only", queueFilterQuery({ bucket: 5, sourceName: null, q: null, flag: null }) === "?bucket=5");
 assert(
   "query: source with spaces and & is encoded",
-  queueFilterQuery({ bucket: null, sourceName: "Higher Education & Loans" }) ===
+  queueFilterQuery({ bucket: null, sourceName: "Higher Education & Loans", q: null, flag: null }) ===
     "?source=Higher+Education+%26+Loans"
 );
 const roundTrip = parseQueueFilter({
-  ...Object.fromEntries(new URLSearchParams(queueFilterQuery({ bucket: 1, sourceName: "Sokoine University of Agriculture" }))),
+  ...Object.fromEntries(new URLSearchParams(queueFilterQuery({ bucket: 1, sourceName: "Sokoine University of Agriculture", q: null, flag: null }))),
 });
 assert(
   "query: build→parse round-trips both dimensions",

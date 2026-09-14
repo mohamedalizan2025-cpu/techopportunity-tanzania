@@ -16,9 +16,11 @@ import {
   TRIAGE_BUCKET_SHORT,
   TRIAGE_HEURISTIC_NOTE,
   firstSuggestedReview,
+  isAmbiguousQueueItem,
   triageBucketOf,
   type TriageBucket,
 } from "@/lib/triage-bucket";
+import { QueueBulkPanel } from "./queue-bulk-panel";
 
 export const metadata: Metadata = {
   title: "Moderation queue · TechOpportunity Tanzania",
@@ -111,6 +113,16 @@ export default async function ModerationPage({
   for (const item of triageItems) {
     bucketCounts.set(item.bucket, (bucketCounts.get(item.bucket) ?? 0) + 1);
   }
+  // Ambiguous / weak-evidence REVIEW FLAG: bucket 7 (ambiguous) or 8
+  // (news-like heuristic) — the same labeled hints as the badges, now
+  // filterable. Hint only; the moderator still decides every record.
+  const flaggedById = new Map(
+    pending.map((opportunity) => [
+      opportunity.id,
+      isAmbiguousQueueItem(opportunity.category, opportunity.title),
+    ])
+  );
+  const flaggedCount = [...flaggedById.values()].filter(Boolean).length;
   const sourceCounts = new Map<string, number>();
   for (const opportunity of pending) {
     if (opportunity.sourceName) {
@@ -159,6 +171,32 @@ export default async function ModerationPage({
           <>
             {/* View filters — narrow the list, never change what is pending. */}
             <div className="mt-8 flex flex-col gap-2">
+              <form method="get" action="/moderation" role="search" className="flex gap-2">
+                {filter.bucket !== null ? (
+                  <input type="hidden" name="bucket" value={filter.bucket} />
+                ) : null}
+                {filter.sourceName !== null ? (
+                  <input type="hidden" name="source" value={filter.sourceName} />
+                ) : null}
+                {filter.flag !== null ? (
+                  <input type="hidden" name="flag" value={filter.flag} />
+                ) : null}
+                <input
+                  type="search"
+                  name="q"
+                  defaultValue={filter.q ?? ""}
+                  maxLength={120}
+                  placeholder="Search pending titles…"
+                  aria-label="Search pending titles"
+                  className="h-9 min-w-0 flex-1 rounded-full border border-black/[.10] bg-white px-4 text-sm text-black outline-none transition-colors focus:border-black/40 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-white/40"
+                />
+                <button
+                  type="submit"
+                  className="inline-flex h-9 shrink-0 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+                >
+                  Search
+                </button>
+              </form>
               <div className="flex flex-wrap items-center gap-2" aria-label="Filter queue by triage hint">
                 <Link href="/moderation" className={filterChipClasses(!filtered)}>
                   All · {pending.length}
@@ -166,12 +204,20 @@ export default async function ModerationPage({
                 {TRIAGE_BUCKET_PRIORITY.filter((bucket) => bucketCounts.has(bucket)).map((bucket) => (
                   <Link
                     key={bucket}
-                    href={`/moderation?bucket=${bucket}${filter.sourceName ? `&source=${encodeURIComponent(filter.sourceName)}` : ""}`}
+                    href={`/moderation${queueFilterQuery({ ...filter, bucket })}`}
                     className={filterChipClasses(filter.bucket === bucket)}
                   >
                     {TRIAGE_BUCKET_SHORT[bucket]} · {bucketCounts.get(bucket)}
                   </Link>
                 ))}
+                {flaggedCount > 0 ? (
+                  <Link
+                    href={`/moderation${queueFilterQuery({ ...filter, flag: "ambiguous" })}`}
+                    className={filterChipClasses(filter.flag === "ambiguous")}
+                  >
+                    Flagged · {flaggedCount}
+                  </Link>
+                ) : null}
               </div>
               <details className="text-sm text-zinc-600 dark:text-zinc-400">
                 <summary className="cursor-pointer select-none text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -180,7 +226,7 @@ export default async function ModerationPage({
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {filter.sourceName ? (
                     <Link
-                      href={filter.bucket !== null ? `/moderation?bucket=${filter.bucket}` : "/moderation"}
+                      href={`/moderation${queueFilterQuery({ ...filter, sourceName: null })}`}
                       className={filterChipClasses(false)}
                     >
                       Any source
@@ -189,7 +235,7 @@ export default async function ModerationPage({
                   {sourceOptions.map(([name, count]) => (
                     <Link
                       key={name}
-                      href={`/moderation?source=${encodeURIComponent(name)}${filter.bucket !== null ? `&bucket=${filter.bucket}` : ""}`}
+                      href={`/moderation${queueFilterQuery({ ...filter, sourceName: name })}`}
                       className={filterChipClasses(filter.sourceName === name)}
                     >
                       {name} · {count}
@@ -266,10 +312,18 @@ export default async function ModerationPage({
                 );
               })}
             </ul>
+            <QueueBulkPanel
+              items={visible.map((opportunity) => ({
+                id: opportunity.id,
+                title: opportunity.title,
+                flagged: flaggedById.get(opportunity.id) ?? false,
+              }))}
+            />
               </>
             )}
             <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-500">
-              {TRIAGE_HEURISTIC_NOTE}
+              {TRIAGE_HEURISTIC_NOTE} Flagged means triage bucket 7
+              (ambiguous) or 8 (news-like) — the same hints, filterable.
             </p>
           </>
         )}

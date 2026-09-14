@@ -5,6 +5,7 @@ import {
   getModerationAccess,
   getPendingOpportunityById,
   isValidOpportunityId,
+  parseBulkRejectIds,
   type StaffContext,
 } from "./moderation";
 import {
@@ -22,9 +23,13 @@ import {
   type ReviewInput,
 } from "./moderation-review";
 import {
+  BULK_REJECT_CONFIRM_TOKEN,
+  BULK_REJECT_MAX_ITEMS,
   MODERATION_REASON_MAX_LENGTH,
   MODERATION_REASON_MIN_LENGTH,
   normalizeModerationReason,
+  type BulkRejectItemResult,
+  type BulkRejectState,
   type DecisionState,
   type UnpublishState,
 } from "../staff-form-state";
@@ -276,6 +281,137 @@ export async function decideOpportunityAction(
     decision: "reject",
     decidedTitle: title,
     decidedSlug: slug,
+  };
+}
+
+function bulkRejectInputError(error: "empty" | "too-many" | "invalid"): string {
+  if (error === "empty") return "Select at least one pending record first.";
+  if (error === "too-many") {
+    return `Select at most ${BULK_REJECT_MAX_ITEMS} records per batch — run the remainder as another batch.`;
+  }
+  return "Invalid submission reference.";
+}
+
+/**
+ * Reject MANY pending records with ONE confirmed reason (Bulk Moderator
+ * Actions milestone).
+ *
+ * Deliberately NOT a set-based database call: every record travels the exact
+ * single-record `reject_pending_opportunity` path, so each keeps its own
+ * authenticated Moderator attribution, decision timestamp, reason, and audit
+ * row. Records are processed sequentially and each commits independently — a
+ * stale or failing row is reported per-record and never rolls back the
+ * independent successes. There is intentionally no bulk approve: approval
+ * demands per-record M31 evidence the batch form cannot supply.
+ */
+export async function bulkRejectPendingAction(
+  _previousState: BulkRejectState,
+  formData: FormData
+): Promise<BulkRejectState> {
+  const idle: BulkRejectState = { status: "idle", message: null, results: [] };
+
+  if (
+    formData.get("confirm") !== BULK_REJECT_CONFIRM_TOKEN ||
+    formData.get("acknowledge") !== "yes"
+  ) {
+    return {
+      ...idle,
+      status: "error",
+      message: "Confirm the bulk rejection before submitting.",
+    };
+  }
+  const rejectionReason = normalizeModerationReason(formData.get("rejectionReason"));
+  if (rejectionReason === null) {
+    return {
+      ...idle,
+      status: "error",
+      message: `Give a specific rejection reason (${MODERATION_REASON_MIN_LENGTH}-${MODERATION_REASON_MAX_LENGTH} characters).`,
+    };
+  }
+  const parsed = parseBulkRejectIds(formData.getAll("opportunityId"));
+  if (!parsed.ok) {
+    return { ...idle, status: "error", message: bulkRejectInputError(parsed.error) };
+  }
+
+  const access = await getModerationAccess();
+  if (!access.ok) {
+    return {
+      ...idle,
+      status: "error",
+      message:
+        access.reason === "unauthenticated"
+          ? "Your session has expired. Please sign in again."
+          : "You do not have permission to moderate submissions.",
+    };
+  }
+
+  const results: BulkRejectItemResult[] = [];
+  for (const id of parsed.ids) {
+    // Same double-decision protection as the single-record path, per row.
+    const current = await getPendingOpportunityById(id);
+    if (!current) {
+      results.push({
+        id,
+        ok: false,
+        error: "This submission is no longer pending — it may already have been reviewed.",
+      });
+      continue;
+    }
+    const { data, error } = await access.staff.client.rpc("reject_pending_opportunity", {
+      target_opportunity_id: id,
+      decision_reason: rejectionReason,
+    });
+    if (error) {
+      console.error("[lib/data] Failed to bulk-reject opportunity:", id, error.message);
+      results.push({
+        id,
+        ok: false,
+        error: "The decision could not be saved. Please try again.",
+      });
+      continue;
+    }
+    const rows = (data ?? []) as unknown as RejectedRow[];
+    if (rows.length === 0) {
+      results.push({
+        id,
+        ok: false,
+        error: "This submission is no longer pending — it may already have been reviewed.",
+      });
+      continue;
+    }
+    results.push({ id, ok: true, title: rows[0].opportunity_title, slug: rows[0].opportunity_slug });
+  }
+
+  const succeeded = results.filter((result) => result.ok);
+  if (succeeded.length > 0) {
+    revalidatePath("/moderation");
+    revalidatePath("/");
+    for (const item of succeeded) {
+      if (item.slug) revalidatePath(`/opportunities/${item.slug}`);
+    }
+  }
+
+  if (succeeded.length === results.length) {
+    return {
+      status: "success",
+      message:
+        results.length === 1
+          ? `Rejected 1 record — the submission stays hidden from the public site.`
+          : `Rejected ${results.length} records — every submission stays hidden from the public site.`,
+      results,
+    };
+  }
+  if (succeeded.length === 0) {
+    return {
+      status: "error",
+      message: "No record was rejected — every selected submission had already been reviewed or could not be saved.",
+      results,
+    };
+  }
+  return {
+    status: "partial",
+    message: `Rejected ${succeeded.length} of ${results.length} — the rest were already reviewed or could not be saved. Succeeded records stay rejected; retry only the listed failures.`,
+    results,
   };
 }
 

@@ -98,3 +98,21 @@ export function firstSuggestedReview<T extends TriageItem>(items: T[]): T | null
   }
   return null;
 }
+
+/**
+ * Ambiguous / weak-evidence REVIEW FLAG (Bulk Moderator Actions milestone).
+ *
+ * Pure display-and-filter aid reusing the exact bucket labels above: bucket 7
+ * is already named "ambiguous" and bucket 8 already names news/institutional
+ * rows whose aggregator wording is weak publication evidence. Like every
+ * triage signal, this is a prioritization hint, never truth — the moderator
+ * remains the final authority and nothing here approves, rejects, or
+ * reclassifies anything.
+ */
+export function isAmbiguousQueueItem(
+  category: OpportunityCategory | null,
+  title: string
+): boolean {
+  const bucket = triageBucketOf(category, title);
+  return bucket === 7 || bucket === 8;
+}

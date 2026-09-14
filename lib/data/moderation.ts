@@ -1,6 +1,7 @@
 import type { Opportunity, OpportunityCategory } from "../types";
 import { OPPORTUNITY_CATEGORIES } from "../types";
-import { triageBucketOf, type TriageBucket } from "../triage-bucket";
+import { BULK_REJECT_MAX_ITEMS } from "../staff-form-state";
+import { triageBucketOf, isAmbiguousQueueItem, type TriageBucket } from "../triage-bucket";
 import {
   createSupabaseAuthServerClient,
   getAuthenticatedUser,
@@ -113,11 +114,16 @@ export async function getNextPendingId(currentId: string): Promise<string | null
 export interface QueueFilter {
   bucket: TriageBucket | null;
   sourceName: string | null;
+  /** Case-insensitive title substring; null when absent. View-only. */
+  q: string | null;
+  /** When "ambiguous", show only flagged review-hint rows. View-only. */
+  flag: "ambiguous" | null;
 }
 
-export const EMPTY_QUEUE_FILTER: QueueFilter = { bucket: null, sourceName: null };
+export const EMPTY_QUEUE_FILTER: QueueFilter = { bucket: null, sourceName: null, q: null, flag: null };
 
 const MAX_SOURCE_PARAM_LENGTH = 120;
+const MAX_SEARCH_PARAM_LENGTH = 120;
 
 function firstParam(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -141,14 +147,26 @@ export function parseQueueFilter(
       sourceName = trimmed;
     }
   }
-  return { bucket, sourceName };
+  let q: string | null = null;
+  const qRaw = firstParam(raw.q);
+  if (qRaw !== null) {
+    const trimmed = qRaw.trim();
+    if (trimmed !== "" && trimmed.length <= MAX_SEARCH_PARAM_LENGTH) {
+      q = trimmed;
+    }
+  }
+  let flag: "ambiguous" | null = null;
+  if (firstParam(raw.flag) === "ambiguous") {
+    flag = "ambiguous";
+  }
+  return { bucket, sourceName, q, flag };
 }
 
 export function isQueueFilterEmpty(filter: QueueFilter): boolean {
-  return filter.bucket === null && filter.sourceName === null;
+  return filter.bucket === null && filter.sourceName === null && filter.q === null && filter.flag === null;
 }
 
-/** Pure predicate: both active conditions must match (AND). */
+/** Pure predicate: all active conditions must match (AND). */
 export function matchesQueueFilter(
   opportunity: Pick<Opportunity, "category" | "title" | "sourceName">,
   filter: QueueFilter
@@ -160,6 +178,12 @@ export function matchesQueueFilter(
     return false;
   }
   if (filter.sourceName !== null && (opportunity.sourceName ?? null) !== filter.sourceName) {
+    return false;
+  }
+  if (filter.q !== null && !opportunity.title.toLowerCase().includes(filter.q.toLowerCase())) {
+    return false;
+  }
+  if (filter.flag === "ambiguous" && !isAmbiguousQueueItem(opportunity.category, opportunity.title)) {
     return false;
   }
   return true;
@@ -179,8 +203,39 @@ export function queueFilterQuery(filter: QueueFilter): string {
   const params = new URLSearchParams();
   if (filter.bucket !== null) params.set("bucket", String(filter.bucket));
   if (filter.sourceName !== null) params.set("source", filter.sourceName);
+  if (filter.q !== null) params.set("q", filter.q);
+  if (filter.flag !== null) params.set("flag", filter.flag);
   const query = params.toString();
   return query === "" ? "" : `?${query}`;
+}
+
+/**
+ * Pure input gate for bulk rejection. Accepts the raw multi-value form field,
+ * validates shape BEFORE any database write is possible, and deduplicates
+ * while preserving the moderator's selection order. Lives here (not in
+ * moderation-actions) because `"use server"` modules may only export async
+ * functions. Exported for unit tests.
+ */
+export function parseBulkRejectIds(
+  values: unknown
+): { ok: true; ids: string[] } | { ok: false; error: "empty" | "too-many" | "invalid" } {
+  if (!Array.isArray(values) || values.length === 0) {
+    return { ok: false, error: "empty" };
+  }
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  for (const value of values) {
+    if (typeof value !== "string") return { ok: false, error: "invalid" };
+    const id = value.trim();
+    if (!isValidOpportunityId(id)) return { ok: false, error: "invalid" };
+    if (!seen.has(id)) {
+      seen.add(id);
+      ids.push(id);
+    }
+  }
+  if (ids.length === 0) return { ok: false, error: "empty" };
+  if (ids.length > BULK_REJECT_MAX_ITEMS) return { ok: false, error: "too-many" };
+  return { ok: true, ids };
 }
 
 export interface QueueNavigation {

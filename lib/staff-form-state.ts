@@ -90,3 +90,38 @@ export const initialUnpublishState: UnpublishState = {
   message: null,
   unpublishedId: null,
 };
+
+/**
+ * Bulk pending-rejection (Bulk Moderator Actions milestone). One confirmed
+ * reason fans out to many records, but every record still travels the exact
+ * single-record `reject_pending_opportunity` path: its own Moderator
+ * attribution, timestamp, reason, and audit row. Results are per-record so a
+ * partial failure (for example a row reviewed concurrently) never hides
+ * behind a batch verdict and never rolls back independent successes.
+ */
+export const BULK_REJECT_CONFIRM_TOKEN = "bulk-reject" as const;
+/** Upper bound of records per bulk submission: bounds action runtime while
+ *  larger cleanups simply run as consecutive batches. */
+export const BULK_REJECT_MAX_ITEMS = 50;
+
+export interface BulkRejectItemResult {
+  id: string;
+  ok: boolean;
+  /** Present only when the record was rejected. */
+  title?: string;
+  slug?: string;
+  /** Machine-stable per-record failure code: "stale" | "write". */
+  error?: string;
+}
+
+export interface BulkRejectState {
+  status: "idle" | "success" | "partial" | "error";
+  message: string | null;
+  results: BulkRejectItemResult[];
+}
+
+export const initialBulkRejectState: BulkRejectState = {
+  status: "idle",
+  message: null,
+  results: [],
+};
