@@ -589,12 +589,31 @@ denied; unrelated/pending fixtures were unchanged; pending rejection and publish
 re-review passed rollback-only regression checks. All fixtures and credentials were
 removed and the six-opportunity staging baseline was restored.
 
-### Exact next milestone — Published Unpublish Attribution Hardening: production promotion
+### Published Unpublish Attribution Hardening — production promoted, corpus delta isolated
 
-Promote only the staged capability and migration 0015 after an explicit owner
-go/no-go and a fresh protected production recovery artifact. Verify production
-structurally and read-only; do not use a real production opportunity as a test.
-Batch 2B2 remains stopped and later roadmap priorities remain out of scope.
+Owner-authorized production promotion applied exact migration 0015, SHA-256
+`c6929aac5cb627a370448cadbf171e8ccd35b9aeb8c0a2f6f9365d06395ece14`,
+and deployed capability commit `45508956` within production repository SHA
+`07b6f407`. Migration-only before/after snapshots matched at 277 opportunities,
+509 references, 250 pending / 8 published / 19 rejected / 0 expired, and 8 audit
+rows. No production Moderator action ran and no status audit was created.
+
+The main push then started the pre-existing Discovery sync run `34841308578`. Its
+exact-SHA retained report records two normal pending inserts and two references.
+The final read-only comparison found 279 opportunities / 511 references and 252
+pending / 8 published / 19 rejected / 0 expired. Every one of the 277 pre-push
+opportunity rows and 509 references remained byte-identical; no existing row was
+removed or changed. This is nevertheless an unexpected promotion-process corpus
+delta under the milestone's zero-change requirement, so it is isolated for
+record-specific reconciliation rather than silently accepted or reversed.
+
+### Exact next milestone — Production Promotion Corpus-Delta Reconciliation
+
+Review only the two exact pending rows and two references inserted by push-triggered
+Discovery sync run `34841308578`; reconcile whether their current pending state is
+accepted as normal operational discovery or requires a separately authorized
+recovery action. Do not unpublish, reject, re-review, resume Batch 2B2, or begin bulk
+moderation or later roadmap work during that incident milestone.
 
 ### Batch 3 — salvage priority pending rows
 

@@ -4,10 +4,10 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- Production application runtime code remains
-  `070c32fb07f147a79626d9e7988767c5f476f373`; repository `main` was
-  `d524062e881c3a5bfb9508a5454d5d98f0d60729` before this staging-closure
-  documentation commit.
+- Production repository SHA is
+  `07b6f407561b9539cdceccc626a5759a47693824`; its runtime capability delta is
+  exact commit `45508956c365911853c3e681e712b0ba53106f23`. Ready deployment
+  `dpl_34M1uWRtSBUtGZ5uPF6CL9Wi4k4W` serves the canonical alias.
 - Production Supabase: `jltuufukcwztugvojwjd`; isolated staging Supabase:
   `pumzofcwfjqswkiwfqty`.
 - M31 is closed; migrations 0013/0014 and the M31 flag remain active. AI remains
@@ -22,13 +22,15 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   The three-record incident is now resolved by an owner-authorized acceptance of
   their current withheld state after record-specific review; resolution performed
   no production mutation.
-- The 2026-09-14 production re-baseline is 246 pending / 8 published / 19 rejected /
-  0 expired = 273 opportunities, with 505 references and 8 enrichment-audit rows.
-- Published Unpublish Attribution Hardening is implemented at capability commit
-  `45508956c365911853c3e681e712b0ba53106f23`, deployed on staging commit
-  `06155b5eb1c0220e9643572d3de54beef77bfe90`, and verified against isolated
-  staging migration 0015. Production code, schema, corpus, and configuration remain
-  unchanged.
+- Immediately before production migration 0015, the fresh baseline was 250 pending /
+  8 published / 19 rejected / 0 expired = 277 opportunities, with 509 references
+  and 8 enrichment-audit rows. Migration and application deployment preserved every
+  one of those rows and references exactly.
+- Published Unpublish Attribution Hardening is promoted in production. The push also
+  triggered existing Discovery sync run `34841308578`, which added exactly two
+  pending rows and two references. Current production is therefore 252 pending /
+  8 published / 19 rejected / 0 expired = 279 opportunities, 511 references, and
+  8 enrichment rows; no status audit exists because no production unpublish ran.
 - Sources, discovery cadence, taxonomy, geography logic, production Auth, and
   unrelated infrastructure were not changed.
 
@@ -407,11 +409,69 @@ Its post-cleanup manifest SHA-256 is
 No credential pattern was retained. Production ref `jltuufukcwztugvojwjd` was not
 mutated, no production corpus cleanup resumed, and no production unpublish ran.
 
+## Published Unpublish Attribution Hardening — production promoted, fail-closed corpus delta
+
+The owner explicitly authorized only the staging-verified production promotion.
+Canonical migration 0015, SHA-256
+`c6929aac5cb627a370448cadbf171e8ccd35b9aeb8c0a2f6f9365d06395ece14`,
+was applied in its existing transaction to independently guarded production ref
+`jltuufukcwztugvojwjd`. The production code SHA is
+`07b6f407561b9539cdceccc626a5759a47693824`: capability commit `45508956` plus the
+legitimate documentation-only commit `07b6f40`. Staging and production capability
+trees are identical. Vercel deployment `dpl_34M1uWRtSBUtGZ5uPF6CL9Wi4k4W` is Ready
+at immutable URL
+`https://techopportunity-tanzania-del1vn8dr-techopportunity.vercel.app` and serves
+the canonical aliases. Prior Ready deployment `dpl_Fge7BQuuVoGcT3jSRKzqtHKN1cHg`
+is the application rollback point.
+
+Fresh protected pre-change recovery contains PostgreSQL 17 public schema plain and
+custom dumps, a custom public-data dump, parseable archive lists, exact migration
+input, ordered corpus/reference snapshots, stable security-catalog snapshots, and
+post-deployment evidence. Its directory is
+`C:\Users\hp\.tech-opportunity-backups\20260914T112422Z-published-unpublish-attribution-production\`.
+ACL inheritance is disabled. The 57 retained artifacts total 4,338,847 bytes; the
+19,990-byte manifest SHA-256 is
+`FF14F03B3ED84C3B08462F41E49E65373061F75C56D399532B16A6867BBCFEA6`.
+A credential-pattern scan of retained text evidence found zero hits.
+
+Read-only production verification proved:
+
+- two nullable audit columns, two validated new constraints, two `SECURITY INVOKER`
+  functions with `search_path=public`, and one enabled trigger are present;
+- RPC execution is `anon=false`, `authenticated=true`, and `service_role=false`;
+- direct anonymous and service-role calls fail with PostgreSQL `42501`; an
+  authenticated synthetic non-staff claim reaches the RPC and fails with
+  `Published unpublish requires an authenticated moderator`;
+- the function derives `auth.uid()`, requires `is_staff()`, requires a bounded
+  reason, and exact-targets only a currently published ID; its trigger makes the
+  audit insertion part of the same transaction;
+- all pre-existing policies/functions/triggers hash-identically match their
+  pre-change snapshot, so pending approval and published re-review remain intact;
+- no Moderator unpublish, reject, or re-review was run, and status-audit count is
+  zero; and
+- the homepage, Sahara, and AAS returned complete HTTP 200 content, while anonymous
+  published-management and moderation access redirected to login. One initial AAS
+  request logged a transient Supabase gateway timeout while returning 200; a single
+  bounded retry returned the expected content.
+
+The migration plus application deployment preserved the 277-opportunity,
+509-reference baseline byte-for-byte at 250 pending / 8 published / 19 rejected /
+0 expired and 8 enrichment rows. However, pushing `main` matched the repository's
+existing Discovery sync path filter and started exact-SHA run `34841308578`. The
+successful run independently inserted two new `pending` opportunities and their two
+references at `2026-09-14T12:04:20.983846Z`. Final read-only comparison is 279
+opportunities / 511 references, with 252 pending / 8 published / 19 rejected /
+0 expired and 8 enrichments. All 277 pre-push opportunities and all 509 references
+are byte-identical; none was removed or status-changed. Because the milestone
+required zero promotion-process corpus delta, this side effect is an incident and
+was failed closed: no attempt was made to accept, reject, delete, or restore either
+new row.
+
 ## Ordered near-term roadmap
 
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
-1. **Published Unpublish Attribution Hardening** *(staging verified; production promotion pending)*
+1. **Published Unpublish Attribution Hardening** *(production promoted; push-side-effect reconciliation pending)*
 2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
    - multi-select
    - select-all-visible
@@ -430,15 +490,16 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 
 ## Exact next milestone
 
-**Published Unpublish Attribution Hardening — Production Promotion.**
+**Published Unpublish Attribution Hardening — Production Promotion Corpus-Delta Reconciliation.**
 
-Review the exact migration and staging evidence, create a fresh protected production
-schema/data recovery artifact, independently bind the target to production ref
-`jltuufukcwztugvojwjd`, and promote only capability commit `45508956` plus exact
-migration 0015. Production migration and deployment require explicit owner go/no-go.
-Use read-only structural/auth checks after promotion; do not unpublish a real
-production record merely to prove the path. Do not resume Batch 2B2 cleanup or begin
-bulk moderation or any later roadmap priority in that milestone.
+Review only exact pending opportunities
+`61ebe91c-2eb4-41e5-a051-f3efc9aa5873` and
+`f821f312-18f3-4a0a-8436-e541a9884db3` plus their two exact references, all created
+by push-triggered Discovery sync run `34841308578`. Reconcile whether their current
+pending state is accepted as normal operational discovery or whether a separately
+authorized recovery action is required. Do not infer authorization to mutate them.
+Do not unpublish, reject, re-review, resume Batch 2B2, begin bulk moderation, or
+start any later roadmap priority during that incident-resolution milestone.
 
 ## Continuing constraints
 

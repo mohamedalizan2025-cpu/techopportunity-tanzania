@@ -479,3 +479,30 @@ with manifest SHA-256
 Production was not targeted. The exact next milestone is a separately authorized
 Published Unpublish Attribution Hardening production promotion, with no production
 unpublish required for proof.
+
+## Published unpublish attribution production checkpoint (2026-09-14)
+
+Migration 0015 was applied to exact production ref `jltuufukcwztugvojwjd` from the
+same canonical Git blob verified on staging. Fresh PostgreSQL 17 schema/data dumps,
+archive-list validation, catalog guards, and ordered corpus snapshots preceded the
+transaction. The post-check found both invoker-rights functions, one trigger, two
+validated new constraints, `anon=false`, `authenticated=true`, and
+`service_role=false` RPC execution grants. Anonymous, synthetic ordinary-user, and
+service-role probes were denied without targeting a real row. Existing policy,
+function, and trigger hashes matched pre-change values, preserving pending approval
+and published re-review.
+
+Production SHA `07b6f407561b9539cdceccc626a5759a47693824` deployed Ready as
+`dpl_34M1uWRtSBUtGZ5uPF6CL9Wi4k4W`; capability content is exact commit `45508956`.
+Homepage and both published controls returned complete HTTP 200 content; anonymous
+staff routes redirected to login. One AAS smoke request logged a transient Supabase
+gateway timeout while returning 200, and one bounded retry returned the expected
+content. No production unpublish, reject, or re-review was attempted.
+
+Migration/deployment verification itself left the 277-row/509-reference corpus
+byte-identical. The main push also triggered existing Discovery sync run
+`34841308578`, which independently inserted two pending rows and two references.
+Every pre-existing row/reference remained byte-identical and all existing statuses
+were unchanged, but the zero-corpus-delta milestone condition therefore failed
+closed. The next milestone is the bounded Production Promotion Corpus-Delta
+Reconciliation, not bulk moderation or further cleanup.

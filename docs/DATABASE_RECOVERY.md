@@ -28,7 +28,21 @@ or modifies the baseline:
 - Batch 2B2 incident-resolution SELECT-only re-baseline:
   `C:\Users\hp\.tech-opportunity-backups\20260914T060843Z-pqd-batch2b2-resolution\`; and
 - Published Unpublish Attribution Hardening staging recovery/evidence:
-  `C:\Users\hp\.tech-opportunity-backups\20260914T065506Z-published-unpublish-attribution-staging\`.
+  `C:\Users\hp\.tech-opportunity-backups\20260914T065506Z-published-unpublish-attribution-staging\`; and
+- Published Unpublish Attribution Hardening production recovery/evidence:
+  `C:\Users\hp\.tech-opportunity-backups\20260914T112422Z-published-unpublish-attribution-production\`.
+
+The production promotion directory contains fresh PostgreSQL 17 pre-0015 public
+schema exports in plain/custom form, a custom public-data archive, validated archive
+lists, full ordered opportunity/reference snapshots, stable security-catalog
+snapshots, exact migration input/execution evidence, post-migration denial proofs,
+deployment/workflow evidence, and the post-push corpus comparison. All 57 retained
+artifacts total 4,338,847 bytes. The manifest is 19,990 bytes with SHA-256
+`FF14F03B3ED84C3B08462F41E49E65373061F75C56D399532B16A6867BBCFEA6`.
+ACL inheritance is disabled and the retained text evidence has zero credential-
+pattern hits. The pre-change archive is the recovery point for migration 0015; do
+not use it to erase the two later pending discovery inserts without a separate,
+record-specific owner authorization.
 
 The attribution-hardening directory contains PostgreSQL 17 pre-0015 public schema
 plain/custom exports, a custom data archive of the six synthetic baseline rows,
