@@ -5,16 +5,15 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 ## Current verified state
 
 - Local repository `main` is SHA
-  `560da209299ff37f5f700ca9e881ac3e11039fc6`, one intentional
-  staging-documentation commit ahead of `origin/main` at
-  `71f4a33bc3bc87c9d5c7680e529eb7035a0423e0`; the runtime source SHA is
-  exact capability commit `71f4a33`, with exact-SHA Milestone verification run
-  `34890838451`, push Discovery sync run `34890838498` (`insertedPending: 0`),
-  and GitHub Production deployment `6445415606` (immutable URL
+  `66253ee9b6b7682027d0bba99425eb79cce202ae`, in sync with `origin/main`.
+  The runtime source SHA is exact capability commit `71f4a33`, with exact-SHA
+  Milestone verification run `34890838451`, push Discovery sync run
+  `34890838498` (`insertedPending: 0`), and GitHub Production deployment
+  `6445415606` (immutable URL
   `https://techopportunity-tanzania-74yru14iv-techopportunity.vercel.app`,
   state success at `2026-09-14T20:06:17Z`) all correlated to it. The docs-only
-  push of `11f100a` started no workflow (`[skip ci]`); this closure commit is
-  docs-only and stays local until its own bounded push. The prior promoted
+  push of `11f100a` and this docs-only closure both started no workflow
+  (`[skip ci]`); each produced only a runtime-identical Vercel deployment. The prior promoted
   runtime source SHA was
   `07b6f407561b9539cdceccc626a5759a47693824`, whose capability delta is exact
   commit `45508956c365911853c3e681e712b0ba53106f23`. The pre-0016 application
