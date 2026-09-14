@@ -30,7 +30,22 @@ or modifies the baseline:
 - Published Unpublish Attribution Hardening staging recovery/evidence:
   `C:\Users\hp\.tech-opportunity-backups\20260914T065506Z-published-unpublish-attribution-staging\`; and
 - Published Unpublish Attribution Hardening production recovery/evidence:
-  `C:\Users\hp\.tech-opportunity-backups\20260914T112422Z-published-unpublish-attribution-production\`.
+  `C:\Users\hp\.tech-opportunity-backups\20260914T112422Z-published-unpublish-attribution-production\`; and
+- Pending Rejection Attribution Hardening staging recovery/evidence:
+  `C:\Users\hp\.tech-opportunity-backups\20260914T171728Z-pending-rejection-attribution-staging\`.
+
+The pending-rejection staging directory preserves the exact pre-0016 synthetic
+opportunity/reference/audit rows, the affected 0015 constraint/function/trigger
+definitions, the hash-locked migration input, the final live verifier, the complete
+staging/deployment/cleanup evidence report, and the transparent optional UI-attempt
+note. The six retained artifacts total 46,674 bytes. `manifest.json` is 1,535 bytes
+with SHA-256
+`058CEDDFED68003DF53B9AFD7E5A8C0EBF4C1E5AE64D2A5289D0FB6A52C2AA47`.
+ACL inheritance is disabled and the retained text evidence has zero credential-
+pattern hits. A fresh full schema dump was attempted but its Docker image download
+timed out before content was written; the zero-byte artifact was removed. The prior
+full pre-0015 staging recovery remains intact, while this new exact row/catalog
+snapshot is the bounded forward recovery evidence for migration 0016.
 
 The production promotion directory contains fresh PostgreSQL 17 pre-0015 public
 schema exports in plain/custom form, a custom public-data archive, validated archive

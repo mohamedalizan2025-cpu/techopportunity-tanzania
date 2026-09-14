@@ -36,7 +36,7 @@ These priorities are ordered. Each is a separate milestone requiring its own
 bounded authorization and verification; this roadmap does not authorize
 implementation or production mutation.
 
-1. **Published Unpublish Attribution Hardening**
+1. **Pending Rejection Attribution Hardening — production promotion review**
 2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
    - multi-select
    - select-all-visible
@@ -53,16 +53,19 @@ implementation or production mutation.
 7. **Opportunity taxonomy improvement**
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**
 
-Priority 1 was promoted to production on 2026-09-14. Its bounded fail-closed
+Published Unpublish Attribution Hardening was promoted to production on 2026-09-14.
+Its bounded fail-closed
 reconciliation found both automatic pending inserts unsuitable for retention: one
 is a same-cohort duplicate and out of product scope; the other conflates two AWARD
 programs and carries Tanzania-excluding evidence under the wrong identity. They
 remain pending. The owner authorized their rejection, but execution stopped before
 the first mutation because the existing pending-rejection path records actor/time
 without a reason and the 0015 reason audit is intentionally restricted to published
-unpublishes. Priority 1 therefore requires one bounded pending-rejection attribution
-hardening milestone before the exact two-record resolution can resume. No later
-priority was implemented.
+unpublishes. The bounded pending-rejection attribution capability is now implemented
+and fully verified on isolated staging at exact commit `71f4a33` plus migration
+0016. Priority 1 is now only the separate production-promotion review; the migration,
+application change, and both real record decisions remain unapplied in production.
+No later priority was implemented.
 
 ## Product Quality & Differentiation direction
 

@@ -511,3 +511,34 @@ Every pre-existing row/reference remained byte-identical and all existing status
 were unchanged, but the zero-corpus-delta milestone condition therefore failed
 closed. The next milestone is the bounded Production Promotion Corpus-Delta
 Reconciliation, not bulk moderation or further cleanup.
+
+## Pending rejection attribution staging checkpoint (2026-09-14)
+
+Migration 0016, SHA-256
+`7260729EB034098A032042EFAB25D22DB00B83EA4AF01D142AE7DDB8DDC76725`,
+was applied only to exact staging ref `pumzofcwfjqswkiwfqty` after a protected
+pre-change row/catalog snapshot. It adds one validated two-transition status-audit
+constraint, one invoker-rights authenticated rejection RPC, and one transaction-
+bound trigger; existing 0015 function hashes and grants remained unchanged.
+
+Ready Preview `dpl_GHnDVohs4bTtUUcX1cZVG2eW9sKs` served exact capability commit
+`71f4a33` through the branch-scoped staging environment. Two exact synthetic public
+routes bound it to staging before mutation. The live disposable-user/record matrix
+proved attributed, reason-bearing exact pending rejection; missing/invalid reason
+rollback; anonymous, ordinary, service-role, and direct-update denial; pending
+approval; published re-review; attributed published unpublish; audit visibility;
+and unrelated row/reference isolation. Anonymous deployed moderation access returned
+307 to login and runtime error/warning logs were empty.
+
+Cleanup restored the six-opportunity/nine-reference baseline with zero audit/Auth/
+profile/save/tagged rows and matching opportunity/reference hashes. Temporary
+credentials, tooling, local link state, and branch movement were removed; nothing
+was pushed. Protected evidence is at
+`C:\Users\hp\.tech-opportunity-backups\20260914T171728Z-pending-rejection-attribution-staging\`
+with manifest SHA-256
+`058CEDDFED68003DF53B9AFD7E5A8C0EBF4C1E5AE64D2A5289D0FB6A52C2AA47`.
+The post-cleanup consolidated gate passed the complete regression suite, TypeScript,
+lint, all 31 permanent boundaries, change classification, and a production build.
+Production remains unchanged. The exact next milestone is a bounded owner go/no-go
+review for production promotion; do not apply or deploy during that review without
+separate exact authorization, and do not resume either real production rejection.

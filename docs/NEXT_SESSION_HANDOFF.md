@@ -4,8 +4,11 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- Repository `main` is documentation-closure SHA
-  `06d14f2356eaf61b668c76cfcd02685034c7f621`. The promoted runtime source SHA is
+- Local repository `main` is SHA
+  `11f100a28f9db75c66b9d78d9a518ed0ae656b10`, preserving three intentional
+  production-documentation commits ahead of `origin/main` at
+  `06d14f2356eaf61b668c76cfcd02685034c7f621`; none was pushed for this milestone.
+  The promoted runtime source SHA is
   `07b6f407561b9539cdceccc626a5759a47693824`, whose capability delta is exact
   commit `45508956c365911853c3e681e712b0ba53106f23`. Current Ready docs-only deployment
   `dpl_6CiJ5sauLKo3YCA7e9no8TN6g6N3` serves the same runtime at the canonical alias.
@@ -35,6 +38,12 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   Current production is therefore 252 pending /
   8 published / 19 rejected / 0 expired = 279 opportunities, 511 references, and
   8 enrichment rows; no status audit exists because no production unpublish ran.
+- Pending Rejection Attribution Hardening is implemented at capability commit
+  `71f4a33bc3bc87c9d5c7680e529eb7035a0423e0` and verified only on isolated
+  staging. Migration 0016 and Ready Preview `dpl_GHnDVohs4bTtUUcX1cZVG2eW9sKs`
+  passed the complete authenticated/denial/regression/isolation matrix. Production
+  has not received the migration or application change, and both real pending
+  production targets remain untouched.
 - Sources, discovery cadence, taxonomy, geography logic, production Auth, and
   unrelated infrastructure were not changed.
 
@@ -552,11 +561,76 @@ still hashes to
 inheritance remains disabled. Fresh homepage, Sahara, and AAS checks each returned
 HTTP 200.
 
+## Pending Rejection Attribution Hardening — staging verified
+
+Migration [0016](../supabase/migrations/0016_pending_rejection_attribution.sql),
+SHA-256
+`7260729EB034098A032042EFAB25D22DB00B83EA4AF01D142AE7DDB8DDC76725`,
+is the smallest forward extension of the existing audit architecture. It replaces
+only the 0015 status-audit shape constraint with a validated two-transition shape,
+then adds one `SECURITY INVOKER` `reject_pending_opportunity(uuid,text)` RPC and one
+transaction-bound pending-rejection audit trigger. The RPC derives `auth.uid()`,
+requires `is_staff()`, validates a trimmed 10–1000 character reason, exact-targets
+only a currently pending ID, and writes `status`, `decided_by`, and `decided_at` in
+the same transaction whose trigger inserts the status audit. The client cannot
+supply an actor or result status. Existing 0015 function definitions and grants are
+unchanged.
+
+The exact staging ref `pumzofcwfjqswkiwfqty` was independently distinguished from
+production `jltuufukcwztugvojwjd`. Its pre-change baseline was six opportunities
+(3 pending / 2 published / 1 rejected), nine references, zero audits, zero Auth
+users/profiles/saves, opportunity hash `42b8a2bf3bb5e0d1046e429e6f97d5ab`,
+and reference hash `53f01444d043d8b67da835685890e904`. Migration 0016 preserved
+every row and both hashes. Ready Preview
+`dpl_GHnDVohs4bTtUUcX1cZVG2eW9sKs` served exact capability commit `71f4a33` and
+was bound to staging by two exact synthetic public-route fingerprints before any
+live mutation. A prior generic Preview failed that guard and performed
+no mutation.
+
+The live matrix used two disposable staging Auth users and nine exact synthetic
+opportunities. It proved:
+
+- the authenticated Moderator changed only
+  `f0160000-0000-4000-8000-000000000001` from pending to rejected with the
+  required normalized reason;
+- the opportunity and its single status audit recorded the same exact synthetic
+  Moderator ID and decision timestamp, plus exact target, previous/resulting status,
+  method, and reason;
+- missing/short reasons and a direct unattributed Moderator update failed with
+  PostgreSQL `22023`, while anonymous, ordinary-user, and service-role RPC calls
+  failed with `42501`; all negative targets remained pending with null attribution
+  and zero audits;
+- pending approval still published and attributed its exact row, published
+  re-review remained published under the existing timestamp guard, and the 0015
+  RPC still performed an attributed `published → rejected` unpublish;
+- ordinary users could not read moderation audits, and an unrelated sentinel row
+  plus its complete reference set remained byte-for-byte unchanged; and
+- anonymous access to the exact deployed moderation route returned 307 to login;
+  runtime error/warning log counts were both zero.
+
+Three fixture-setup verifier mistakes were transparently failed closed and cleaned
+before the passing run; none reached a moderation action. Final exact-ID cleanup
+returned staging to the same six opportunities, nine references, zero audit/user/
+profile/save/tagged rows, and both original hashes. Temporary credentials, query
+files, branch movement, Supabase/Vercel link state, and the injected local Vercel
+OIDC line were removed. The local `staging` ref was restored to `06155b5`; nothing
+was pushed. Protected recovery/evidence is at
+`C:\Users\hp\.tech-opportunity-backups\20260914T171728Z-pending-rejection-attribution-staging\`;
+its manifest SHA-256 is
+`058CEDDFED68003DF53B9AFD7E5A8C0EBF4C1E5AE64D2A5289D0FB6A52C2AA47`.
+The post-cleanup consolidated gate passed the complete regression suite, TypeScript,
+lint, all 31 permanent boundaries, change classification, and a production build.
+
+Production received no migration, deployment, Auth user, record mutation, audit,
+or configuration change. Batch 2B2, the two real pending rejections, bulk moderation,
+discovery, taxonomy, registry, cadence, geography, profiles, and AI all remain out
+of scope.
+
 ## Ordered near-term roadmap
 
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
-1. **Published Unpublish Attribution Hardening** *(production promoted; two-record resolution blocked on pending-rejection reason attribution)*
+1. **Pending Rejection Attribution Hardening** *(staging verified; production promotion review next; two-record resolution remains stopped)*
 2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
    - multi-select
    - select-all-visible
@@ -575,18 +649,15 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 
 ## Exact next milestone
 
-**Pending Rejection Attribution Hardening — Staging Implementation.**
+**Pending Rejection Attribution Hardening — Production Promotion Review.**
 
-Implement and verify in isolated staging the smallest permanent extension of the
-existing authenticated Moderator pending-rejection path so one exact
-`pending → rejected` decision atomically records the authenticated actor, exact
-opportunity ID, previous/resulting status, bounded rejection reason, and decision
-timestamp in the existing moderation/audit architecture. Preserve pending approval,
-published re-review, and published unpublish unchanged; deny anonymous, ordinary,
-and service-role impersonation; exact-target and concurrency guard the transition;
-and prove unrelated rows/references cannot change. Do not promote to production or
-resume the two authorized production rejections within that staging milestone. Do
-not implement bulk moderation, discovery changes, or any later roadmap priority.
+Conduct a bounded owner go/no-go review of exact capability commit `71f4a33` and
+migration 0016 using the completed isolated-staging evidence. Review the production
+target guard, fresh recovery requirements, exact migration/application promotion
+plan, rollback points, and post-promotion read-only proof. Do not apply migration
+0016, deploy the application change, or reject either real pending production record
+within that review unless the owner separately authorizes the exact next action.
+Do not resume Batch 2B2, implement bulk moderation, or start later roadmap work.
 
 ## Continuing constraints
 

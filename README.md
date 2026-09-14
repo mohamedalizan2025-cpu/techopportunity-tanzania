@@ -4,9 +4,10 @@
 M31 is closed and isolated staging is established. Published Unpublish Attribution
 Hardening is promoted to production; no production moderation action was used for
 proof. The promotion-push corpus delta has been reconciled read-only, but its
-two-record resolution stopped before mutation because the existing pending-reject
-path cannot persist a rejection reason. The exact next milestone is the bounded
-pending-rejection attribution hardening documented in the handoff.
+two-record resolution remains stopped before mutation. Pending Rejection Attribution
+Hardening is now implemented and fully verified in isolated staging. The exact next
+milestone is its bounded production-promotion review; production schema/data and the
+two real pending records remain unchanged.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

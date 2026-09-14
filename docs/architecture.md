@@ -1401,6 +1401,27 @@ published-to-published re-review do not enter the trigger branch. The design was
 verified on isolated staging with real anonymous, ordinary, Moderator, and
 service-role sessions plus exact-ID fixtures; production was not promoted.
 
+**Pending-rejection attribution hardening (2026-09-14 update)**
+
+Migration 0016 reuses that architecture for the missing `pending → rejected`
+decision. It broadens only the existing status-audit check to accept either the
+0015 `moderator-unpublish` shape or a new `moderator-rejection` shape, then adds a
+separate invoker-rights `reject_pending_opportunity(uuid,text)` RPC and trigger.
+The RPC accepts only exact ID plus bounded reason; the database derives the actor
+and one decision timestamp, writes `status = rejected`, `decided_by`, and
+`decided_at`, and the trigger verifies those values before inserting the audit.
+Any missing/invalid reason, actor mismatch, timestamp mismatch, authorization
+failure, audit failure, or stale/non-pending target leaves no mutation.
+
+The application retains one pending decision form. Rejection now exposes a reason
+field and calls only the new authenticated RPC; approval still uses the complete
+M31 review parser and exact pending-status update. Published re-review and the 0015
+published-unpublish RPC are separate and unchanged. Isolated-staging live proof
+covered Moderator success; anonymous, ordinary, and service-role denial; direct
+update denial; all three legacy transitions; audit visibility; exact-target and
+unrelated-reference isolation; cleanup; and zero Preview error/warning logs.
+Production promotion remains a separate owner gate.
+
 ---
 
 ### 12.21 Milestone 15 — first-session attempt and the supply ceiling (2026-08-30)
@@ -1534,3 +1555,4 @@ works, nor as proof it does not. Two consequences are recorded as policy:
 | 2026-09-02 | Milestone 26 evidence audit: at 01:11 UTC, zero natural post-M25 scheduled observations existed; preserve `NOT_YET_PROVEN` and all anomaly thresholds. Correct baseline reporting so the fifth successful scheduled observation matures descriptive baselines in its own report while anomaly comparison remains prior-only; exclude an earlier retry attempt from readiness/maturity before replacement | Evidence closure cannot be manufactured before real clock time passes. The M25 deployment push was healthy (18/18 sources) but remains excluded. The off-by-one would have delayed declared maturity until run six and retry history could double-count readiness; both are deterministic evidence-integrity defects independent of production volume. No schedule, concurrency, discovery, schema, source, production-data, or threshold change |
 | 2026-09-14 | Published Unpublish Attribution Hardening: extend the existing enrichment audit with a constrained status-decision shape; require a reason; derive Moderator identity from `auth.uid()`; bind exact status mutation and audit in one invoker-rights transaction; deny anonymous, ordinary, and service-role paths; verify only on isolated staging | The Batch 2B2 incident proved application-layer confirmation and exact IDs were insufficient evidence when the write used an unattributed direct update. A database trigger makes attribution mandatory for every `published → rejected` transition while preserving pending approval and published re-review. Staging proof passed and cleaned up; production promotion remains a separate owner gate |
 | 2026-09-14 | Production promotion of exact unpublish-attribution capability `45508956` and migration 0015 at repository SHA `07b6f407`; no live moderation action used for proof | Read-only catalog and denial checks prove the production boundary. Migration/deployment left existing corpus rows unchanged, but the existing push-triggered discovery workflow inserted two new pending rows; this is isolated as a separate corpus-delta reconciliation gate before later roadmap work |
+| 2026-09-14 | Pending Rejection Attribution Hardening staging implementation: exact capability `71f4a33`, migration 0016, and Preview `dpl_GHnDVohs4bTtUUcX1cZVG2eW9sKs`; no production mutation or push | Reuse the 0015 reason-bearing atomic audit pattern for exact `pending → rejected`, derive actor/time in PostgreSQL, deny anonymous/ordinary/service-role/direct paths, and preserve approval/re-review/unpublish. The full synthetic staging matrix passed and cleaned back to the exact six-row/nine-reference baseline; production promotion is a separate owner gate |
