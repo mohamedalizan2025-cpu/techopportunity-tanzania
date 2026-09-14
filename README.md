@@ -1,7 +1,9 @@
 # Tech Opportunity
 
 **Continuing development? Read [the authoritative engineering handoff](docs/NEXT_SESSION_HANDOFF.md) first.**
-M31 remains OPEN; isolated staging is not safely established. Do not treat local credentials as staging proof.
+M31 is closed and isolated staging is established. The Batch 2B2 fail-closed
+incident is resolved without another production mutation; the exact next milestone
+is Published Unpublish Attribution Hardening.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
@@ -91,8 +93,8 @@ requirements would justify adding a separate backend service.
 
 ## Roadmap
 
-The current completed milestones, owner gates and planned roadmap are maintained
-in [NEXT_SESSION_HANDOFF.md](docs/NEXT_SESSION_HANDOFF.md). M31 rollout remains
-open; the next owner action is to establish distinct production and staging
-Supabase project identities. Do not follow historical migration or AI activation
-plans as current instructions.
+Permanent boundaries are in [ENGINEERING_RULES.md](docs/ENGINEERING_RULES.md), the
+ordered near-term priorities are in [PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md),
+and current state plus the one exact next milestone are maintained in
+[NEXT_SESSION_HANDOFF.md](docs/NEXT_SESSION_HANDOFF.md). Do not follow historical
+migration or AI-activation plans as current instructions.

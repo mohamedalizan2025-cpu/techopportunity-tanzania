@@ -4,9 +4,12 @@ Status: planning baseline, Batch 1 test-artifact quarantine, read-only Batch 2A
 legacy-publication triage, the attributable published re-review blocker resolution,
 its smallest production promotion, and the exact two-record Batch 2B1 production
 re-review are completed through 2026-09-13. Batch 2B2 stopped fail-closed after a
-concurrent six-row unpublish sequence included three out-of-scope records. No
-production row or reference was deleted and no source-registry, schedule, schema,
-migration, or infrastructure-configuration change was performed.
+concurrent six-row unpublish sequence included three out-of-scope records. The
+three-record incident was resolved on 2026-09-14 by accepting the current withheld
+state after record-specific review and a SELECT-only production re-baseline. No
+additional production mutation occurred. No production row or reference was
+deleted and no source-registry, schedule, schema, migration, or
+infrastructure-configuration change was performed.
 
 This is the execution plan for Product Quality & Differentiation. Permanent
 direction remains in [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md); all execution must
@@ -547,16 +550,42 @@ inheritance disabled. The pre-change manifest SHA-256 is
 fail-closed incident report SHA-256 is
 `04888C90DAE743CA77F035D53241502E94D915A4C9D3FE9FDC93B1F7F1250C71`.
 
-### Exact next milestone — Batch 2B2 fail-closed incident resolution
+### Batch 2B2 fail-closed incident resolution (completed 2026-09-14)
 
-Resolve only the three out-of-scope transitions listed above. This is owner-gated:
-obtain explicit authorization either to restore their exact pre-incident published
-state through a safe authenticated recovery path, or to accept their current
-withheld state after record-specific evidence review. The product currently has no
-authenticated `rejected → published` recovery action; do not bypass Auth or use
-service-role impersonation. Re-baseline production after the authorized decision.
-Only then may a separately authorized continuation process the three untouched
-Batch 2B2 IDs one at a time. Do not begin Batch 3.
+The owner authorized autonomous completion of this exact incident milestone and
+forbade further production unpublishes. Fresh record-specific review supported
+accepting, rather than restoring, the current withheld state:
+
+| Incident ID | Resolution evidence | Disposition |
+|---|---|---|
+| `22222c92-9790-4cc6-8f11-66a18d50038e` | The stored [NM-AIST course page](https://nm-aist.ac.tz/courses/master-of-innovation-and-entrepreneurship-management-iem/) is not a bounded current call. A distinct [official call](https://nm-aist.ac.tz/event/call-for-applications/) that included IEM closed on 10 September 2026 and restricted its EAC scholarship to citizens of partner states other than Tanzania. The legacy row remains evidence-incomplete and unreviewed under M31. | Accept current withheld state. |
+| `14c76d7b-8d70-4a4a-9131-0ab91697e2c9` | The [official SUZA notice](https://suza.ac.tz/?p=19005) is authentic, but its 24 April 2026 deadline passed, technology scope remains unsupported, and the row has no M31 decision evidence. | Accept current withheld state. |
+| `21dae9a3-991b-48a6-8ab4-7448d1bdc883` | The stored [official VETA page](https://www.veta.go.tz/news/tangazo-la-kujiunga-na-kozi-za-muda-mrefu-veta-kwa-mwaka-wa-masomo-unaoanza-januari-2027) was unavailable during the fresh review. The row still lacks deadline/application/M31 evidence and combines technical and non-technical courses. | Accept current withheld state pending future evidence acquisition. |
+
+No restore or other production write was performed. A target-guarded SELECT at
+`2026-09-14T06:13:36.838Z` confirmed production ref
+`jltuufukcwztugvojwjd`, all three exact incident statuses and timestamps, their six
+preserved references, zero incident enrichment rows, both published M31 controls,
+and all three untouched Batch 2B2 rows. Production remains 273 opportunities / 505
+references / 8 enrichments and 246 pending / 8 published / 19 rejected / 0 expired.
+The opportunity ID-set hash still matches the pre-incident value. Public checks
+returned the expected three 404s and six 200s for the homepage, protected controls,
+and untouched Batch 2B2 routes.
+
+The original incident evidence remains unchanged. The ACL-protected resolution
+report is outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260914T060843Z-pqd-batch2b2-resolution\`
+with SHA-256
+`5F2C223E857E3519989BDC031CB4D866AA3525E34314DE9AC09B85A068E6AA9C`.
+Temporary tooling was removed.
+
+### Exact next milestone — Published Unpublish Attribution Hardening
+
+The next bounded milestone must add durable per-record actor, timestamp, and reason
+attribution to the authenticated `published → rejected` path and prove the safety
+contract in isolated staging. It must not implement bulk actions, process the three
+untouched Batch 2B2 records, or begin later roadmap priorities. Production promotion
+and any production data exercise require separate authorization.
 
 ### Batch 3 — salvage priority pending rows
 

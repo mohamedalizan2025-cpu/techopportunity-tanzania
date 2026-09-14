@@ -1,11 +1,13 @@
 # Current engineering handoff
 
-Updated: 2026-09-13. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
 ## Current verified state
 
-- Production runtime code is `070c32fb07f147a79626d9e7988767c5f476f373`
-  (`main`/`origin/main` before this closure-only documentation commit).
+- Production application runtime code remains
+  `070c32fb07f147a79626d9e7988767c5f476f373`; repository `main` was
+  `82173b085421d3f964baeda755e7378b954d1015` before this closure-only
+  documentation commit.
 - Production Supabase: `jltuufukcwztugvojwjd`; isolated staging Supabase:
   `pumzofcwfjqswkiwfqty`.
 - M31 is closed; migrations 0013/0014 and the M31 flag remain active. AI remains
@@ -17,8 +19,11 @@ Updated: 2026-09-13. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   authenticated production Moderator path and remain published.
 - Batch 2B2 stopped fail-closed when a concurrent six-row unpublish sequence
   included three authorized records and three explicitly out-of-scope records.
-  Production is now 246 pending / 8 published / 19 rejected / 0 expired = 273
-  opportunities with 505 references.
+  The three-record incident is now resolved by an owner-authorized acceptance of
+  their current withheld state after record-specific review; resolution performed
+  no production mutation.
+- The 2026-09-14 production re-baseline is 246 pending / 8 published / 19 rejected /
+  0 expired = 273 opportunities, with 505 references and 8 enrichment-audit rows.
 - Sources, discovery cadence, taxonomy, geography logic, schema, migrations, Auth,
   Vercel configuration, and unrelated infrastructure were not changed.
 
@@ -296,19 +301,92 @@ inheritance is disabled. Manifest SHA-256:
 Incident-report SHA-256:
 `04888C90DAE743CA77F035D53241502E94D915A4C9D3FE9FDC93B1F7F1250C71`.
 
+## Batch 2B2 fail-closed incident resolution
+
+The owner's 2026-09-14 instruction to complete this exact milestone autonomously,
+while forbidding further production unpublishes, delegated the bounded disposition
+decision for the three out-of-scope records. After a fresh record-specific review,
+the accepted outcome is to retain their current withheld state. No restore,
+unpublish, status update, audit insertion, schema change, or other production write
+was performed.
+
+- `22222c92-9790-4cc6-8f11-66a18d50038e` — the stored
+  [NM-AIST course page](https://nm-aist.ac.tz/courses/master-of-innovation-and-entrepreneurship-management-iem/)
+  is a standing programme page, not a bounded current call. A separately found
+  [official 2026/2027 call](https://nm-aist.ac.tz/event/call-for-applications/)
+  included IEM but closed on 10 September 2026; its EAC scholarship is restricted
+  to citizens of EAC partner states other than Tanzania. The legacy row still lacks
+  current deadline/application evidence and all M31 moderation fields.
+- `14c76d7b-8d70-4a4a-9131-0ab91697e2c9` — the
+  [official SUZA notice](https://suza.ac.tz/?p=19005) is the real 2026/2027 KA171
+  student-mobility call, but its previously verified 24 April 2026 deadline is
+  passed, technology scope is not established, and all M31 moderation fields remain
+  absent.
+- `21dae9a3-991b-48a6-8ab4-7448d1bdc883` — the stored
+  [official VETA URL](https://www.veta.go.tz/news/tangazo-la-kujiunga-na-kozi-za-muda-mrefu-veta-kwa-mwaka-wa-masomo-unaoanza-januari-2027)
+  was unavailable during the fresh check. The row still has no deadline, deadline
+  evidence, direct application destination, or M31 moderation fields and combines
+  technical with non-technical courses. Evidence remains insufficient for
+  publication.
+
+At `2026-09-14T06:13:36.838Z`, a target-guarded, service-role SELECT independently
+bound to production ref `jltuufukcwztugvojwjd` and verified:
+
+- all three incident IDs remain `rejected` with the exact incident `updated_at`
+  timestamps;
+- their six references remain present and they still have zero enrichment-audit
+  rows;
+- production remains 273 opportunities / 505 references / 8 enrichment rows with
+  246 pending / 8 published / 19 rejected / 0 expired;
+- opportunity ID-set hash
+  `e83809e7c360328e848afb145064f3ab4ea12c2a976fd6d28110278da1c98b12`
+  still matches the pre-incident baseline; the new full opportunity-row hash is
+  `d2a2677d390cb177872be9e4bbb23c9cf08c8ccaa937d7aab428ecaec588d525`
+  and reference-row hash is
+  `b62911b492d5f14f6b8cc1ed1aff6924cdd2764586fdd24dca3a255615eab51d`;
+- Sahara and AAS remain published controls, while Ogilvy, AIJC, and the 30-job
+  aggregate remain published with their pre-incident timestamps; and
+- public HTTP checks returned 404 for all three incident routes and 200 for the
+  homepage, both controls, and all three untouched Batch 2B2 routes.
+
+The original pre-change manifest and incident report remain unchanged. The
+resolution re-baseline is protected outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260914T060843Z-pqd-batch2b2-resolution\`;
+ACL inheritance is disabled and its sole report has SHA-256
+`5F2C223E857E3519989BDC031CB4D866AA3525E34314DE9AC09B85A068E6AA9C`.
+Temporary read-only tooling was removed.
+
+## Ordered near-term roadmap
+
+The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
+
+1. **Published Unpublish Attribution Hardening**
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
+   - multi-select
+   - select-all-visible
+   - bulk reject/withhold
+   - rejection reason
+   - confirmation
+   - per-record attribution/audit
+   - safe partial-failure handling
+   - filter/flag for likely ambiguous or weak-evidence records
+3. **Finish legacy public-corpus cleanup**
+4. **Source credibility/source registry**
+5. **Discovery quality review and move from ~6-hour cadence toward ~2-hour cadence if verified safe**
+6. **National vs International classification**
+7. **Opportunity taxonomy improvement**
+8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**
+
 ## Exact next milestone
 
-**Batch 2B2 Fail-Closed Incident Resolution — Three Out-of-Scope Unpublishes.**
+**Published Unpublish Attribution Hardening.**
 
-Scope is only `22222c92-9790-4cc6-8f11-66a18d50038e`,
-`14c76d7b-8d70-4a4a-9131-0ab91697e2c9`, and
-`21dae9a3-991b-48a6-8ab4-7448d1bdc883`. Obtain an explicit owner decision either
-to restore their exact pre-incident published state through a safe authenticated
-recovery path, or to accept their current withheld state after record-specific
-evidence review. There is currently no authenticated `rejected → published`
-recovery action; do not bypass Auth or impersonate via service role. Re-baseline
-after the authorized outcome, then separately authorize continuation for Ogilvy,
-AIJC, and the 30-job aggregate. Do not begin Batch 3.
+Design, implement, stage, and verify the smallest authenticated Moderator path that
+gives every `published → rejected` transition durable per-record actor attribution,
+time, and reason without weakening RLS or erasing existing moderation evidence.
+Production promotion and any production data exercise remain separately gated.
+Do not implement bulk actions, resume the three untouched Batch 2B2 unpublishes, or
+begin any later roadmap item during that milestone.
 
 ## Continuing constraints
 

@@ -13,6 +13,28 @@ inheritance is disabled; only the current owner, `SYSTEM`, and local
 `Administrators` have Full Control. Do not move this directory into a synced or
 shared location without an owner-approved encryption and retention plan.
 
+### Bounded corpus-change and incident evidence
+
+The immutable baseline above remains the broad recovery source. Later bounded
+corpus operations preserve their own protected manifests alongside it; none replaces
+or modifies the baseline:
+
+- Batch 1 status recovery:
+  `C:\Users\hp\.tech-opportunity-backups\20260911T194524Z-pqd-batch1\`;
+- Batch 2B1 full-row/reference/audit recovery:
+  `C:\Users\hp\.tech-opportunity-backups\20260912T210306Z-pqd-batch2b1\`;
+- Batch 2B2 pre-change and fail-closed incident evidence:
+  `C:\Users\hp\.tech-opportunity-backups\20260912T215416Z-pqd-batch2b2\`; and
+- Batch 2B2 incident-resolution SELECT-only re-baseline:
+  `C:\Users\hp\.tech-opportunity-backups\20260914T060843Z-pqd-batch2b2-resolution\`.
+
+The resolution directory has ACL inheritance disabled. Its only report is 19,791
+bytes with SHA-256
+`5F2C223E857E3519989BDC031CB4D866AA3525E34314DE9AC09B85A068E6AA9C`.
+It records an accepted-withheld disposition and performed no database mutation.
+Use the original Batch 2B2 pre-change manifest—not the resolution report—if an
+owner later authorizes exact status recovery.
+
 `manifest.json` is the authoritative per-file inventory. It contains 61 artifact
 entries totaling 1,162,925 bytes, with a byte size, SHA-256 checksum, and
 classification for every listed artifact. The manifest itself is 21,824 bytes with SHA-256
