@@ -59,8 +59,20 @@ export const initialDecisionState: DecisionState = {
  * auth server client) into the browser bundle.
  */
 export const UNPUBLISH_CONFIRM_TOKEN = "unpublish" as const;
-export const UNPUBLISH_REASON_MIN_LENGTH = 10;
-export const UNPUBLISH_REASON_MAX_LENGTH = 1000;
+export const MODERATION_REASON_MIN_LENGTH = 10;
+export const MODERATION_REASON_MAX_LENGTH = 1000;
+export const UNPUBLISH_REASON_MIN_LENGTH = MODERATION_REASON_MIN_LENGTH;
+export const UNPUBLISH_REASON_MAX_LENGTH = MODERATION_REASON_MAX_LENGTH;
+
+/** Shared fail-closed normalization for every reason-bearing moderation action. */
+export function normalizeModerationReason(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const reason = value.trim();
+  return reason.length >= MODERATION_REASON_MIN_LENGTH &&
+    reason.length <= MODERATION_REASON_MAX_LENGTH
+    ? reason
+    : null;
+}
 
 /**
  * Published-record management (Milestone 14). Deliberately narrower than

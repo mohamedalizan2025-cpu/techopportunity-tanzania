@@ -21,13 +21,25 @@ import {
   satisfiesPublishedReviewContract,
   type ReviewInput,
 } from "./moderation-review";
-import type { DecisionState, UnpublishState } from "../staff-form-state";
+import {
+  MODERATION_REASON_MAX_LENGTH,
+  MODERATION_REASON_MIN_LENGTH,
+  normalizeModerationReason,
+  type DecisionState,
+  type UnpublishState,
+} from "../staff-form-state";
 import { trustSchemaEnabled } from "./opportunities";
 import type { Opportunity } from "../types";
 
 interface DecidedRow {
   slug: string;
   title: string;
+}
+
+interface RejectedRow {
+  opportunity_id: string;
+  opportunity_slug: string;
+  opportunity_title: string;
 }
 
 type ReviewSaveResult =
@@ -150,6 +162,16 @@ export async function decideOpportunityAction(
   if (rawDecision === null) {
     return { ...initial, status: "error", message: "Choose approve or reject." };
   }
+  const rejectionReason = rawDecision === "reject"
+    ? normalizeModerationReason(formData.get("rejectionReason"))
+    : null;
+  if (rawDecision === "reject" && rejectionReason === null) {
+    return {
+      ...initial,
+      status: "error",
+      message: `Give a specific rejection reason (${MODERATION_REASON_MIN_LENGTH}-${MODERATION_REASON_MAX_LENGTH} characters).`,
+    };
+  }
   if (rawDecision === "approve" && !trustSchemaEnabled()) {
     return {
       ...initial,
@@ -169,8 +191,6 @@ export async function decideOpportunityAction(
           : "You do not have permission to moderate submissions.",
     };
   }
-
-  const nextStatus = rawDecision === "approve" ? "published" : "rejected";
 
   // Explicit double-decision protection: fetch the pending row first.
   const current = await getPendingOpportunityById(rawId);
@@ -194,8 +214,8 @@ export async function decideOpportunityAction(
     review = parsed.review;
   }
 
-  const decisionTime = new Date().toISOString();
   if (rawDecision === "approve" && review !== null) {
+    const decisionTime = new Date().toISOString();
     const saved = await saveApprovedReview({
       staff: access.staff,
       current,
@@ -219,18 +239,11 @@ export async function decideOpportunityAction(
     };
   }
 
-  const update: Record<string, unknown> = { status: nextStatus };
-  if (trustSchemaEnabled()) {
-    update.decided_by = access.staff.userId;
-    update.decided_at = decisionTime;
-  }
-
   const { data, error } = await access.staff.client
-    .from("opportunities")
-    .update(update)
-    .eq("id", rawId)
-    .eq("status", "pending")
-    .select("slug,title");
+    .rpc("reject_pending_opportunity", {
+      target_opportunity_id: rawId,
+      decision_reason: rejectionReason,
+    });
 
   if (error) {
     console.error("[lib/data] Failed to decide opportunity:", error.message);
@@ -241,7 +254,7 @@ export async function decideOpportunityAction(
     };
   }
 
-  const rows = (data ?? []) as unknown as DecidedRow[];
+  const rows = (data ?? []) as unknown as RejectedRow[];
   if (rows.length === 0) {
     return {
       ...initial,
@@ -251,7 +264,7 @@ export async function decideOpportunityAction(
     };
   }
 
-  const { slug, title } = rows[0];
+  const { opportunity_slug: slug, opportunity_title: title } = rows[0];
 
   revalidatePath("/moderation");
   revalidatePath("/");

@@ -7,7 +7,11 @@ import {
   rereviewPublishedOpportunityAction,
 } from "@/lib/data/moderation-actions";
 import type { ModerationCategoryOption } from "@/lib/data/moderation";
-import { initialDecisionState } from "@/lib/staff-form-state";
+import {
+  initialDecisionState,
+  MODERATION_REASON_MAX_LENGTH,
+  MODERATION_REASON_MIN_LENGTH,
+} from "@/lib/staff-form-state";
 import {
   TANZANIA_MAINLAND_REGIONS,
   TANZANIA_ZANZIBAR_REGIONS,
@@ -334,6 +338,30 @@ export function DecisionForm({
           defaultValue={opportunity.trust?.eligibilityEvidence ?? ""}
         />
       </fieldset>
+
+      {mode === "pending" ? (
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50/60 p-4 dark:border-red-950 dark:bg-red-950/20">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
+            Rejection audit
+          </legend>
+          <label className={labelClasses}>
+            Rejection reason{" "}
+            <span className="font-normal text-zinc-500">
+              (required when rejecting)
+            </span>
+            <textarea
+              name="rejectionReason"
+              rows={3}
+              maxLength={MODERATION_REASON_MAX_LENGTH}
+              placeholder={`State the evidence-based reason (${MODERATION_REASON_MIN_LENGTH}-${MODERATION_REASON_MAX_LENGTH} characters).`}
+              className={`${inputClasses} mt-1.5`}
+            />
+          </label>
+          <p className="text-xs text-zinc-600 dark:text-zinc-400">
+            Approval ignores this field. A rejection cannot be saved without a specific reason, and the reason is retained with the actor and decision time.
+          </p>
+        </fieldset>
+      ) : null}
 
       {/* Decision controls stay reachable at the bottom of long records;
           they submit the same form (no duplicated state). */}

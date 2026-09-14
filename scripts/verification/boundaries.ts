@@ -50,6 +50,7 @@ const opportunitiesData = read("lib/data/opportunities.ts");
 const moderationActions = read("lib/data/moderation-actions.ts");
 const moderationReview = read("lib/data/moderation-review.ts");
 const unpublishAttributionMigration = read("supabase/migrations/0015_published_unpublish_attribution.sql");
+const pendingRejectionMigration = read("supabase/migrations/0016_pending_rejection_attribution.sql");
 
 invariant("all discovery network acquisition crosses fetchPage", () => {
   const directFetchFiles = filesBelow("scripts/discovery")
@@ -110,6 +111,18 @@ invariant("published unpublish is atomic, attributable, exact-target and authent
   assert.match(unpublishAttributionMigration, /where opportunity\.id = target_opportunity_id\s+and opportunity\.status = 'published'/);
   assert.match(unpublishAttributionMigration, /revoke all on function public\.unpublish_published_opportunity\(uuid, text\)\s+from public, anon, service_role/);
   assert.match(unpublishAttributionMigration, /grant execute on function public\.unpublish_published_opportunity\(uuid, text\)\s+to authenticated/);
+});
+
+invariant("pending rejection is reason-bearing, atomic, exact-target and authenticated-only", () => {
+  assert.match(moderationActions, /\.rpc\("reject_pending_opportunity"/);
+  assert.match(pendingRejectionMigration, /security invoker/);
+  assert.match(pendingRejectionMigration, /actor uuid := auth\.uid\(\)/);
+  assert.match(pendingRejectionMigration, /actor is null or not public\.is_staff\(\)/);
+  assert.match(pendingRejectionMigration, /old\.status = 'pending' and new\.status = 'rejected'/);
+  assert.match(pendingRejectionMigration, /set status = 'rejected',[\s\S]*decided_by = actor,[\s\S]*decided_at = decision_time/);
+  assert.match(pendingRejectionMigration, /where opportunity\.id = target_opportunity_id\s+and opportunity\.status = 'pending'/);
+  assert.match(pendingRejectionMigration, /revoke all on function public\.reject_pending_opportunity\(uuid, text\)\s+from public, anon, service_role/);
+  assert.match(pendingRejectionMigration, /grant execute on function public\.reject_pending_opportunity\(uuid, text\)\s+to authenticated/);
 });
 
 invariant("saved relationships are owner-only and never anonymous or mutable", () => {

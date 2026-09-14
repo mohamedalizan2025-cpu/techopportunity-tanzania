@@ -29,6 +29,7 @@ import {
   UNPUBLISH_CONFIRM_TOKEN,
   UNPUBLISH_REASON_MAX_LENGTH,
   UNPUBLISH_REASON_MIN_LENGTH,
+  normalizeModerationReason,
 } from "../staff-form-state";
 
 /**
@@ -134,12 +135,8 @@ export function parseUnpublishRequest(formData: FormData): UnpublishRequest {
   if (formData.get("confirm") !== UNPUBLISH_CONFIRM_TOKEN) {
     return { ok: false, reason: "unconfirmed" };
   }
-  const rawReason = formData.get("reason");
-  const reason = typeof rawReason === "string" ? rawReason.trim() : "";
-  if (
-    reason.length < UNPUBLISH_REASON_MIN_LENGTH ||
-    reason.length > UNPUBLISH_REASON_MAX_LENGTH
-  ) {
+  const reason = normalizeModerationReason(formData.get("reason"));
+  if (reason === null) {
     return { ok: false, reason: "invalid-reason" };
   }
   return { ok: true, id: rawId, reason };
