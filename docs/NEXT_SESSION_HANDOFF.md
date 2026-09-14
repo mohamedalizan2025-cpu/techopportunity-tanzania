@@ -68,7 +68,10 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   both RPCs. The push-triggered Discovery sync run `34890838498` succeeded at
   the exact SHA with 18/18 sources and `insertedPending: 0` (11 qualified
   candidates, all duplicates skipped; one duplicate-rate health warning only).
-  Both real pending production targets remain untouched.
+  Both real pending production targets were then rejected with full attribution
+  in the Two-Record Resolution below; production is now 254 pending /
+  8 published / 21 rejected / 0 expired = 283 opportunities, 515 references,
+  10 enrichments, and 2 status audits.
 - Sources, discovery cadence, taxonomy, geography logic, production Auth, and
   unrelated infrastructure were not changed.
 
@@ -698,15 +701,48 @@ deployment `6445415606` for the exact SHA is success at
 Post-promotion comparison found all 283 opportunity IDs and 515 reference IDs
 present with zero status or timestamp changes; both pending targets retain null
 attribution and one reference each; Sahara and AAS remain published controls.
-HTTP smoke checks returned 200 for the homepage and both controls and 307 to
-login for anonymous moderation and published-management access. No Moderator
-session was used and no production moderation action was attempted.
+  HTTP smoke checks returned 200 for the homepage and both controls and 307 to
+  login for anonymous moderation and published-management access. No Moderator
+  session was used and no production moderation action was attempted then; both
+  pending targets were resolved in the next milestone below.
+
+## Pending Rejection Attribution — Two-Record Resolution — completed
+
+  Both records were rejected one at a time through the authenticated production
+  Moderator UI (owner browser session; the agent performed read-only
+  verification only, with no service-role impersonation and no direct writes),
+  each with its exact owner-authorized reason, with the first fully verified
+  before the second was touched:
+
+- `61ebe91c-2eb4-41e5-a051-f3efc9aa5873` at `2026-09-14T20:34:56.296352Z` with
+  the 164-character duplicate/out-of-scope reason;
+- `f821f312-18f3-4a0a-8436-e541a9884db3` at `2026-09-14T20:50:56.474222Z` with
+  the 177-character ambiguous-evidence reason.
+
+  Each change wrote exactly `status`, `decided_by` (sole Moderator
+  `1caee695-3a00-43e7-85a4-79db4067ba0d`), and `decided_at`, plus one
+  `moderator-rejection` audit row whose reason matches verbatim and whose
+  `created_at` equals `decided_at`. Full 37-column comparison of all 283
+  opportunities against the pre-0016 snapshot shows only these two rows changed;
+  all 515 reference rows are byte-identical and both references were preserved.
+  The older CFJ duplicate remains pending and Sahara/AAS remain published.
+  Final production is 254 pending / 8 published / 21 rejected / 0 expired =
+  283 opportunities, 515 references, 10 enrichments, and 2 status audits.
+  Protected milestone evidence (post-record-1 and post-record-2 snapshots plus
+  the verification report) is at
+  `C:\Users\hp\.tech-opportunity-backups\20260914T205438Z-pqd-two-record-resolution\`;
+  its manifest SHA-256 is
+  `9c829cfcf51185117a2e57a3a62e35f0fedbe14bbab6719479307e788419744c`,
+  ACL inheritance is disabled, and retained text evidence has zero
+  credential-pattern hits. The frozen pre-resolution manifest
+  (`2dd4cc9359e0805d9a01a6f3c2e43963ab55ec59d0da301b6e6a8cba79bbf255`)
+  remains the exact rollback baseline.
 
 ## Ordered near-term roadmap
 
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
-1. **Pending Rejection Attribution Hardening** *(promoted to production with zero corpus delta; attributable two-record resolution next with separate owner authorization)*
+1. **Pending Rejection Attribution Hardening** *(promoted and both real pending records resolved with full attribution; closed)*
 2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
    - multi-select
    - select-all-visible
@@ -725,17 +761,15 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 
 ## Exact next milestone
 
-**Pending Rejection Attribution — Two-Record Resolution.**
+**Bulk Moderator Actions + Ambiguous Queue Cleanup.**
 
-After explicit owner authorization with one exact evidence-based reason per
-record (10–1000 characters each), reject only
-`61ebe91c-2eb4-41e5-a051-f3efc9aa5873` and
-`f821f312-18f3-4a0a-8436-e541a9884db3`, one at a time through the
-authenticated Moderator path using the new reason-bearing RPC, retain their
-references, and prove non-target immutability. Do not modify the pre-existing
-CFJ duplicate, touch any published record, or begin bulk moderation, Batch 2B2,
-or later roadmap work. Until that authorization arrives, both records stay
-pending and no production moderation action runs.
+Design and implement the smallest safe bulk path (multi-select, select-all-visible,
+bulk reject/withhold with per-record rejection reasons, confirmation, per-record
+attribution/audit, safe partial-failure handling) plus the filter/flag for likely
+ambiguous or weak-evidence records, verified on isolated staging first. This is a
+separate milestone requiring its own bounded authorization and verification; do not
+start implementation, touch the corpus, or change discovery, sources, taxonomy, or
+cadence until that authorization arrives.
 
 ## Continuing constraints
 

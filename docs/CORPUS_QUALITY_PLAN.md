@@ -739,6 +739,37 @@ owner-authorized reasons (164 and 177 characters) are:
   opportunities, so the record is not trustworthy enough for the moderation
   queue.`
 
+### Two-record resolution — completed with full attribution
+
+Both records were rejected one at a time through the authenticated production
+Moderator UI (owner browser session; agent verification only), each with its
+exact reason above, with record 1 fully verified before record 2 was touched:
+
+- `61ebe91c-2eb4-41e5-a051-f3efc9aa5873` rejected at
+  `2026-09-14T20:34:56.296352Z`, decided by sole Moderator
+  `1caee695-3a00-43e7-85a4-79db4067ba0d`, one `moderator-rejection` audit row
+  with the verbatim 164-character reason and `created_at` equal to
+  `decided_at`;
+- `f821f312-18f3-4a0a-8436-e541a9884db3` rejected at
+  `2026-09-14T20:50:56.474222Z` by the same Moderator, one audit row with the
+  verbatim 177-character reason and matching timestamps.
+
+Full 37-column comparison of all 283 opportunities against the pre-0016
+snapshot shows only these two rows changed (each exactly `status`,
+`decided_by`, `decided_at`, `updated_at`); all 515 reference rows are
+byte-identical and both references were preserved. The older CFJ duplicate
+remains pending and Sahara/AAS remain published. Final counts are 254 pending /
+8 published / 21 rejected / 0 expired with 10 enrichments and 2 status audits;
+both public detail routes return 404 and the homepage returns 200. Protected
+milestone evidence is outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260914T205438Z-pqd-two-record-resolution\`
+(manifest SHA-256
+`9c829cfcf51185117a2e57a3a62e35f0fedbe14bbab6719479307e788419744c`)
+with the frozen pre-resolution manifest
+(`2dd4cc9359e0805d9a01a6f3c2e43963ab55ec59d0da301b6e6a8cba79bbf255`)
+as the exact rollback baseline. This closes the promotion-push corpus delta;
+bulk moderation and later roadmap work remain separately authorized.
+
 ### Batch 3 — salvage priority pending rows
 
 - Review the 34 potentially qualifying rows before spending effort on likely noise.

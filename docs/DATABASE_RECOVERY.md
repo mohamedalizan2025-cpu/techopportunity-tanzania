@@ -34,7 +34,23 @@ or modifies the baseline:
 - Pending Rejection Attribution Hardening staging recovery/evidence:
   `C:\Users\hp\.tech-opportunity-backups\20260914T171728Z-pending-rejection-attribution-staging\`; and
 - Pending Rejection Attribution Hardening production recovery/evidence:
-  `C:\Users\hp\.tech-opportunity-backups\20260914T194854Z-pending-rejection-attribution-production\`.
+  `C:\Users\hp\.tech-opportunity-backups\20260914T194854Z-pending-rejection-attribution-production\`; and
+- Two-record resolution preflight (frozen pre-change manifest):
+  `C:\Users\hp\.tech-opportunity-backups\20260914T202546Z-pqd-two-record-preflight\`; and
+- Two-record resolution completion evidence:
+  `C:\Users\hp\.tech-opportunity-backups\20260914T205438Z-pqd-two-record-resolution\`.
+
+The resolution directory preserves post-record-1 and post-record-2 full
+opportunity/reference snapshots, the machine-readable verification report, and
+the manifest. The six retained artifacts total 1,334,861 bytes with manifest
+SHA-256 `9c829cfcf51185117a2e57a3a62e35f0fedbe14bbab6719479307e788419744c`.
+The preflight directory preserves both target rows, both target references, and
+an ordered 283-row corpus snapshot (five artifacts, 33,773 bytes, manifest
+SHA-256 `2dd4cc9359e0805d9a01a6f3c2e43963ab55ec59d0da301b6e6a8cba79bbf255`)
+as the exact rollback baseline: restore each target's status/attribution/
+timestamps and delete its single audit row, only under separate owner
+authorization. ACL inheritance is disabled on both and retained text evidence
+has zero credential-pattern hits.
 
 The pending-rejection production directory is the database rollback point for
 migration 0016. It preserves public-schema plain/custom dumps with parseable

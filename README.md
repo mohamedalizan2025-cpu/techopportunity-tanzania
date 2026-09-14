@@ -7,8 +7,11 @@ proof. The promotion-push corpus delta has been reconciled read-only, but its
 two-record resolution remains stopped before mutation. Pending Rejection Attribution
 Hardening is now promoted to production (migration 0016 plus capability `71f4a33`)
 with a zero-row corpus delta; no production moderation action was used for proof.
-The exact next milestone is the attributable resolution of the same two real
-pending records; production schema/data and both records remain unchanged.
+Both real pending records have since been rejected through the authenticated
+Moderator path with exact attributable reasons, one at a time with independent
+verification. The exact next milestone is Bulk Moderator Actions plus Ambiguous
+Queue Cleanup; production holds 254 pending / 8 published / 21 rejected with
+both decisions fully audited.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
