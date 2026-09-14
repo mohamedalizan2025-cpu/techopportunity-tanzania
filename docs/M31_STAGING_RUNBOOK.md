@@ -499,6 +499,11 @@ staff routes redirected to login. One AAS smoke request logged a transient Supab
 gateway timeout while returning 200, and one bounded retry returned the expected
 content. No production unpublish, reject, or re-review was attempted.
 
+Documentation closure SHA `06d14f2356eaf61b668c76cfcd02685034c7f621`
+started no GitHub Actions or Discovery sync. Vercel nevertheless produced
+runtime-identical Ready deployment `dpl_6CiJ5sauLKo3YCA7e9no8TN6g6N3`, which now
+serves the canonical alias; it did not broaden the runtime capability.
+
 Migration/deployment verification itself left the 277-row/509-reference corpus
 byte-identical. The main push also triggered existing Discovery sync run
 `34841308578`, which independently inserted two pending rows and two references.

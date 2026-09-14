@@ -36,9 +36,9 @@ The production promotion directory contains fresh PostgreSQL 17 pre-0015 public
 schema exports in plain/custom form, a custom public-data archive, validated archive
 lists, full ordered opportunity/reference snapshots, stable security-catalog
 snapshots, exact migration input/execution evidence, post-migration denial proofs,
-deployment/workflow evidence, and the post-push corpus comparison. All 57 retained
-artifacts total 4,338,847 bytes. The manifest is 19,990 bytes with SHA-256
-`FF14F03B3ED84C3B08462F41E49E65373061F75C56D399532B16A6867BBCFEA6`.
+deployment/workflow evidence, and the post-push corpus comparison. All 58 retained
+artifacts total 4,339,424 bytes. The manifest is 20,346 bytes with SHA-256
+`CC4CA53597F12285CFAB87781CD1BA776B4995E0010B1CC9BBA1A0734982EB83`.
 ACL inheritance is disabled and the retained text evidence has zero credential-
 pattern hits. The pre-change archive is the recovery point for migration 0015; do
 not use it to erase the two later pending discovery inserts without a separate,

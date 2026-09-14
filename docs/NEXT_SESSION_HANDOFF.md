@@ -4,10 +4,11 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- Production repository SHA is
-  `07b6f407561b9539cdceccc626a5759a47693824`; its runtime capability delta is
-  exact commit `45508956c365911853c3e681e712b0ba53106f23`. Ready deployment
-  `dpl_34M1uWRtSBUtGZ5uPF6CL9Wi4k4W` serves the canonical alias.
+- Repository `main` is documentation-closure SHA
+  `06d14f2356eaf61b668c76cfcd02685034c7f621`. The promoted runtime source SHA is
+  `07b6f407561b9539cdceccc626a5759a47693824`, whose capability delta is exact
+  commit `45508956c365911853c3e681e712b0ba53106f23`. Current Ready docs-only deployment
+  `dpl_6CiJ5sauLKo3YCA7e9no8TN6g6N3` serves the same runtime at the canonical alias.
 - Production Supabase: `jltuufukcwztugvojwjd`; isolated staging Supabase:
   `pumzofcwfjqswkiwfqty`.
 - M31 is closed; migrations 0013/0014 and the M31 flag remain active. AI remains
@@ -417,21 +418,26 @@ Canonical migration 0015, SHA-256
 was applied in its existing transaction to independently guarded production ref
 `jltuufukcwztugvojwjd`. The production code SHA is
 `07b6f407561b9539cdceccc626a5759a47693824`: capability commit `45508956` plus the
-legitimate documentation-only commit `07b6f40`. Staging and production capability
-trees are identical. Vercel deployment `dpl_34M1uWRtSBUtGZ5uPF6CL9Wi4k4W` is Ready
-at immutable URL
+legitimate staging documentation commit `07b6f40`. Staging and production capability
+trees are identical. Exact runtime-promotion deployment
+`dpl_34M1uWRtSBUtGZ5uPF6CL9Wi4k4W` is Ready at immutable URL
 `https://techopportunity-tanzania-del1vn8dr-techopportunity.vercel.app` and serves
-the canonical aliases. Prior Ready deployment `dpl_Fge7BQuuVoGcT3jSRKzqtHKN1cHg`
-is the application rollback point.
+the verified capability. Repository documentation closure
+`06d14f2356eaf61b668c76cfcd02685034c7f621` started no GitHub Actions or Discovery
+sync, but Vercel produced runtime-identical Ready deployment
+`dpl_6CiJ5sauLKo3YCA7e9no8TN6g6N3` at
+`https://techopportunity-tanzania-2ztwf5y5l-techopportunity.vercel.app`; it now
+serves the canonical aliases. Pre-capability Ready deployment
+`dpl_Fge7BQuuVoGcT3jSRKzqtHKN1cHg` is the application rollback point.
 
 Fresh protected pre-change recovery contains PostgreSQL 17 public schema plain and
 custom dumps, a custom public-data dump, parseable archive lists, exact migration
 input, ordered corpus/reference snapshots, stable security-catalog snapshots, and
 post-deployment evidence. Its directory is
 `C:\Users\hp\.tech-opportunity-backups\20260914T112422Z-published-unpublish-attribution-production\`.
-ACL inheritance is disabled. The 57 retained artifacts total 4,338,847 bytes; the
-19,990-byte manifest SHA-256 is
-`FF14F03B3ED84C3B08462F41E49E65373061F75C56D399532B16A6867BBCFEA6`.
+ACL inheritance is disabled. The 58 retained artifacts total 4,339,424 bytes; the
+20,346-byte manifest SHA-256 is
+`CC4CA53597F12285CFAB87781CD1BA776B4995E0010B1CC9BBA1A0734982EB83`.
 A credential-pattern scan of retained text evidence found zero hits.
 
 Read-only production verification proved:
