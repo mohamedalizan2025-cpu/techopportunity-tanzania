@@ -692,6 +692,53 @@ action ran. The exact next milestone is the attributable two-record resolution
 through the new reason-bearing path, requiring separate owner authorization with
 one exact reason per record.
 
+### Two-record resolution — preflight ready, stopped at the session gate
+
+At `2026-09-14T20:25:46Z`, a target-guarded read-only preflight independently
+bound to production ref `jltuufukcwztugvojwjd` and confirmed the resolution is
+fully ready except for the one gate below:
+
+- production is 283 opportunities (256 pending / 8 published / 19 rejected /
+  0 expired), 515 references, 8 enrichments, zero status audits — identical to
+  the post-0016 proof, so drift since promotion is zero;
+- both exact targets remain `pending` with null `decided_by`/`decided_at`,
+  their original `2026-09-14T12:04:20.983846Z` timestamps, one reference each,
+  and zero audit rows;
+- the older CFJ duplicate `39aa6b9d-df93-410e-85f3-fa280afe9cc6` remains
+  pending and must not be modified; Sahara and AAS remain published controls;
+- migration 0016 constraint/RPC/trigger are present and exactly one Moderator
+  profile exists;
+- both owner-authorized reasons validate at 164 and 177 characters (within the
+  10–1000 database bound);
+- no GitHub run is in progress (next schedule 21:00 UTC); the homepage returns
+  HTTP 200 and anonymous access to record 1's moderation route returns 307 to
+  login, so the Moderator path is live and guarded.
+
+A frozen pre-resolution manifest (both target rows, both target references, and
+an ordered 283-row corpus snapshot) is protected outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260914T202546Z-pqd-two-record-preflight\`;
+its manifest SHA-256 is
+`2dd4cc9359e0805d9a01a6f3c2e43963ab55ec59d0da301b6e6a8cba79bbf255`,
+ACL inheritance is disabled, and the retained text evidence has zero
+credential-pattern hits. No mutation of any kind was attempted.
+
+Execution stopped before the first action for one reason only: this environment
+has no browser surface and holds no authenticated Moderator session, and a
+profile row never authorizes service-role impersonation (which the 0016 trigger
+would block anyway). To resume, the owner signs in as Moderator in their own
+browser, opens record `61ebe91c-2eb4-41e5-a051-f3efc9aa5873` in Moderation,
+selects Reject, enters its exact authorized reason verbatim, and submits — then
+reports back for independent verification before record 2 is touched. The exact
+owner-authorized reasons (164 and 177 characters) are:
+
+- `61ebe91c-2eb4-41e5-a051-f3efc9aa5873`: `Duplicate and outside Tech
+  Opportunity core scope; this legal fellowship duplicates an existing pending
+  record and technology is only incidental to the opportunity.`
+- `f821f312-18f3-4a0a-8436-e541a9884db3`: `Ambiguous and misidentified
+  evidence; the title, deadline, and eligibility belong to conflicting
+  opportunities, so the record is not trustworthy enough for the moderation
+  queue.`
+
 ### Batch 3 — salvage priority pending rows
 
 - Review the 34 potentially qualifying rows before spending effort on likely noise.
