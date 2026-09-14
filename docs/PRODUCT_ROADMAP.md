@@ -53,6 +53,10 @@ implementation or production mutation.
 7. **Opportunity taxonomy improvement**
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**
 
+Priority 1 is implemented and verified on isolated staging as of 2026-09-14, but
+remains first until its separately gated production promotion is complete. No
+later priority was implemented during staging hardening.
+
 ## Product Quality & Differentiation direction
 
 1. Audit the current corpus and execute cleanup in bounded, recoverable cohorts:

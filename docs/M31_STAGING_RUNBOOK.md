@@ -452,3 +452,30 @@ dump, backup, generated cache, or test credential is tracked by Git.
 The one next action is: conduct a separate owner go/no-go review for production M31
 activation using this completed staging evidence. Do not apply any production
 migration or enable the production flag during that review.
+
+## Published unpublish attribution staging checkpoint (2026-09-14)
+
+This checkpoint supersedes the earlier runbook next-action sentence; M31 activation
+was completed separately. Published Unpublish Attribution Hardening is now verified
+on this same isolated staging project. Migration 0015, SHA-256
+`c6929aac5cb627a370448cadbf171e8ccd35b9aeb8c0a2f6f9365d06395ece14`,
+was applied in its explicit transaction after a fresh PostgreSQL 17 recovery export.
+The six baseline opportunity rows were unchanged by migration.
+
+Ready Preview deployment `dpl_6rC6Nwt6swTWSVMUDEKEe9KBKbxa` served staging commit
+`06155b5`. Anonymous, ordinary-user, and service-role RPC probes were denied. One
+tagged Moderator UI action wrote exactly one attributed `published → rejected`
+audit for its exact target; an unrelated published fixture and pending fixture did
+not change, and a direct unattributed update rolled back. Pending rejection and
+published re-review also passed rollback-only live checks. Runtime error/warning
+logs were empty.
+
+Exact-ID cleanup returned staging to 6 opportunities, 9 references, 0 audit rows,
+0 Auth users, 0 profiles/saves, and 0 tagged fixtures. Temporary credentials,
+link state, and tooling were removed. Recovery/evidence is protected at
+`C:\Users\hp\.tech-opportunity-backups\20260914T065506Z-published-unpublish-attribution-staging\`
+with manifest SHA-256
+`4D55C8C19A5DEB92C7E6D568F3E1B2ADA81FBF58ACFD2A6756820A85A4F4F414`.
+Production was not targeted. The exact next milestone is a separately authorized
+Published Unpublish Attribution Hardening production promotion, with no production
+unpublish required for proof.

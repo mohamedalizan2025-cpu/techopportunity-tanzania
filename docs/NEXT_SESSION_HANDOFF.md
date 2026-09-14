@@ -6,7 +6,7 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 - Production application runtime code remains
   `070c32fb07f147a79626d9e7988767c5f476f373`; repository `main` was
-  `82173b085421d3f964baeda755e7378b954d1015` before this closure-only
+  `d524062e881c3a5bfb9508a5454d5d98f0d60729` before this staging-closure
   documentation commit.
 - Production Supabase: `jltuufukcwztugvojwjd`; isolated staging Supabase:
   `pumzofcwfjqswkiwfqty`.
@@ -24,8 +24,13 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   no production mutation.
 - The 2026-09-14 production re-baseline is 246 pending / 8 published / 19 rejected /
   0 expired = 273 opportunities, with 505 references and 8 enrichment-audit rows.
-- Sources, discovery cadence, taxonomy, geography logic, schema, migrations, Auth,
-  Vercel configuration, and unrelated infrastructure were not changed.
+- Published Unpublish Attribution Hardening is implemented at capability commit
+  `45508956c365911853c3e681e712b0ba53106f23`, deployed on staging commit
+  `06155b5eb1c0220e9643572d3de54beef77bfe90`, and verified against isolated
+  staging migration 0015. Production code, schema, corpus, and configuration remain
+  unchanged.
+- Sources, discovery cadence, taxonomy, geography logic, production Auth, and
+  unrelated infrastructure were not changed.
 
 ## Batch 1 verified result
 
@@ -356,11 +361,57 @@ ACL inheritance is disabled and its sole report has SHA-256
 `5F2C223E857E3519989BDC031CB4D866AA3525E34314DE9AC09B85A068E6AA9C`.
 Temporary read-only tooling was removed.
 
+## Published Unpublish Attribution Hardening — staging verified
+
+Migration [0015](../supabase/migrations/0015_published_unpublish_attribution.sql),
+SHA-256
+`c6929aac5cb627a370448cadbf171e8ccd35b9aeb8c0a2f6f9365d06395ece14`,
+extends the existing `opportunity_enrichments` audit with nullable `actor_id` and
+`reason`, permits a constrained `status` audit entry, and installs one
+`SECURITY INVOKER` authenticated RPC plus a transaction-bound trigger. The
+application uses its request-scoped Moderator client; it never accepts an actor
+from the form and never uses a service-role credential.
+
+The exact staging target `pumzofcwfjqswkiwfqty` was guarded independently from
+production. A PostgreSQL 17 pre-change schema/data recovery set was created before
+the transaction. Migration 0015 committed without changing the six baseline
+opportunities. On Ready Preview deployment
+`dpl_6rC6Nwt6swTWSVMUDEKEe9KBKbxa`, the live matrix proved:
+
+- anonymous, ordinary authenticated, and service-role RPC calls were each denied
+  with PostgreSQL `42501`;
+- one authenticated Moderator UI unpublish changed only exact synthetic target
+  `f0010000-0000-4000-8000-000000000001` from `published` to `rejected`;
+- exactly one audit row recorded that ID, the Moderator UUID, previous/resulting
+  statuses, exact reason, and decision time within the measured action window;
+- the unrelated published fixture and pending fixture retained their original
+  statuses and `updated_at`; a direct unattributed update was rejected and rolled
+  back;
+- rollback-only live checks confirmed pending rejection and published re-review
+  still execute without entering the new transition branch; and
+- the exact deployment had zero error- or warning-level runtime logs.
+
+All three tagged opportunities and both tagged Auth users were removed. Final
+staging returned to six opportunities (3 pending / 2 published / 1 rejected), nine
+references, zero audit rows, zero Auth users/profiles/saves, and zero tagged
+fixtures. Temporary credentials, Vercel/Supabase link state, and test tooling were
+removed. `npm run verify` passed at exact staging HEAD; the complete local battery
+is 723 tests, TypeScript, ESLint, 30 permanent boundaries, and a successful
+production build. The initial sandboxed build alone could not fetch Google fonts;
+the approved network rerun passed.
+
+The protected recovery/evidence directory is
+`C:\Users\hp\.tech-opportunity-backups\20260914T065506Z-published-unpublish-attribution-staging\`.
+Its post-cleanup manifest SHA-256 is
+`4D55C8C19A5DEB92C7E6D568F3E1B2ADA81FBF58ACFD2A6756820A85A4F4F414`.
+No credential pattern was retained. Production ref `jltuufukcwztugvojwjd` was not
+mutated, no production corpus cleanup resumed, and no production unpublish ran.
+
 ## Ordered near-term roadmap
 
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
-1. **Published Unpublish Attribution Hardening**
+1. **Published Unpublish Attribution Hardening** *(staging verified; production promotion pending)*
 2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
    - multi-select
    - select-all-visible
@@ -379,14 +430,15 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 
 ## Exact next milestone
 
-**Published Unpublish Attribution Hardening.**
+**Published Unpublish Attribution Hardening — Production Promotion.**
 
-Design, implement, stage, and verify the smallest authenticated Moderator path that
-gives every `published → rejected` transition durable per-record actor attribution,
-time, and reason without weakening RLS or erasing existing moderation evidence.
-Production promotion and any production data exercise remain separately gated.
-Do not implement bulk actions, resume the three untouched Batch 2B2 unpublishes, or
-begin any later roadmap item during that milestone.
+Review the exact migration and staging evidence, create a fresh protected production
+schema/data recovery artifact, independently bind the target to production ref
+`jltuufukcwztugvojwjd`, and promote only capability commit `45508956` plus exact
+migration 0015. Production migration and deployment require explicit owner go/no-go.
+Use read-only structural/auth checks after promotion; do not unpublish a real
+production record merely to prove the path. Do not resume Batch 2B2 cleanup or begin
+bulk moderation or any later roadmap priority in that milestone.
 
 ## Continuing constraints
 

@@ -579,13 +579,22 @@ with SHA-256
 `5F2C223E857E3519989BDC031CB4D866AA3525E34314DE9AC09B85A068E6AA9C`.
 Temporary tooling was removed.
 
-### Exact next milestone — Published Unpublish Attribution Hardening
+### Published Unpublish Attribution Hardening — staging complete
 
-The next bounded milestone must add durable per-record actor, timestamp, and reason
-attribution to the authenticated `published → rejected` path and prove the safety
-contract in isolated staging. It must not implement bulk actions, process the three
-untouched Batch 2B2 records, or begin later roadmap priorities. Production promotion
-and any production data exercise require separate authorization.
+The bounded capability is implemented and verified on isolated staging at commit
+`06155b5`: authenticated Moderator identity, exact opportunity ID,
+`published → rejected`, reason, and decision time persisted atomically through the
+existing audit architecture. Anonymous, ordinary-user, and service-role calls were
+denied; unrelated/pending fixtures were unchanged; pending rejection and published
+re-review passed rollback-only regression checks. All fixtures and credentials were
+removed and the six-opportunity staging baseline was restored.
+
+### Exact next milestone — Published Unpublish Attribution Hardening: production promotion
+
+Promote only the staged capability and migration 0015 after an explicit owner
+go/no-go and a fresh protected production recovery artifact. Verify production
+structurally and read-only; do not use a real production opportunity as a test.
+Batch 2B2 remains stopped and later roadmap priorities remain out of scope.
 
 ### Batch 3 — salvage priority pending rows
 

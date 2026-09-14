@@ -1383,6 +1383,24 @@ GitHub Discovery sync: still runs #1–#3, all pre-fix failures — CI
 proof remains pending. No record was unpublished and no data was
 modified in this milestone.
 
+**Published-unpublish attribution hardening (2026-09-14 update)**
+
+Migration 0015 closes the historical audit limitation without changing the status
+model or creating a second audit system. `opportunity_enrichments` now permits one
+strict `status` shape and stores nullable `actor_id`/`reason` for backward-compatible
+field audits. A `SECURITY INVOKER` RPC derives the actor from `auth.uid()`, verifies
+`is_staff()`, validates the reason, and conditionally updates exactly one
+`id + published` row. An `AFTER UPDATE OF status` trigger inserts the exact target,
+old/new statuses, actor, reason, and statement timestamp. Trigger failure aborts the
+same transaction, so an unattributed `published → rejected` transition cannot land.
+
+Only `authenticated` may execute the RPC; `PUBLIC`, `anon`, and `service_role` are
+revoked. The application continues through `getModerationAccess()` and its
+request-scoped client, and supplies no actor identifier. Pending rejection and
+published-to-published re-review do not enter the trigger branch. The design was
+verified on isolated staging with real anonymous, ordinary, Moderator, and
+service-role sessions plus exact-ID fixtures; production was not promoted.
+
 ---
 
 ### 12.21 Milestone 15 — first-session attempt and the supply ceiling (2026-08-30)
@@ -1514,3 +1532,4 @@ works, nor as proof it does not. Two consequences are recorded as policy:
 | 2026-09-02 | Milestone 24: extend the existing structured discovery summary into a pure execution/schedule/source/pipeline health model; retain at most 24 comparable observations through GitHub cache plus 90-day per-run artifacts; add an independent credential-free schedule observer, source-aware descriptive baselines, deterministic anomalies, trust-evidence counters, and read-only freshness semantics | Three recent production successes prove repeated execution but not scheduled repeatability and do not share complete counters, so the baseline starts `insufficient_history` instead of fabricating statistics. Five comparable successes are required; soft anomalies require sample floors/severity or consecutive confirmation. The discovery cron remains daily and six-hour readiness remains `NOT_YET_PROVEN`. No schema, registry, source, AI, historical row, moderation, or publication change |
 | 2026-09-02 | Milestone 25: move the one authoritative Discovery Sync cron to 03:00/09:00/15:00/21:00 UTC, retain the existing fixed non-cancelling production concurrency lane and 30-minute timeout, align the observer and health interval to six hours, classify trigger/attempt identity, de-duplicate re-runs, and restrict baselines to complete successful scheduled observations | Increased cadence must improve freshness without changing qualification or multiplying evidence. Manual/push/failed/incomplete/retry observations cannot prove scheduler health or mature baselines. Three real scheduled successes are required for `PROVEN`; five are required for baseline maturity. Deployment alone remains `NOT_YET_PROVEN`. No retry loop, source/schema/data/AI/moderation/publication change |
 | 2026-09-02 | Milestone 26 evidence audit: at 01:11 UTC, zero natural post-M25 scheduled observations existed; preserve `NOT_YET_PROVEN` and all anomaly thresholds. Correct baseline reporting so the fifth successful scheduled observation matures descriptive baselines in its own report while anomaly comparison remains prior-only; exclude an earlier retry attempt from readiness/maturity before replacement | Evidence closure cannot be manufactured before real clock time passes. The M25 deployment push was healthy (18/18 sources) but remains excluded. The off-by-one would have delayed declared maturity until run six and retry history could double-count readiness; both are deterministic evidence-integrity defects independent of production volume. No schedule, concurrency, discovery, schema, source, production-data, or threshold change |
+| 2026-09-14 | Published Unpublish Attribution Hardening: extend the existing enrichment audit with a constrained status-decision shape; require a reason; derive Moderator identity from `auth.uid()`; bind exact status mutation and audit in one invoker-rights transaction; deny anonymous, ordinary, and service-role paths; verify only on isolated staging | The Batch 2B2 incident proved application-layer confirmation and exact IDs were insufficient evidence when the write used an unattributed direct update. A database trigger makes attribution mandatory for every `published → rejected` transition while preserving pending approval and published re-review. Staging proof passed and cleaned up; production promotion remains a separate owner gate |

@@ -26,7 +26,19 @@ or modifies the baseline:
 - Batch 2B2 pre-change and fail-closed incident evidence:
   `C:\Users\hp\.tech-opportunity-backups\20260912T215416Z-pqd-batch2b2\`; and
 - Batch 2B2 incident-resolution SELECT-only re-baseline:
-  `C:\Users\hp\.tech-opportunity-backups\20260914T060843Z-pqd-batch2b2-resolution\`.
+  `C:\Users\hp\.tech-opportunity-backups\20260914T060843Z-pqd-batch2b2-resolution\`; and
+- Published Unpublish Attribution Hardening staging recovery/evidence:
+  `C:\Users\hp\.tech-opportunity-backups\20260914T065506Z-published-unpublish-attribution-staging\`.
+
+The attribution-hardening directory contains PostgreSQL 17 pre-0015 public schema
+plain/custom exports, a custom data archive of the six synthetic baseline rows,
+archive list validation, hash-locked migration input, execution/post-state logs,
+negative and exact-attribution proof, cleanup evidence, and a per-file manifest.
+Its post-cleanup manifest SHA-256 is
+`4D55C8C19A5DEB92C7E6D568F3E1B2ADA81FBF58ACFD2A6756820A85A4F4F414`.
+Credential/link/session files were removed before the manifest was finalized; the
+retained evidence passed a credential-pattern scan. This is staging-only recovery
+evidence and does not replace the immutable production baseline.
 
 The resolution directory has ACL inheritance disabled. Its only report is 19,791
 bytes with SHA-256

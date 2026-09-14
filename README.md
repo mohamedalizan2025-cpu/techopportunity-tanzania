@@ -1,9 +1,10 @@
 # Tech Opportunity
 
 **Continuing development? Read [the authoritative engineering handoff](docs/NEXT_SESSION_HANDOFF.md) first.**
-M31 is closed and isolated staging is established. The Batch 2B2 fail-closed
-incident is resolved without another production mutation; the exact next milestone
-is Published Unpublish Attribution Hardening.
+M31 is closed and isolated staging is established. Published Unpublish Attribution
+Hardening is implemented and verified on staging only; production has not been
+promoted or further unpublished. The exact next milestone is Published Unpublish
+Attribution Hardening — Production Promotion.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
