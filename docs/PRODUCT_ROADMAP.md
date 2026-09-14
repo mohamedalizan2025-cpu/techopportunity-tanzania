@@ -36,7 +36,7 @@ These priorities are ordered. Each is a separate milestone requiring its own
 bounded authorization and verification; this roadmap does not authorize
 implementation or production mutation.
 
-1. **Pending Rejection Attribution Hardening — production promotion review**
+1. **Pending Rejection Attribution Hardening — production promotion** *(promoted 2026-09-14; attributable two-record resolution next)*
 2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
    - multi-select
    - select-all-visible
@@ -61,10 +61,12 @@ programs and carries Tanzania-excluding evidence under the wrong identity. They
 remain pending. The owner authorized their rejection, but execution stopped before
 the first mutation because the existing pending-rejection path records actor/time
 without a reason and the 0015 reason audit is intentionally restricted to published
-unpublishes. The bounded pending-rejection attribution capability is now implemented
-and fully verified on isolated staging at exact commit `71f4a33` plus migration
-0016. Priority 1 is now only the separate production-promotion review; the migration,
-application change, and both real record decisions remain unapplied in production.
+unpublishes. The bounded pending-rejection attribution capability at exact commit
+`71f4a33` plus migration 0016 was promoted to production on 2026-09-14 with a
+zero-row corpus delta and no production moderation action. Priority 1 is now only
+the attributable resolution of the same two real pending records through the new
+reason-bearing path; both decisions remain unapplied in production until the owner
+authorizes them with one exact reason per record.
 No later priority was implemented.
 
 ## Product Quality & Differentiation direction

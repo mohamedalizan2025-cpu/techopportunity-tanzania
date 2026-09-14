@@ -668,6 +668,30 @@ authenticated single-record pending-rejection path and verify it in isolated
 staging. Preserve every other moderation path and stop before production promotion
 or resuming the two-record corpus-delta resolution.
 
+### Pending Rejection Attribution Hardening — production promoted, zero corpus delta
+
+Staging implementation completed at exact capability `71f4a33` plus migration
+0016, and the owner authorized the smallest safe production promotion with failure
+closure on drift and no rejection of either real pending record. The pre-change
+guard bound production ref `jltuufukcwztugvojwjd` and proved only expected
+scheduled-discovery growth since the 279/511 deployment snapshot (four pending
+rows and four references from run `34863515551`; zero removals, zero status or
+timestamp changes). Canonical migration 0016, SHA-256
+`7260729EB034098A032042EFAB25D22DB00B83EA4AF01D142AE7DDB8DDC76725`,
+applied at `2026-09-14T20:02:37Z` from a fresh protected recovery set
+(`C:\Users\hp\.tech-opportunity-backups\20260914T194854Z-pending-rejection-attribution-production\`,
+manifest SHA-256
+`f9adc8ae3251a8ec0f046a7ddc9157f282fa341a94d5b901ddbe7f4953608bd1`).
+Exact capability `71f4a33` deployed as GitHub Production deployment `6445415606`;
+exact-SHA Milestone verification `34890838451` and Discovery sync `34890838498`
+(`insertedPending: 0`) both succeeded. Post-promotion comparison proved all 283
+opportunity IDs and 515 reference IDs present with zero status or timestamp
+changes, zero status audits, and both real pending records still `pending` with
+null attribution. No Moderator session was used and no production moderation
+action ran. The exact next milestone is the attributable two-record resolution
+through the new reason-bearing path, requiring separate owner authorization with
+one exact reason per record.
+
 ### Batch 3 — salvage priority pending rows
 
 - Review the 34 potentially qualifying rows before spending effort on likely noise.

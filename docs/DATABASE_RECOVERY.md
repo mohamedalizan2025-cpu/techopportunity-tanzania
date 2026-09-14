@@ -32,7 +32,23 @@ or modifies the baseline:
 - Published Unpublish Attribution Hardening production recovery/evidence:
   `C:\Users\hp\.tech-opportunity-backups\20260914T112422Z-published-unpublish-attribution-production\`; and
 - Pending Rejection Attribution Hardening staging recovery/evidence:
-  `C:\Users\hp\.tech-opportunity-backups\20260914T171728Z-pending-rejection-attribution-staging\`.
+  `C:\Users\hp\.tech-opportunity-backups\20260914T171728Z-pending-rejection-attribution-staging\`; and
+- Pending Rejection Attribution Hardening production recovery/evidence:
+  `C:\Users\hp\.tech-opportunity-backups\20260914T194854Z-pending-rejection-attribution-production\`.
+
+The pending-rejection production directory is the database rollback point for
+migration 0016. It preserves public-schema plain/custom dumps with parseable
+archive lists, a full data-only custom dump plus a public plain data dump,
+ordered 283-opportunity / 515-reference snapshots with SHA-256 hashes, focused
+pre/post structure and grant evidence, 0015-definition fingerprints, exact
+migration input, execution/denial/post-promotion proofs, and the exact-SHA
+Discovery worker report. The 24 retained artifacts total 1,491,209 bytes.
+`manifest.json` is 4,191 bytes with SHA-256
+`f9adc8ae3251a8ec0f046a7ddc9157f282fa341a94d5b901ddbe7f4953608bd1`.
+ACL inheritance is disabled and all 18 retained text files passed a credential-
+pattern scan with zero hits. The immutable pre-0015 production archive remains
+the deeper fallback; do not use either archive to erase later legitimate
+discovery inserts without separate, record-specific owner authorization.
 
 The pending-rejection staging directory preserves the exact pre-0016 synthetic
 opportunity/reference/audit rows, the affected 0015 constraint/function/trigger

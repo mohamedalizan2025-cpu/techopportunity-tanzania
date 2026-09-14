@@ -542,3 +542,44 @@ lint, all 31 permanent boundaries, change classification, and a production build
 Production remains unchanged. The exact next milestone is a bounded owner go/no-go
 review for production promotion; do not apply or deploy during that review without
 separate exact authorization, and do not resume either real production rejection.
+
+## Pending rejection attribution production checkpoint (2026-09-14)
+
+The owner explicitly authorized the smallest safe production promotion with failure
+closure on drift and no rejection of either real pending record. The pre-change
+guard bound production ref `jltuufukcwztugvojwjd` (PostgreSQL 17.6) with the
+expected 0015 objects and no 0016 objects, and a full ID comparison against the
+protected deployment snapshot found zero removals, zero status or timestamp
+changes, and only four pending-only additions from scheduled Discovery run
+`34863515551`. Fresh protected pre-change recovery (24 artifacts, 1,491,209 bytes,
+manifest SHA-256
+`f9adc8ae3251a8ec0f046a7ddc9157f282fa341a94d5b901ddbe7f4953608bd1`,
+zero credential-pattern hits, ACL inheritance disabled) is at
+`C:\Users\hp\.tech-opportunity-backups\20260914T194854Z-pending-rejection-attribution-production\`.
+
+Canonical migration 0016, SHA-256
+`7260729EB034098A032042EFAB25D22DB00B83EA4AF01D142AE7DDB8DDC76725`,
+applied at `2026-09-14T20:02:37Z` in its existing transaction inside an outer
+failure-stop wrapper. Post-change proof: validated two-transition status-audit
+constraint replacing the 0015 shape, both new invoker-rights functions plus the
+enabled trigger, exact 0015 function definitions unchanged, both RPC grant
+matrices `anon=false` / `authenticated=true` / `service_role=false`, anonymous
+and service-role RPC denials with PostgreSQL `42501`, a claim-less authenticated
+call denied with the staff message, and corpus counts identical at 283 / 515 / 8
+enrichments with zero status audits. All denial probes used a fake UUID inside
+rolled-back transactions and touched no real row.
+
+The docs-only push of `11f100a` started no workflow. Exact capability `71f4a33`
+pushed fast-forward and produced four successful exact-SHA workflows (Milestone
+verification `34890838451`, Discovery sync `34890838498` with
+`insertedPending: 0`, Discovery schedule health `34890838470`, Deadline alert
+evaluation `34890838698`) plus GitHub Production deployment `6445415606`
+(immutable URL
+`https://techopportunity-tanzania-74yru14iv-techopportunity.vercel.app`).
+Post-promotion comparison proved zero added, removed, or changed opportunity or
+reference rows; both pending targets and both published controls intact; homepage
+and both controls returned HTTP 200 with 307-to-login on anonymous staff routes.
+No Moderator session was used and no production moderation action ran. The exact
+next milestone is the attributable two-record resolution with separate owner
+authorization; do not reject either record, resume Batch 2B2, or start bulk
+moderation or later roadmap work.

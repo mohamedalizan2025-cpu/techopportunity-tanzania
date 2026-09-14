@@ -5,13 +5,23 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 ## Current verified state
 
 - Local repository `main` is SHA
-  `11f100a28f9db75c66b9d78d9a518ed0ae656b10`, preserving three intentional
-  production-documentation commits ahead of `origin/main` at
-  `06d14f2356eaf61b668c76cfcd02685034c7f621`; none was pushed for this milestone.
-  The promoted runtime source SHA is
+  `560da209299ff37f5f700ca9e881ac3e11039fc6`, one intentional
+  staging-documentation commit ahead of `origin/main` at
+  `71f4a33bc3bc87c9d5c7680e529eb7035a0423e0`; the runtime source SHA is
+  exact capability commit `71f4a33`, with exact-SHA Milestone verification run
+  `34890838451`, push Discovery sync run `34890838498` (`insertedPending: 0`),
+  and GitHub Production deployment `6445415606` (immutable URL
+  `https://techopportunity-tanzania-74yru14iv-techopportunity.vercel.app`,
+  state success at `2026-09-14T20:06:17Z`) all correlated to it. The docs-only
+  push of `11f100a` started no workflow (`[skip ci]`); this closure commit is
+  docs-only and stays local until its own bounded push. The prior promoted
+  runtime source SHA was
   `07b6f407561b9539cdceccc626a5759a47693824`, whose capability delta is exact
-  commit `45508956c365911853c3e681e712b0ba53106f23`. Current Ready docs-only deployment
-  `dpl_6CiJ5sauLKo3YCA7e9no8TN6g6N3` serves the same runtime at the canonical alias.
+  commit `45508956c365911853c3e681e712b0ba53106f23`. The pre-0016 application
+  rollback point was Ready docs-only deployment
+  `dpl_6CiJ5sauLKo3YCA7e9no8TN6g6N3` (same runtime as `07b6f40`); the database
+  rollback point is the fresh pre-0016 recovery set below plus the immutable
+  pre-0015 archive.
 - Production Supabase: `jltuufukcwztugvojwjd`; isolated staging Supabase:
   `pumzofcwfjqswkiwfqty`.
 - M31 is closed; migrations 0013/0014 and the M31 flag remain active. AI remains
@@ -38,12 +48,28 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   Current production is therefore 252 pending /
   8 published / 19 rejected / 0 expired = 279 opportunities, 511 references, and
   8 enrichment rows; no status audit exists because no production unpublish ran.
-- Pending Rejection Attribution Hardening is implemented at capability commit
-  `71f4a33bc3bc87c9d5c7680e529eb7035a0423e0` and verified only on isolated
-  staging. Migration 0016 and Ready Preview `dpl_GHnDVohs4bTtUUcX1cZVG2eW9sKs`
-  passed the complete authenticated/denial/regression/isolation matrix. Production
-  has not received the migration or application change, and both real pending
-  production targets remain untouched.
+  Scheduled Discovery sync run `34863515551` (2026-09-14T15:38:42Z) later added
+  four pending rows and four references. The 0016 preflight compared every live
+  row against the protected deployment snapshot and found zero removals, zero
+  status or timestamp changes, both pending targets intact, and both published
+  controls intact. Accepted pre-0016 production was therefore 256 pending /
+  8 published / 19 rejected / 0 expired = 283 opportunities, 515 references, and
+  8 enrichment rows.
+- Pending Rejection Attribution Hardening is promoted in production: canonical
+  migration 0016, SHA-256
+  `7260729EB034098A032042EFAB25D22DB00B83EA4AF01D142AE7DDB8DDC76725`,
+  applied to independently guarded production ref `jltuufukcwztugvojwjd` at
+  `2026-09-14T20:02:37Z`, and exact capability commit `71f4a33` deployed as
+  GitHub Production deployment `6445415606` (immutable URL
+  `https://techopportunity-tanzania-74yru14iv-techopportunity.vercel.app`).
+  Post-promotion proof found 283 opportunities / 515 references / 8 enrichments
+  with zero added, removed, or changed rows versus the pre-change snapshot, zero
+  status audits, the exact 0015 function definitions unchanged, and the
+  `anon=false` / `authenticated=true` / `service_role=false` grant matrix on
+  both RPCs. The push-triggered Discovery sync run `34890838498` succeeded at
+  the exact SHA with 18/18 sources and `insertedPending: 0` (11 qualified
+  candidates, all duplicates skipped; one duplicate-rate health warning only).
+  Both real pending production targets remain untouched.
 - Sources, discovery cadence, taxonomy, geography logic, production Auth, and
   unrelated infrastructure were not changed.
 
@@ -626,11 +652,62 @@ or configuration change. Batch 2B2, the two real pending rejections, bulk modera
 discovery, taxonomy, registry, cadence, geography, profiles, and AI all remain out
 of scope.
 
+## Pending Rejection Attribution Hardening — production promoted, zero corpus delta
+
+The owner explicitly authorized the smallest safe production promotion of the
+already-reviewed capability and migration 0016, with failure closure on any
+unexpected production drift and no rejection of either real pending record.
+
+Pre-change guard at `2026-09-14T19:40Z` independently bound production ref
+`jltuufukcwztugvojwjd` (PostgreSQL 17.6, `server_version_num 170006`) and found
+the expected 0015 objects with no 0016 objects. Full ID comparison against the
+protected deployment snapshot found zero removals, zero status changes, and four
+pending-only additions from scheduled Discovery run `34863515551`, both pending
+targets still `pending` with null attribution and original timestamps, and both
+published controls M31-compliant. Fresh protected pre-change recovery was created
+at `C:\Users\hp\.tech-opportunity-backups\20260914T194854Z-pending-rejection-attribution-production\`:
+public-schema plain/custom dumps with parseable archive lists, a full data-only
+custom dump plus public plain data dump, ordered 283-opportunity / 515-reference
+snapshots with SHA-256 hashes, focused structure/grant evidence, exact migration
+input, and a credential scan with zero hits. Its 24 retained artifacts total
+1,491,209 bytes; manifest SHA-256 is
+`f9adc8ae3251a8ec0f046a7ddc9157f282fa341a94d5b901ddbe7f4953608bd1`.
+ACL inheritance is disabled.
+
+Canonical migration 0016 was applied in its existing transaction (plus an outer
+failure-stop wrapper) at `2026-09-14T20:02:37Z`; the execution log retains only
+the expected transaction notice and the first-apply trigger notice. Post-change
+proof found the old status-audit constraint replaced by the validated
+two-transition constraint, both new `SECURITY INVOKER` functions and the enabled
+trigger present, the exact 0015 function definitions hash-identical
+(`b6978138f19f95d57ceec38e5224a6eb` and `181c3a6d581ada094e423cf61ed1483c`),
+grants `anon=false` / `authenticated=true` / `service_role=false` on both RPCs,
+anonymous and service-role RPC calls denied with PostgreSQL `42501`, a
+claim-less authenticated call reaching the RPC denied with
+`Pending rejection requires an authenticated moderator`, and corpus counts
+identical at 283 / 515 / 8 enrichments with zero status audits.
+
+The docs-only push of `11f100a` started no workflow. The fast-forward push of
+exact capability `71f4a33` started four exact-SHA workflows, all successful:
+Milestone verification `34890838451`, Discovery sync `34890838498`
+(18/18 sources, `insertedPending: 0`, 11 qualified candidates all duplicates
+skipped, one duplicate-rate health warning only), Discovery schedule health
+`34890838470`, and Deadline alert evaluation `34890838698`. GitHub Production
+deployment `6445415606` for the exact SHA is success at
+`https://techopportunity-tanzania-74yru14iv-techopportunity.vercel.app`
+(the immutable URL is Vercel-SSO-gated; public proof ran on the canonical alias).
+Post-promotion comparison found all 283 opportunity IDs and 515 reference IDs
+present with zero status or timestamp changes; both pending targets retain null
+attribution and one reference each; Sahara and AAS remain published controls.
+HTTP smoke checks returned 200 for the homepage and both controls and 307 to
+login for anonymous moderation and published-management access. No Moderator
+session was used and no production moderation action was attempted.
+
 ## Ordered near-term roadmap
 
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
-1. **Pending Rejection Attribution Hardening** *(staging verified; production promotion review next; two-record resolution remains stopped)*
+1. **Pending Rejection Attribution Hardening** *(promoted to production with zero corpus delta; attributable two-record resolution next with separate owner authorization)*
 2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
    - multi-select
    - select-all-visible
@@ -649,15 +726,17 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 
 ## Exact next milestone
 
-**Pending Rejection Attribution Hardening — Production Promotion Review.**
+**Pending Rejection Attribution — Two-Record Resolution.**
 
-Conduct a bounded owner go/no-go review of exact capability commit `71f4a33` and
-migration 0016 using the completed isolated-staging evidence. Review the production
-target guard, fresh recovery requirements, exact migration/application promotion
-plan, rollback points, and post-promotion read-only proof. Do not apply migration
-0016, deploy the application change, or reject either real pending production record
-within that review unless the owner separately authorizes the exact next action.
-Do not resume Batch 2B2, implement bulk moderation, or start later roadmap work.
+After explicit owner authorization with one exact evidence-based reason per
+record (10–1000 characters each), reject only
+`61ebe91c-2eb4-41e5-a051-f3efc9aa5873` and
+`f821f312-18f3-4a0a-8436-e541a9884db3`, one at a time through the
+authenticated Moderator path using the new reason-bearing RPC, retain their
+references, and prove non-target immutability. Do not modify the pre-existing
+CFJ duplicate, touch any published record, or begin bulk moderation, Batch 2B2,
+or later roadmap work. Until that authorization arrives, both records stay
+pending and no production moderation action runs.
 
 ## Continuing constraints
 
