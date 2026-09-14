@@ -39,6 +39,6 @@ test("published re-review fails closed through the current M31 contract", () => 
 test("pending approval and protected unpublish remain separate guarded paths", () => {
   assert.match(actions, /expectedStatus: "pending"/);
   assert.match(actions, /\.eq\("id", rawId\)\s*\.eq\("status", "pending"\)/);
-  assert.match(actions, /unpublishUpdatePayload\(\)[\s\S]*\.eq\("id", rawId\)[\s\S]*\.eq\("status", "published"\)/);
+  assert.match(actions, /\.rpc\("unpublish_published_opportunity", unpublishRpcArguments\(rawId, permission\.reason\)\)/);
   assert.match(actions, /reviewAuditRows\(current, review\)/);
 });

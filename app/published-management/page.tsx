@@ -104,7 +104,9 @@ export default async function PublishedManagementPage() {
             <p className="mt-8 text-sm text-zinc-600 dark:text-zinc-400">
               Unpublishing hides one record from the public site. It never
               deletes the row: discovery source, URL, timestamps and the title
-              stay intact for audit. An unpublished record is not publicly
+              stay intact. A required reason and the authenticated moderator,
+              exact record, status transition and decision time are retained
+              in the moderation audit. An unpublished record is not publicly
               readable and does not re-enter the pending review queue — this
               interface offers no re-publish button by design. Re-review keeps
               a record live only after the complete current trust contract

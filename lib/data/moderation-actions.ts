@@ -9,11 +9,10 @@ import {
 } from "./moderation";
 import {
   evaluateUnpublishPermission,
-  evaluateUnpublishTarget,
   getPublishedOpportunityById,
   parseUnpublishRequest,
   unpublishDenialMessage,
-  unpublishUpdatePayload,
+  unpublishRpcArguments,
 } from "./published-management";
 import {
   parseReviewInput,
@@ -377,13 +376,10 @@ const initialUnpublish: UnpublishState = {
 /**
  * Unpublish ONE already-published record (Milestone 14 public-trust cleanup).
  *
- * Mirrors the defensive sequence of `decideOpportunityAction` exactly: staff
- * authorization → explicit confirmation token → exact UUID target → a
- * status-scoped pre-read → a conditional UPDATE that only lands while the row
- * is still published. It writes `status` and NOTHING else, never deletes, and
- * touches no provenance field. No audit row is attempted: migration 0003
- * constrains `field` to location/deadline names, so a status entry would
- * violate the CHECK — adding one would be a schema change (owner gate).
+ * Staff authorization, explicit confirmation and a reason precede one
+ * authenticated RPC. Its exact-id published → rejected transition and audit
+ * insert share a transaction, so neither can succeed alone. No service-role
+ * credential participates in this application path.
  */
 export async function unpublishOpportunityAction(
   _previousState: UnpublishState,
@@ -402,23 +398,8 @@ export async function unpublishOpportunityAction(
   }
   const rawId = permission.id;
 
-  // Pre-write guard: the row must still be published right now.
-  const current = await getPublishedOpportunityById(rawId);
-  const target = evaluateUnpublishTarget(current);
-  if (!target.ok) {
-    return {
-      ...initialUnpublish,
-      status: "error",
-      message: unpublishDenialMessage(target.denial),
-    };
-  }
-
   const { data, error } = await permission.staff.client
-    .from("opportunities")
-    .update(unpublishUpdatePayload())
-    .eq("id", rawId)
-    .eq("status", "published")
-    .select("id,title");
+    .rpc("unpublish_published_opportunity", unpublishRpcArguments(rawId, permission.reason));
 
   if (error) {
     console.error("[lib/data] Failed to unpublish opportunity:", error.message);
@@ -429,7 +410,11 @@ export async function unpublishOpportunityAction(
     };
   }
 
-  const rows = (data ?? []) as unknown as Array<{ id: string; title: string }>;
+  const rows = (data ?? []) as unknown as Array<{
+    opportunity_id: string;
+    opportunity_title: string;
+    opportunity_slug: string;
+  }>;
   if (rows.length === 0) {
     // Lost a race with another staff member — refuse instead of clobbering.
     return {
@@ -441,11 +426,11 @@ export async function unpublishOpportunityAction(
 
   revalidatePath("/published-management");
   revalidatePath("/");
-  revalidatePath(`/opportunities/${target.record.slug}`);
+  revalidatePath(`/opportunities/${rows[0].opportunity_slug}`);
 
   return {
     status: "success",
-    message: `Unpublished “${rows[0].title}” — hidden from the public site, record and provenance retained.`,
-    unpublishedId: rawId,
+    message: `Unpublished “${rows[0].opportunity_title}” — hidden from the public site, record, provenance and attributed decision retained.`,
+    unpublishedId: rows[0].opportunity_id,
   };
 }

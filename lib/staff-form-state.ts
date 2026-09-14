@@ -59,6 +59,8 @@ export const initialDecisionState: DecisionState = {
  * auth server client) into the browser bundle.
  */
 export const UNPUBLISH_CONFIRM_TOKEN = "unpublish" as const;
+export const UNPUBLISH_REASON_MIN_LENGTH = 10;
+export const UNPUBLISH_REASON_MAX_LENGTH = 1000;
 
 /**
  * Published-record management (Milestone 14). Deliberately narrower than

@@ -5,16 +5,17 @@
  * Why this exists: the moderation queue only ever walks `pending` rows, so a
  * wrongly-published record had no safe path back to hidden. This module adds
  * that path using ONLY the existing authorization boundary
- * (`getModerationAccess`) and the existing status enum — no DDL, no new
- * status, no deletion.
+ * (`getModerationAccess`) and the existing status enum — no new status or
+ * deletion.
  *
  * Unpublish semantics (deliberate, conservative):
  *   published → rejected
  * `rejected` is the app's established "stays hidden from the public site"
  * state. The row is never deleted, so discovery provenance (source_id,
  * source_url, discovered_at, discovery_method), the title and every evidence
- * field survive untouched. Only `status` is written — see
- * `unpublishUpdatePayload`, which is contract-tested to contain nothing else.
+ * field survive untouched. The atomic database path writes only `status` and
+ * records the target, actor, transition, reason and decision time in the
+ * existing moderation audit architecture.
  */
 import type { Opportunity, OpportunityStatus } from "../types";
 import {
@@ -24,7 +25,11 @@ import {
   type StaffContext,
 } from "./moderation";
 import { opportunitySelect, mapOpportunityRow, type OpportunityRow } from "./opportunities";
-import { UNPUBLISH_CONFIRM_TOKEN } from "../staff-form-state";
+import {
+  UNPUBLISH_CONFIRM_TOKEN,
+  UNPUBLISH_REASON_MAX_LENGTH,
+  UNPUBLISH_REASON_MIN_LENGTH,
+} from "../staff-form-state";
 
 /**
  * The existing status that represents "no longer publicly visible".
@@ -39,15 +44,6 @@ export const UNPUBLISH_TARGET_STATUS = "rejected" as const satisfies Opportunity
  * this server-only module — and `next/headers` — into the client bundle.
  */
 
-/**
- * Pure: the ONLY columns an unpublish may write. Provenance, title, url,
- * deadline, location and category are structurally unreachable from this
- * action — there is no code path that puts them in the payload.
- */
-export function unpublishUpdatePayload(): { status: typeof UNPUBLISH_TARGET_STATUS } {
-  return { status: UNPUBLISH_TARGET_STATUS };
-}
-
 /** Pure guard: only a live published record may be unpublished. */
 export function canUnpublish(status: OpportunityStatus): boolean {
   return status === "published";
@@ -56,14 +52,15 @@ export function canUnpublish(status: OpportunityStatus): boolean {
 export type UnpublishDenial =
   | "invalid-id"
   | "unconfirmed"
+  | "invalid-reason"
   | "unauthenticated"
   | "forbidden"
   | "not-published";
 
 /**
  * Pure authorization state machine, evaluated BEFORE any query: a request
- * must carry a valid UUID target, the explicit confirmation token, and a
- * staff role. Ordered so the cheapest refusal wins and a malformed request
+ * must carry a valid UUID target, the explicit confirmation token, a reason,
+ * and a staff role. Ordered so the cheapest refusal wins and a malformed request
  * never reaches the database at all. On success it hands back the verified
  * target id and staff context, so the caller cannot write without having
  * passed the gate.
@@ -71,10 +68,12 @@ export type UnpublishDenial =
 export function evaluateUnpublishPermission(
   request: UnpublishRequest,
   access: ModerationAccessResult
-): { ok: true; id: string; staff: StaffContext } | { ok: false; denial: UnpublishDenial } {
+):
+  | { ok: true; id: string; reason: string; staff: StaffContext }
+  | { ok: false; denial: UnpublishDenial } {
   if (!request.ok) return { ok: false, denial: request.reason };
   if (!access.ok) return { ok: false, denial: access.reason };
-  return { ok: true, id: request.id, staff: access.staff };
+  return { ok: true, id: request.id, reason: request.reason, staff: access.staff };
 }
 
 /**
@@ -98,6 +97,8 @@ export function unpublishDenialMessage(denial: UnpublishDenial): string {
       return "Invalid submission reference.";
     case "unconfirmed":
       return "Unpublishing needs an explicit confirmation.";
+    case "invalid-reason":
+      return `Give a specific reason (${UNPUBLISH_REASON_MIN_LENGTH}-${UNPUBLISH_REASON_MAX_LENGTH} characters).`;
     case "unauthenticated":
       return "Your session has expired. Please sign in again.";
     case "forbidden":
@@ -117,12 +118,12 @@ export function filterPublishedRecords(items: Opportunity[]): Opportunity[] {
 }
 
 export type UnpublishRequest =
-  | { ok: true; id: string }
-  | { ok: false; reason: "invalid-id" | "unconfirmed" };
+  | { ok: true; id: string; reason: string }
+  | { ok: false; reason: "invalid-id" | "unconfirmed" | "invalid-reason" };
 
 /**
- * Pure, hostile-input-safe request parser. Requires BOTH an exact UUID
- * target and the deliberate confirmation token, so a stray or crafted
+ * Pure, hostile-input-safe request parser. Requires an exact UUID target, the
+ * deliberate confirmation token and a bounded reason, so a stray or crafted
  * submission can never mutate a record.
  */
 export function parseUnpublishRequest(formData: FormData): UnpublishRequest {
@@ -133,7 +134,23 @@ export function parseUnpublishRequest(formData: FormData): UnpublishRequest {
   if (formData.get("confirm") !== UNPUBLISH_CONFIRM_TOKEN) {
     return { ok: false, reason: "unconfirmed" };
   }
-  return { ok: true, id: rawId };
+  const rawReason = formData.get("reason");
+  const reason = typeof rawReason === "string" ? rawReason.trim() : "";
+  if (
+    reason.length < UNPUBLISH_REASON_MIN_LENGTH ||
+    reason.length > UNPUBLISH_REASON_MAX_LENGTH
+  ) {
+    return { ok: false, reason: "invalid-reason" };
+  }
+  return { ok: true, id: rawId, reason };
+}
+
+/** Exact RPC shape: there is no field or record collection to over-post. */
+export function unpublishRpcArguments(id: string, reason: string) {
+  return {
+    target_opportunity_id: id,
+    decision_reason: reason,
+  };
 }
 
 function toOpportunityRows(data: unknown): OpportunityRow[] {
