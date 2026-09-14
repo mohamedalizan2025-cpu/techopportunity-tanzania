@@ -49,6 +49,7 @@ const m31SourcePolicy = read("scripts/discovery/source-policy.ts");
 const opportunitiesData = read("lib/data/opportunities.ts");
 const moderationActions = read("lib/data/moderation-actions.ts");
 const moderationReview = read("lib/data/moderation-review.ts");
+const unpublishAttributionMigration = read("supabase/migrations/0015_published_unpublish_attribution.sql");
 
 invariant("all discovery network acquisition crosses fetchPage", () => {
   const directFetchFiles = filesBelow("scripts/discovery")
@@ -97,6 +98,18 @@ invariant("moderation and published-management pages enforce the shared access g
     assert.match(source, /getModerationAccess\(\)/);
     assert.match(source, /redirect\(/);
   }
+});
+
+invariant("published unpublish is atomic, attributable, exact-target and authenticated-only", () => {
+  assert.match(moderationActions, /permission\.staff\.client[\s\S]*\.rpc\("unpublish_published_opportunity"/);
+  assert.doesNotMatch(moderationActions, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
+  assert.match(unpublishAttributionMigration, /security invoker/);
+  assert.match(unpublishAttributionMigration, /actor uuid := auth\.uid\(\)/);
+  assert.match(unpublishAttributionMigration, /actor is null or not public\.is_staff\(\)/);
+  assert.match(unpublishAttributionMigration, /old\.status = 'published' and new\.status = 'rejected'/);
+  assert.match(unpublishAttributionMigration, /where opportunity\.id = target_opportunity_id\s+and opportunity\.status = 'published'/);
+  assert.match(unpublishAttributionMigration, /revoke all on function public\.unpublish_published_opportunity\(uuid, text\)\s+from public, anon, service_role/);
+  assert.match(unpublishAttributionMigration, /grant execute on function public\.unpublish_published_opportunity\(uuid, text\)\s+to authenticated/);
 });
 
 invariant("saved relationships are owner-only and never anonymous or mutable", () => {

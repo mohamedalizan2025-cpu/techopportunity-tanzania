@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { unpublishOpportunityAction } from "@/lib/data/moderation-actions";
 import {
   UNPUBLISH_CONFIRM_TOKEN,
+  UNPUBLISH_REASON_MAX_LENGTH,
+  UNPUBLISH_REASON_MIN_LENGTH,
   initialUnpublishState,
 } from "@/lib/staff-form-state";
 
@@ -50,12 +52,24 @@ export function UnpublishControl({
       ) : null}
 
       {confirming ? (
-        <form action={formAction} className="flex items-center gap-2">
+        <form action={formAction} className="flex max-w-xl flex-col items-end gap-2">
           <input type="hidden" name="opportunityId" value={id} />
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
             Hide “{title}” from the public site? The record is kept, not
             deleted.
           </span>
+          <label className="w-full text-xs font-medium text-zinc-700 dark:text-zinc-300">
+            Reason (recorded in the moderation audit)
+            <textarea
+              name="reason"
+              required
+              minLength={UNPUBLISH_REASON_MIN_LENGTH}
+              maxLength={UNPUBLISH_REASON_MAX_LENGTH}
+              rows={2}
+              disabled={isPending}
+              className="mt-1 w-full rounded-lg border border-black/[.12] bg-white px-3 py-2 text-sm font-normal text-zinc-900 dark:border-white/[.16] dark:bg-zinc-950 dark:text-zinc-100"
+            />
+          </label>
           <button
             type="submit"
             name="confirm"
