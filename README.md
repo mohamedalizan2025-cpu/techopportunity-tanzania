@@ -3,9 +3,9 @@
 **Continuing development? Read [the authoritative engineering handoff](docs/NEXT_SESSION_HANDOFF.md) first.**
 M31 is closed and isolated staging is established. Published Unpublish Attribution
 Hardening is promoted to production; no production moderation action was used for
-proof. The promotion push also triggered the existing Discovery sync and inserted
-two pending records, so the exact next milestone is the bounded Production
-Promotion Corpus-Delta Reconciliation documented in the handoff.
+proof. The promotion-push corpus delta has been reconciled read-only: both inserted
+pending records require owner-authorized rejection, so the exact next milestone is
+the bounded two-record resolution documented in the handoff.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

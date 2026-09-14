@@ -53,10 +53,13 @@ implementation or production mutation.
 7. **Opportunity taxonomy improvement**
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**
 
-Priority 1 was promoted to production on 2026-09-14. A bounded fail-closed
-reconciliation of the promotion push's two automatic pending discovery inserts is
-required before priority 2 begins. No later priority was implemented during
-attribution hardening or its promotion.
+Priority 1 was promoted to production on 2026-09-14. Its bounded fail-closed
+reconciliation found both automatic pending inserts unsuitable for retention: one
+is a same-cohort duplicate and out of product scope; the other conflates two AWARD
+programs and carries Tanzania-excluding evidence under the wrong identity. They
+remain pending until the owner explicitly authorizes a two-record resolution. No
+later priority was implemented during attribution hardening, promotion, or
+reconciliation.
 
 ## Product Quality & Differentiation direction
 

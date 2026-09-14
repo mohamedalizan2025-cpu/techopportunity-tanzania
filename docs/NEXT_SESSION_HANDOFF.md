@@ -29,7 +29,9 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   one of those rows and references exactly.
 - Published Unpublish Attribution Hardening is promoted in production. The push also
   triggered existing Discovery sync run `34841308578`, which added exactly two
-  pending rows and two references. Current production is therefore 252 pending /
+  pending rows and two references. Read-only reconciliation found both unsuitable
+  for retention, but neither was mutated without explicit authorization. Current
+  production is therefore 252 pending /
   8 published / 19 rejected / 0 expired = 279 opportunities, 511 references, and
   8 enrichment rows; no status audit exists because no production unpublish ran.
 - Sources, discovery cadence, taxonomy, geography logic, production Auth, and
@@ -473,11 +475,52 @@ required zero promotion-process corpus delta, this side effect is an incident an
 was failed closed: no attempt was made to accept, reject, delete, or restore either
 new row.
 
+## Production promotion corpus-delta reconciliation — completed read-only
+
+The two exact rows and their exact canonical RSS references were inspected without
+mutation. The delta is **not accepted** as normal legitimate Discovery growth:
+
+- `61ebe91c-2eb4-41e5-a051-f3efc9aa5873` — the CFJ Fellowship is a genuine,
+  current legal/human-rights placement, but technology is incidental rather than
+  the opportunity's purpose. It is also the same 2027 CFJ Fellowship already held
+  in pending row `39aa6b9d-df93-410e-85f3-fa280afe9cc6`, discovered earlier from
+  Opportunity Desk with the same 20 October 2026 deadline and materially identical
+  host/eligibility facts. Recommendation: reject the newly inserted duplicate as
+  out-of-scope noise.
+- `f821f312-18f3-4a0a-8436-e541a9884db3` — the stored OFA article conflates two
+  genuine AWARD programs. Its title identifies the 2027 Emerging African Women in
+  Science program, while its 6 November 2026 deadline and latter eligibility text
+  belong to the separate Women in Agriculture Leadership Program Fellowship. The
+  official latter call is restricted to Egypt, Morocco, Ghana, Nigeria, Sierra
+  Leone, and Senegal; Tanzania is excluded. Recommendation: reject this ambiguous,
+  identity-incoherent record rather than moderate it as either real program.
+
+Both insertions followed the implementation's mechanical pending-only path: one
+row, one canonical RSS reference, extracted action/deadline evidence, and no public
+visibility. They did not satisfy the intended semantic discovery contract. CFJ's
+incidental `technology` wording passed the positive-scope regex and conservative
+cross-source dedupe did not equate its materially different title; AWARD's `science`
+and application wording passed qualification even though the source article merged
+two calls. These are findings only; discovery logic, registry, cadence, and both
+pending rows remain unchanged.
+
+At `2026-09-14T14:19:16.375Z`, a production-bound SELECT compared all live rows to
+the protected final deployment snapshot. Production remained 279 opportunities /
+511 references / 8 enrichments, with 252 pending / 8 published / 19 rejected / 0
+expired and zero status audits. There were zero added, removed, or changed
+opportunity or reference rows versus that final baseline. The two targets retain
+their exact `2026-09-14T12:04:20.983846Z` create/update timestamp and one reference
+each. Selecting the new audit columns succeeded; the retained production promotion
+evidence still proves the two functions, constraints, trigger, grants, denial
+matrix, and unchanged legacy moderation paths. Fresh public checks returned 200
+for the homepage, Sahara, and AAS and 307-to-login for anonymous moderation and
+published management. No RPC or production mutation was used in this milestone.
+
 ## Ordered near-term roadmap
 
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
-1. **Published Unpublish Attribution Hardening** *(production promoted; push-side-effect reconciliation pending)*
+1. **Published Unpublish Attribution Hardening** *(production promoted; reconciliation complete read-only, two-record resolution owner-gated)*
 2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
    - multi-select
    - select-all-visible
@@ -496,16 +539,17 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 
 ## Exact next milestone
 
-**Published Unpublish Attribution Hardening — Production Promotion Corpus-Delta Reconciliation.**
+**Published Unpublish Attribution Hardening — Production Promotion Corpus-Delta Resolution.**
 
-Review only exact pending opportunities
+Obtain explicit owner authorization, then resolve only exact pending opportunities
 `61ebe91c-2eb4-41e5-a051-f3efc9aa5873` and
-`f821f312-18f3-4a0a-8436-e541a9884db3` plus their two exact references, all created
-by push-triggered Discovery sync run `34841308578`. Reconcile whether their current
-pending state is accepted as normal operational discovery or whether a separately
-authorized recovery action is required. Do not infer authorization to mutate them.
-Do not unpublish, reject, re-review, resume Batch 2B2, begin bulk moderation, or
-start any later roadmap priority during that incident-resolution milestone.
+`f821f312-18f3-4a0a-8436-e541a9884db3`, both created by push-triggered Discovery
+sync run `34841308578`. If authorized, reject those two pending rows through the
+existing authenticated Moderator path with attributable reasons; preserve both
+references and prove all non-target rows byte-identical. Do not infer that this
+handoff authorizes the write. Do not modify the earlier CFJ duplicate, unpublish or
+re-review any published record, resume Batch 2B2, begin bulk moderation, or start
+any later roadmap priority during that resolution milestone.
 
 ## Continuing constraints
 

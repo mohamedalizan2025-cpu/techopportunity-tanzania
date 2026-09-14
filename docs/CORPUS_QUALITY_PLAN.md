@@ -615,6 +615,34 @@ accepted as normal operational discovery or requires a separately authorized
 recovery action. Do not unpublish, reject, re-review, resume Batch 2B2, or begin bulk
 moderation or later roadmap work during that incident milestone.
 
+### Production Promotion Corpus-Delta Reconciliation — completed read-only
+
+The two exact pending rows and two references from Discovery run `34841308578`
+were independently reviewed. No record or reference was modified.
+
+| Inserted ID | Evidence and contract assessment | Recommendation |
+|---|---|---|
+| `61ebe91c-2eb4-41e5-a051-f3efc9aa5873` | The [official CFJ call](https://cfj.org/become-a-wjw-fellow/) confirms a real paid legal placement for early-career women lawyers, hosted only in Kenya, Malawi, South Africa, and The Gambia, with admission and work authorization required in the selected host country. Its central work is litigation, representation, and advocacy; technology is an incidental tool. Existing pending row `39aa6b9d-df93-410e-85f3-fa280afe9cc6` represents the same 2027 CFJ Fellowship, same 20 October deadline, and same host/eligibility facts from Opportunity Desk. The insert was mechanically pending-only and evidence-bearing, but incidental `technology` text defeated the positive-scope intent and conservative title dedupe missed the semantic duplicate. | **Reject newly inserted row** as a duplicate and out-of-scope legal fellowship; preserve its reference. Explicit mutation authorization required. |
+| `f821f312-18f3-4a0a-8436-e541a9884db3` | The OFA record is not coherent at record level. Its headline names the 2027 Emerging African Women in Science program, but its 6 November deadline and latter mid-career eligibility section are copied from the distinct [Women in Agriculture Leadership Program Fellowship](https://awardfellowships.org/news/award-opens-call-for-second-cohort-of-women-in-agriculture-leadership-program-fellowship/). AWARD's official call for that latter fellowship restricts applicants to Egypt, Morocco, Ghana, Nigeria, Sierra Leone, and Senegal, excluding Tanzania. The actual [2026/2027 Emerging Women in Science call](https://www.opportunitiesforafricans.com/the-award-leadership-program-2026-2027-for-emerging-african-women-in-agricultural-sciences/) had a 20 September deadline and included Tanzania. `science` plus generic application language made the implementation admit the item pending, but the source cannot reliably testify to one exact opportunity. | **Reject** as ambiguous/misidentified evidence noise; preserve its reference. Explicit mutation authorization required. |
+
+The corpus delta is not accepted. Both records remain pending because this
+milestone did not authorize mutation. A production-bound SELECT at
+`2026-09-14T14:19:16.375Z` compared the entire live opportunity/reference corpus
+with the protected final deployment snapshot and found zero additions, removals,
+or changes: 279 opportunities / 511 references / 8 enrichments; 252 pending / 8
+published / 19 rejected / 0 expired; zero status audits. Both target timestamps and
+their one-reference-each state are unchanged. Audit-column reads succeeded, the
+retained 0015 structural/security evidence remains applicable, and fresh public
+checks returned 200 for the homepage and both M31 controls plus 307-to-login for
+anonymous moderation and published management. No RPC was invoked.
+
+### Exact next milestone — Production Promotion Corpus-Delta Resolution
+
+After explicit owner mutation authorization, reject only the two exact pending rows
+above through the authenticated Moderator path with attributable reasons, retain
+their references, and prove non-target immutability. Do not modify the pre-existing
+CFJ duplicate, touch any published record, or begin a later roadmap item.
+
 ### Batch 3 — salvage priority pending rows
 
 - Review the 34 potentially qualifying rows before spending effort on likely noise.
