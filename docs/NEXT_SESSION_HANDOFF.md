@@ -759,17 +759,69 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 7. **Opportunity taxonomy improvement**
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**
 
+## Bulk Moderator Actions — implementation exists, staging verification partial (fail-closed)
+
+- Implementation is exact commit `1645973` on branch `bulk-moderator-actions`
+  (parent `3bf8dc1` = `origin/main`). Ten files, no migration, no workflow,
+  source, discovery, taxonomy, cadence, or AI change. It was verified in place
+  via `git show` and `main...HEAD` diff, not rebuilt.
+- Local gates at the exact HEAD all pass: full `npm test` (including bulk 9/9,
+  queue-filter 30/30, review 30, rereview 4, pending-rejection 7,
+  published-management 52, and every other suite), `tsc --noEmit`, `eslint`,
+  `verify:boundaries` 33/33 (including both bulk invariants), `verify:plan
+  --after-gates` (10 changed files; selected gates build + moderation-auth; no
+  migration/source-registry/workflow change), and `npm run build` (Next.js
+  16.3.2, 11 routes). The bulk action reuses the single-record
+  `reject_pending_opportunity` RPC per ID with per-record results
+  (`success`/`partial`/`error`), confirmation token plus acknowledge, reason
+  normalization, `BULK_REJECT_MAX_ITEMS = 50`, no approve path, no direct
+  opportunity update/insert, no new database system, and no service-role in app
+  paths. Queue search (`q`) and the ambiguous flag (`flag=ambiguous`, buckets
+  7/8) remain server-side view-only filters with hostile-input-safe parsing.
+- Staging read-only probe used the staging anon key only in-process (never
+  committed, written to disk, printed, or logged) and never used or requested a
+  service-role key. The exact staging ref was guarded independently from
+  production before any call, and the anon JWT ref/role were checked in memory.
+  With a fake UUID that was first proved absent: anon published read returned
+  exactly the 2 baseline published rows (all `published`); anon pending read
+  returned 0 rows (no leak); anon `reject_pending_opportunity` was denied with
+  PostgreSQL `42501`/HTTP 401; anon direct update affected 0 rows; post-probe
+  published re-read was unchanged at 2. No fixture, user, save, audit, or
+  reference was created, mutated, or deleted; staging was left untouched.
+- Live Moderator proof is deliberately NOT claimed (fail-closed, staging
+  untouched): disposable-Moderator bulk rejection, per-record actor/timestamp/
+  reason/audit persistence, safe partial-failure retention, multi-select and
+  select-all-visible served behavior, served queue search/ambiguous narrowing on
+  the new Preview, served pending-approval/re-review/unpublish regression on
+  the new Preview, and full 6-opportunity/9-reference baseline hashes with
+  exact-ID cleanup. Those require (a) a staging Preview deployment serving
+  exact `1645973` and (b) an owner-authorized disposable staging Moderator
+  session with bounded fixture setup/cleanup. No ordinary-user fixture was
+  created because its cleanup would require privileged deletion while
+  service-role use is forbidden; ordinary-user RPC denial remains covered by
+  the prior 0016 live matrix plus current code/boundary gates, not by a new
+  live user. Temporary probe scripts were removed.
+- Production received no mutation, deployment, Auth change, or proof attempt.
+  Discovery cadence, source strategy, taxonomy, National/International,
+  profiles, AI, and later roadmap work are unchanged.
+
 ## Exact next milestone
 
-**Bulk Moderator Actions + Ambiguous Queue Cleanup.**
+**Bulk Moderator Actions + Ambiguous Queue Cleanup — remaining live staging matrix.**
 
-Design and implement the smallest safe bulk path (multi-select, select-all-visible,
-bulk reject/withhold with per-record rejection reasons, confirmation, per-record
-attribution/audit, safe partial-failure handling) plus the filter/flag for likely
-ambiguous or weak-evidence records, verified on isolated staging first. This is a
-separate milestone requiring its own bounded authorization and verification; do not
-start implementation, touch the corpus, or change discovery, sources, taxonomy, or
-cadence until that authorization arrives.
+On a staging Preview serving exact `1645973`, with only disposable synthetic
+staging fixtures/users: prove anonymous and ordinary-user denial; prove served
+search and ambiguous/weak-evidence filtering; prove multi-select and
+select-all-visible behavior; prove bulk rejection through the authenticated
+Moderator path with per-record actor, timestamp, reason, and audit; prove safe
+partial-failure behavior; prove pending approval and existing moderation paths
+are unaffected; preserve rows/references; clean up every synthetic artifact;
+and prove staging returns to its original baseline/hashes. Staging only. Do
+not mutate or deploy production, clean the real queue, or change discovery
+cadence, source strategy, taxonomy, National/International, profiles, AI, or
+later roadmap work. This requires explicit owner authorization for the staging
+Preview deployment and the disposable Moderator session; do not improvise with
+service-role access.
 
 ## Continuing constraints
 
