@@ -17,6 +17,7 @@ import {
   TRIAGE_HEURISTIC_NOTE,
   firstSuggestedReview,
   isAmbiguousQueueItem,
+  isFurnitureQueueItem,
   triageBucketOf,
   type TriageBucket,
 } from "@/lib/triage-bucket";
@@ -123,6 +124,12 @@ export default async function ModerationPage({
     ])
   );
   const flaggedCount = [...flaggedById.values()].filter(Boolean).length;
+  // Frozen site-furniture REVIEW FLAG: exact reviewed titles only (hint, not
+  // a verdict). Counted over the full pending list so the chip shows the
+  // whole batch even inside another filtered view.
+  const furnitureCount = pending.filter((opportunity) =>
+    isFurnitureQueueItem(opportunity.title)
+  ).length;
   const sourceCounts = new Map<string, number>();
   for (const opportunity of pending) {
     if (opportunity.sourceName) {
@@ -216,6 +223,14 @@ export default async function ModerationPage({
                     className={filterChipClasses(filter.flag === "ambiguous")}
                   >
                     Flagged · {flaggedCount}
+                  </Link>
+                ) : null}
+                {furnitureCount > 0 ? (
+                  <Link
+                    href={`/moderation${queueFilterQuery({ ...filter, flag: "furniture" })}`}
+                    className={filterChipClasses(filter.flag === "furniture")}
+                  >
+                    Furniture · {furnitureCount}
                   </Link>
                 ) : null}
               </div>
@@ -324,6 +339,7 @@ export default async function ModerationPage({
             <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-500">
               {TRIAGE_HEURISTIC_NOTE} Flagged means triage bucket 7
               (ambiguous) or 8 (news-like) — the same hints, filterable.
+              Furniture lists only exact reviewed site-furniture titles.
             </p>
           </>
         )}

@@ -1404,6 +1404,37 @@ actionable rows. Expected end state after all 29 confirmations: 194 pending
 / 8 published / 86 rejected, barring legitimate concurrent Discovery
 growth (reconcile, never force counts).
 
+## Furniture review filter — implemented on branch `furniture-filter` (unpromoted)
+
+The smallest safe view-only filter for the frozen 55-ID site-furniture
+cohort, built only from the existing queue/filter architecture on top of
+`9b9694a`. `isFurnitureQueueItem(title)` in `lib/triage-bucket.ts` matches
+exactly 51 normalized frozen titles (exact-match set, same honesty contract
+as the ambiguous flag: hint only, never a verdict); `flag=furniture` flows
+through the existing `parseQueueFilter`/`matchesQueueFilter`/
+`queueFilterQuery` plumbing with fail-closed parsing, and the queue page
+gains a `Furniture · N` chip beside Flagged. No moderation logic, Auth/RLS,
+schema, migration, RPC, bulk-limit (still 50), discovery, taxonomy,
+geography, profile, or AI change; the bulk panel is untouched.
+
+Verified on the branch: TypeScript, ESLint, bulk 10/10 (new furniture
+assertions, including stored `&amp;`-entity titles), queue-filter 30/30,
+triage 29/29, 33/33 boundaries, production build — no test weakened. One
+transparent fail-closed during verification: the first transcription used
+plain `&` where three stored titles carry `&amp;`, and the live exactness
+check caught all three misses before any further step; unit coverage for
+entity titles was added. Live proof with the real predicate and plumbing
+over all 249 pending rows: `?flag=furniture` matches exactly the frozen 55
+IDs with zero false positives.
+
+Two-confirmation execution shape (requires separate owner authorization, NOT
+run here): open the Furniture filter (55 visible), select all, uncheck any 5
+(the over-50 cap blocks review, by design), confirm 50 with the exact shared
+furniture reason; the filter then shows the remaining 5 for one second
+select-all confirmation. Staging matrix with disposable identities and any
+production promotion remain separate owner gates. `main`, `origin/main`,
+production, and the UX branch are untouched and nothing was pushed.
+
 ## Exact next milestone
 
 **Filter-driven sweep execution, Tier 1 first (owner-authorized).**

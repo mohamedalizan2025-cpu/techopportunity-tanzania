@@ -116,3 +116,94 @@ export function isAmbiguousQueueItem(
   const bucket = triageBucketOf(category, title);
   return bucket === 7 || bucket === 8;
 }
+
+/**
+ * Normalizer shared by the furniture review flag below: lowercase,
+ * non-alphanumeric runs collapsed to one space. Stored titles keep their
+ * original punctuation (including aggregator HTML entities); matching always
+ * runs both sides through this same function.
+ */
+export function normalizeQueueTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+/**
+ * Frozen site-furniture title set (Bulk Production Cleanup milestone).
+ *
+ * Exact normalized titles of the 55 high-confidence page-furniture rows
+ * reviewed one by one from live production evidence (site navigation,
+ * section headers, timetables, galleries, reports, and similar page
+ * furniture that cannot denote a bounded opportunity under any reading).
+ * Like every triage signal this is a prioritization hint, never truth: the
+ * `flag=furniture` queue filter only narrows the visible list so a moderator
+ * can batch-review these rows, and nothing here approves, rejects, or
+ * reclassifies anything. Extending this set requires its own record-by-record
+ * review; never add a title that could plausibly name a real call.
+ */
+const FURNITURE_QUEUE_TITLES: ReadonlySet<string> = new Set(
+  [
+    "Quick Links",
+    "Latest News",
+    "Monetary Policy",
+    "Payment &amp; Settlement systems",
+    "Financial Markets",
+    "Advertisements",
+    "Financial Sector Supervision",
+    "Campus Life",
+    "Teaching Timetable",
+    "SEMESTER II EXAMINATION TIMETABLE FOR THE 2025/2026 ACADEMIC YEAR",
+    "OUR VISION",
+    "News &amp; Events",
+    "Shortcut Links",
+    "Contact Us",
+    "Useful links",
+    "Empowering Tanzania's Digital Future.",
+    "Publications",
+    "More from Ifakara Health Institute",
+    "ISO 9001:2015",
+    "Data Repository",
+    "Contribution to New Knowledge",
+    "Latest Events",
+    "Our Projects",
+    "We're a Registered Charity Organization in Tanzania",
+    "Ground Breaking Research",
+    "Tovuti Zinazohusiana",
+    "Kurasa za Karibu",
+    "Social Media",
+    "Official Map of Tanzania",
+    "ANNOUNCEMENTS",
+    "POPULAR LINKS",
+    "SUA NEWSLETTERS",
+    "USEFUL INFORMATION",
+    "Study Options",
+    "About the University",
+    "Help &amp; Support",
+    "Subfooter Menu",
+    "Top Bar Menu",
+    "University School",
+    "Other Resources",
+    "ANNUAL REPORT 2024",
+    "Main navigation",
+    "Our Quick Links",
+    "Other Links",
+    "Welcome Note",
+    "Latest Announcements",
+    "Upcoming Events",
+    "VETA Gallery",
+    "Join the community",
+    "Explore our involvement",
+    "View our events",
+  ].map(normalizeQueueTitle)
+);
+
+/**
+ * Furniture REVIEW FLAG: true only for an exact frozen-set title match.
+ * Display-and-filter aid only; the moderator remains the final authority.
+ */
+export function isFurnitureQueueItem(title: string): boolean {
+  return FURNITURE_QUEUE_TITLES.has(normalizeQueueTitle(title));
+}

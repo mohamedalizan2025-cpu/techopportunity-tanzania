@@ -10,7 +10,7 @@ import {
   parseQueueFilter,
   queueFilterQuery,
 } from "../lib/data/moderation";
-import { isAmbiguousQueueItem } from "../lib/triage-bucket";
+import { isAmbiguousQueueItem, isFurnitureQueueItem } from "../lib/triage-bucket";
 import type { Opportunity } from "../lib/types";
 
 const root = process.cwd();
@@ -50,6 +50,24 @@ test("ambiguous flag reuses the labeled heuristic buckets and nothing else", () 
   assert.equal(isAmbiguousQueueItem(null, "Latest News roundup"), true);
 });
 
+test("furniture flag matches exact reviewed titles and nothing else", () => {
+  assert.equal(isFurnitureQueueItem("Quick Links"), true);
+  assert.equal(isFurnitureQueueItem("QUICK LINKS"), true);
+  assert.equal(isFurnitureQueueItem("  Main navigation  "), true);
+  assert.equal(isFurnitureQueueItem("About the University"), true);
+  assert.equal(isFurnitureQueueItem("VETA Gallery"), true);
+  assert.equal(isFurnitureQueueItem("Payment &amp; Settlement systems"), true);
+  assert.equal(isFurnitureQueueItem("News &amp; Events"), true);
+  assert.equal(isFurnitureQueueItem("Latest News roundup"), false);
+  assert.equal(isFurnitureQueueItem("Quick Links for Applicants"), false);
+  assert.equal(isFurnitureQueueItem("Call for Applications 2026"), false);
+  assert.equal(
+    isFurnitureQueueItem("World Bank Group (WBG) Young Professionals Program 2026"),
+    false
+  );
+  assert.equal(isFurnitureQueueItem(""), false);
+});
+
 test("queue search and flag params parse fail-closed", () => {
   assert.equal(parseQueueFilter({}).q, null);
   assert.equal(parseQueueFilter({}).flag, null);
@@ -61,6 +79,9 @@ test("queue search and flag params parse fail-closed", () => {
   assert.equal(parseQueueFilter({ flag: "Ambiguous" }).flag, null);
   assert.equal(parseQueueFilter({ flag: "all" }).flag, null);
   assert.equal(parseQueueFilter({ flag: ["ambiguous", "x"] }).flag, "ambiguous");
+  assert.equal(parseQueueFilter({ flag: "furniture" }).flag, "furniture");
+  assert.equal(parseQueueFilter({ flag: "Furniture" }).flag, null);
+  assert.equal(parseQueueFilter({ flag: ["furniture", "x"] }).flag, "furniture");
   const combined = parseQueueFilter({ bucket: "2", source: "Twaweza", q: "AI", flag: "ambiguous" });
   assert.deepEqual(combined, { bucket: 2, sourceName: "Twaweza", q: "AI", flag: "ambiguous" });
 });
@@ -82,6 +103,14 @@ test("search and flag narrow the rendered view only, combined with AND", () => {
     matchesQueueFilter(b, { ...base, sourceName: "Elsewhere", q: "waziri", flag: "ambiguous" }),
     false
   );
+  const c = row({ id: "c", title: "Quick Links", sourceName: "Twaweza" });
+  assert.equal(matchesQueueFilter(c, { ...base, flag: "furniture" }), true);
+  assert.equal(matchesQueueFilter(a, { ...base, flag: "furniture" }), false);
+  assert.equal(matchesQueueFilter(b, { ...base, flag: "furniture" }), false);
+  assert.equal(
+    matchesQueueFilter(c, { ...base, sourceName: "Twaweza", flag: "furniture" }),
+    true
+  );
   assert.deepEqual(
     filterPendingQueue([a, b], { ...base, q: "sahara" }).map((item) => item.id),
     ["a"]
@@ -93,6 +122,12 @@ test("search and flag survive the URL round-trip", () => {
   const query = queueFilterQuery({ bucket: 2, sourceName: "Twaweza", q: "AI & Health", flag: "ambiguous" });
   const parsed = parseQueueFilter({ ...Object.fromEntries(new URLSearchParams(query)) });
   assert.deepEqual(parsed, { bucket: 2, sourceName: "Twaweza", q: "AI & Health", flag: "ambiguous" });
+  const furnitureQuery = queueFilterQuery({ bucket: null, sourceName: null, q: null, flag: "furniture" });
+  assert.equal(furnitureQuery, "?flag=furniture");
+  assert.deepEqual(
+    parseQueueFilter({ ...Object.fromEntries(new URLSearchParams(furnitureQuery)) }),
+    { bucket: null, sourceName: null, q: null, flag: "furniture" }
+  );
   assert.equal(queueFilterQuery(EMPTY_QUEUE_FILTER), "");
 });
 
@@ -158,7 +193,11 @@ test("the queue page guards, searches, flags, and hosts the panel", () => {
   assert.match(queuePage, /QueueBulkPanel/);
   assert.match(queuePage, /flaggedById/);
   assert.match(queuePage, /isAmbiguousQueueItem/);
+  assert.match(queuePage, /isFurnitureQueueItem/);
+  assert.match(queuePage, /Furniture/);
+  assert.match(queuePage, /flag: "furniture"/);
   assert.match(moderation, /isAmbiguousQueueItem/);
+  assert.match(moderation, /isFurnitureQueueItem/);
   assert.match(staffState, /BULK_REJECT_CONFIRM_TOKEN = "bulk-reject"/);
   assert.match(staffState, /BULK_REJECT_MAX_ITEMS = 50/);
 });
