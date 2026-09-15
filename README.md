@@ -18,8 +18,9 @@ mechanical growth (all pending-only, no corruption). The one Tanzania-excluded
 Nordic row has now been rejected through the authenticated production Moderator
 path with exact reason, attribution, timestamp, and audit; the other four delta
 rows remain untouched. Production holds 258 pending / 8 published / 22 rejected.
-The exact next milestone is Bulk Production Cleanup — Ambiguous Queue Batch
-Planning.
+The exact next milestone is the Batch 1 authorization gate: bulk-reject six
+frozen expired rows with one shared expiry reason only under explicit owner
+authorization.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

@@ -982,17 +982,93 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 7. **Opportunity taxonomy improvement**
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**
 
+## Ambiguous-queue batch planning — completed read-only
+
+Production ref `jltuufukcwztugvojwjd` was censused read-only (SELECT only):
+258 pending, zero with any attribution, by category `other` 185 /
+`fellowship` 42 / `grant` 20 / `scholarship` 5 / `internship` 3 /
+`conference` 2 / `competition` 1; triage buckets 1:27 / 2:70 / 5:1 / 6:2 /
+7:152 / 8:6 (158 flagged). Deadlines present on 42 rows, absent on 216;
+eligibility `unknown` on 255, `tanzanians_eligible` on 3. No approval,
+rejection, bulk action, deployment, or configuration change ran. Broad sector
+coverage was never treated as noise: only expiry, face-evidence exclusion,
+exact-duplicate page furniture, and non-opportunity identity qualify rows.
+
+Frozen reason-homogeneous batches (each far below the 50-row bulk cap; verify
+each fully before touching the next; stop on any drift):
+
+- **Batch 1 — expired calls (6 rows, FIRST).** Every stored deadline is
+  corroborated by an explicit in-description deadline sentence, all before
+  2026-09-15: `93519585-8b2d-467a-ab1b-d93f45058c3b` AfricaCDC Youth
+  Pre-Conference 2026 (13 Sept, 17:00 EAT); `d3ffb857-63f3-4c53-96af-f59d5d8e8788`
+  JICE Japan-Africa Youth Program 2026 (8 Sept, system auto-closed);
+  `38a7ef5c-be94-4148-9815-4ee477dc86ce` AREF Towards Leadership 2026/2027
+  (8 Sept); `8545c0ab-cfef-4da2-a6ab-480111995010` JICE Professionals Japan
+  Visit for Co-creation 2026 (8 Sept, system auto-closed);
+  `937caef1-8ff3-4b97-9d05-52e20ae508f2` Claude Campus Ambassador 2026
+  (12 Sept); `d9b1097c-dd1c-402a-b2db-121a98ed2fe0` African Food Baskets
+  Country Researchers 2026 (6 Sept). All `pending`, null attribution, two
+  sources (OFA/OD). Proposed shared reason: "Rejected as expired: each
+  listed call's stated application deadline has passed (deadlines 6–13
+  September 2026), so none remains actionable."
+- **Batch 2 — EBID cross-source pair (2 rows).** `346c2d6a-e825-49c6-90e7-f34413216493`
+  (OFA) and `e129c166-d20e-4536-a3e4-bc8a95de9763` (OD) hold the same EBID
+  Young Professionals Programme 2026 (deadline 30 Oct 2026) from two
+  aggregator extractions, and both descriptions require ECOWAS Member State
+  citizenship (Benin through Togo), which excludes Tanzanian applicants.
+  Proposed shared reason: "Rejected: the programme requires ECOWAS Member
+  State citizenship and holds Tanzania-excluding evidence; the same call is
+  held twice across two aggregator extractions."
+- **Batch 3 — AWARD single (1 row).** `51e23a07-2210-4bf1-9b36-98d707215efa`
+  AWARD Women in Agriculture Leadership Program Fellowship 2026 [Cohort 2]
+  (deadline 6 Nov 2026, evidenced `date`) limits applicants to six listed
+  countries excluding Tanzania. Single-reject through the attributable path
+  as with the Nordic precedent. Proposed reason: "Rejected because documented
+  eligibility is limited to Egypt, Morocco, Ghana, Nigeria, Sierra Leone, and
+  Senegal; Tanzania is excluded."
+- **Batch 4 — exact-duplicate page furniture (6 rows).** `db42c5f4`,
+  `5314b299`, `db214504`, `7aeda1ce` all titled Quick Links/QUICK LINKS and
+  `e6d8f260`, `a53ee125` titled Latest News (descriptions ≤11 chars, no
+  deadlines). Site-navigation text, not bounded opportunities. Proposed shared
+  reason: "Rejected: the row holds site-navigation or section-header text
+  captured from an institutional page, not a bounded opportunity."
+
+Explicitly staying out (evidence uncertain): the 3 `tanzanians_eligible` rows
+(`395f5611` ARC-GSSP, `639267c7` ASU Mastercard, `55590933` Leaders of Africa
+— positive eligibility decisions already stored); the 3 same-day-deadline rows
+(`d8caf136`, `363cc7cb`, `6db9cabc` — intraday expiry uncertain);
+`1241a0bd` Schlumberger (Tanzanians plausibly eligible); all future-deadline
+actionable rows including Catalyst `6fec5039`, IAIFI `a2b70fe1`, Earhart
+`fb12a207`; Maple `0d207c0d` (needs stronger evidence); thin-but-real program
+extractions (`8cb3e7a7` World Bank YPP, `b7809dde` EMA Traineeship,
+`ea6bcc5d` Kenya AI Accelerator, and similar — extraction truncation is not a
+non-opportunity verdict, title-by-title review required); the older CFJ
+duplicate `39aa6b9d` (genuine placement under review); bucket-1
+actionable-looking rows generally; and the ~108 remaining short-description
+institutional rows (candidate pool for later batches, none frozen here).
+
+Per-batch verification/rollback: protected pre-batch read-only snapshot
+(exact IDs, pending/null-attribution/timestamps, reference counts, corpus
+counts) outside Git with manifest; execute only via the authenticated
+Moderator bulk/single path with the exact authorized reason; post-batch prove
+each row rejected with sole-Moderator attribution, matching timestamps, one
+verbatim `moderator-rejection` audit each, all non-target rows byte-identical,
+counts reconciled, and HTTP smoke (homepage 200, rejected routes 404,
+anonymous moderation 307). No application rejected→pending path exists, so
+rollback is a separate owner-authorized DB-level status restoration from the
+pre-batch snapshot plus audit deletion (Batch 1 precedent).
+
 ## Exact next milestone
 
-**Bulk Production Cleanup — Ambiguous Queue Batch Planning.**
+**Bulk Production Cleanup — Batch 1 authorization gate (expired calls).**
 
-Plan only: measure the current ambiguous/weak-evidence queue, define the smallest
-reviewable reason-homogeneous first cohort with frozen exact IDs, document evidence
-and false-positive checks, prepare recovery/rollback and per-record verification,
-and return an explicit owner authorization gate. Do not execute any bulk or
-single-record production moderation action during planning. Do not change discovery,
-sources, cadence, taxonomy, National/International, profiles, AI, or later roadmap
-work.
+The owner is asked to authorize or refuse exactly this: bulk-reject the six
+frozen expired rows (`93519585`, `d3ffb857`, `38a7ef5c`, `8545c0ab`,
+`937caef1`, `d9b1097c`) in one Moderator batch with the exact proposed
+shared expiry reason, after independently confirming each stated deadline on
+its served review route, with the per-batch snapshot/verification/rollback
+protocol above. Batches 2–4 and every stay-out row wait for later gates. No
+moderation action runs without that explicit authorization.
 
 ## Continuing constraints
 
