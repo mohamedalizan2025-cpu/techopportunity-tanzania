@@ -1058,17 +1058,62 @@ anonymous moderation 307). No application rejected→pending path exists, so
 rollback is a separate owner-authorized DB-level status restoration from the
 pre-batch snapshot plus audit deletion (Batch 1 precedent).
 
+## Bulk Production Cleanup — Batch 2 authorization gate: GO (read-only)
+
+On 2026-09-15 the two frozen EBID rows were independently re-read from
+production ref `jltuufukcwztugvojwjd` without mutation. Both remain `pending`
+with null `decided_by`/`decided_at`, original 2026-09-02 timestamps, one
+canonical reference each, and zero status audits. Production is unchanged at
+252 pending / 8 published / 28 rejected / 0 expired = 288 opportunities.
+
+Both rows hold the same underlying programme: EBID Young Professionals
+Programme 2026, Lomé HQ, two-year trainee contract with six-month probation,
+P1-1 grade, and the same 30 October 2026 deadline — discovered four seconds
+apart from OpportunitiesForAfricans (`346c2d6a-e825-49c6-90e7-f34413216493`)
+and OpportunityDesk (`e129c166-d20e-4536-a3e4-bc8a95de9763`). Both stored
+descriptions require ECOWAS Member State citizenship; the OpportunityDesk
+extraction enumerates all fifteen members (Benin through Togo), and Tanzania
+— an EAC/SADC member, never ECOWAS — is absent. Same-day third-party
+corroboration (OFA, ScholarshipsAndAid, MSME Africa, SmartyAcad, Opportunity
+Universe) quotes the identical citizenship requirement against the official
+EBID programme page. The call is current (deadline 30 October 2026, future)
+and both aggregators are concurring second-hand sources for the same
+organizer-published call.
+
+Authorization-ready two-record batch (NOT executed here): reject exactly
+`346c2d6a-e825-49c6-90e7-f34413216493` and
+`e129c166-d20e-4536-a3e4-bc8a95de9763` in one authenticated Moderator bulk
+action with this exact shared reason:
+
+> Rejected: the programme requires ECOWAS Member State citizenship and holds
+> Tanzania-excluding evidence; the same call is held twice across two
+> aggregator extractions.
+
+The reason is evidence-safe for both rows: each stored description states the
+ECOWAS-citizenship requirement and both rows are the same call. Expected
+post-mutation proof: both `rejected` with sole-Moderator attribution,
+matching timestamps, one verbatim `moderator-rejection` audit each with
+`created_at = decided_at`; all other 286 opportunities and all 521 references
+byte-identical; 250 pending / 8 published / 30 rejected; homepage 200,
+rejected routes 404, anonymous moderation 307. No Batch 3/4 row, stay-out
+row, deployment, discovery, or later work is in scope.
+
 ## Exact next milestone
 
-**Bulk Production Cleanup — Batch 1 authorization gate (expired calls).**
+**Bulk Production Cleanup — Batch 2 execution (owner-authorized EBID pair).**
 
-The owner is asked to authorize or refuse exactly this: bulk-reject the six
-frozen expired rows (`93519585`, `d3ffb857`, `38a7ef5c`, `8545c0ab`,
-`937caef1`, `d9b1097c`) in one Moderator batch with the exact proposed
-shared expiry reason, after independently confirming each stated deadline on
-its served review route, with the per-batch snapshot/verification/rollback
-protocol above. Batches 2–4 and every stay-out row wait for later gates. No
-moderation action runs without that explicit authorization.
+Batch 1 completed separately (six expired rows rejected with full
+attribution; production now 252 pending / 8 published / 28 rejected — full
+report on branch commit `46de256` plus the protected Batch 1 backup set). The
+owner is asked to authorize or refuse exactly the frozen two-row EBID cohort
+(`346c2d6a-e825-49c6-90e7-f34413216493` and
+`e129c166-d20e-4536-a3e4-bc8a95de9763`) with the exact shared reason in the
+gate section above, after independently confirming both rows are still
+pending on their served review routes, under the same protected per-batch
+verification/recovery contract as Batch 1. Batch 3, Batch 4, every stay-out
+row, the Staff Moderation UX branch, and all later roadmap work remain
+outside scope. This handoff does not itself authorize either Batch 2
+rejection.
 
 ## Continuing constraints
 
