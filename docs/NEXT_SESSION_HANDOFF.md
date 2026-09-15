@@ -1435,6 +1435,38 @@ select-all confirmation. Staging matrix with disposable identities and any
 production promotion remain separate owner gates. `main`, `origin/main`,
 production, and the UX branch are untouched and nothing was pushed.
 
+## Furniture Filter — production promotion review: GO (review-only)
+
+On a later session the exact capability `2cbba5a` was reviewed file by file
+against `9b9694a`: six files, zero `supabase/`, `.github/`,
+`scripts/discovery/`, `package.json`, Auth/RLS, RPC, or decision-logic
+changes. The predicate is a pure title→boolean exact-set match; the plumbing
+reuses the fail-closed parser and generic query serializer; the chip is a GET
+link; the bulk panel, `BULK_REJECT_MAX_ITEMS = 50`, and every grant and
+migration are untouched. Prior live proof on this exact tree stands:
+`?flag=furniture` returns exactly the frozen 55 IDs with zero false
+positives across 249 pending rows; tsc, lint, bulk 10/10, queue-filter
+30/30, triage 29/29, 33/33 boundaries, and the production build all pass
+with no test weakened.
+
+GO for the smallest safe code-only promotion: merge the five
+code/test/boundary files at their exact `2cbba5a` content
+(`app/moderation/page.tsx`, `lib/data/moderation.ts`,
+`lib/triage-bucket.ts`, `scripts/verification/boundaries.ts`,
+`tests/bulk-moderation.test.ts`; docs follow separately). The push runs
+exact-SHA Milestone verification but matches no Discovery-sync path, so it
+starts no Discovery run and risks zero corpus delta. No migration means no
+database change and no database rollback; the code rollback point stays the
+then-current production deployment (redeploy to revert). Post-promotion
+proof is read-only only: filter serves exactly 55, counts unchanged,
+homepage 200, anonymous moderation 307 — no moderation action for proof.
+
+TEMPORARY FILTER NOTICE: this frozen-title flag exists only to execute the
+documented 55-row furniture cleanup. After those rows are rejected and
+verified, remove the flag, chip, and title set (or generalize it through a
+separately reviewed milestone) — do not keep matching future rows against a
+stale frozen list, and never extend the set without record-by-record review.
+
 ## Exact next milestone
 
 **Filter-driven sweep execution, Tier 1 first (owner-authorized).**
