@@ -1617,19 +1617,24 @@ needs-evidence rows are untouched by the frozen scope.
 
 ## Exact next milestone
 
-**Corpus reset execution — ONE owner gate (Moderator session handoff).**
+**Corpus reset execution — ONE owner gate (secure local token prompt).**
 
-The 20-confirmation browser plan is superseded and must not be executed.
-The owner is asked for exactly one thing: paste the live sole-Moderator
-session JWT (signed in as the Moderator in the production browser: DevTools
-→ Application → Local Storage → the `sb-<ref>-auth-token` entry → its
-`access_token` value) into chat, and keep the session open until the run is
-confirmed. On receipt it is used immediately, in memory only, for the single
-scripted RPC run in the section above — never stored, logged, committed, or
-written to evidence — and the owner then signs out (rotating it) right after
-confirmation. Residual risk is stated plainly: the token grants full
-Moderator power while live, and chat retains its text; scope is enforced by
-frozen IDs, exact reasons, and fail-closed stops. If this handoff is
+The 20-confirmation browser plan is superseded and must not be executed, and
+no token is ever pasted into chat. A child-process prompt variant failed
+immediately without touching production, so the runner takes the token only
+through an in-memory pipe from an owner-shell-native `Read-Host
+-AsSecureString` prompt: never in argv, env, disk, history, logs, or chat.
+The pipe path is mock-proven end to end (happy path, empty-pipe and TTY
+fail-closeds, plus the stale/HTTP-500/resume suite). The owner is asked to
+run exactly one local PowerShell command (any directory; nothing secret in
+it, safe for history) while signed in as the Moderator, type the token
+hidden at the prompt — copy it from the production browser at DevTools →
+Application → Local Storage → the `sb-<ref>-auth-token` entry → its
+`access_token` value — and let the single scripted RPC run plus its built-in
+final verification complete. On the script's DONE line, sign out of the
+Moderator account immediately to revoke the session. Residual risk is stated
+plainly: the token grants full Moderator power while live; scope is enforced
+by frozen IDs, exact reasons, and fail-closed stops. If this handoff is
 unacceptable, the fallback is the documented 20-confirmation browser plan,
 not service-role impersonation. This handoff authorizes nothing by itself.
 
