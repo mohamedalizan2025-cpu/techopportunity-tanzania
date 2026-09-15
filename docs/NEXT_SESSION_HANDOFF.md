@@ -1404,18 +1404,63 @@ actionable rows. Expected end state after all 29 confirmations: 194 pending
 / 8 published / 86 rejected, barring legitimate concurrent Discovery
 growth (reconcile, never force counts).
 
+## Furniture filter — promoted to production (code-only, no mutation)
+
+The owner explicitly authorized the smallest safe promotion of the reviewed
+capability at exact commit `2cbba5a`: only the five verified files
+(`app/moderation/page.tsx`, `lib/data/moderation.ts`,
+`lib/triage-bucket.ts`, `scripts/verification/boundaries.ts`,
+`tests/bulk-moderation.test.ts`) at byte-identical content, committed as
+`c11a6ba`. No database, schema, RLS, RPC, discovery, source, cadence,
+taxonomy, geography, profile, or AI change; no moderation action ran.
+
+Pre-promotion guard bound production ref `jltuufukcwztugvojwjd`: 249 pending
+/ 8 published / 31 rejected / 0 expired = 288 opportunities, 521 references,
+20 enrichments. Local `tsc`, lint, bulk 10/10, 33/33 boundaries, and the
+production build passed on the exact content; no workflow was in progress.
+Prior production deployment `6457910546` (`9b9694a`) is preserved as the code
+rollback point.
+
+The push started only exact-SHA Milestone verification `34967608673`
+(success) — it matches no Discovery-sync path, so no Discovery run started
+and zero corpus delta was possible. GitHub Production deployment `6458519326`
+for the exact SHA is success (immutable URL
+`https://techopportunity-tanzania-qggwyuba8-techopportunity.vercel.app`,
+Vercel-SSO-gated; public proof on the canonical alias).
+
+Post-promotion proof (read-only; no Moderator session, no moderation
+action): all 288 opportunity IDs and 521 reference IDs byte-identical
+(`b6288c96…`, `a5feb389…`), counts unchanged at 249 / 8 / 31 with 20
+enrichments; the promoted predicate and plumbing re-checked live return
+exactly the frozen 55 with zero false positives over 249 pending;
+`/` returns 200 while anonymous `/moderation`, `/moderation?flag=furniture`,
+and `/published-management` each return 307; `BULK_REJECT_MAX_ITEMS` remains
+50. Served-HTML confirmation of the 55-row filtered view itself remains for
+a Moderator browser session (anonymous access correctly cannot reach it).
+
+TEMPORARY FILTER NOTICE: `flag=furniture` exists only to execute the
+documented 55-row furniture cleanup. After those rows are rejected and
+verified, remove the flag, chip, and title set — or generalize them through
+a separately reviewed milestone. Never extend the frozen set without
+record-by-record review.
+
 ## Exact next milestone
 
-**Filter-driven sweep execution, Tier 1 first (owner-authorized).**
+**Furniture-filter sweep execution (owner-authorized).**
 
-The owner is asked to authorize or refuse Tier 1 only: the 14 pure
-source+bucket select-all cohorts (36 rows) in any order, each executed as one
-Moderator bulk action with the exact shared furniture reason above, after
-confirming the served filter shows exactly the documented rows and count,
-with the protected per-batch snapshot and per-record verification contract.
-Tier 2, Tier 3, every stay-out row, the Staff Moderation UX branch, and all
-later roadmap work remain outside scope. This handoff authorizes nothing by
-itself.
+The view-only `flag=furniture` filter is live in production at exact commit
+`c11a6ba`. The owner is asked to authorize or refuse the documented
+two-confirmation sweep only: open the Furniture filter (55 visible), select
+all, uncheck any 5, confirm 50 with one exact shared reason; then confirm
+the remaining 5 the same way — each step only after confirming the
+served filter shows exactly the documented rows and count, with the
+protected per-batch snapshot and per-record verification contract. The
+single shared reason for both confirmations (evidence-safe for all 55,
+including the six Batch 4 rows): "Rejected: the row holds
+site-navigation, section-header, or page-furniture text captured from an
+institutional page, not a bounded opportunity." No
+furniture rejection runs without that explicit authorization. Removing the
+temporary filter afterwards is a separate reviewed milestone.
 
 ## Continuing constraints
 

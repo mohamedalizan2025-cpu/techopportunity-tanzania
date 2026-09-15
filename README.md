@@ -22,8 +22,12 @@ EBID pair, and the Batch 3 AWARD single then followed with exact reasons
 and per-record audits. Production holds 249 pending / 8 published / 31
 rejected. A filter-driven sweep plan freezes the 55 furniture rows into 29
 exact select-all cohorts across three tiers (no UI change needed); the
-manual Batch 4 plan is paused. The exact next milestone is Tier 1 sweep
-authorization only under explicit owner authorization.
+manual Batch 4 plan is paused. The view-only furniture filter is now live
+in production as a code-only promotion (exact `2cbba5a` content, no
+migration, zero corpus delta); it serves exactly the frozen 55 with zero
+false positives and is temporary — remove it after the cleanup. The exact
+next milestone is the furniture-filter sweep authorization only under
+explicit owner authorization.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
