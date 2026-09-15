@@ -72,8 +72,10 @@ Priority 1 is closed.
 Priority 2 is implemented at exact capability commit `1645973`, verified on
 isolated staging, reviewed GO, and promoted to production on 2026-09-15 with
 no production moderation action. The push Discovery run inserted five pending
-records (six references), preserved untouched for separate read-only
-reconciliation. Real-queue cleanup remains a separate, unauthorized
+records (six references), preserved untouched. Read-only reconciliation
+accepts the delta as legitimate mechanical growth with no corruption and
+recommends later rejection of only the Tanzania-excluded Nordic row under
+separate authorization. Real-queue cleanup remains a separate, unauthorized
 milestone. No later priority was implemented.
 
 ## Product Quality & Differentiation direction

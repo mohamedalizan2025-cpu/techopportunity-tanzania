@@ -13,10 +13,12 @@ verification. Bulk Moderator Actions plus Ambiguous Queue Cleanup is promoted
 to production at exact capability commit `1645973` (ten files, no migration;
 GitHub Production deployment `6454270624`); no production moderation action
 was used for proof. The push Discovery run inserted five pending records and
-six references, preserved untouched for separate reconciliation. The exact
-next milestone is read-only reconciliation of that five-row delta; production
-holds 259 pending / 8 published / 21 rejected with both prior decisions
-fully audited.
+six references; read-only reconciliation accepts the delta as legitimate
+mechanical growth (all pending-only, no corruption) while recommending later
+rejection of only the Tanzania-excluded Nordic row under separate
+authorization. The exact next milestone is that single-record disposition;
+production holds 259 pending / 8 published / 21 rejected with both prior
+decisions fully audited.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

@@ -832,6 +832,71 @@ moderation action, no fixture):
 Sources, discovery cadence, taxonomy, National/International, profiles, AI,
 and later roadmap work were not changed.
 
+## Five-row push-delta reconciliation — completed read-only
+
+Discovery run `34944048646` (push, exact SHA `1645973`, 18/18 sources,
+12 qualified, 7 duplicates skipped) inserted five pending rows with six
+canonical references at `2026-09-15T07:55:03Z`. All five were re-read from
+production ref `jltuufukcwztugvojwjd` without mutation. Each remains
+`pending` with null `decided_by`/`decided_at` and its original timestamps;
+production remains 259 pending / 8 published / 21 rejected / 0 expired =
+288 opportunities, 521 references, 10 enrichments, and 2 status audits.
+Title screens for `Earhart`, `IAIFI`, `Catalyst`, `Nordic`, and `Maple` each
+match only the new row itself: no duplicate of any existing corpus record.
+All five came through the mechanical pending-only path (one row, canonical
+RSS reference, extracted action/deadline evidence, no public visibility).
+
+Disposition matrix (findings only; no approval, rejection, or cleanup ran):
+
+- `6fec5039-8e0e-40ba-b32e-5eac94a439e9` — Digital Science Catalyst Grant
+  2026 (up to £25,000). Genuine international tech grant: AI agentic tooling
+  for research is the program's purpose, deadline 5 October 2026 is extracted
+  with evidence, category `grant`. Unique, actionable bounded call.
+  Eligibility and country verification are `unknown`; only the OpportunityDesk
+  aggregator page stands as evidence. In broad tech-grant scope, Tanzania
+  access unverified. Recommendation: remain pending; needs stronger evidence
+  (official organizer page plus eligibility).
+- `7f4e1806-f041-4960-8525-acd13229fa95` — Nordic Baltic Youth Summit 2026.
+  Genuine event, deadline 20 September 2026 with evidence, category
+  `conference`. Unique. But the stored description restricts applicants to
+  residents of Denmark, Estonia, the Faroe Islands, Finland, Greenland,
+  Iceland, Latvia, Lithuania, Norway, Sweden, and Åland — Tanzania is
+  excluded on the face of the evidence, as with the earlier AWARD
+  Tanzania-excluding record. Non-actionable for Tanzanians and out of scope.
+  Recommendation: reject later with a Tanzania-exclusion reason under
+  separate owner authorization.
+- `0d207c0d-c3eb-4b42-a029-42f8d2c9445c` — Maple Global Innovation
+  Fellowship 2026. Ambiguous identity: the description is the title alone,
+  deadline is null/`unknown` with no evidence, eligibility and country are
+  `unknown`, and the second reference is the bare OpportunityDesk feed URL
+  rather than corroboration. Genuineness, bounds, and currency cannot be
+  established from stored evidence. Unique, non-actionable as stored.
+  Recommendation: remain pending; needs stronger evidence, otherwise reject
+  later as unverifiable noise under separate authorization.
+- `a2b70fe1-bfaa-4c74-9c65-e139a140049e` — NSF IAIFI Fellowship 2027–2030
+  (MIT). Genuine prestigious AI/physics fellowship, deadline 7 October 2026
+  with evidence, full program description, category `fellowship`. Unique,
+  actionable bounded call. Tanzania is not excluded on the face of the
+  evidence (early-career researchers; J-1 route for outsiders); verification
+  remains `unknown` and only the aggregator page stands as evidence. In
+  tech scope. Recommendation: remain pending; needs stronger evidence
+  (official MIT/IAIFI page).
+- `fb12a207-4651-480e-adb7-0a97d8539d1e` — Amelia Earhart Fellowship 2027
+  (up to $12,000, Zonta). Genuine long-running fellowship for women PhD
+  aerospace researchers of any nationality, deadline 15 November 2026 with
+  evidence, category `fellowship`. Unique, actionable bounded call. Tanzania
+  is not excluded on the face of the evidence; verification remains
+  `unknown` with aggregator-only evidence. In STEM scope. Recommendation:
+  remain pending; needs stronger evidence (official Zonta page).
+
+The push delta is **accepted** as legitimate mechanical Discovery growth:
+pending-only inserts with intact prior rows, references, attributions, and
+audits — no incident, unlike the earlier two-record delta. Acceptance covers
+growth mechanics only; no record is accepted as publication-ready and all
+five remain pending. The missed-schedule signal (`34944048624`, nominal
+`2026-09-14T21:00Z` slot) is preserved unchanged: this milestone alters no
+schedule, workflow, discovery, cadence, or threshold.
+
 ## Ordered near-term roadmap
 
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
@@ -855,15 +920,14 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 
 ## Exact next milestone
 
-**Bulk Moderator Actions promotion-push corpus-delta reconciliation (read-only).**
+**Single-record disposition of the Tanzania-excluded Nordic row (owner-gated).**
 
-Inspect the five preserved pending inserts (`6fec5039…`, `7f4e1806…`,
-`0d207c0d…`, `a2b70fe1…`, `fb12a207…`, created `2026-09-15T07:55:03Z`) and
-their six references without mutation: verify each row is still `pending`
-with null attribution, record its source/evidence/duplicate posture, and
-recommend per-record retention or rejection for separate owner authorization.
-Do not approve, reject, bulk-reject, delete, or restore any record in this
-milestone. Do not start Bulk Production Cleanup or later roadmap work.
+Reject `7f4e1806-f041-4960-8525-acd13229fa95` (Nordic Baltic Youth Summit
+2026) one time through the authenticated Moderator path with an exact
+attributable Tanzania-exclusion reason, only under separate explicit owner
+authorization, with independent verification before and after. Do not touch
+the other four preserved rows, do not bulk-action, and do not start Bulk
+Production Cleanup or later roadmap work in that milestone.
 
 ## Continuing constraints
 
