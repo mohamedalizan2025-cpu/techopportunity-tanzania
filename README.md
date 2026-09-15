@@ -19,15 +19,15 @@ Nordic row has now been rejected through the authenticated production Moderator
 path with exact reason, attribution, timestamp, and audit; the other four delta
 rows remain untouched. The Batch 1 expired-calls cleanup, the Batch 2
 EBID pair, and the Batch 3 AWARD single then followed with exact reasons
-and per-record audits. Production holds 249 pending / 8 published / 31
-rejected. A filter-driven sweep plan freezes the 55 furniture rows into 29
-exact select-all cohorts across three tiers (no UI change needed); the
-manual Batch 4 plan is paused. The view-only furniture filter is now live
-in production as a code-only promotion (exact `2cbba5a` content, no
-migration, zero corpus delta); it serves exactly the frozen 55 with zero
-false positives and is temporary — remove it after the cleanup. The exact
-next milestone is the furniture-filter sweep authorization only under
-explicit owner authorization.
+and per-record audits, and the furniture sweep's first confirmation rejected
+50 rows. Production holds 199 pending / 8 published / 81 rejected. The
+bounded legacy-cleanup phase freezes all remaining high-confidence noise
+into 8 reason-homogeneous confirmation groups (furniture remainder plus 7
+new cohorts) with a documented needs-evidence cohort for the rest; the
+manual Batch 4 plan and the 29-cohort Tier plan are superseded. The exact
+next milestone is the ordered legacy-cleanup confirmations only under
+explicit owner authorization, ending with the Discovery Quality Hardening
+gate (no discovery changes during cleanup).
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

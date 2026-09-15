@@ -37,7 +37,7 @@ bounded authorization and verification; this roadmap does not authorize
 implementation or production mutation.
 
 1. **Pending Rejection Attribution Hardening** *(completed 2026-09-14: promoted plus both real pending records resolved with full attribution)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; the authorized Nordic single-record disposition is complete; batch planning complete; Batch 1 expired-calls cleanup complete; Batch 2 EBID pair complete; Batch 3 AWARD complete; filter-driven sweep planned; view-only furniture filter live in production (temporary); sweep authorization next)*
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; the authorized Nordic single-record disposition is complete; batch planning complete; Batch 1 expired-calls cleanup complete; Batch 2 EBID pair complete; Batch 3 AWARD complete; furniture sweep first confirmation done (50 rows); bounded legacy-cleanup phase (8 confirmation groups + needs-evidence cohort) planned, confirmations next)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold

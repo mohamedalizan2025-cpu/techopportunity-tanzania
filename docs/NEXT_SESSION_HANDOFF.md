@@ -1444,23 +1444,110 @@ verified, remove the flag, chip, and title set — or generalize them through
 a separately reviewed milestone. Never extend the frozen set without
 record-by-record review.
 
+## Legacy cleanup bounded phase — planned read-only (all remaining cohorts)
+
+On 2026-09-15 the 199-row pending queue was fully triaged read-only
+(confirmation 1 already rejected 50 furniture rows: 199 pending / 8
+published / 81 rejected). Every cohort below is reason-homogeneous,
+evidence-decisive per row, and executable with existing UI filters —
+each stated filter was proven to return exactly its listed IDs and nothing
+else. Cross-filter ID accumulation inside one shared reason keeps the whole
+phase to 8 owner confirmations for 39 rows; the confirm screen (exact title
+list) is the per-action proof surface alongside the served counts. No cohort
+touches thin-but-plausible, actionable, or evidence-incomplete rows. A full
+phase pre-snapshot is sealed in
+`C:\Users\hp\.tech-opportunity-backups\20260915T130900Z-pqd-legacy-cleanup-phase\`
+(counts 199 / 8 / 81, sole Moderator intact); per-confirmation targeted
+checks plus one final full post snapshot close the phase. No mutation ran.
+
+- **G0 — furniture remainder (5, gate already open).** Furniture filter → 5
+  (`db42c5f4`, `45dccd01`, `a180f81f`, `54d3fc00`, `88809190`). Furniture
+  reason (143 chars, in bounds).
+- **G1 — expired corroborated (3).** `d7139a22` Heirs (deadline 4 Sept),
+  `38bbb7a1` Kenya AI Accelerator (6 Sept), `31f4de3c` Sasol (13 Sept) —
+  each deadline stated in-text. Three exact q-singles, one confirmation.
+  Reason: "Rejected as expired: each listed call's stated application
+  deadline has passed (deadlines 4–13 September 2026), so none remains
+  actionable."
+- **G2 — South-African-excluded (2).** `e7c0a1ac` KPMG Supply Chain,
+  `65323d20` Sanlam — stored eligibility limits to young South African
+  graduates. Two exact q-singles, one confirmation. Reason: "Rejected:
+  documented eligibility is limited to young South African graduates;
+  Tanzanian applicants are excluded."
+- **G3 — Egyptian-excluded (2).** `8b65ce51` + `f507ba2b` Standard Chartered
+  Women in Tech Egypt — stored eligibility limits to young Egyptian
+  entrepreneurs. One exact q-filter (`Standard Chartered` → both, proven),
+  one confirmation. Reason: "Rejected: documented eligibility is limited to
+  young Egyptian entrepreneurs; Tanzanian applicants are excluded."
+- **G4 — Nigerian-excluded (1).** `43e7fb3c` She Leads Africa BoostHer —
+  stored eligibility limits to young Nigerian women entrepreneurs. Exact
+  q-single, one confirmation. Reason: "Rejected: documented eligibility is
+  limited to young Nigerian women entrepreneurs; Tanzanian applicants are
+  excluded."
+- **G5 — stale sidebar stubs (7).** `b9fa44b5` Eagles HOPE 2017, `f03870e0`
+  Pina Bausch 2018, `5ee5c907` IMF 2023, `58977e5e` Global Health Corps
+  2013/14, `2957017e` VINNMER 2015, `3465f88f` WEF 2017, `861aa637` Yale
+  2016 — each names a long-past cohort year and its stored content is a
+  "Listed in:" sidebar capture describing a different programme. Seven exact
+  q-singles, one confirmation. Reason: "Rejected as a stale dated cohort
+  captured as a sidebar listing: the named programme year (2013–2023) has
+  long passed and the stored content does not describe a current call."
+- **G6 — news/event reports (16).** `919939c7` CEBOT showcase, `61962e15`
+  DIT–MIT news, `9a719280` Vision-2050 news, `af619ec8` graduates-challenged
+  news, `6478b4a1` Nanenane exhibition, `ba525b0e` best-employees news,
+  `c10d325e` thesis-congratulations, `aadd93b6` HALOTEL hope, `18b09c22`
+  researchers-awards news, `4a63a1d7` BSU4 progress report, `3412c633`
+  digitalskills article, `27357b80` SUZASO awards news, `c1464c77` NMB
+  partnership, `f543f8cd` MZUMBE meeting, `c2d725f0` hostel meeting,
+  `3d92d20b` SABASABA thanks — each title is face-evidence news, none carries
+  a bounded call. Sixteen exact q-singles, one confirmation. Reason:
+  "Rejected: the row is a news article, event report, or institutional
+  announcement — not a bounded opportunity with an actionable call."
+- **G7 — VETA admin notices (3).** `2e938d33` + `253cdfc3` selection lists,
+  `22c735ef` certificate procedure. Two exact q-filters, one confirmation.
+  Reason: "Rejected: the row is an administrative outcome or procedural
+  notice (selection list / certificate procedure), not an open opportunity."
+
+Needs-evidence cohort (explicitly NOT rejected — genuine/actionable/plausible
+but incomplete): 2025-cycle rows (deadline confirmation required, incl. the
+Fuller pair with noted-but-unverified Asian scope and the raw-URL-titled
+`3d501f94`); Maple; NAFASI vague row; WISE call; transfers; bachelor/diploma
+applications; all NM-AIST programme/research pages (intake-bound review per
+IEM precedent); ministry/company/entity pages; Guidelines; Alumni;
+LearnImpact RFP; Canada nominations; FSDT analytical teasers; OD thin-but-
+real extractions (World Bank, EMA, Kenya AI duplicate note, Anita Hill,
+Defra, Tara's Circle, Tech Policy, Big Ten, Cybersafe, IRE, LASR, Chatham,
+Jobberman, Civic, Frontier, Leon Levy, NTU, Olympic, Intuit, UMAPS/UBC/
+Toronto, Iliad, fai/iaps internships, Nivishe, Democracy, Leaders, Int'l
+Affairs, IIH, NALA, APMF, UNEP, ATRIUM, Global Changemaker, Stanbic, CRDB,
+Volunteer); OFA big-description actionable rows (KAUST, UNU-WIDER ×2, CIFAR
+×2, Leverhulme, Ashoka, Swiss, IRENA, WTO, NALA, ATRIUM, Toronto/ASU/UBC/
+Michigan/Princeton/EJS/UCT/EJS-NextGen, UCT doctoral, EJS series); YUNA
+actionable rows; SUZA/BSU4 misc actionable; DIT misc; VETA admission notice/
+form/short-course list; Schlumberger rows + stubs (probable duplicates of
+stay-out full rows — duplicate review at moderation time); same-day
+deadlines (`d8caf136`, `363cc7cb`, `6db9cabc`); older CFJ duplicate;
+Catalyst/IAIFI/Earhart; ASU/ARC/Leaders eligible rows (review queue, never
+cleanup). Expected end state after all 8 confirmations: 160 pending / 8
+published / 120 rejected, barring legitimate concurrent Discovery growth
+(reconcile, never force counts).
+
 ## Exact next milestone
 
-**Furniture-filter sweep execution (owner-authorized).**
+**Legacy cleanup confirmations (owner-authorized, in this order).**
 
-The view-only `flag=furniture` filter is live in production at exact commit
-`c11a6ba`. The owner is asked to authorize or refuse the documented
-two-confirmation sweep only: open the Furniture filter (55 visible), select
-all, uncheck any 5, confirm 50 with one exact shared reason; then confirm
-the remaining 5 the same way — each step only after confirming the
-served filter shows exactly the documented rows and count, with the
-protected per-batch snapshot and per-record verification contract. The
-single shared reason for both confirmations (evidence-safe for all 55,
-including the six Batch 4 rows): "Rejected: the row holds
-site-navigation, section-header, or page-furniture text captured from an
-institutional page, not a bounded opportunity." No
-furniture rejection runs without that explicit authorization. Removing the
-temporary filter afterwards is a separate reviewed milestone.
+Confirmation 1 (already gated, still open): furniture remainder — Furniture
+filter shows exactly 5, select all, confirm with the exact shared furniture
+reason. Then, only after independent verification of each step: G1 expired
+(3 rows via 3 exact filters, one confirmation), G2 South-African pair, G3
+Egyptian pair, G4 Nigerian single, G5 stale stubs (7 filters), G6 news
+reports (16 filters), G7 VETA admin (2 filters) — each with its exact shared
+reason in the phase section above, each preceded by served-filter proof.
+After the phase verifies clean, stop creating cleanup batches: the following
+milestone is **Discovery Quality Hardening — Queue Admission Gate**, scoped
+to learn from these rejected patterns so the same classes stop entering the
+queue (no discovery changes during cleanup). This handoff authorizes no
+rejection by itself.
 
 ## Continuing constraints
 
