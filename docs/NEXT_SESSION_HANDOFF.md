@@ -826,17 +826,85 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
   moderation action. No real queue item was selected. Discovery cadence, sources,
   taxonomy, National/International, profiles, AI, and later work are unchanged.
 
-## Exact next milestone
+## Exact next milestone — REVIEW COMPLETE (GO)
 
-**Bulk Moderator Actions + Ambiguous Queue Cleanup — Production Promotion Review.**
+**Bulk Moderator Actions + Ambiguous Queue Cleanup — Production Promotion Review:
+GO for the smallest safe production promotion. No production action was taken.**
 
-Conduct a bounded owner go/no-go review of exact capability commit `1645973` and
-the completed staging evidence. Review the exact production target guard, code/
-deployment rollback point, promotion plan, Preview environment-mismatch finding,
-and post-promotion read-only proof. Do not deploy the capability, create production
-fixtures/users, select or clean any real queue record, or begin bulk production
-cleanup during that review unless the owner separately authorizes the exact next
-action. Do not start later roadmap work.
+Review-only verification on 2026-09-15 (no production deployment, mutation,
+fixture, selection, rejection, or cadence/source/taxonomy change):
+
+- Exact delta `3bf8dc1..1645973` is ten files, 781 insertions / 23 deletions,
+  with zero `supabase/`, `.github/`, or `scripts/discovery/` changes and no
+  migration: `app/moderation/page.tsx`, `app/moderation/queue-bulk-panel.tsx`,
+  `lib/data/moderation-actions.ts`, `lib/data/moderation.ts`,
+  `lib/staff-form-state.ts`, `lib/triage-bucket.ts`, `package.json` (bulk test
+  registration only), `scripts/verification/boundaries.ts`,
+  `tests/bulk-moderation.test.ts`, `tests/queue-filter.test.ts` (filter-shape
+  update only). `1645973..HEAD` is docs-only; runtime is identical to `1645973`.
+  `verify:plan -- --base 3bf8dc1` selects only `build` and `moderation-auth`;
+  migration, source-registry, workflow, discovery, qualification, acquisition,
+  alert, and assistant gates are explicitly skipped with no-input reasons.
+- Staging matrix is sufficient for all eight roadmap bullets: served title
+  search narrowed 8 pending to 5, Flagged narrowed to the one news-like Mbuyu
+  fixture; select-all-visible checked/cleared exactly the visible 5 with no
+  hidden selection; manual multi-select rejected exactly Zephyr `...0001` plus
+  Tumaini `...0003` with one 134-character reason; stale-Jabari partial
+  reported exactly `Rejected 1 of 2` with Mbuyu committed under the shared
+  123-character reason and Jabari retained as the listed already-reviewed
+  failure; both audits preserve distinct reasons, the same Moderator
+  `5e20fe54-64ff-41b0-9fa4-1221331c37bb`, and `created_at = decided_at`;
+  anonymous 307/401 and ordinary-user restricted-page/403 plus zero-row direct
+  update left the denial target pending/null-attribution/zero-audit; pending
+  approval, published re-review, and attributed unpublish all regressed cleanly
+  on the same Preview; cleanup restored the exact six-opportunity /
+  nine-reference baseline SHA-256 pair, zero enrichments/users/profiles/saves,
+  signed-out session, zero Preview errors/warnings, `.env.local`
+  `F0165F8ABE79C009985A18CD56EEA2F01599F7227630B45C89297CB34C4DB0F5`
+  byte-for-byte, `staging` at `06155b5`, and no link/credential artifacts.
+  The production-bound bulk-branch Preview `dpl_AQHKAcW6bS2oSeFdd3DqsusEePeU`
+  was correctly abandoned before any selection or mutation.
+- Production compatibility: no migration means the live 0016
+  `reject_pending_opportunity(uuid,text)` RPC, its `anon=false` /
+  `authenticated=true` / `service_role=false` grants, and the exact 0015
+  function definitions are reused unchanged. Bulk invokes that RPC once per
+  ID sequentially with per-row pending re-check, one normalized 10–1000
+  character reason, `bulk-reject` confirm token plus `acknowledge=yes`, max 50
+  rows per batch, independent per-record commits, and no bulk approve, no
+  set-based RPC, no direct update, and no service-role application path.
+  Filters remain view-only hints. Production queue 254 pending fits the
+  existing 500-row explicit cap; 50-row batches bound runtime.
+- Auth/RLS: page plus single and bulk actions all require
+  `getModerationAccess()` over the request-scoped Supabase Auth/RLS client.
+  Local re-verification passed: 33/33 boundaries (including the two bulk
+  invariants), 9/9 bulk-moderation, 30/30 queue-filter, `tsc --noEmit`, and
+  ESLint. Recovery state intact: 12 protected backup directories present,
+  `.env.local` hash re-verified, no `.vercel`/`.supabase` link state, worktree
+  clean, `main`/`origin/main` still `3bf8dc1`, `staging` still `06155b5`.
+- Deployment implication: `package.json` is a Discovery-sync push path, so
+  promotion will start an exact-SHA Discovery sync run as in 0015/0016. Any
+  inserted pending rows must fail closed for separate record-specific review;
+  they are never auto-accepted or auto-rejected by the promotion. Rollback is
+  code-only: redeploy current production deployment `6445415606` (exact SHA
+  `71f4a33`); no database rollback is introduced and existing pre-0016 plus
+  two-record-resolution manifests remain the fallback. Do not erase later
+  legitimate discovery inserts without separate authorization.
+
+Smallest safe production promotion (requires separate explicit owner
+authorization; NOT executed here): fast-forward or cherry-pick exact
+capability `1645973` (ten files only, no docs, no migration, no workflow,
+no source/discovery change) to `main`, then exact-SHA Milestone verification,
+exact-SHA Discovery sync observation with fail-closed insert handling,
+GitHub Production deployment bound to the exact SHA, and read-only
+post-promotion proof (IDs/rows unchanged except fail-closed Discovery delta,
+grants unchanged, homepage/controls 200, anonymous moderation 307, zero
+production moderation actions for proof, no real queue selection).
+
+Next milestone after that promotion: **Bulk Production Cleanup as a separate
+owner-gated milestone** — bounded batches (max 50) of real ambiguous queue
+records with per-batch evidence-based reasons, per-record attribution/audit
+verification, and partial-failure reporting. Do not begin that cleanup here.
+Do not start later roadmap work.
 
 ## Continuing constraints
 

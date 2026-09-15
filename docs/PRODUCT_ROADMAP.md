@@ -37,7 +37,7 @@ bounded authorization and verification; this roadmap does not authorize
 implementation or production mutation.
 
 1. **Pending Rejection Attribution Hardening** *(completed 2026-09-14: promoted plus both real pending records resolved with full attribution)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(staging verified; production-promotion review next)*
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(staging verified; promotion review GO — promotion execution pending separate authorization)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold
@@ -76,8 +76,10 @@ select-all-visible, multi-select, successful and partial bulk rejection,
 per-record attribution/reason/audit, denial boundaries, and all existing
 moderation transitions were proved with disposable records/users. Cleanup
 restored the six-opportunity/nine-reference staging baseline and removed all
-test identities and audits. Production promotion and real-queue cleanup remain
-separate, unauthorized milestones. No priority after 2 was implemented.
+test identities and audits. Production promotion review is GO for exact
+capability `1645973` (ten files, no migration); promotion execution and
+real-queue cleanup remain separate, unauthorized milestones. No priority
+after 2 was implemented.
 
 ## Product Quality & Differentiation direction
 

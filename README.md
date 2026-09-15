@@ -11,8 +11,10 @@ Both real pending records have since been rejected through the authenticated
 Moderator path with exact attributable reasons, one at a time with independent
 verification. Bulk Moderator Actions plus Ambiguous Queue Cleanup is implemented
 at exact capability commit `1645973` and its complete live matrix now passes on
-isolated staging. The exact next milestone is the bounded production-promotion
-review; production remains unchanged at 254 pending / 8 published / 21 rejected.
+isolated staging. The bounded production-promotion review is complete with GO
+for the smallest safe promotion of exact `1645973` (ten files, no migration);
+promotion execution and real-queue cleanup remain separately unauthorized.
+Production remains unchanged at 254 pending / 8 published / 21 rejected.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
