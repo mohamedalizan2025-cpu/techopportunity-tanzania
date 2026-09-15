@@ -1124,6 +1124,32 @@ rules. The credential-pattern scan found zero hits. Temporary verification tooli
 was removed. No Batch 2 or other pending record, deployment, discovery, Auth,
 configuration, or later-roadmap work ran.
 
+## Staff Moderation UX Polish — reconciled, staging Preview gated (branch-only)
+
+The presentational UX implementation at `8a68638` (four UI files only:
+`app/moderation/page.tsx`, `app/moderation/queue-bulk-panel.tsx`,
+`app/moderation/[id]/page.tsx`, `app/published-management/page.tsx`) was
+verified already based on the latest `main` (`8ce5c29`): no rebase was needed
+and no conflict existed. The Batch 1 closure docs (`46de256`, docs-only) sit
+on the same branch on top, so Batch 1 documentation and moderation history
+are preserved intact; the runtime tree equals the verified UX commit
+byte-for-byte. Re-verified on this branch: TypeScript, ESLint, bulk 9/9,
+queue-filter 30/30, review 30/30, re-review 4/4, pending-rejection 7/7,
+published-management 52/52, triage 29/29, 33/33 boundaries, and the Next.js
+16.3.2 production build — no test weakened. No business logic, Auth/RLS,
+schema, RPC, discovery, taxonomy, geography, profile, AI, or production data
+changed; `main` and `origin/main` are untouched and nothing was pushed.
+
+No staging Preview was created: binding one requires staging credentials
+(`.env.local` is production-only and must never drive staging) plus a branch
+push, and the standing precedent proves an unbound branch Preview serves the
+production queue — an unacceptable mismatch while Batch 2 cleanup is active.
+With no browser surface available, a Preview would add risk for zero
+verification value. The gate for a future session: push the UX branch, bind
+the Preview to `pumzofcwfjqswkiwfqty` by public fingerprint before any action
+( abandon it on any production-queue sign, per precedent), then verify queue,
+review, and published-management UX with disposable staging identities only.
+
 ## Exact next milestone
 
 **Bulk Production Cleanup — Batch 2 authorization gate (EBID cross-source pair).**
