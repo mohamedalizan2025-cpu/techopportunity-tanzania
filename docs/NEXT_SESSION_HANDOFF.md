@@ -4,9 +4,9 @@ Updated: 2026-09-15. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- Local repository `main` is SHA
-  `1645973a937981fb4574e1e498a03f57b277c9ba`, in sync with `origin/main`.
-  The runtime source SHA is the same exact capability commit `1645973`, with
+- The last pushed documentation closure before this disposition is
+  `f8d531d` on `origin/main`. The runtime source SHA remains exact capability
+  commit `1645973`, with
   exact-SHA Milestone verification run `34944048614` (success), push Discovery
   sync run `34944048646` (success, 18/18 sources, `insertedPending: 5`),
   Deadline alert evaluation run `34944048667` (success), and GitHub Production
@@ -23,8 +23,8 @@ Updated: 2026-09-15. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   application rollback point. No migration was involved, so no database
   rollback was introduced; the fresh pre-0016 recovery set plus the immutable
   pre-0015 archive and the two-record-resolution manifests remain the
-  fallback. This docs-only closure starts no workflow (`[skip ci]`) and
-  produces only a runtime-identical Vercel deployment.
+  fallback. This disposition changes no runtime source, deployment, migration,
+  workflow, source, or schedule.
 - Production Supabase: `jltuufukcwztugvojwjd`; isolated staging Supabase:
   `pumzofcwfjqswkiwfqty`.
 - M31 is closed; migrations 0013/0014 and the M31 flag remain active. AI remains
@@ -73,9 +73,18 @@ Updated: 2026-09-15. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   the exact SHA with 18/18 sources and `insertedPending: 0` (11 qualified
   candidates, all duplicates skipped; one duplicate-rate health warning only).
   Both real pending production targets were then rejected with full attribution
-  in the Two-Record Resolution below; production is now 254 pending /
-  8 published / 21 rejected / 0 expired = 283 opportunities, 515 references,
+  in the Two-Record Resolution below; at that checkpoint production held
+  254 pending / 8 published / 21 rejected / 0 expired = 283 opportunities,
+  515 references,
   10 enrichments, and 2 status audits.
+- The five-row push delta from Discovery run `34944048646` was reconciled
+  read-only. Under separate explicit authorization, only Nordic Baltic Youth
+  Summit 2026 (`7f4e1806-f041-4960-8525-acd13229fa95`) was rejected through the
+  authenticated production Moderator path because its current eligibility is
+  restricted to Nordic/Baltic residents and excludes Tanzania. Production is
+  now 258 pending / 8 published / 22 rejected / 0 expired = 288 opportunities,
+  521 references, 11 enrichments, and 3 status audits. The other four push-delta
+  records are untouched; Sahara and AAS remain published and M31-compliant.
 - Sources, discovery cadence, taxonomy, geography logic, production Auth, and
   unrelated infrastructure were not changed.
 
@@ -804,7 +813,8 @@ moderation action, no fixture):
   12 qualified candidates (7 OpportunitiesForAfricans, 5 OpportunityDesk),
   7 duplicates skipped, `insertedPending: 5` (all OpportunityDesk).
 - Exact-SHA Deadline alert evaluation `34944048667` succeeded.
-- Production now holds 259 pending / 8 published / 21 rejected / 0 expired =
+- Immediately after the push, production held 259 pending / 8 published /
+  21 rejected / 0 expired =
   288 opportunities, 521 references, 10 enrichments, and 2 status audits. The
   five new pending rows (all `pending`, null attribution, created
   `2026-09-15T07:55:03Z`) are `6fec5039-8e0e-40ba-b32e-5eac94a439e9`,
@@ -837,10 +847,10 @@ and later roadmap work were not changed.
 Discovery run `34944048646` (push, exact SHA `1645973`, 18/18 sources,
 12 qualified, 7 duplicates skipped) inserted five pending rows with six
 canonical references at `2026-09-15T07:55:03Z`. All five were re-read from
-production ref `jltuufukcwztugvojwjd` without mutation. Each remains
-`pending` with null `decided_by`/`decided_at` and its original timestamps;
-production remains 259 pending / 8 published / 21 rejected / 0 expired =
-288 opportunities, 521 references, 10 enrichments, and 2 status audits.
+production ref `jltuufukcwztugvojwjd` without mutation. At that read-only
+checkpoint, each remained `pending` with null `decided_by`/`decided_at` and its
+original timestamps; production held 259 pending / 8 published / 21 rejected /
+0 expired = 288 opportunities, 521 references, 10 enrichments, and 2 status audits.
 Title screens for `Earhart`, `IAIFI`, `Catalyst`, `Nordic`, and `Maple` each
 match only the new row itself: no duplicate of any existing corpus record.
 All five came through the mechanical pending-only path (one row, canonical
@@ -892,17 +902,71 @@ Disposition matrix (findings only; no approval, rejection, or cleanup ran):
 The push delta is **accepted** as legitimate mechanical Discovery growth:
 pending-only inserts with intact prior rows, references, attributions, and
 audits — no incident, unlike the earlier two-record delta. Acceptance covers
-growth mechanics only; no record is accepted as publication-ready and all
-five remain pending. The missed-schedule signal (`34944048624`, nominal
+growth mechanics only; no record was accepted as publication-ready and all
+five remained pending at that checkpoint. The later Nordic disposition is
+documented below. The missed-schedule signal (`34944048624`, nominal
 `2026-09-14T21:00Z` slot) is preserved unchanged: this milestone alters no
 schedule, workflow, discovery, cadence, or threshold.
+
+## Five-row Discovery delta — Nordic single-record disposition completed
+
+The owner explicitly authorized rejection of only
+`7f4e1806-f041-4960-8525-acd13229fa95` (Nordic Baltic Youth Summit 2026) through
+the authenticated production Moderator path. Before mutation, independent guards
+bound `.env.local`, its service credential, and the served application to production
+ref `jltuufukcwztugvojwjd`. The exact row was still pending with null attribution,
+one reference, and no status audit; the other four run-`34944048646` rows were also
+pending and untouched. Production was 288 opportunities / 521 references /
+10 enrichments at 259 pending / 8 published / 21 rejected / 0 expired. Sahara and
+AAS were published and satisfied the M31 contract.
+
+The stored description and served review form both restrict applicants to residents
+of Denmark, Estonia, the Faroe Islands, Finland, Greenland, Iceland, Latvia,
+Lithuania, Norway, Sweden, and Åland. A same-day recheck of the official Nordic
+Baltic Youth Summit [application page](https://www.nordicbalticyouthsummit.com/)
+returned the same exhaustive residency requirement, so Tanzania remains excluded.
+The served exact-title filter showed one of 259 pending;
+the record's public detail route returned 404. A protected pre-change snapshot of
+all opportunity, reference, and enrichment rows plus the exact target/reference was
+created before the action.
+
+The Moderator rejected that one row at
+`2026-09-15T08:19:40.930778Z` with this exact 200-character reason:
+
+> Rejected because documented eligibility is limited to residents of Denmark,
+> Estonia, the Faroe Islands, Finland, Greenland, Iceland, Latvia, Lithuania,
+> Norway, Sweden, and Åland; Tanzania is excluded.
+
+The database derived sole Moderator
+`1caee695-3a00-43e7-85a4-79db4067ba0d` and the decision timestamp. Exactly one
+`moderator-rejection` audit records the target ID, `pending → rejected`, the same
+actor, verbatim reason, and `created_at = decided_at`. The opportunity retained its
+complete discovered data and its one reference. Full post-action comparison proves
+all other 287 opportunity rows byte-identical (non-target SHA-256 before/after
+`ec5869787c2e7feb4c07ae77598716ddad8d7bf49b14959283a974ed805d89a8`)
+and all 521 reference rows byte-identical (SHA-256 before/after
+`b85647e98289aec783eaf0a70f2533a8238843697d4bd1ee323752ae0b858e24`).
+The other four push-delta records remain exactly unchanged and pending. Sahara and
+AAS remain byte-identical, published, M31-compliant, and publicly served with HTTP
+200. The exact-title queue filter now shows zero of 258 pending and the rejected
+record's public route remains 404.
+
+Final production is 288 opportunities / 521 references / 11 enrichments at
+258 pending / 8 published / 22 rejected / 0 expired, with three status audits.
+Protected pre/post snapshots and the machine-readable comparison are outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260915T081312Z-pqd-nordic-disposition\`.
+Its nine files total 1,572,298 bytes; manifest SHA-256 is
+`4a77ae46fb2c1be56ec1a1ed796ba481364e446666ed4a3caa7a5ac57753fdd3`,
+ACL inheritance is disabled, and its credential-pattern scan found zero hits.
+Temporary verification tooling was removed. No bulk action, other queue mutation,
+deployment, Auth/configuration change, discovery change, or later roadmap work ran.
 
 ## Ordered near-term roadmap
 
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
 1. **Pending Rejection Attribution Hardening** *(promoted and both real pending records resolved with full attribution; closed)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production as exact `1645973` on 2026-09-15; five-row push delta preserved for reconciliation; real-queue cleanup not started)*
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted as exact `1645973`; the authorized Nordic single-record disposition is complete; ambiguous-queue batch planning next)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold
@@ -920,14 +984,15 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 
 ## Exact next milestone
 
-**Single-record disposition of the Tanzania-excluded Nordic row (owner-gated).**
+**Bulk Production Cleanup — Ambiguous Queue Batch Planning.**
 
-Reject `7f4e1806-f041-4960-8525-acd13229fa95` (Nordic Baltic Youth Summit
-2026) one time through the authenticated Moderator path with an exact
-attributable Tanzania-exclusion reason, only under separate explicit owner
-authorization, with independent verification before and after. Do not touch
-the other four preserved rows, do not bulk-action, and do not start Bulk
-Production Cleanup or later roadmap work in that milestone.
+Plan only: measure the current ambiguous/weak-evidence queue, define the smallest
+reviewable reason-homogeneous first cohort with frozen exact IDs, document evidence
+and false-positive checks, prepare recovery/rollback and per-record verification,
+and return an explicit owner authorization gate. Do not execute any bulk or
+single-record production moderation action during planning. Do not change discovery,
+sources, cadence, taxonomy, National/International, profiles, AI, or later roadmap
+work.
 
 ## Continuing constraints
 

@@ -37,7 +37,7 @@ bounded authorization and verification; this roadmap does not authorize
 implementation or production mutation.
 
 1. **Pending Rejection Attribution Hardening** *(completed 2026-09-14: promoted plus both real pending records resolved with full attribution)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; five-row push delta preserved for reconciliation; real-queue cleanup not started)*
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; the authorized Nordic single-record disposition is complete; ambiguous-queue batch planning next)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold
@@ -72,11 +72,15 @@ Priority 1 is closed.
 Priority 2 is implemented at exact capability commit `1645973`, verified on
 isolated staging, reviewed GO, and promoted to production on 2026-09-15 with
 no production moderation action. The push Discovery run inserted five pending
-records (six references), preserved untouched. Read-only reconciliation
-accepts the delta as legitimate mechanical growth with no corruption and
-recommends later rejection of only the Tanzania-excluded Nordic row under
-separate authorization. Real-queue cleanup remains a separate, unauthorized
-milestone. No later priority was implemented.
+records (six references). Read-only reconciliation accepted the delta as
+legitimate mechanical growth with no corruption and recommended rejection of
+only the Tanzania-excluded Nordic row. That one record was subsequently rejected
+through the authenticated production Moderator path with a 200-character reason,
+exact actor/time/audit, and its reference preserved; all other 287 opportunities,
+all 521 references, and the other four delta rows remained unchanged. Production
+is 258 pending / 8 published / 22 rejected with 3 status audits. The exact next
+milestone is bounded planning for ambiguous-queue cleanup; no broad cleanup or
+later priority was implemented.
 
 ## Product Quality & Differentiation direction
 

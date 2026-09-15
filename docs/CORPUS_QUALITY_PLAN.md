@@ -770,6 +770,36 @@ with the frozen pre-resolution manifest
 as the exact rollback baseline. This closes the promotion-push corpus delta;
 bulk moderation and later roadmap work remain separately authorized.
 
+### Five-row Discovery delta — Nordic disposition completed
+
+Discovery run `34944048646` inserted five legitimate mechanical pending rows and
+six references. Read-only reconciliation found four worth retaining for stronger
+evidence review and one exact Tanzania-excluded record. Under separate explicit
+authorization, only Nordic Baltic Youth Summit 2026
+(`7f4e1806-f041-4960-8525-acd13229fa95`) was rejected through the authenticated
+production Moderator UI at `2026-09-15T08:19:40.930778Z`.
+
+The stored/served evidence and a same-day recheck of the official summit
+[application page](https://www.nordicbalticyouthsummit.com/) agree that applicants
+must reside in Denmark, Estonia, the Faroe Islands, Finland, Greenland, Iceland,
+Latvia, Lithuania, Norway, Sweden, or Åland. The exact 200-character rejection
+reason states that bounded evidence and Tanzania's exclusion. The resulting row and
+single `moderator-rejection` audit carry sole Moderator
+`1caee695-3a00-43e7-85a4-79db4067ba0d`, matching decision timestamps, and the
+verbatim reason.
+
+All 521 reference rows remain byte-identical, including the target's reference.
+All other 287 opportunities are byte-identical; specifically, Catalyst, Maple,
+IAIFI, and Earhart remain pending with their original timestamps and null
+attribution. Sahara and AAS remain unchanged, published, and M31-compliant. Final
+production is 288 opportunities at 258 pending / 8 published / 22 rejected /
+0 expired, with 11 enrichments and 3 status audits. Protected pre/post evidence is
+at `C:\Users\hp\.tech-opportunity-backups\20260915T081312Z-pqd-nordic-disposition\`
+(manifest SHA-256
+`4a77ae46fb2c1be56ec1a1ed796ba481364e446666ed4a3caa7a5ac57753fdd3`).
+No bulk action or other queue cleanup ran. The next milestone is planning only for
+the first bounded ambiguous-queue cleanup cohort.
+
 ### Batch 3 — salvage priority pending rows
 
 - Review the 34 potentially qualifying rows before spending effort on likely noise.
@@ -817,8 +847,10 @@ reference, and audit manifest plus sequential post-change reports. Follow
 
 ## Explicit non-goals
 
-Apart from the completed, explicitly authorized Batch 1 status transitions and
-Batch 2B1 two-record trust re-review, this plan does not authorize further corpus
-mutation or any deletion, source activation or deactivation, schema/category change,
-National/International UI, schedule change, migration-history repair, AI,
-infrastructure, Auth, Vercel, or Supabase configuration change.
+Apart from the completed, explicitly authorized Batch 1 status transitions,
+Batch 2B1 two-record trust re-review, attributed two-record rejection, and Nordic
+single-record rejection documented above, this plan does not authorize further
+corpus mutation or any deletion, source activation or deactivation,
+schema/category change, National/International UI, schedule change,
+migration-history repair, AI, infrastructure, Auth, Vercel, or Supabase
+configuration change.

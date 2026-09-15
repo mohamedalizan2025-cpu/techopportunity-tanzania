@@ -38,7 +38,9 @@ or modifies the baseline:
 - Two-record resolution preflight (frozen pre-change manifest):
   `C:\Users\hp\.tech-opportunity-backups\20260914T202546Z-pqd-two-record-preflight\`; and
 - Two-record resolution completion evidence:
-  `C:\Users\hp\.tech-opportunity-backups\20260914T205438Z-pqd-two-record-resolution\`.
+  `C:\Users\hp\.tech-opportunity-backups\20260914T205438Z-pqd-two-record-resolution\`; and
+- Nordic single-record disposition pre/post evidence:
+  `C:\Users\hp\.tech-opportunity-backups\20260915T081312Z-pqd-nordic-disposition\`.
 
 The resolution directory preserves post-record-1 and post-record-2 full
 opportunity/reference snapshots, the machine-readable verification report, and
@@ -51,6 +53,16 @@ as the exact rollback baseline: restore each target's status/attribution/
 timestamps and delete its single audit row, only under separate owner
 authorization. ACL inheritance is disabled on both and retained text evidence
 has zero credential-pattern hits.
+
+The Nordic disposition directory preserves complete ordered pre/post snapshots of
+all 288 opportunities, 521 references, and the enrichment/audit table, plus the
+exact pre-change target/reference and machine-readable comparison. Its nine files
+total 1,572,298 bytes; `manifest.json` SHA-256 is
+`4a77ae46fb2c1be56ec1a1ed796ba481364e446666ed4a3caa7a5ac57753fdd3`.
+ACL inheritance is disabled and its credential-pattern scan found zero hits. The
+pre-change files are the exact bounded recovery point for the one Nordic status,
+attribution, timestamp, and audit transition; any restoration requires separate
+record-specific owner authorization.
 
 The pending-rejection production directory is the database rollback point for
 migration 0016. It preserves public-schema plain/custom dumps with parseable

@@ -14,11 +14,12 @@ to production at exact capability commit `1645973` (ten files, no migration;
 GitHub Production deployment `6454270624`); no production moderation action
 was used for proof. The push Discovery run inserted five pending records and
 six references; read-only reconciliation accepts the delta as legitimate
-mechanical growth (all pending-only, no corruption) while recommending later
-rejection of only the Tanzania-excluded Nordic row under separate
-authorization. The exact next milestone is that single-record disposition;
-production holds 259 pending / 8 published / 21 rejected with both prior
-decisions fully audited.
+mechanical growth (all pending-only, no corruption). The one Tanzania-excluded
+Nordic row has now been rejected through the authenticated production Moderator
+path with exact reason, attribution, timestamp, and audit; the other four delta
+rows remain untouched. Production holds 258 pending / 8 published / 22 rejected.
+The exact next milestone is Bulk Production Cleanup — Ambiguous Queue Batch
+Planning.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
