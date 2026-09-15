@@ -800,6 +800,38 @@ at `C:\Users\hp\.tech-opportunity-backups\20260915T081312Z-pqd-nordic-dispositio
 No bulk action or other queue cleanup ran. The next milestone is planning only for
 the first bounded ambiguous-queue cleanup cohort.
 
+### Bulk Production Cleanup — expired-calls Batch 1 completed
+
+Under separate explicit owner authorization, only the six frozen expired-call rows
+(`93519585-8b2d-467a-ab1b-d93f45058c3b`,
+`d3ffb857-63f3-4c53-96af-f59d5d8e8788`,
+`38a7ef5c-be94-4148-9815-4ee477dc86ce`,
+`8545c0ab-cfef-4da2-a6ab-480111995010`,
+`937caef1-8ff3-4b97-9d05-52e20ae508f2`, and
+`d9b1097c-dd1c-402a-b2db-121a98ed2fe0`) were rejected through the authenticated
+production Moderator bulk workflow. Preflight and served-route review independently
+confirmed each was still pending and its explicitly stated 6–13 September 2026
+deadline had passed by 15 September.
+
+The exact shared reason was applied record by record:
+`Rejected as expired: each listed call's stated application deadline has passed
+(deadlines 6–13 September 2026), so none remains actionable.` Each row has sole-
+Moderator attribution and exactly one matching `moderator-rejection` audit with
+audit `created_at = decided_at`. Full comparison proves only the four authorized
+decision fields changed on the six targets, all 282 non-target opportunities and
+all 521 references are byte-identical, and every target row/reference remains
+present. Final production is 288 opportunities / 521 references / 17 enrichments:
+252 pending / 8 published / 28 rejected / 0 expired, with nine status audits.
+All rejected routes are hidden, queue count is 252, application health is green,
+and Sahara/AAS remain published and M31-compliant.
+
+Protected evidence is at
+`C:\Users\hp\.tech-opportunity-backups\20260915T085002Z-pqd-bulk-cleanup-batch1-expired\`
+(nine files, 1,616,554 bytes; manifest SHA-256
+`c69f4e38baf7d6b60d99660d760af280dbc1c3927f9212ab5203b505e4d89ec3`; zero
+credential-pattern hits). Batch 2 was not touched. The exact next milestone is the
+separate owner authorization gate for the two frozen EBID cross-source rows.
+
 ### Batch 3 — salvage priority pending rows
 
 - Review the 34 potentially qualifying rows before spending effort on likely noise.
@@ -847,10 +879,10 @@ reference, and audit manifest plus sequential post-change reports. Follow
 
 ## Explicit non-goals
 
-Apart from the completed, explicitly authorized Batch 1 status transitions,
-Batch 2B1 two-record trust re-review, attributed two-record rejection, and Nordic
-single-record rejection documented above, this plan does not authorize further
-corpus mutation or any deletion, source activation or deactivation,
+Apart from the completed, explicitly authorized test-artifact Batch 1 status
+transitions, Batch 2B1 two-record trust re-review, attributed two-record rejection,
+Nordic single-record rejection, and expired-calls Batch 1 documented above, this
+plan does not authorize further corpus mutation or any deletion, source activation or deactivation,
 schema/category change, National/International UI, schedule change,
 migration-history repair, AI, infrastructure, Auth, Vercel, or Supabase
 configuration change.

@@ -40,7 +40,9 @@ or modifies the baseline:
 - Two-record resolution completion evidence:
   `C:\Users\hp\.tech-opportunity-backups\20260914T205438Z-pqd-two-record-resolution\`; and
 - Nordic single-record disposition pre/post evidence:
-  `C:\Users\hp\.tech-opportunity-backups\20260915T081312Z-pqd-nordic-disposition\`.
+  `C:\Users\hp\.tech-opportunity-backups\20260915T081312Z-pqd-nordic-disposition\`; and
+- expired-calls cleanup Batch 1 pre/post evidence:
+  `C:\Users\hp\.tech-opportunity-backups\20260915T085002Z-pqd-bulk-cleanup-batch1-expired\`.
 
 The resolution directory preserves post-record-1 and post-record-2 full
 opportunity/reference snapshots, the machine-readable verification report, and
@@ -63,6 +65,17 @@ ACL inheritance is disabled and its credential-pattern scan found zero hits. The
 pre-change files are the exact bounded recovery point for the one Nordic status,
 attribution, timestamp, and audit transition; any restoration requires separate
 record-specific owner authorization.
+
+The expired-calls Batch 1 directory preserves complete ordered pre/post snapshots
+of all 288 opportunities, 521 references, and the enrichment/audit table, plus the
+six exact pre-change targets and machine-readable verification. Its nine files
+total 1,616,554 bytes; `manifest.json` SHA-256 is
+`c69f4e38baf7d6b60d99660d760af280dbc1c3927f9212ab5203b505e4d89ec3`.
+The directory ACL disables inheritance and grants Full Control only to the owner,
+`SYSTEM`, and local `Administrators`; its credential-pattern scan found zero hits.
+The pre-change snapshots are the exact bounded recovery point for the six status,
+attribution, timestamp, and audit transitions. Restoration would require separate
+owner authorization and must not affect any non-target row or reference.
 
 The pending-rejection production directory is the database rollback point for
 migration 0016. It preserves public-schema plain/custom dumps with parseable

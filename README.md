@@ -17,10 +17,11 @@ six references; read-only reconciliation accepts the delta as legitimate
 mechanical growth (all pending-only, no corruption). The one Tanzania-excluded
 Nordic row has now been rejected through the authenticated production Moderator
 path with exact reason, attribution, timestamp, and audit; the other four delta
-rows remain untouched. Production holds 258 pending / 8 published / 22 rejected.
-The exact next milestone is the Batch 1 authorization gate: bulk-reject six
-frozen expired rows with one shared expiry reason only under explicit owner
-authorization.
+rows remain untouched. The separately authorized Batch 1 bulk cleanup then rejected
+only the six frozen expired calls, with the exact shared reason and a separate
+attributed audit per record. Production holds 252 pending / 8 published / 28
+rejected. The exact next milestone is the Batch 2 authorization gate for the two
+frozen EBID cross-source rows; no Batch 2 mutation is authorized yet.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

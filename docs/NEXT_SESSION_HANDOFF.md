@@ -4,8 +4,8 @@ Updated: 2026-09-15. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- The last pushed documentation closure before this disposition is
-  `f8d531d` on `origin/main`. The runtime source SHA remains exact capability
+- The remote documentation baseline before this batch is
+  `8ce5c29` on `origin/main`. The runtime source SHA remains exact capability
   commit `1645973`, with
   exact-SHA Milestone verification run `34944048614` (success), push Discovery
   sync run `34944048646` (success, 18/18 sources, `insertedPending: 5`),
@@ -23,8 +23,9 @@ Updated: 2026-09-15. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   application rollback point. No migration was involved, so no database
   rollback was introduced; the fresh pre-0016 recovery set plus the immutable
   pre-0015 archive and the two-record-resolution manifests remain the
-  fallback. This disposition changes no runtime source, deployment, migration,
-  workflow, source, or schedule.
+  fallback. This batch changes no runtime source, deployment, migration,
+  workflow, source, or schedule; it changes only the six authorized production
+  decisions and their transaction-bound audits.
 - Production Supabase: `jltuufukcwztugvojwjd`; isolated staging Supabase:
   `pumzofcwfjqswkiwfqty`.
 - M31 is closed; migrations 0013/0014 and the M31 flag remain active. AI remains
@@ -82,9 +83,15 @@ Updated: 2026-09-15. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   Summit 2026 (`7f4e1806-f041-4960-8525-acd13229fa95`) was rejected through the
   authenticated production Moderator path because its current eligibility is
   restricted to Nordic/Baltic residents and excludes Tanzania. Production is
-  now 258 pending / 8 published / 22 rejected / 0 expired = 288 opportunities,
+  then 258 pending / 8 published / 22 rejected / 0 expired = 288 opportunities,
   521 references, 11 enrichments, and 3 status audits. The other four push-delta
   records are untouched; Sahara and AAS remain published and M31-compliant.
+- Under a new, separate authorization, only the six frozen expired-call Batch 1
+  rows were rejected through one authenticated Moderator bulk action after every
+  state/evidence gate passed. Production is now 252 pending / 8 published / 28
+  rejected / 0 expired = 288 opportunities, 521 references, 17 enrichments, and
+  9 status audits. Every non-target opportunity and every reference is unchanged;
+  the exact result and recovery proof are documented below.
 - Sources, discovery cadence, taxonomy, geography logic, production Auth, and
   unrelated infrastructure were not changed.
 
@@ -966,7 +973,7 @@ deployment, Auth/configuration change, discovery change, or later roadmap work r
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
 1. **Pending Rejection Attribution Hardening** *(promoted and both real pending records resolved with full attribution; closed)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted as exact `1645973`; the authorized Nordic single-record disposition is complete; ambiguous-queue batch planning next)*
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted as exact `1645973`; the Nordic disposition and six-row expired-calls Batch 1 are complete; Batch 2 awaits separate authorization)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold
@@ -1058,17 +1065,77 @@ anonymous moderation 307). No application rejected→pending path exists, so
 rollback is a separate owner-authorized DB-level status restoration from the
 pre-batch snapshot plus audit deletion (Batch 1 precedent).
 
+## Bulk Production Cleanup — Batch 1 expired calls completed
+
+On 2026-09-15, the owner explicitly authorized only the six frozen expired-call
+IDs above and the exact 139-character shared reason. A fail-closed preflight bound
+to production ref `jltuufukcwztugvojwjd` independently confirmed that all six exact
+rows were still `pending`, had null decision attribution, one preserved reference
+and zero status audits, and exposed deadlines of 6, 8, 8, 8, 12, and 13 September
+2026. Every deadline preceded the 15 September verification date and was also
+stated explicitly in the stored description. No workflow was in progress.
+
+Computer Use then verified each exact served Moderator review route, selected the
+six records individually while leaving `Select all visible (258)` unchecked, and
+armed `Review bulk rejection (6)`. The final confirmation named only the six frozen
+titles and contained verbatim:
+
+> Rejected as expired: each listed call's stated application deadline has passed
+> (deadlines 6–13 September 2026), so none remains actionable.
+
+The authenticated Moderator bulk workflow reported `Rejected 6 records` with no
+partial failure. Per-record decisions and their matching `moderator-rejection`
+audits were written at:
+
+| Exact opportunity ID | Decision/audit time (UTC) |
+|---|---|
+| `93519585-8b2d-467a-ab1b-d93f45058c3b` | `2026-09-15T09:39:07.708766Z` |
+| `d3ffb857-63f3-4c53-96af-f59d5d8e8788` | `2026-09-15T09:39:08.120225Z` |
+| `38a7ef5c-be94-4148-9815-4ee477dc86ce` | `2026-09-15T09:39:08.686380Z` |
+| `8545c0ab-cfef-4da2-a6ab-480111995010` | `2026-09-15T09:39:09.058679Z` |
+| `937caef1-8ff3-4b97-9d05-52e20ae508f2` | `2026-09-15T09:39:09.435981Z` |
+| `d9b1097c-dd1c-402a-b2db-121a98ed2fe0` | `2026-09-15T09:39:09.826356Z` |
+
+Each row is `rejected`, carries the sole authenticated Moderator actor, retains the
+verbatim shared reason in exactly one audit, and has `created_at = decided_at` for
+that audit. Full 37-column comparison proves that each target changed only
+`status`, `decided_by`, `decided_at`, and `updated_at`; every one of the other 282
+opportunities is byte-identical. All 521 reference rows are byte-identical, so each
+target row and its one reference are preserved. Exactly six audit rows were added.
+Production is now 288 opportunities / 521 references / 17 enrichments at 252
+pending / 8 published / 28 rejected / 0 expired, with nine status audits.
+
+The served queue shows `Select all visible (252)` and the six-record success
+receipt. Each rejected public route returns 404, the homepage returns 200, and
+anonymous `/moderation` returns 307 to sign-in. Sahara and AAS remain publicly
+served, byte-identical, published, and M31-compliant. The unchanged non-target
+opportunity SHA-256 is
+`de71dfb89cfe57ef04d0a144d087ac53e846eebd4ee4253c7a6c7e683686395a`;
+the unchanged references SHA-256 is
+`b85647e98289aec783eaf0a70f2533a8238843697d4bd1ee323752ae0b858e24`.
+
+Protected pre/post recovery evidence is outside Git at
+`C:\Users\hp\.tech-opportunity-backups\20260915T085002Z-pqd-bulk-cleanup-batch1-expired\`.
+Its nine files total 1,616,554 bytes; `manifest.json` SHA-256 is
+`c69f4e38baf7d6b60d99660d760af280dbc1c3927f9212ab5203b505e4d89ec3`.
+ACL inheritance is disabled at the directory and only the owner, `SYSTEM`, and
+local `Administrators` have Full Control; all child files inherit those same three
+rules. The credential-pattern scan found zero hits. Temporary verification tooling
+was removed. No Batch 2 or other pending record, deployment, discovery, Auth,
+configuration, or later-roadmap work ran.
+
 ## Exact next milestone
 
-**Bulk Production Cleanup — Batch 1 authorization gate (expired calls).**
+**Bulk Production Cleanup — Batch 2 authorization gate (EBID cross-source pair).**
 
-The owner is asked to authorize or refuse exactly this: bulk-reject the six
-frozen expired rows (`93519585`, `d3ffb857`, `38a7ef5c`, `8545c0ab`,
-`937caef1`, `d9b1097c`) in one Moderator batch with the exact proposed
-shared expiry reason, after independently confirming each stated deadline on
-its served review route, with the per-batch snapshot/verification/rollback
-protocol above. Batches 2–4 and every stay-out row wait for later gates. No
-moderation action runs without that explicit authorization.
+The owner is asked to authorize or refuse exactly the frozen two-row EBID cohort:
+`346c2d6a-e825-49c6-90e7-f34413216493` and
+`e129c166-d20e-4536-a3e4-bc8a95de9763`. Before any mutation, re-confirm that both
+remain pending and that their served evidence still requires ECOWAS Member State
+citizenship, excluding Tanzania. If authorized, use the exact documented shared
+reason and the same protected per-batch verification/recovery contract. Batch 3,
+Batch 4, every stay-out row, and all later roadmap work remain outside scope. This
+handoff does not itself authorize either Batch 2 rejection.
 
 ## Continuing constraints
 

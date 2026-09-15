@@ -37,7 +37,7 @@ bounded authorization and verification; this roadmap does not authorize
 implementation or production mutation.
 
 1. **Pending Rejection Attribution Hardening** *(completed 2026-09-14: promoted plus both real pending records resolved with full attribution)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; the authorized Nordic single-record disposition is complete; batch planning complete — Batch 1 of six expired rows awaits owner authorization)*
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; the Nordic disposition and six-row expired-calls Batch 1 are complete; Batch 2 awaits a separate owner authorization)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold
@@ -78,9 +78,15 @@ only the Tanzania-excluded Nordic row. That one record was subsequently rejected
 through the authenticated production Moderator path with a 200-character reason,
 exact actor/time/audit, and its reference preserved; all other 287 opportunities,
 all 521 references, and the other four delta rows remained unchanged. Production
-is 258 pending / 8 published / 22 rejected with 3 status audits. The exact next
-milestone is bounded planning for ambiguous-queue cleanup; no broad cleanup or
-later priority was implemented.
+was 258 pending / 8 published / 22 rejected with 3 status audits after the Nordic
+disposition. The separately authorized expired-calls Batch 1 then rejected only
+its six frozen pending rows through the authenticated Moderator bulk workflow.
+Each received the exact shared reason, sole-Moderator attribution, matching
+decision/audit timestamps, and one `moderator-rejection` audit; all target
+rows/references and every non-target row were preserved. Production is now 252
+pending / 8 published / 28 rejected with 9 status audits. The exact next milestone
+is the Batch 2 authorization gate for the frozen EBID cross-source pair; no Batch 2
+or later-priority mutation is authorized.
 
 ## Product Quality & Differentiation direction
 
