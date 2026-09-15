@@ -1,26 +1,30 @@
 # Current engineering handoff
 
-Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-15. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
 ## Current verified state
 
 - Local repository `main` is SHA
-  `66253ee9b6b7682027d0bba99425eb79cce202ae`, in sync with `origin/main`.
-  The runtime source SHA is exact capability commit `71f4a33`, with exact-SHA
-  Milestone verification run `34890838451`, push Discovery sync run
-  `34890838498` (`insertedPending: 0`), and GitHub Production deployment
-  `6445415606` (immutable URL
+  `1645973a937981fb4574e1e498a03f57b277c9ba`, in sync with `origin/main`.
+  The runtime source SHA is the same exact capability commit `1645973`, with
+  exact-SHA Milestone verification run `34944048614` (success), push Discovery
+  sync run `34944048646` (success, 18/18 sources, `insertedPending: 5`),
+  Deadline alert evaluation run `34944048667` (success), and GitHub Production
+  deployment `6454270624` (immutable URL
+  `https://techopportunity-tanzania-ldfkpt53l-techopportunity.vercel.app`,
+  state success at `2026-09-15T07:54:09Z`) all correlated to it. Discovery
+  schedule health run `34944048624` for the same push failed with a
+  missed-slot signal (nominal `2026-09-14T21:00Z` slot, 8.21h observed gap);
+  it is recorded below as a schedule-delivery health signal, not a promotion
+  defect. The prior runtime source SHA was exact capability commit `71f4a33`
+  (GitHub Production deployment `6445415606`, immutable URL
   `https://techopportunity-tanzania-74yru14iv-techopportunity.vercel.app`,
-  state success at `2026-09-14T20:06:17Z`) all correlated to it. The docs-only
-  push of `11f100a` and this docs-only closure both started no workflow
-  (`[skip ci]`); each produced only a runtime-identical Vercel deployment. The prior promoted
-  runtime source SHA was
-  `07b6f407561b9539cdceccc626a5759a47693824`, whose capability delta is exact
-  commit `45508956c365911853c3e681e712b0ba53106f23`. The pre-0016 application
-  rollback point was Ready docs-only deployment
-  `dpl_6CiJ5sauLKo3YCA7e9no8TN6g6N3` (same runtime as `07b6f40`); the database
-  rollback point is the fresh pre-0016 recovery set below plus the immutable
-  pre-0015 archive.
+  state success at `2026-09-14T20:06:17Z`), which remains the preserved
+  application rollback point. No migration was involved, so no database
+  rollback was introduced; the fresh pre-0016 recovery set plus the immutable
+  pre-0015 archive and the two-record-resolution manifests remain the
+  fallback. This docs-only closure starts no workflow (`[skip ci]`) and
+  produces only a runtime-identical Vercel deployment.
 - Production Supabase: `jltuufukcwztugvojwjd`; isolated staging Supabase:
   `pumzofcwfjqswkiwfqty`.
 - M31 is closed; migrations 0013/0014 and the M31 flag remain active. AI remains
@@ -738,12 +742,102 @@ attribution and one reference each; Sahara and AAS remain published controls.
   (`2dd4cc9359e0805d9a01a6f3c2e43963ab55ec59d0da301b6e6a8cba79bbf255`)
   remains the exact rollback baseline.
 
+## Bulk Moderator Actions — staging verified, review GO (incorporated)
+
+Exact capability commit `1645973` (parent `3bf8dc1` = pre-promotion `main`)
+holds ten files and no migration, workflow, source, discovery, taxonomy,
+cadence, geography, profile, or AI change: `app/moderation/page.tsx`,
+`app/moderation/queue-bulk-panel.tsx`, `lib/data/moderation-actions.ts`,
+`lib/data/moderation.ts`, `lib/staff-form-state.ts`, `lib/triage-bucket.ts`,
+`package.json` (bulk test registration only),
+`scripts/verification/boundaries.ts`, `tests/bulk-moderation.test.ts`, and
+`tests/queue-filter.test.ts` (filter-shape update only). Bulk rejection is a
+bounded orchestration over the existing single-record
+`reject_pending_opportunity(uuid,text)` RPC: one normalized 10–1000 character
+reason fans out to at most 50 visible pending IDs, each re-checked pending
+and committed independently with its own Moderator attribution, timestamp,
+and trigger-written audit; stale rows fail per-record without rolling back
+successes. There is no bulk approve, no set-based RPC, no direct update, and
+no service-role application path. Search and `flag=ambiguous` filters are
+view-only hints reusing the labeled triage buckets.
+
+Isolated staging Preview `dpl_ADhgUb2ayrWBgVexxmwkBiG6uG2v` (bound to
+`pumzofcwfjqswkiwfqty` by public fingerprint before any action; the
+production-bound bulk-branch Preview was abandoned before any selection)
+proved served search narrowing, Flagged narrowing, select-all-visible scope,
+manual multi-select success with one shared reason, one-success/one-stale
+partial failure with distinct per-record audits, anonymous/ordinary-user
+denial, and unchanged pending-approval, published re-review, and attributed
+unpublish paths. Exact-ID cleanup restored the six-opportunity /
+nine-reference baseline hashes with zero errors/warnings. Local gates passed:
+33/33 boundaries, bulk and queue-filter suites, TypeScript, ESLint, and the
+production build. The bounded promotion review returned GO for this exact
+delta. No production action was taken during review.
+
+## Bulk Moderator Actions — production promoted, five-row push delta preserved
+
+The owner explicitly authorized promotion of the already-reviewed exact
+capability `1645973` only, with no real bulk rejection or queue cleanup.
+
+Pre-promotion guard independently bound production ref `jltuufukcwztugvojwjd`
+and found the expected baseline: 254 pending / 8 published / 21 rejected /
+0 expired = 283 opportunities, 515 references, 10 enrichments, and 2 status
+audits (opportunity ID-set SHA-256
+`88ea863e564cb29ac674eb2b05cffa05114f89409e2db12f0e1c3d51be6015b1`,
+reference ID-set SHA-256
+`02b2477ffd27d1a491322e55e9d11f9f426a0c634e32d6c83c6f9c44112c73ad`).
+Exact ancestry `3bf8dc1..1645973` held ten files with zero `supabase/`,
+`.github/`, or `scripts/discovery/` changes. Local `verify:boundaries`
+(33/33) and `npm run build` (Next.js 16.3.2) passed at the exact SHA before
+the fast-forward push of `main` to `1645973`.
+
+Post-promotion proof (read-only; no Moderator session, no bulk or single
+moderation action, no fixture):
+
+- GitHub Production deployment `6454270624` for the exact SHA is success
+  (immutable URL above; Vercel-SSO-gated, public proof on the canonical
+  alias). Prior production deployment `6445415606` (`71f4a33`) is preserved
+  as the code rollback point.
+- Exact-SHA Milestone verification `34944048614` succeeded (full regression,
+  typecheck, lint, boundaries, production build).
+- Exact-SHA Discovery sync `34944048646` succeeded: 18/18 sources, 0 failed,
+  12 qualified candidates (7 OpportunitiesForAfricans, 5 OpportunityDesk),
+  7 duplicates skipped, `insertedPending: 5` (all OpportunityDesk).
+- Exact-SHA Deadline alert evaluation `34944048667` succeeded.
+- Production now holds 259 pending / 8 published / 21 rejected / 0 expired =
+  288 opportunities, 521 references, 10 enrichments, and 2 status audits. The
+  five new pending rows (all `pending`, null attribution, created
+  `2026-09-15T07:55:03Z`) are `6fec5039-8e0e-40ba-b32e-5eac94a439e9`,
+  `7f4e1806-f041-4960-8525-acd13229fa95`,
+  `0d207c0d-c3eb-4b42-a029-42f8d2c9445c` (two references),
+  `a2b70fe1-bfaa-4c74-9c65-e139a140049e`, and
+  `fb12a207-4651-480e-adb7-0a97d8539d1e` (one reference each otherwise).
+  All pre-existing rows, both published controls, both prior rejection
+  attributions/audits, and all 515 prior references are intact; enrichments
+  and status audits are unchanged at 10 and 2. The five inserts are preserved
+  untouched for separate reconciliation; they were not moderated here.
+- Schedule-health observer `34944048624` reports a missed nominal
+  `2026-09-14T21:00Z` slot (8.21h observed gap; latest retained scheduled
+  success `34909932133`); the same `scheduled_run_missed` critical anomaly is
+  retained in the push Discovery report. This is a schedule-delivery health
+  signal predating the push, not a defect of the code change (which touches
+  no schedule, workflow, or discovery file). Six-hour repeatability remains
+  `NOT_YET_PROVEN`; no cadence change was made and no threshold was weakened.
+- HTTP smoke checks on the canonical alias returned 200 for `/` and 307 to
+  login for anonymous `/moderation` and `/published-management` access.
+  Approval, re-review, pending rejection, and attributed unpublish paths
+  remain intact by the exact-SHA regression suite plus unchanged live RPC
+  definitions and grants (no DDL ran).
+
+Sources, discovery cadence, taxonomy, National/International, profiles, AI,
+and later roadmap work were not changed.
+
 ## Ordered near-term roadmap
 
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
 1. **Pending Rejection Attribution Hardening** *(promoted and both real pending records resolved with full attribution; closed)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production as exact `1645973` on 2026-09-15; five-row push delta preserved for reconciliation; real-queue cleanup not started)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold
@@ -761,15 +855,15 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 
 ## Exact next milestone
 
-**Bulk Moderator Actions + Ambiguous Queue Cleanup.**
+**Bulk Moderator Actions promotion-push corpus-delta reconciliation (read-only).**
 
-Design and implement the smallest safe bulk path (multi-select, select-all-visible,
-bulk reject/withhold with per-record rejection reasons, confirmation, per-record
-attribution/audit, safe partial-failure handling) plus the filter/flag for likely
-ambiguous or weak-evidence records, verified on isolated staging first. This is a
-separate milestone requiring its own bounded authorization and verification; do not
-start implementation, touch the corpus, or change discovery, sources, taxonomy, or
-cadence until that authorization arrives.
+Inspect the five preserved pending inserts (`6fec5039…`, `7f4e1806…`,
+`0d207c0d…`, `a2b70fe1…`, `fb12a207…`, created `2026-09-15T07:55:03Z`) and
+their six references without mutation: verify each row is still `pending`
+with null attribution, record its source/evidence/duplicate posture, and
+recommend per-record retention or rejection for separate owner authorization.
+Do not approve, reject, bulk-reject, delete, or restore any record in this
+milestone. Do not start Bulk Production Cleanup or later roadmap work.
 
 ## Continuing constraints
 

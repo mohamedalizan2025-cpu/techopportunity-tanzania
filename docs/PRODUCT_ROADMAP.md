@@ -37,7 +37,7 @@ bounded authorization and verification; this roadmap does not authorize
 implementation or production mutation.
 
 1. **Pending Rejection Attribution Hardening** *(completed 2026-09-14: promoted plus both real pending records resolved with full attribution)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup**
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; five-row push delta preserved for reconciliation; real-queue cleanup not started)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold
@@ -69,7 +69,12 @@ path with exact attributable reasons (164 and 177 characters), each fully
 verified before the next was touched; production is now 254 pending /
 8 published / 21 rejected with 2 status audits and both references preserved.
 Priority 1 is closed.
-No later priority was implemented.
+Priority 2 is implemented at exact capability commit `1645973`, verified on
+isolated staging, reviewed GO, and promoted to production on 2026-09-15 with
+no production moderation action. The push Discovery run inserted five pending
+records (six references), preserved untouched for separate read-only
+reconciliation. Real-queue cleanup remains a separate, unauthorized
+milestone. No later priority was implemented.
 
 ## Product Quality & Differentiation direction
 

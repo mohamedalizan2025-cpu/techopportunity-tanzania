@@ -9,9 +9,14 @@ Hardening is now promoted to production (migration 0016 plus capability `71f4a33
 with a zero-row corpus delta; no production moderation action was used for proof.
 Both real pending records have since been rejected through the authenticated
 Moderator path with exact attributable reasons, one at a time with independent
-verification. The exact next milestone is Bulk Moderator Actions plus Ambiguous
-Queue Cleanup; production holds 254 pending / 8 published / 21 rejected with
-both decisions fully audited.
+verification. Bulk Moderator Actions plus Ambiguous Queue Cleanup is promoted
+to production at exact capability commit `1645973` (ten files, no migration;
+GitHub Production deployment `6454270624`); no production moderation action
+was used for proof. The push Discovery run inserted five pending records and
+six references, preserved untouched for separate reconciliation. The exact
+next milestone is read-only reconciliation of that five-row delta; production
+holds 259 pending / 8 published / 21 rejected with both prior decisions
+fully audited.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
