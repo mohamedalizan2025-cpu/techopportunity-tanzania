@@ -20,14 +20,12 @@ path with exact reason, attribution, timestamp, and audit; the other four delta
 rows remain untouched. The Batch 1 expired-calls cleanup, the Batch 2
 EBID pair, and the Batch 3 AWARD single then followed with exact reasons
 and per-record audits, and the furniture sweep's first confirmation rejected
-50 rows. Production holds 199 pending / 8 published / 81 rejected. The
-bounded legacy-cleanup phase freezes all remaining high-confidence noise
-into 8 reason-homogeneous confirmation groups (furniture remainder plus 7
-new cohorts) with a documented needs-evidence cohort for the rest; the
-manual Batch 4 plan and the 29-cohort Tier plan are superseded. The exact
-next milestone is the ordered legacy-cleanup confirmations only under
-explicit owner authorization, ending with the Discovery Quality Hardening
-gate (no discovery changes during cleanup).
+50 rows. Production holds 199 pending / 8 published / 81 rejected. Strategy
+has changed to an Authoritative Corpus Reset: scheduled Discovery is paused,
+a full protected pre-reset snapshot is sealed, and the legacy corpus leaves
+active use through existing attributable status transitions only (Sahara and
+AAS stay published as already-authoritative). The exact next milestone is
+reset execution only under explicit owner authorization.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

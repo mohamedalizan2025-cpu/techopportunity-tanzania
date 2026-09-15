@@ -29,6 +29,14 @@ listing volume.
 - The normal non-AI product must already be excellent. AI may assist users but must
   never turn uncontrolled or weak internet evidence into false certainty.
 - Measure before changing cadence, sources, taxonomy, infrastructure, or AI.
+- No authoritative evidence = no active opportunity record. Discovery may
+  find leads anywhere on the public web, but a candidate enters the active
+  Moderator queue only after verification against credible authoritative
+  evidence (official organizer/programme page, government/ministry/agency,
+  university, company, NGO/institution, official application portal, or
+  another clearly authoritative first-party source). Unverified leads stay
+  outside the active corpus as internal research candidates or are
+  discarded; ambiguity is never a normal active-queue state.
 
 ## Near-term priorities
 
@@ -37,7 +45,7 @@ bounded authorization and verification; this roadmap does not authorize
 implementation or production mutation.
 
 1. **Pending Rejection Attribution Hardening** *(completed 2026-09-14: promoted plus both real pending records resolved with full attribution)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; the authorized Nordic single-record disposition is complete; batch planning complete; Batch 1 expired-calls cleanup complete; Batch 2 EBID pair complete; Batch 3 AWARD complete; furniture sweep first confirmation done (50 rows); bounded legacy-cleanup phase (8 confirmation groups + needs-evidence cohort) planned, confirmations next)*
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; the authorized Nordic single-record disposition is complete; batch planning complete; Batch 1 expired-calls cleanup complete; Batch 2 EBID pair complete; Batch 3 AWARD complete; furniture sweep first confirmation done (50 rows); bounded legacy-cleanup phase superseded by Authoritative Corpus Reset (Discovery paused, pre-reset snapshot sealed, reset execution next)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold

@@ -1532,22 +1532,67 @@ cleanup). Expected end state after all 8 confirmations: 160 pending / 8
 published / 120 rejected, barring legitimate concurrent Discovery growth
 (reconcile, never force counts).
 
+## Authoritative Corpus Reset — planned, Discovery paused (no mutation yet)
+
+On 2026-09-15 the owner ordered an end to record-by-record cleanup: the
+legacy corpus leaves active use so the product rebuilds from authoritative
+sources. Scheduled Discovery (`discovery.yml`) was disabled first via the
+authorized workflow control and reads back `disabled_manually`; no scheduled
+worker can run on the old admission logic during the reset (push/manual
+dispatch stay naturally unavailable while disabled; the credential-free
+schedule observer and deadline alerts are untouched). A full protected
+pre-reset snapshot is sealed in
+`C:\Users\hp\.tech-opportunity-backups\20260915T133000Z-corpus-reset-pre\`
+(all 288 opportunities, 521 references, 75 enrichments, counts 194 pending /
+8 published / 86 rejected, sole Moderator intact; manifest + restricted
+ACLs). Nothing was deleted and nothing will be: the reset uses only the
+existing attributable status transitions, fully restorable from the
+snapshot under separate authorization.
+
+Reset scope (Sahara `156b20a2` and AAS `ef8defbb` stay published: both
+already satisfy the new authoritative standard today through complete
+official-source M31 evidence chains — keeping verified-compliant public
+inventory is applying the rule, not grandfathering ambiguity; either can
+still be unpublished later by single action):
+
+- **194 pending → rejected** in filter-exact bulk groups (all ≤50):
+  source=OFA (49), source=NM-AIST (36), source=OD+bucket 2 (28),
+  source=OD+bucket 7 (18), source=DIT (12), source=FSDT (11), source=YUNA
+  (11), source=SUZA (10), source=OD+bucket 1 (8), source=VETA (7), plus 4
+  single-record rejections (HESLB, SUA, Twaweza, UDSM rows). One shared
+  210-character reason for all: "Legacy corpus reset: this record entered
+  the active queue before the authoritative-evidence admission standard and
+  is withdrawn from active moderation without individual adjudication; full
+  history is preserved."
+- **6 published → rejected** via the existing single-record unpublish path
+  (Consultancy `e0c271f4`, ERASMUS `a6855dd9`, AIJC `9d967b53`, 30-job
+  aggregate `1b3649a0`, Ogilvy `fdfe3e70`, YSP `01042eca` — all legacy
+  unreviewed, none M31-compliant). One shared 180-character reason reused
+  per action: "Legacy corpus reset: this published record predates the
+  authoritative-evidence standard and is withdrawn from public use without
+  individual adjudication; full history is preserved."
+- Expected end state: 0 pending / 2 published / 286 rejected = 288
+  opportunities, 521 references, 275 enrichments (200 new status audits),
+  barring legitimate concurrent activity (none possible with Discovery
+  paused; reconcile, never force counts).
+- The `flag=ambiguous` workflow and the temporary `flag=furniture` filter
+  are NOT removed in this phase; both stay live until the reset verifies
+  clean, then retire in the admission-gate implementation. All prior frozen
+  cohorts, stay-out lists, and the needs-evidence pool are superseded by
+  this reset (history preserved in prior sections and snapshots).
+
 ## Exact next milestone
 
-**Legacy cleanup confirmations (owner-authorized, in this order).**
+**Authoritative Corpus Reset execution (owner-authorized).**
 
-Confirmation 1 (already gated, still open): furniture remainder — Furniture
-filter shows exactly 5, select all, confirm with the exact shared furniture
-reason. Then, only after independent verification of each step: G1 expired
-(3 rows via 3 exact filters, one confirmation), G2 South-African pair, G3
-Egyptian pair, G4 Nigerian single, G5 stale stubs (7 filters), G6 news
-reports (16 filters), G7 VETA admin (2 filters) — each with its exact shared
-reason in the phase section above, each preceded by served-filter proof.
-After the phase verifies clean, stop creating cleanup batches: the following
-milestone is **Discovery Quality Hardening — Queue Admission Gate**, scoped
-to learn from these rejected patterns so the same classes stop entering the
-queue (no discovery changes during cleanup). This handoff authorizes no
-rejection by itself.
+The owner is asked to execute the reset plan in the section above, in
+order: the ten filter-exact bulk groups (confirm each served filter shows
+exactly the documented size first), the 4 pending singles via the
+single-record path, then the 6 single unpublishes — each with its exact
+shared reason, stopping and reporting immediately on any surprise, with
+independent read-only verification and the final full post snapshot closing
+the phase. The prior furniture/G1–G7 confirmation gates are superseded and
+must not be executed. This handoff authorizes nothing by itself.
 
 ## Continuing constraints
 
