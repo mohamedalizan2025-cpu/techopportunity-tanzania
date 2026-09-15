@@ -1154,7 +1154,7 @@ from the already-rejected conflated `f821f312` row.
 
 Authorization-ready single-record disposition (NOT executed here): reject
 exactly `51e23a07-2210-4bf1-9b36-98d707215efa` through the authenticated
-production Moderator path with this exact 133-character reason:
+production Moderator path with this exact 134-character reason:
 
 > Rejected because documented eligibility is limited to Egypt, Morocco,
 > Ghana, Nigeria, Sierra Leone, and Senegal; Tanzania is excluded.
@@ -1326,18 +1326,96 @@ first, then 4, then 5; stop on any drift):
 Each batch keeps the protected pre-batch snapshot and per-record
 verification contract. No Batch 3–5 mutation ran here.
 
+## Bulk Production Cleanup — Batch 3 AWARD executed and verified
+
+On 2026-09-15 the owner executed the authorized AWARD single rejection in
+the Moderator browser session. Read-only post-verification confirms:
+`51e23a07-2210-4bf1-9b36-98d707215efa` changed only
+`status`/`decided_by`/`decided_at`/`updated_at`, decided
+`2026-09-15T11:09:12Z` by the sole Moderator with the verbatim 134-character
+Tanzania-exclusion reason audit (`created_at = decided_at`); its reference
+is preserved; all other 287 opportunities and all 521 references are
+byte-identical. Production is 288 opportunities / 521 references /
+20 enrichments at 249 pending / 8 published / 31 rejected / 0 expired.
+Homepage 200, rejected route 404, anonymous moderation 307, Sahara/AAS 200 and published. Post evidence and manifest
+(`7e6f3091c118487af15ee219c32e57d34f7348836e9ee586b323f9d69fef691f`)
+are sealed in
+`C:\Users\hp\.tech-opportunity-backups\20260915T104211Z-pqd-bulk-cleanup-batch3-award\`.
+The unused Batch 4 manual-plan pre-snapshot
+(`20260915T111700Z-pqd-bulk-cleanup-batch4-furniture`, pre-files only, no
+mutation followed) is retained as-is and superseded by the sweep below.
+
+## Filter-driven ambiguous-queue sweep — planned read-only (supersedes B4/B5)
+
+On 2026-09-15 the 249-row pending queue was re-censused read-only (AWARD
+rejected, all 55 frozen furniture rows still pending/null, zero new expired,
+zero new exclusions, zero new duplicates). The owner will not hunt titles,
+so every cohort below is proven to equal EXACTLY one existing UI filter
+result (title-substring `q`, exact source, bucket, or `source`+`bucket` AND —
+replicated from the served implementation and re-verified live per ID), sized
+for `Select all visible` within the 50-row bulk cap. No cohort needs the UX
+branch: production already ships select-all-visible plus these filters at
+`1645973`; the UX work adds presentation only. Order matters only where
+noted; every step re-verifies its served filter result pre-action and stops
+on any drift. All furniture cohorts share one evidence-safe reason:
+
+> Rejected: the row holds site-navigation, section-header, or page-furniture
+> text captured from an institutional page, not a bounded opportunity.
+
+Tier 1 — pure source+bucket select-alls (14 confirmations, 36 rows): BoT|7
+(6), HESLB|7 (2), HESLB|8 (1), ICT|7 (4), Ifakara|1 (1), Ifakara|7 (8),
+JGI|7 (1), MINAG|7 (3), SUA|8 (1), Twaweza|8 (1), UDOM|7 (2), UDOM|8 (2),
+VETA|8 (1), YUNA|7 (3). Each cell was proven to contain only intended
+furniture IDs (complete cell table retained in the planning notes above).
+
+Tier 2 — exact title-substring select-alls on the remainder (6
+confirmations, 10 rows, run after Tier 1): q"Quick Links" (2:
+`7aeda1ce`, `298bd61c`), q"Timetable" (2), q"Menu" (2: `326b480b`,
+`6fda86ee`), q"Announcements" (1: `29b2a7f3`), q"News" (1: `9db0bc1f`),
+q"Links" (2: `da2a024d`, `eecb4ac7`).
+
+Tier 3 — exact single-title select-alls (9 confirmations, 9 rows, each term
+proven to match exactly its one intended row and nothing else):
+q"Campus Life" (`ed8d73b9`), q"University School" (`fa7205d2`),
+q"Other Resources" (`75ad18f3`), q"navigation" (`f88b4c8b`),
+q"Official Map" (`413f7827`), q"Useful Information" (`ef78a11d`),
+q"Study Options" (`98d77e5f`), q"Help" (`ce08f6a9`), q"Gallery"
+(`c3d1e761`). (Sibling terms such as Our Vision, Annual Report, and About
+were verified pure but are unneeded — Tier 1 cells already take those
+rows.)
+
+No UI change is required for any cohort above: every isolation uses filters
+already live in production. The one structural gap found is expiry-based
+triage — the queue has no deadline-passed view filter, and several 2025
+YUNA calls look expired by title year while their stored deadlines are null,
+so expiry cannot be asserted without per-record evidence work. If a future
+expired sweep is wanted, the smallest improvement is a view-only
+deadline-passed filter following the existing `flag=ambiguous` honesty
+pattern (hint only, no verdict); it is NOT approved or built here. UX-branch
+integration sequence (also not started): land only after the cleanup lanes
+close, then rebase, staging matrix with disposable identities, and a
+separate owner-gated production promotion.
+
+Deliberately outside the sweep (unchanged stay-out list): thin-but-real
+program extractions, news headlines, course/programme listings, admissions
+notices, procurement calls, community joins, FSDT teasers, Maple (needs
+evidence), Schlumberger, same-day deadlines, older CFJ duplicate, and all
+actionable rows. Expected end state after all 29 confirmations: 194 pending
+/ 8 published / 86 rejected, barring legitimate concurrent Discovery
+growth (reconcile, never force counts).
+
 ## Exact next milestone
 
-**Bulk Production Cleanup — Batch 3 execution (owner-authorized AWARD single).**
+**Filter-driven sweep execution, Tier 1 first (owner-authorized).**
 
-The owner is asked to authorize or refuse exactly the frozen one-row AWARD
-cohort (`51e23a07-2210-4bf1-9b36-98d707215efa`) with the exact 133-character
-reason in the gate section above, after independently confirming the row is
-still pending on its served review route, under the same protected
-per-batch verification/recovery contract as Batches 1–2. Batch 4, every
-stay-out row, the Staff Moderation UX branch, and all later roadmap work
-remain outside scope. This handoff does not itself authorize the Batch 3
-rejection.
+The owner is asked to authorize or refuse Tier 1 only: the 14 pure
+source+bucket select-all cohorts (36 rows) in any order, each executed as one
+Moderator bulk action with the exact shared furniture reason above, after
+confirming the served filter shows exactly the documented rows and count,
+with the protected per-batch snapshot and per-record verification contract.
+Tier 2, Tier 3, every stay-out row, the Staff Moderation UX branch, and all
+later roadmap work remain outside scope. This handoff authorizes nothing by
+itself.
 
 ## Continuing constraints
 

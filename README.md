@@ -17,14 +17,13 @@ six references; read-only reconciliation accepts the delta as legitimate
 mechanical growth (all pending-only, no corruption). The one Tanzania-excluded
 Nordic row has now been rejected through the authenticated production Moderator
 path with exact reason, attribution, timestamp, and audit; the other four delta
-rows remain untouched. The Batch 1 expired-calls cleanup and the Batch 2
-EBID pair then followed with exact reasons and per-record audits. Production
-holds 250 pending / 8 published / 30 rejected. The Batch 3 gate review
-independently re-verified the frozen AWARD row (six-country
-Tanzania-excluding evidence, current deadline, official-source
-corroboration) and returns an authorization-ready single-record
-disposition; no Batch 3 mutation ran. The exact next milestone is Batch 3
-execution only under explicit owner authorization.
+rows remain untouched. The Batch 1 expired-calls cleanup, the Batch 2
+EBID pair, and the Batch 3 AWARD single then followed with exact reasons
+and per-record audits. Production holds 249 pending / 8 published / 31
+rejected. A filter-driven sweep plan freezes the 55 furniture rows into 29
+exact select-all cohorts across three tiers (no UI change needed); the
+manual Batch 4 plan is paused. The exact next milestone is Tier 1 sweep
+authorization only under explicit owner authorization.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
