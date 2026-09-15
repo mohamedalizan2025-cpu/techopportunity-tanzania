@@ -146,15 +146,21 @@ invariant("bulk rejection reuses the single-record attributable path only", () =
 
 invariant("bulk queue aids stay honest view-only filters", () => {
   const moderationData = read("lib/data/moderation.ts");
+  const triageBucket = read("lib/triage-bucket.ts");
   const bulkPanel = read("app/moderation/queue-bulk-panel.tsx");
   const queuePage = read("app/moderation/page.tsx");
   assert.match(moderationData, /isAmbiguousQueueItem/);
+  assert.match(moderationData, /isFurnitureQueueItem/);
+  assert.match(triageBucket, /export function isFurnitureQueueItem/);
   assert.match(queuePage, /isAmbiguousQueueItem/);
+  assert.match(queuePage, /isFurnitureQueueItem/);
   assert.match(queuePage, /QueueBulkPanel/);
+  assert.match(queuePage, /flag: "furniture"/);
   assert.match(bulkPanel, /bulkRejectPendingAction/);
   assert.match(bulkPanel, /name="confirm"[\s\S]*value=\{BULK_REJECT_CONFIRM_TOKEN\}/);
   assert.doesNotMatch(bulkPanel, /\.rpc\(/);
   assert.doesNotMatch(bulkPanel, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
+  assert.doesNotMatch(triageBucket, /\.rpc\(|SUPABASE_SERVICE_ROLE_KEY|service_role/);
 });
 
 invariant("saved relationships are owner-only and never anonymous or mutable", () => {

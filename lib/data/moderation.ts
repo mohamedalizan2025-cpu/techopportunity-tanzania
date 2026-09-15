@@ -1,7 +1,7 @@
 import type { Opportunity, OpportunityCategory } from "../types";
 import { OPPORTUNITY_CATEGORIES } from "../types";
 import { BULK_REJECT_MAX_ITEMS } from "../staff-form-state";
-import { triageBucketOf, isAmbiguousQueueItem, type TriageBucket } from "../triage-bucket";
+import { triageBucketOf, isAmbiguousQueueItem, isFurnitureQueueItem, type TriageBucket } from "../triage-bucket";
 import {
   createSupabaseAuthServerClient,
   getAuthenticatedUser,
@@ -116,8 +116,11 @@ export interface QueueFilter {
   sourceName: string | null;
   /** Case-insensitive title substring; null when absent. View-only. */
   q: string | null;
-  /** When "ambiguous", show only flagged review-hint rows. View-only. */
-  flag: "ambiguous" | null;
+  /**
+   * Row hint to narrow by. `"ambiguous"` shows the bucket 7/8 review hints;
+   * `"furniture"` shows only exact frozen site-furniture titles. View-only.
+   */
+  flag: "ambiguous" | "furniture" | null;
 }
 
 export const EMPTY_QUEUE_FILTER: QueueFilter = { bucket: null, sourceName: null, q: null, flag: null };
@@ -155,9 +158,10 @@ export function parseQueueFilter(
       q = trimmed;
     }
   }
-  let flag: "ambiguous" | null = null;
-  if (firstParam(raw.flag) === "ambiguous") {
-    flag = "ambiguous";
+  let flag: "ambiguous" | "furniture" | null = null;
+  const flagRaw = firstParam(raw.flag);
+  if (flagRaw === "ambiguous" || flagRaw === "furniture") {
+    flag = flagRaw;
   }
   return { bucket, sourceName, q, flag };
 }
@@ -184,6 +188,9 @@ export function matchesQueueFilter(
     return false;
   }
   if (filter.flag === "ambiguous" && !isAmbiguousQueueItem(opportunity.category, opportunity.title)) {
+    return false;
+  }
+  if (filter.flag === "furniture" && !isFurnitureQueueItem(opportunity.title)) {
     return false;
   }
   return true;
