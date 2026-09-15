@@ -47,6 +47,25 @@ function formatQueueDeadline(iso: string | null): string {
   }).format(new Date(iso));
 }
 
+/**
+ * Display-only expiry hint from the already-loaded stored deadline.
+ * A passed calendar date reads "expired"; today or future stays unmarked and
+ * a missing deadline stays unknown. This never decides anything — the
+ * moderator still opens the record and verifies before acting.
+ */
+function isExpiredDeadline(iso: string | null, now: number = Date.now()): boolean {
+  if (!iso) return false;
+  return iso.slice(0, 10) < new Date(now).toISOString().slice(0, 10);
+}
+
+const badgeClasses =
+  "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium";
+const bucketBadgeClasses = `${badgeClasses} border-black/[.08] bg-zinc-50 text-zinc-600 dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-400`;
+const flaggedBadgeClasses = `${badgeClasses} border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200`;
+const expiredBadgeClasses = `${badgeClasses} border-red-300 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300`;
+const sectionLabelClasses =
+  "text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400";
+
 const signOutButtonClasses =
   "inline-flex h-9 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50";
 
@@ -122,6 +141,14 @@ export default async function ModerationPage({
       isAmbiguousQueueItem(opportunity.category, opportunity.title),
     ])
   );
+  // Expired-date hint per visible row, derived from the already-loaded stored
+  // deadline (display only; same-day deadlines stay unmarked).
+  const expiredById = new Map(
+    pending.map((opportunity) => [
+      opportunity.id,
+      isExpiredDeadline(opportunity.deadline),
+    ])
+  );
   const flaggedCount = [...flaggedById.values()].filter(Boolean).length;
   const sourceCounts = new Map<string, number>();
   for (const opportunity of pending) {
@@ -169,9 +196,15 @@ export default async function ModerationPage({
           </p>
         ) : (
           <>
-            {/* View filters — narrow the list, never change what is pending. */}
-            <div className="mt-8 flex flex-col gap-2">
-              <form method="get" action="/moderation" role="search" className="flex gap-2">
+            {/* Find records — search and view filters in one card. They
+                only narrow what this page renders; pending status, ordering
+                and decision logic are untouched, and filters stay clearable. */}
+            <section
+              aria-label="Find records"
+              className="mt-8 rounded-lg border border-black/[.08] bg-white p-4 dark:border-white/[.145] dark:bg-zinc-950"
+            >
+              <h2 className={sectionLabelClasses}>Find records</h2>
+              <form method="get" action="/moderation" role="search" className="mt-3 flex flex-wrap gap-2">
                 {filter.bucket !== null ? (
                   <input type="hidden" name="bucket" value={filter.bucket} />
                 ) : null}
@@ -244,20 +277,45 @@ export default async function ModerationPage({
                 </div>
               </details>
               {filtered ? (
-                <p className="text-xs text-zinc-500 dark:text-zinc-500">
+                <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-500">
                   Filtered view — showing {visible.length} of {pending.length} pending ·{" "}
                   <Link href="/moderation" className="font-medium underline underline-offset-2 hover:text-black dark:hover:text-zinc-50">
                     Clear filter
                   </Link>
                 </p>
-              ) : null}
-            </div>
+              ) : (
+                <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-500">
+                  Showing all {pending.length} pending records.
+                </p>
+              )}
+            </section>
             {visible.length === 0 ? (
-              <p className="mt-6 rounded-lg border border-dashed border-black/[.15] p-8 text-center text-sm text-zinc-500 dark:border-white/[.2] dark:text-zinc-400">
-                No pending records match this filter — clear it to see the full queue.
-              </p>
+              <div className="mt-6 rounded-lg border border-dashed border-black/[.15] p-8 text-center dark:border-white/[.2]">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  No pending records match this filter.
+                </p>
+                <Link
+                  href="/moderation"
+                  className="mt-3 inline-flex h-9 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+                >
+                  Clear filter
+                </Link>
+              </div>
             ) : (
               <>
+              <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className={sectionLabelClasses}>
+                  Review list · {visible.length} of {pending.length}
+                </h2>
+                {visible.length > 1 ? (
+                  <a
+                    href="#bulk-actions"
+                    className="text-xs font-medium text-zinc-600 underline underline-offset-2 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
+                  >
+                    Select several below ↓
+                  </a>
+                ) : null}
+              </div>
             {suggested ? (
               <Link
                 href={`/moderation/${suggested.id}`}
@@ -266,47 +324,70 @@ export default async function ModerationPage({
                 Start with a suggested high-value record →
               </Link>
             ) : null}
-            <ul className="mt-6 flex flex-col gap-3">
-              {visible.map((opportunity) => {
+            <ul className="mt-4 flex flex-col gap-3">
+              {visible.map((opportunity, index) => {
                 const bucket = bucketById.get(opportunity.id);
+                const flagged = flaggedById.get(opportunity.id) ?? false;
+                const expired = expiredById.get(opportunity.id) ?? false;
                 return (
                   <li key={opportunity.id}>
                     <Link
                       href={`/moderation/${opportunity.id}${query}`}
-                      className="block rounded-lg border border-black/[.08] bg-white p-4 transition-colors hover:border-black/30 dark:border-white/[.145] dark:bg-zinc-950 dark:hover:border-white/40"
+                      className="block rounded-lg border border-black/[.08] bg-white p-4 transition-colors hover:border-black/30 sm:p-5 dark:border-white/[.145] dark:bg-zinc-950 dark:hover:border-white/40"
                     >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="min-w-0 flex-1 break-words font-medium text-black dark:text-zinc-50">
-                          {opportunity.title}
-                        </p>
-                        {bucket ? (
-                          <span className="shrink-0 rounded-full border border-black/[.08] bg-zinc-50 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-400">
-                            {TRIAGE_BUCKET_SHORT[bucket]}
-                          </span>
-                        ) : null}
-                      </div>
-                      {(() => {
-                        const segments = [
-                          opportunity.organization,
-                          categoryLabel(opportunity.category),
-                          opportunity.location?.city ?? null,
-                        ].filter((segment): segment is string => segment !== null && segment !== "");
-                        return segments.length > 0 ? (
-                          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                            {segments.join(" · ")}
+                      <div className="flex items-start gap-3">
+                        <span
+                          aria-hidden="true"
+                          className="mt-0.5 w-7 shrink-0 text-right text-xs font-semibold tabular-nums text-zinc-400 dark:text-zinc-500"
+                        >
+                          {index + 1}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="min-w-0 flex-1 break-words font-medium text-black dark:text-zinc-50">
+                              {opportunity.title}
+                            </p>
+                            {bucket ? (
+                              <span className={bucketBadgeClasses}>
+                                {TRIAGE_BUCKET_SHORT[bucket]}
+                              </span>
+                            ) : null}
+                            {flagged ? (
+                              <span className={flaggedBadgeClasses}>
+                                flagged — verify
+                              </span>
+                            ) : null}
+                            {expired ? (
+                              <span className={expiredBadgeClasses}>
+                                expired
+                              </span>
+                            ) : null}
+                          </div>
+                          {(() => {
+                            const segments = [
+                              opportunity.organization,
+                              categoryLabel(opportunity.category),
+                              opportunity.location?.city ?? null,
+                            ].filter((segment): segment is string => segment !== null && segment !== "");
+                            return segments.length > 0 ? (
+                              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                                {segments.join(" · ")}
+                              </p>
+                            ) : null;
+                          })()}
+                          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                            Submitted {formatSubmitted(opportunity.createdAt)} · Deadline{" "}
+                            {formatQueueDeadline(opportunity.deadline)}
+                            {opportunity.sourceName ? ` · Source ${opportunity.sourceName}` : ""}
                           </p>
-                        ) : null;
-                      })()}
-                      {opportunity.sourceName ? (
-                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-                          Auto-discovered · {opportunity.sourceName}
-                          {opportunity.discoveryMethod ? ` · ${opportunity.discoveryMethod}` : ""}
-                        </p>
-                      ) : null}
-                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
-                        Submitted {formatSubmitted(opportunity.createdAt)} · Deadline{" "}
-                        {formatQueueDeadline(opportunity.deadline)}
-                      </p>
+                        </div>
+                        <span
+                          aria-hidden="true"
+                          className="mt-1 shrink-0 text-sm text-zinc-400 transition-transform dark:text-zinc-500"
+                        >
+                          →
+                        </span>
+                      </div>
                     </Link>
                   </li>
                 );

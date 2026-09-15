@@ -88,10 +88,17 @@ export function QueueBulkPanel({ items }: { items: BulkQueueItem[] }) {
   const selectedItems = items.filter((item) => selectedVisible.includes(item.id));
 
   return (
-    <section aria-label="Bulk rejection" className={panelClasses}>
+    <section
+      aria-label="Bulk rejection"
+      id="bulk-actions"
+      className={`${panelClasses} scroll-mt-24`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-black dark:text-zinc-50">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Step 1 · Select records
+          </p>
+          <h2 className="mt-1 text-sm font-semibold text-black dark:text-zinc-50">
             Bulk reject
           </h2>
           <p className="mt-0.5 text-xs text-zinc-600 dark:text-zinc-400">
@@ -112,28 +119,37 @@ export function QueueBulkPanel({ items }: { items: BulkQueueItem[] }) {
       </div>
 
       <ul className="mt-3 flex max-h-64 flex-col gap-1 overflow-y-auto">
-        {items.map((item) => (
-          <li key={item.id}>
-            <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 text-sm text-zinc-800 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-900">
-              <input
-                type="checkbox"
-                checked={selectedVisible.includes(item.id)}
-                onChange={() => toggleId(item.id)}
-                disabled={isPending}
-                aria-label={`Select ${item.title}`}
-                className={`${checkboxClasses} mt-0.5`}
-              />
-              <span className="min-w-0 flex-1 break-words">
-                {item.title}
-                {item.flagged ? (
-                  <span className="ml-2 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-                    flagged — verify
-                  </span>
-                ) : null}
-              </span>
-            </label>
-          </li>
-        ))}
+        {items.map((item) => {
+          const checked = selectedVisible.includes(item.id);
+          return (
+            <li key={item.id}>
+              <label
+                className={`flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 text-sm text-zinc-800 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-900 ${
+                  checked ? "bg-zinc-100 dark:bg-zinc-900" : ""
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleId(item.id)}
+                  disabled={isPending}
+                  aria-label={`Select ${item.title}`}
+                  className={`${checkboxClasses} mt-0.5`}
+                />
+                <span
+                  className={`min-w-0 flex-1 break-words ${checked ? "font-medium text-black dark:text-zinc-50" : ""}`}
+                >
+                  {item.title}
+                  {item.flagged ? (
+                    <span className="ml-2 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                      flagged — verify
+                    </span>
+                  ) : null}
+                </span>
+              </label>
+            </li>
+          );
+        })}
       </ul>
 
       {state.status !== "idle" && state.message !== null ? (
@@ -167,7 +183,18 @@ export function QueueBulkPanel({ items }: { items: BulkQueueItem[] }) {
       ) : null}
 
       {!armed ? (
-        <div className="mt-3 flex flex-wrap items-center gap-3">
+        <div
+          className={
+            selectedVisible.length === 0
+              ? "mt-3 flex flex-wrap items-center gap-3"
+              : "sticky bottom-4 mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-black/[.08] bg-white/95 px-3 py-2 shadow-sm backdrop-blur dark:border-white/[.145] dark:bg-zinc-950/95"
+          }
+        >
+          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+            {selectedVisible.length === 0
+              ? "No records selected yet."
+              : `${selectedVisible.length} selected`}
+          </p>
           <button
             type="button"
             onClick={() => setArmed(true)}
@@ -190,13 +217,25 @@ export function QueueBulkPanel({ items }: { items: BulkQueueItem[] }) {
           {selectedVisible.map((id) => (
             <input key={id} type="hidden" name="opportunityId" value={id} />
           ))}
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Step 2 · Confirm rejection
+          </p>
           <p className="text-sm font-medium text-black dark:text-zinc-50">
             Reject these {selectedItems.length} records?
           </p>
           <ul className="flex max-h-40 flex-col gap-1 overflow-y-auto text-xs text-zinc-600 dark:text-zinc-400">
             {selectedItems.map((item) => (
-              <li key={item.id} className="break-words">
-                • {item.title}
+              <li key={item.id} className="flex items-start justify-between gap-2 break-words">
+                <span>• {item.title}</span>
+                <button
+                  type="button"
+                  onClick={() => toggleId(item.id)}
+                  disabled={isPending}
+                  aria-label={`Remove ${item.title} from bulk selection`}
+                  className="shrink-0 font-medium underline underline-offset-2 hover:text-black disabled:cursor-not-allowed disabled:opacity-60 dark:hover:text-zinc-50"
+                >
+                  Remove
+                </button>
               </li>
             ))}
           </ul>

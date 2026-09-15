@@ -126,6 +126,12 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
   );
 
   const triageBucket = triageBucketOf(opportunity.category, opportunity.title);
+  // Display-only expiry hint from the already-loaded stored deadline (same
+  // rule as the queue list; the moderator still verifies before acting).
+  const deadlineExpired =
+    opportunity.deadline !== null &&
+    opportunity.deadline.slice(0, 10) <
+      new Date().toISOString().slice(0, 10);
   const dateFormatter = new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "short",
@@ -234,6 +240,11 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
             {opportunity.deadline
               ? `Deadline ${dateFormatter.format(new Date(opportunity.deadline))}`
               : "No deadline listed"}
+            {deadlineExpired ? (
+              <span className="ml-2 rounded-full border border-red-300 bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                expired — verify before acting
+              </span>
+            ) : null}
           </p>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             {locationLines.join(" · ")}

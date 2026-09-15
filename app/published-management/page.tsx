@@ -134,9 +134,6 @@ export default async function PublishedManagementPage() {
                         {" · "}
                         Published {formatPublished(opportunity.createdAt)}
                       </p>
-                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
-                        Status · publicly visible
-                      </p>
                       <Link
                         href={`/opportunities/${opportunity.slug}`}
                         className="mt-2 inline-block text-xs font-medium text-zinc-600 underline underline-offset-2 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
