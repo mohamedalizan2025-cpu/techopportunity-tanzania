@@ -1132,21 +1132,53 @@ anonymous moderation 307. The interrupted session's temporary verifier
 pre/post tooling only, no secret values) and removed. No Batch 3 row,
 stay-out row, UX-branch, deployment, discovery, or later work was touched.
 
+## Bulk Production Cleanup — Batch 3 authorization gate: GO (read-only)
+
+On 2026-09-15 the frozen AWARD row was independently re-read from production
+ref `jltuufukcwztugvojwjd` without mutation. `51e23a07-2210-4bf1-9b36-98d707215efa`
+("AWARD Women in Agriculture Leadership Program Fellowship 2026 [Cohort 2]",
+category `fellowship`, OpportunityDesk) remains `pending` with null
+`decided_by`/`decided_at`, original 2026-09-14 timestamps, one canonical
+reference, and zero audits. Production is unchanged at 250 pending /
+8 published / 30 rejected / 0 expired = 288 opportunities. The stored
+deadline is 6 November 2026 (`date` precision with evidence), so the call is
+current. The stored description requires applicants to "be nationals of the
+target countries: Egypt, Morocco, Ghana, Nigeria, Sierra Leone, and
+Senegal" — Tanzania is excluded on the face of the evidence. Same-day
+corroboration from the official AWARD call (awardfellowships.org: second
+cohort open until 6 November 2026 for scientists in exactly those six
+countries; "be nationals of target countries and residing in Africa")
+matches the stored record verbatim, and independent third-party pages quote
+the identical country list. This is the clean latter-call record, distinct
+from the already-rejected conflated `f821f312` row.
+
+Authorization-ready single-record disposition (NOT executed here): reject
+exactly `51e23a07-2210-4bf1-9b36-98d707215efa` through the authenticated
+production Moderator path with this exact 133-character reason:
+
+> Rejected because documented eligibility is limited to Egypt, Morocco,
+> Ghana, Nigeria, Sierra Leone, and Senegal; Tanzania is excluded.
+
+Expected post-mutation proof: the row `rejected` with sole Moderator
+`1caee695-3a00-43e7-85a4-79db4067ba0d`, matching decision timestamps, one
+verbatim `moderator-rejection` audit with `created_at = decided_at`, and its
+preserved reference; all other 287 opportunities and all 521 references
+byte-identical; 249 pending / 8 published / 31 rejected; homepage 200,
+rejected route 404, anonymous moderation 307. No Batch 4 row, stay-out row,
+UX-branch, deployment, discovery, or later work is in scope.
+
 ## Exact next milestone
 
-**Bulk Production Cleanup — Batch 3 authorization gate (AWARD single).**
+**Bulk Production Cleanup — Batch 3 execution (owner-authorized AWARD single).**
 
-Batch 2 completed as recorded above (EBID pair rejected with full
-attribution; production now 250 pending / 8 published / 30 rejected). The
-owner is asked to authorize or refuse exactly the frozen one-row AWARD
-cohort (`51e23a07-2210-4bf1-9b36-98d707215efa`, Women in Agriculture
-Leadership Program Fellowship 2026 [Cohort 2], six-country
-Tanzania-excluding evidence, deadline 6 November 2026) with the exact
-documented reason, after independently confirming the row is still pending
-on its served review route, under the same protected per-batch
-verification/recovery contract as Batches 1–2. Batch 4, every stay-out row,
-the Staff Moderation UX branch, and all later roadmap work remain outside
-scope. This handoff does not itself authorize the Batch 3 rejection.
+The owner is asked to authorize or refuse exactly the frozen one-row AWARD
+cohort (`51e23a07-2210-4bf1-9b36-98d707215efa`) with the exact 133-character
+reason in the gate section above, after independently confirming the row is
+still pending on its served review route, under the same protected
+per-batch verification/recovery contract as Batches 1–2. Batch 4, every
+stay-out row, the Staff Moderation UX branch, and all later roadmap work
+remain outside scope. This handoff does not itself authorize the Batch 3
+rejection.
 
 ## Continuing constraints
 
