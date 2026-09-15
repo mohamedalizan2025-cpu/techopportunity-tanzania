@@ -1288,6 +1288,44 @@ the protected pre-batch snapshot and per-record verification contract. No
 incoherent/misidentified record beyond the already-resolved AWARD conflation
 was found.
 
+## Batches 3/4/5 count and overlap reconciliation — verified read-only
+
+On 2026-09-15 the frozen cohorts were audited end to end without mutation.
+Document sizes are Batch 3: 1, Batch 4: 6, Batch 5: 49 — 56 IDs total, 56
+unique, zero overlaps within or across batches (checked document-level and
+live). All 56 are still `pending` with null attribution. Live corpus is
+unchanged at 250 pending / 8 published / 30 rejected. Correct arithmetic is
+250 − 56 = **194** expected pending after all three batches (an earlier
+report draft wrote 196 in chat only; no authoritative doc carried that
+number). Expected end state: 194 pending / 8 published / 86 rejected = 288
+opportunities, 521 references, 75 enrichments (56 new status audits).
+
+Authorization-ready execution bundle (NOT executed; Batch 3 gate order
+first, then 4, then 5; stop on any drift):
+
+1. **Batch 3 — AWARD (1).** `51e23a07-2210-4bf1-9b36-98d707215efa`.
+   Reason: "Rejected because documented eligibility is limited to Egypt,
+   Morocco, Ghana, Nigeria, Sierra Leone, and Senegal; Tanzania is
+   excluded."
+2. **Batch 4 — duplicate page furniture (6).**
+   `db42c5f4-e5bd-467d-b247-9cba604917be`,
+   `5314b299-f05a-4ca2-985e-7e9244f5007c`,
+   `db214504-80a2-42da-9eeb-f50ec4c7fb5e`,
+   `7aeda1ce-8004-46b2-a4a5-9521fd3191c6` (Quick Links),
+   `e6d8f260-0688-44e3-8db1-3fffa2021fed`,
+   `a53ee125-beb4-4094-bccd-fcedffb0e52e` (Latest News).
+   Reason: "Rejected: the row holds site-navigation or section-header text
+   captured from an institutional page, not a bounded opportunity."
+3. **Batch 5 — site furniture labels (49).** Full IDs frozen in the expansion
+   section above (48 listed plus `88809190-90ca-4ae5-a82c-f81f33ec1fa0`,
+   all re-confirmed pending/null/no-deadline live).
+   Reason: "Rejected: the row holds site-navigation, section-header, or
+   page-furniture text captured from an institutional page, not a bounded
+   opportunity."
+
+Each batch keeps the protected pre-batch snapshot and per-record
+verification contract. No Batch 3–5 mutation ran here.
+
 ## Exact next milestone
 
 **Bulk Production Cleanup — Batch 3 execution (owner-authorized AWARD single).**
