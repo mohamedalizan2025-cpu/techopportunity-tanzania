@@ -1,11 +1,11 @@
 # Current engineering handoff
 
-Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-15. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
 ## Current verified state
 
 - Local repository `main` is SHA
-  `66253ee9b6b7682027d0bba99425eb79cce202ae`, in sync with `origin/main`.
+  `3bf8dc1306256b5d8b9992fec19c54f79fdb4911`, in sync with `origin/main`.
   The runtime source SHA is exact capability commit `71f4a33`, with exact-SHA
   Milestone verification run `34890838451`, push Discovery sync run
   `34890838498` (`insertedPending: 0`), and GitHub Production deployment
@@ -13,7 +13,9 @@ Updated: 2026-09-14. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   `https://techopportunity-tanzania-74yru14iv-techopportunity.vercel.app`,
   state success at `2026-09-14T20:06:17Z`) all correlated to it. The docs-only
   push of `11f100a` and this docs-only closure both started no workflow
-  (`[skip ci]`); each produced only a runtime-identical Vercel deployment. The prior promoted
+  (`[skip ci]`); the later documentation closures through `3bf8dc1` likewise
+  changed no runtime source. Each produced only a runtime-identical Vercel
+  deployment. The prior promoted
   runtime source SHA was
   `07b6f407561b9539cdceccc626a5759a47693824`, whose capability delta is exact
   commit `45508956c365911853c3e681e712b0ba53106f23`. The pre-0016 application
@@ -759,69 +761,82 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
 7. **Opportunity taxonomy improvement**
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**
 
-## Bulk Moderator Actions — implementation exists, staging verification partial (fail-closed)
+## Bulk Moderator Actions — complete staging verification
 
-- Implementation is exact commit `1645973` on branch `bulk-moderator-actions`
-  (parent `3bf8dc1` = `origin/main`). Ten files, no migration, no workflow,
-  source, discovery, taxonomy, cadence, or AI change. It was verified in place
-  via `git show` and `main...HEAD` diff, not rebuilt.
-- Local gates at the exact HEAD all pass: full `npm test` (including bulk 9/9,
-  queue-filter 30/30, review 30, rereview 4, pending-rejection 7,
-  published-management 52, and every other suite), `tsc --noEmit`, `eslint`,
-  `verify:boundaries` 33/33 (including both bulk invariants), `verify:plan
-  --after-gates` (10 changed files; selected gates build + moderation-auth; no
-  migration/source-registry/workflow change), and `npm run build` (Next.js
-  16.3.2, 11 routes). The bulk action reuses the single-record
-  `reject_pending_opportunity` RPC per ID with per-record results
-  (`success`/`partial`/`error`), confirmation token plus acknowledge, reason
-  normalization, `BULK_REJECT_MAX_ITEMS = 50`, no approve path, no direct
-  opportunity update/insert, no new database system, and no service-role in app
-  paths. Queue search (`q`) and the ambiguous flag (`flag=ambiguous`, buckets
-  7/8) remain server-side view-only filters with hostile-input-safe parsing.
-- Staging read-only probe used the staging anon key only in-process (never
-  committed, written to disk, printed, or logged) and never used or requested a
-  service-role key. The exact staging ref was guarded independently from
-  production before any call, and the anon JWT ref/role were checked in memory.
-  With a fake UUID that was first proved absent: anon published read returned
-  exactly the 2 baseline published rows (all `published`); anon pending read
-  returned 0 rows (no leak); anon `reject_pending_opportunity` was denied with
-  PostgreSQL `42501`/HTTP 401; anon direct update affected 0 rows; post-probe
-  published re-read was unchanged at 2. No fixture, user, save, audit, or
-  reference was created, mutated, or deleted; staging was left untouched.
-- Live Moderator proof is deliberately NOT claimed (fail-closed, staging
-  untouched): disposable-Moderator bulk rejection, per-record actor/timestamp/
-  reason/audit persistence, safe partial-failure retention, multi-select and
-  select-all-visible served behavior, served queue search/ambiguous narrowing on
-  the new Preview, served pending-approval/re-review/unpublish regression on
-  the new Preview, and full 6-opportunity/9-reference baseline hashes with
-  exact-ID cleanup. Those require (a) a staging Preview deployment serving
-  exact `1645973` and (b) an owner-authorized disposable staging Moderator
-  session with bounded fixture setup/cleanup. No ordinary-user fixture was
-  created because its cleanup would require privileged deletion while
-  service-role use is forbidden; ordinary-user RPC denial remains covered by
-  the prior 0016 live matrix plus current code/boundary gates, not by a new
-  live user. Temporary probe scripts were removed.
-- Production received no mutation, deployment, Auth change, or proof attempt.
-  Discovery cadence, source strategy, taxonomy, National/International,
-  profiles, AI, and later roadmap work are unchanged.
+- Implementation remains exact capability commit `1645973` on branch
+  `bulk-moderator-actions` (parent `3bf8dc1` = `origin/main`). Ten files, no
+  migration, workflow, source, discovery, taxonomy, cadence, geography, profile,
+  or AI change. Local verification remains fully passed: the complete suite,
+  TypeScript, ESLint, 33/33 permanent boundaries, milestone classification, and
+  the Next.js 16.3.2 production build.
+- Existing bulk-branch Preview `dpl_AQHKAcW6bS2oSeFdd3DqsusEePeU` was
+  independently found to serve the production queue (254 pending and the
+  production Moderator identity). It was treated as an unsafe environment
+  mismatch: no checkbox, form, or mutation was attempted there. Exact `1645973`
+  was then deployed through the established branch-scoped `staging` environment
+  as Ready Preview `dpl_ADhgUb2ayrWBgVexxmwkBiG6uG2v` at
+  `https://techopportunity-tanzania-hmms2jhvz-techopportunity.vercel.app`.
+  The public `Synthetic Known Deadline` fingerprint proved binding to
+  `pumzofcwfjqswkiwfqty` before any live action.
+- Pre-action staging was the six-opportunity/nine-reference baseline plus five
+  reserved `f017...` pending fixtures and their five references, two disposable
+  Auth/profile rows, and zero enrichments/saves. Baseline-only SHA-256 was
+  `a09d830eb0abcbdd340ec8da576a81e1e33fff9be09436558616745414c0dae1`
+  for all six opportunity rows and
+  `6ce0899ed6cac5b524b3d6ffdf9fdf72f311e5ee5391a41521c8218557731a36`
+  for all nine reference rows.
+- Anonymous Preview access redirected to `/login?next=%2Fmoderation` and its RPC
+  failed `42501`/HTTP 401. The disposable ordinary user signed in normally,
+  received the served `Access restricted` moderation page, failed the RPC with
+  `42501`/HTTP 403, and affected zero rows through a direct update. The denial
+  target retained pending/null-attribution/zero-audit state.
+- Served title search for `Bulk Synthetic` showed exactly five of eight pending
+  rows. Adding Flagged narrowed that view to the one news-like Mbuyu fixture.
+  `Select all visible (5)` checked all five and cleared all five when toggled off;
+  no hidden baseline row was selected. Manual multi-select then chose only Zephyr
+  `...0001` and Tumaini `...0003`.
+- The authenticated Moderator confirmed one 134-character reason and rejected
+  exactly Zephyr and Tumaini. Each row recorded Moderator
+  `5e20fe54-64ff-41b0-9fa4-1221331c37bb`, its own decision timestamp, and one
+  exact `pending → rejected` / `moderator-rejection` audit whose actor, reason,
+  and `created_at = decided_at` matched the row.
+- Partial failure used only authenticated Moderator paths. After the served form
+  selected Mbuyu `...0002` plus Jabari `...0004`, a separate disposable
+  Moderator call made Jabari stale with its own reason. Submission then reported
+  exactly `Rejected 1 of 2`: Mbuyu committed with the shared 123-character reason,
+  while Jabari was retained as the listed already-reviewed failure. Both audits
+  preserve distinct reasons, the same actor, and matching decision timestamps;
+  earlier successful rows remained rejected.
+- Remaining Imara fixture `...0005` proved all legacy paths on the same Preview:
+  pending approval made it publicly served with entered M31 evidence; published
+  re-review returned the explicit successful contract result and refreshed
+  attribution/time; published management then created one attributed
+  `published → rejected` / `moderator-unpublish` audit with the exact
+  100-character reason. Both baseline published records stayed published.
+- Exact-ID cleanup removed all five fixture rows/references/enrichments and both
+  disposable Auth/profile rows. Staging returned to exactly six opportunities,
+  nine references, zero enrichments/Auth users/profiles/saves, and the same two
+  baseline SHA-256 values. The session was signed out. The exact Preview logged
+  zero errors and zero warnings. Temporary verification code, Supabase/Vercel
+  link state, generated credentials, and branch movement were removed;
+  `.env.local` returned byte-for-byte to pre-link SHA-256
+  `F0165F8ABE79C009985A18CD56EEA2F01599F7227630B45C89297CB34C4DB0F5`,
+  and local `staging` was restored to `06155b5`.
+- Production received no deployment, database/Auth/configuration mutation, or
+  moderation action. No real queue item was selected. Discovery cadence, sources,
+  taxonomy, National/International, profiles, AI, and later work are unchanged.
 
 ## Exact next milestone
 
-**Bulk Moderator Actions + Ambiguous Queue Cleanup — remaining live staging matrix.**
+**Bulk Moderator Actions + Ambiguous Queue Cleanup — Production Promotion Review.**
 
-On a staging Preview serving exact `1645973`, with only disposable synthetic
-staging fixtures/users: prove anonymous and ordinary-user denial; prove served
-search and ambiguous/weak-evidence filtering; prove multi-select and
-select-all-visible behavior; prove bulk rejection through the authenticated
-Moderator path with per-record actor, timestamp, reason, and audit; prove safe
-partial-failure behavior; prove pending approval and existing moderation paths
-are unaffected; preserve rows/references; clean up every synthetic artifact;
-and prove staging returns to its original baseline/hashes. Staging only. Do
-not mutate or deploy production, clean the real queue, or change discovery
-cadence, source strategy, taxonomy, National/International, profiles, AI, or
-later roadmap work. This requires explicit owner authorization for the staging
-Preview deployment and the disposable Moderator session; do not improvise with
-service-role access.
+Conduct a bounded owner go/no-go review of exact capability commit `1645973` and
+the completed staging evidence. Review the exact production target guard, code/
+deployment rollback point, promotion plan, Preview environment-mismatch finding,
+and post-promotion read-only proof. Do not deploy the capability, create production
+fixtures/users, select or clean any real queue record, or begin bulk production
+cleanup during that review unless the owner separately authorizes the exact next
+action. Do not start later roadmap work.
 
 ## Continuing constraints
 

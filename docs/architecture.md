@@ -1422,6 +1422,29 @@ update denial; all three legacy transitions; audit visibility; exact-target and
 unrelated-reference isolation; cleanup; and zero Preview error/warning logs.
 Production promotion remains a separate owner gate.
 
+**Bulk moderator actions (2026-09-15 staging checkpoint)**
+
+Bulk rejection is a bounded orchestration layer over the existing single-record
+security boundary, not a second moderation engine. Server-side `q` and
+`flag=ambiguous` parameters change only the visible pending view. The client can
+select individual rows or all rows in that visible view, up to the fixed 50-row
+cap, then submits one normalized shared reason and the exact selected IDs. The
+server invokes `reject_pending_opportunity(uuid,text)` separately for each ID;
+each success therefore retains its own atomic status, Moderator identity,
+decision timestamp, reason, and trigger-written audit. A stale or unauthorized
+record fails independently and is reported by exact ID without rolling back or
+misreporting earlier successes. No set-based RPC, migration, direct status
+update, service-role application path, bulk approval, or discovery behavior was
+introduced.
+
+The complete served Preview matrix passed against isolated staging at exact
+capability commit `1645973`: search/filter and selection scope, two-record
+success, one-success/one-stale partial failure, per-record audit evidence,
+anonymous/ordinary denial, and pending approval/published re-review/attributed
+unpublish regressions. Exact-ID cleanup restored the original six-opportunity,
+nine-reference baseline and removed both disposable identities. Production was
+not deployed or mutated; promotion remains a separate owner gate.
+
 ---
 
 ### 12.21 Milestone 15 — first-session attempt and the supply ceiling (2026-08-30)
@@ -1558,3 +1581,4 @@ works, nor as proof it does not. Two consequences are recorded as policy:
 | 2026-09-14 | Pending Rejection Attribution Hardening staging implementation: exact capability `71f4a33`, migration 0016, and Preview `dpl_GHnDVohs4bTtUUcX1cZVG2eW9sKs`; no production mutation or push | Reuse the 0015 reason-bearing atomic audit pattern for exact `pending → rejected`, derive actor/time in PostgreSQL, deny anonymous/ordinary/service-role/direct paths, and preserve approval/re-review/unpublish. The full synthetic staging matrix passed and cleaned back to the exact six-row/nine-reference baseline; production promotion is a separate owner gate |
 | 2026-09-14 | Production promotion of exact pending-rejection capability `71f4a33` and migration 0016; no live moderation action used for proof | Fresh pre-change recovery plus full ID comparison proved only expected scheduled-discovery growth; migration committed with zero row changes and exact 0015 definitions intact; exact-SHA verification, Discovery sync (`insertedPending: 0`), schedule-health, and deadline-evaluation workflows all succeeded; post-promotion comparison proved zero added/removed/changed rows and both real pending records untouched |
 | 2026-09-14 | Attributable two-record resolution through the new reason-bearing path | Both real pending records rejected one at a time through the authenticated Moderator UI with exact verbatim reasons (164/177 chars), each fully verified before the next was touched. Full-column comparison shows only the two rows changed; all references preserved; production is 254 pending / 8 published / 21 rejected with 2 status audits |
+| 2026-09-15 | Bulk Moderator Actions staging verification at exact capability `1645973`: compose the existing exact-ID rejection RPC sequentially, cap selection at 50 visible rows, preserve independent per-record outcomes, and add no migration or privileged application path | A five-record/two-user authenticated staging matrix proved served search/filter scope, selection semantics, complete and partial rejection, per-record attribution/audit, denial boundaries, and all existing moderation transitions. Exact cleanup restored the original staging hashes; production promotion and real-queue cleanup remain separately owner-gated |

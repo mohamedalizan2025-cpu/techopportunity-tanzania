@@ -583,3 +583,40 @@ No Moderator session was used and no production moderation action ran. The exact
 next milestone is the attributable two-record resolution with separate owner
 authorization; do not reject either record, resume Batch 2B2, or start bulk
 moderation or later roadmap work.
+
+## Bulk moderator actions staging checkpoint (2026-09-15)
+
+Exact capability commit `1645973` was exercised only against staging project
+`pumzofcwfjqswkiwfqty`. The existing bulk-branch Preview was first proved to be
+production-bound and was abandoned before any selection or mutation. A fresh
+Ready Preview, deployment `dpl_ADhgUb2ayrWBgVexxmwkBiG6uG2v` at
+`https://techopportunity-tanzania-hmms2jhvz-techopportunity.vercel.app`, was
+independently bound to staging through the known public staging fingerprint
+before authenticated work began.
+
+Five reserved synthetic pending rows and two disposable users covered served
+search and ambiguous filtering, multi-select, select-all-visible, successful
+bulk rejection, a deliberately stale per-record partial failure, anonymous and
+ordinary-user denial, and the unchanged pending-approval, published re-review,
+and attributed-unpublish paths. Every successful rejection or unpublish carried
+the exact record ID, authenticated Moderator
+`5e20fe54-64ff-41b0-9fa4-1221331c37bb`, a decision timestamp, the submitted
+reason, and one matching status audit. The
+partial result committed only the still-pending record and named the stale row;
+earlier successes and all unrelated records remained unchanged. Service-role
+credentials were used only for bounded fixture administration/readback/cleanup,
+never to invoke a moderation RPC or impersonate the Moderator.
+
+Exact-ID cleanup removed all five fixtures and both disposable Auth/profile
+rows. Staging returned to six opportunities, nine references, and zero
+enrichments/Auth users/profiles/saves. The baseline-only opportunity SHA-256
+`a09d830eb0abcbdd340ec8da576a81e1e33fff9be09436558616745414c0dae1`
+and reference SHA-256
+`6ce0899ed6cac5b524b3d6ffdf9fdf72f311e5ee5391a41521c8218557731a36`
+matched their pre-action values; the exact Preview logged zero errors and zero
+warnings. Temporary tooling, generated credentials, link state, and temporary
+branch movement were removed, and `.env.local` was restored byte-for-byte.
+Production received no deployment, configuration, Auth, database, or moderation
+mutation. The exact next milestone is **Bulk Moderator Actions + Ambiguous Queue
+Cleanup — Production Promotion Review**; that review does not itself authorize
+deployment or action on the real queue.
