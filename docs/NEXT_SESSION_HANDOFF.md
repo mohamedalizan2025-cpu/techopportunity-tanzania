@@ -1581,18 +1581,57 @@ still be unpublished later by single action):
   cohorts, stay-out lists, and the needs-evidence pool are superseded by
   this reset (history preserved in prior sections and snapshots).
 
+## Authoritative Corpus Reset — single-operation execution plan (no mutation yet)
+
+The owner replaced the 20-confirmation browser plan with one controlled
+database-level operation. Design, constrained by the standing
+no-impersonation rule (a profile row never authorizes service-role
+impersonation, so actor/timestamps cannot be forged server-side): a bounded
+one-time local script drives ONLY the existing moderation RPCs —
+`reject_pending_opportunity` (194 frozen pending IDs) then
+`unpublish_published_opportunity` (6 frozen published IDs) — over HTTPS as
+the authenticated sole Moderator, sequentially with per-call result checks.
+Each RPC commits independently, exactly like the served bulk path (whose
+partial-failure semantics were staging-proven); a single 200-row atomic
+transaction is not achievable without forging auth context, so the script
+instead stops fail-closed on the first unexpected result and reports the
+exact remaining IDs for an explicit resume. Rollback remains the sealed
+pre-reset snapshot plus per-row restore.
+
+Preflight holds: 194 pending / 8 published / 86 rejected, all 200 targets in
+expected state, sole Moderator unchanged, Discovery still
+`disabled_manually`, no workflow clash. The executor
+(`reset-execute.mjs`, temp-only, never committed) enforces: production-URL
+binding, token bound to production + `authenticated` + sole-Moderator `sub`
++ 10-minute expiry margin, exact frozen ID counts (194/6), reason-length
+bounds, live Gate-0 re-verification (counts, every target state, controls
+published, moderator identity), per-row 200-plus-exactly-one-row checks,
+timeout ambiguity resolution by truthful re-read (never assume), one retry
+only after transport failure, 150 ms pacing, and a token that lives in
+memory only — never logged, persisted, or written to evidence. Mock-proven
+with dummy credentials against localhost (real-backend contact refused by
+construction): 3/3 success with server-side exact-reason assertion, stale
+stop with remaining list, HTTP-500 stop with remaining list, and resume of
+exactly the remainder. Sahara/AAS stay published (already authoritative);
+needs-evidence rows are untouched by the frozen scope.
+
 ## Exact next milestone
 
-**Authoritative Corpus Reset execution (owner-authorized).**
+**Corpus reset execution — ONE owner gate (Moderator session handoff).**
 
-The owner is asked to execute the reset plan in the section above, in
-order: the ten filter-exact bulk groups (confirm each served filter shows
-exactly the documented size first), the 4 pending singles via the
-single-record path, then the 6 single unpublishes — each with its exact
-shared reason, stopping and reporting immediately on any surprise, with
-independent read-only verification and the final full post snapshot closing
-the phase. The prior furniture/G1–G7 confirmation gates are superseded and
-must not be executed. This handoff authorizes nothing by itself.
+The 20-confirmation browser plan is superseded and must not be executed.
+The owner is asked for exactly one thing: paste the live sole-Moderator
+session JWT (signed in as the Moderator in the production browser: DevTools
+→ Application → Local Storage → the `sb-<ref>-auth-token` entry → its
+`access_token` value) into chat, and keep the session open until the run is
+confirmed. On receipt it is used immediately, in memory only, for the single
+scripted RPC run in the section above — never stored, logged, committed, or
+written to evidence — and the owner then signs out (rotating it) right after
+confirmation. Residual risk is stated plainly: the token grants full
+Moderator power while live, and chat retains its text; scope is enforced by
+frozen IDs, exact reasons, and fail-closed stops. If this handoff is
+unacceptable, the fallback is the documented 20-confirmation browser plan,
+not service-role impersonation. This handoff authorizes nothing by itself.
 
 ## Continuing constraints
 
