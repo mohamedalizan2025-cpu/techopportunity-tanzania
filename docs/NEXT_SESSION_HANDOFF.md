@@ -1167,6 +1167,127 @@ byte-identical; 249 pending / 8 published / 31 rejected; homepage 200,
 rejected route 404, anonymous moderation 307. No Batch 4 row, stay-out row,
 UX-branch, deployment, discovery, or later work is in scope.
 
+## High-confidence batch expansion — planned read-only (Batch 5 frozen)
+
+On 2026-09-15 the 250-row pending queue was re-censused read-only from
+production ref `jltuufukcwztugvojwjd` (AWARD `51e23a07` still pending, Batch 3
+gate undisturbed). No new expired calls (Batch 1 cleared them; three
+same-day deadlines stay out on intraday uncertainty), no new exclusion cases
+beyond AWARD, and no new exact duplicates beyond the frozen Batch 4 pair.
+The expansion freezes one further deterministic cohort only; thin-but-real
+program extractions, news headlines, course/programme listings, and all
+actionable rows stay out as documented below. No mutation ran.
+
+**Batch 5 — site furniture labels (49 rows, authorization-ready).** Every row
+below was individually confirmed still `pending` with null attribution and no
+stored deadline; each title is site navigation, a section header, a timetable,
+a gallery, a report, or other page furniture that cannot denote a bounded
+opportunity under any reading:
+
+- Bank of Tanzania (5): `45dccd01` Monetary Policy; `a180f81f` Payment &
+  Settlement systems; `54d3fc00` Financial Markets; `0decada9`
+  Advertisements; `080ff4fc` Financial Sector Supervision.
+- DIT (3): `ed8d73b9` Campus Life; `f0768d03` Teaching Timetable; `88809190`
+  Semester II Examination Timetable 2025/2026.
+- HESLB (3): `700d6690` Our Vision; `cb00c030` News & Events; `5d7988c8`
+  Shortcut Links.
+- ICT Commission (3): `93b0e67a` Contact Us; `eff22f5b` Useful links;
+  `ee7be84e` Empowering Tanzania's Digital Future (hero slogan).
+- Ifakara (8): `ce3753b6` Publications; `5aa36831` More from Ifakara;
+  `180810f6` ISO 9001:2015; `c158b740` Data Repository; `d8a4087e`
+  Contribution to New Knowledge; `884ce307` Latest Events; `8f95fa20` Our
+  Projects; `25f8276e` Registered-charity badge text.
+- JGI (1): `f2f11c24` Ground Breaking Research.
+- Ministry of Agriculture (3): `6f468115` related-sites nav; `68eab6c4`
+  nearby-pages nav; `1f6e11ef` Social Media.
+- SUA (9): `413f7827` Official Map of Tanzania; `29b2a7f3` Announcements;
+  `da2a024d` Popular Links; `9db0bc1f` SUA Newsletters; `ef78a11d` Useful
+  Information; `98d77e5f` Study Options; `282fe078` About the University;
+  `ce08f6a9` Help & Support; `326b480b` Subfooter Menu.
+- SUZA (3): `6fda86ee` Top Bar Menu; `fa7205d2` University School;
+  `75ad18f3` Other Resources.
+- Twaweza (1): `deee5a1d` Annual Report 2024.
+- UDSM (3): `f88b4c8b` Main navigation; `298bd61c` Our Quick Links;
+  `eecb4ac7` Other Links.
+- UDOM (3): `4122a126` Welcome Note; `b3a5ac88` Latest Announcements;
+  `11ea54ac` Upcoming Events.
+- VETA (1): `c3d1e761` VETA Gallery.
+- YUNA (3): `52f72038` Join the community; `3b54200b` Explore our
+  involvement; `d0193df8` View our events.
+
+(Full IDs: `45dccd01-08ed-49c1-bd0c-371bc515a7e7`,
+`a180f81f-0c4c-46e2-9ca6-b6a40e381950`,
+`54d3fc00-2a54-4a05-9663-03740b3b5214`,
+`0decada9-2ecc-44b9-bf7d-0f6a94358a02`,
+`080ff4fc-f162-45c8-83a8-574ce4c19f0d`,
+`ed8d73b9-2cbc-4868-8ce0-c4e36d2cffd7`,
+`f0768d03-374a-4cbe-9eb8-2213ba348201`,
+`88809190-90ca-4ae5-a82c-f81f33ec1fa0`,
+`700d6690-1e12-4871-9f51-cb4e26af7674`,
+`cb00c030-9a10-4716-b731-b14aece7b992`,
+`5d7988c8-655d-4e41-afd5-4bab055d7e12`,
+`93b0e67a-5a3c-4661-ac2f-3062d5f8e8cd`,
+`eff22f5b-5c29-4aa1-948e-477074f9adcc`,
+`ee7be84e-62a0-4844-97e9-695c75147a3a`,
+`ce3753b6-b28c-4d02-aaea-1a1c01f4dc5a`,
+`5aa36831-2b4a-4fe1-83db-ca80cac61267`,
+`180810f6-44d2-44dc-a697-226b37dd2b33`,
+`c158b740-f520-4668-a1b8-bfb17a0d9c95`,
+`d8a4087e-5a29-42d0-bb28-0191efa12538`,
+`884ce307-cc41-4e3b-b2af-83ff0c095fef`,
+`8f95fa20-ade4-4359-8b2d-c2bbab90592e`,
+`25f8276e-1c6e-494d-a3e4-4ef296df7b99`,
+`f2f11c24-51e8-4b3c-a8b5-cdd5f15489e0`,
+`6f468115-bd01-49af-b76f-e3b0f536a7f1`,
+`68eab6c4-05dd-4133-b424-67a83b481639`,
+`1f6e11ef-125a-4cda-9c8b-d812d91b6174`,
+`413f7827-4cad-4fc4-ac82-aa5434721c44`,
+`29b2a7f3-81b7-4764-b63b-e5e5d7fd0411`,
+`da2a024d-af0a-4ba1-a1ec-59e9f703a485`,
+`9db0bc1f-0888-4201-bd46-bf22f302ef3c`,
+`ef78a11d-bb43-45dc-a6db-371f8a3ffd69`,
+`98d77e5f-7d30-426f-a38e-416567b0a493`,
+`282fe078-27f1-4a7a-abfa-4ddbbc968d6b`,
+`ce08f6a9-7fd0-42bf-b985-4547347ecdf0`,
+`326b480b-b783-4778-a2e5-6fe9f7fadf02`,
+`6fda86ee-d012-4886-8cf4-6340b0883e48`,
+`fa7205d2-8788-4eec-8ebd-7ee293d9f032`,
+`75ad18f3-6ad8-4e11-82d3-e4589417b0b3`,
+`deee5a1d-734c-40e4-8780-86be5da5e287`,
+`f88b4c8b-e3ba-4b01-815d-b77e76b4e3dd`,
+`298bd61c-5ebc-4774-b320-487888bc52c0`,
+`eecb4ac7-4aae-484f-bfef-2844a0fe1a09`,
+`4122a126-4843-48b6-a830-c29b6599556d`,
+`b3a5ac88-9b03-48a4-abd8-e89262a36edf`,
+`11ea54ac-5191-4e84-bffc-6e7c9bdbc67a`,
+`c3d1e761-7d2b-4af5-b774-e0e614001884`,
+`52f72038-b46a-47e4-af67-265401549f0f`,
+`3b54200b-3364-45dd-a57d-abc7f59f8f14`,
+`d0193df8-0254-4e58-841d-af4f605f9413`.)
+
+49 rows fit one bulk action within the 50-row cap. Exact shared reason:
+
+> Rejected: the row holds site-navigation, section-header, or page-furniture
+> text captured from an institutional page, not a bounded opportunity.
+
+Deliberately excluded for insufficient confidence: thin-but-real program
+extractions (`8cb3e7a7` World Bank YPP, `b7809dde` EMA Traineeship,
+`ea6bcc5d` Kenya AI Accelerator, `3af922a8` Anita Hill, and similar —
+truncation is not a verdict); news headlines and event reports (DIT–MIT,
+CEBOT showcase, employee/ partnership news, SABASABA thanks); course and
+degree-programme listings including all NM-AIST rows (standing pages need
+per-record review per the IEM precedent); admissions/transfer notices (WISE
+call, DIT transfers, bachelor/diploma applications); procurement and
+nomination calls (LearnImpact RFP, Canada Small Business 100); community
+joins with opportunity adjacency (Alumni Network, Stanbic internships,
+Africans Rising volunteering); FSDT article teasers; Maple `0d207c0d`
+(needs evidence); same-day deadlines `d8caf136`, `363cc7cb`, `6db9cabc`;
+Schlumberger `1241a0bd`; all future-deadline actionable rows; and the older
+CFJ duplicate. Execution order stays Batch 3 → Batch 4 → Batch 5, each with
+the protected pre-batch snapshot and per-record verification contract. No
+incoherent/misidentified record beyond the already-resolved AWARD conflation
+was found.
+
 ## Exact next milestone
 
 **Bulk Production Cleanup — Batch 3 execution (owner-authorized AWARD single).**
