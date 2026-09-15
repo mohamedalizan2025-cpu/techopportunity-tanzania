@@ -17,9 +17,11 @@ six references; read-only reconciliation accepts the delta as legitimate
 mechanical growth (all pending-only, no corruption). The one Tanzania-excluded
 Nordic row has now been rejected through the authenticated production Moderator
 path with exact reason, attribution, timestamp, and audit; the other four delta
-rows remain untouched. Production holds 252 pending / 8 published / 28
-rejected. The exact next milestone is Batch 2 execution (EBID pair) only
-under explicit owner authorization.
+rows remain untouched. The Batch 1 expired-calls cleanup and the Batch 2
+EBID pair then followed with exact reasons and per-record audits. Production
+holds 250 pending / 8 published / 30 rejected. The exact next milestone is
+the Batch 3 authorization gate (AWARD single) only under explicit owner
+authorization.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

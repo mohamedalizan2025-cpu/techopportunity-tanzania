@@ -37,7 +37,7 @@ bounded authorization and verification; this roadmap does not authorize
 implementation or production mutation.
 
 1. **Pending Rejection Attribution Hardening** *(completed 2026-09-14: promoted plus both real pending records resolved with full attribution)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; the authorized Nordic single-record disposition is complete; batch planning complete; Batch 1 expired-calls cleanup complete; Batch 2 EBID gate reviewed GO — execution awaits owner authorization)*
+2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; the authorized Nordic single-record disposition is complete; batch planning complete; Batch 1 expired-calls cleanup complete; Batch 2 EBID pair complete; Batch 3 AWARD gate next)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold

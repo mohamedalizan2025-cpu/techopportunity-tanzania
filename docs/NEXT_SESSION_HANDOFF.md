@@ -1098,22 +1098,55 @@ byte-identical; 250 pending / 8 published / 30 rejected; homepage 200,
 rejected routes 404, anonymous moderation 307. No Batch 3/4 row, stay-out
 row, deployment, discovery, or later work is in scope.
 
+## Bulk Production Cleanup — Batch 2 EBID pair completed (recovered closure)
+
+The production bulk rejection already succeeded before the executing session
+was interrupted: at `2026-09-15T10:16:28Z` and `2026-09-15T10:16:29Z` the
+authenticated Moderator bulk workflow rejected exactly the two frozen EBID
+rows with the exact authorized shared reason. No rejection was repeated here.
+
+Codex's protected pre/post evidence at
+`C:\Users\hp\.tech-opportunity-backups\20260915T100555Z-pqd-bulk-cleanup-batch2-ebid\`
+was preserved byte-for-byte without replacement: pre/post full
+opportunity/reference/enrichment snapshots, pre-targets, pre-manifest,
+verification report, and manifest (10 files, credential-pattern scan zero
+hits). Manifest SHA-256 is
+`f30d928384d7334da331c836b734a53a9ab24b6fe1eb020327691b2209ab2e40`;
+the pre-manifest already proved both targets pending with null attribution,
+one reference each, zero audits, and M31-compliant Sahara/AAS controls.
+
+Independent read-only re-verification on 2026-09-15 confirms the retained
+post-report exactly: `346c2d6a-e825-49c6-90e7-f34413216493` and
+`e129c166-d20e-4536-a3e4-bc8a95de9763` are `rejected` with sole Moderator
+`1caee695-3a00-43e7-85a4-79db4067ba0d`, matching decision timestamps, one
+verbatim `moderator-rejection` audit each with `created_at = decided_at`,
+and one preserved reference each. Non-target opportunity hash is unchanged
+(`f53ee254f172fbfaeabb6401984ba3e1fcb5dc883dcbfe1fdd2e6117b7843fd3`)
+and the reference hash is unchanged
+(`b85647e98289aec783eaf0a70f2533a8238843697d4bd1ee323752ae0b858e24`).
+Production is 288 opportunities / 521 references / 19 enrichments at 250
+pending / 8 published / 30 rejected / 0 expired. Sahara and AAS remain
+published; retained route health is homepage 200, rejected routes 404,
+anonymous moderation 307. The interrupted session's temporary verifier
+`.tmp-ebid-batch2-production.mjs` was confirmed temporary (runtime-guarded
+pre/post tooling only, no secret values) and removed. No Batch 3 row,
+stay-out row, UX-branch, deployment, discovery, or later work was touched.
+
 ## Exact next milestone
 
-**Bulk Production Cleanup — Batch 2 execution (owner-authorized EBID pair).**
+**Bulk Production Cleanup — Batch 3 authorization gate (AWARD single).**
 
-Batch 1 completed separately (six expired rows rejected with full
-attribution; production now 252 pending / 8 published / 28 rejected — full
-report on branch commit `46de256` plus the protected Batch 1 backup set). The
-owner is asked to authorize or refuse exactly the frozen two-row EBID cohort
-(`346c2d6a-e825-49c6-90e7-f34413216493` and
-`e129c166-d20e-4536-a3e4-bc8a95de9763`) with the exact shared reason in the
-gate section above, after independently confirming both rows are still
-pending on their served review routes, under the same protected per-batch
-verification/recovery contract as Batch 1. Batch 3, Batch 4, every stay-out
-row, the Staff Moderation UX branch, and all later roadmap work remain
-outside scope. This handoff does not itself authorize either Batch 2
-rejection.
+Batch 2 completed as recorded above (EBID pair rejected with full
+attribution; production now 250 pending / 8 published / 30 rejected). The
+owner is asked to authorize or refuse exactly the frozen one-row AWARD
+cohort (`51e23a07-2210-4bf1-9b36-98d707215efa`, Women in Agriculture
+Leadership Program Fellowship 2026 [Cohort 2], six-country
+Tanzania-excluding evidence, deadline 6 November 2026) with the exact
+documented reason, after independently confirming the row is still pending
+on its served review route, under the same protected per-batch
+verification/recovery contract as Batches 1–2. Batch 4, every stay-out row,
+the Staff Moderation UX branch, and all later roadmap work remain outside
+scope. This handoff does not itself authorize the Batch 3 rejection.
 
 ## Continuing constraints
 
