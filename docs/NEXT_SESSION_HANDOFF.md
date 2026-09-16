@@ -43,10 +43,14 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   real-parser National gate test in `tests/moderation-review.test.ts`. Read-only
   production probe: the 8 published rows classify `national=8 international=0
   unknown=0`, and of the 2 M31-trusted rows `0` have unknown geography — the
-  trusted publishable corpus is fully determinate with no Ambiguous state. The
-  push-triggered Discovery sync CI at this commit's HEAD is the online proof the
-  runner change runs clean in production. Next milestone: **Showcase UI/UX
-  Readiness** (roadmap priority 8).
+  trusted publishable corpus is fully determinate with no Ambiguous state.
+  Production evidence at HEAD `88fdf95` is green: Milestone verification CI
+  `35135184777` (47s) and Discovery sync CI `35135184867` (discover job 1m46s;
+  `state:success`, `workerErrors:0`, `sourcesSucceeded:20`, `sourcesFailed:0`,
+  `insertedPending:0`, `categorySkipped:0` across all 20 sources — the applied 0017
+  seeds mean no category is skipped for a missing seed; 2-hour cadence `on_time`) —
+  the online proof the runner change runs clean in production. Next milestone:
+  **Showcase UI/UX Readiness** (roadmap priority 8).
 
 - **2026-09-16 National/International classification + opportunity taxonomy
   (implemented at HEAD `d370bf8`; superseded by the closure entry above, which
