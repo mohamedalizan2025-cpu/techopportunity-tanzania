@@ -69,11 +69,18 @@ regions kept as metadata) and SECTOR (13 practical slugs, independent from type)
 Geography and sector are derived, not stored (no new columns); unknown fails safe
 to null (never an "Ambiguous" workflow); discovery classifies every candidate
 automatically; public browse and the Moderator queue filter by group, sector and
-type. The only schema change is the additive, idempotent, owner-gated seed
-`supabase/migrations/0017_opportunity_taxonomy_categories.sql` (not yet applied —
-discovery gracefully skips the three new types until it is). Full `npm run verify`
-is green. Next milestone: showcase readiness for Sahara Sparks and the Tech & AI
-Expo (roadmap priority 8).
+type. The only schema change is the additive, idempotent seed
+`supabase/migrations/0017_opportunity_taxonomy_categories.sql`, now applied to
+production (owner-authorized), so discovery admits the three new types. Geography
+classification follows the OPPORTUNITY, not the organizer's nationality: a
+canonical Tanzania region/city (e.g. Zanzibar, Arusha) is National even for a
+foreign-run event, a Tanzania-specific call is National, and a global call with
+evidenced Tanzanian access is International; every opportunity entering the
+publishable corpus must be determinate National/International, and an item with
+insufficient geographic evidence is held out until evidence exists (never
+"Ambiguous"). Full `npm run verify` and `npm run build` are green. Next milestone:
+Showcase UI/UX Readiness for Sahara Sparks and the Tech & AI Expo (roadmap
+priority 8).
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

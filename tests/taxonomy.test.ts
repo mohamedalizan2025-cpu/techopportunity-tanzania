@@ -25,7 +25,9 @@ import {
   classifyOpportunity,
   deriveGeography,
   geographyOf,
+  hasDeterminateGeography,
   inferSector,
+  isTanzaniaPlace,
   parseGeography,
   parseSector,
   sectorOf,
@@ -297,6 +299,112 @@ assert(
     (slug) => CATEGORY_LABELS[slug].trim().length > 0
   )
 );
+
+// --- 9. Focus: classification follows the OPPORTUNITY, not the organizer -----
+// Required cases: foreign organizer + Zanzibar event = National; Tanzania call
+// = National; global call open to Tanzanians = International; insufficient
+// evidence = not publishable/classifiable (never Ambiguous).
+
+// (a) Foreign organizer running an event/challenge in Zanzibar → National.
+const zanzibarByForeignOrganizer = opportunity({
+  title: "Blue Economy Innovation Challenge",
+  location: location({ city: "Zanzibar", country: "Germany" }),
+  trust: trust({
+    countryVerification: "verified_other",
+    eligibilityDecision: "tanzanians_eligible",
+    eligibilityEvidence: "open to all African nationals",
+  }),
+});
+assert(
+  "focus: foreign organizer + Zanzibar city → national (follows the opportunity)",
+  geographyOf(zanzibarByForeignOrganizer) === "national"
+);
+assert(
+  "focus: foreign organizer + canonical Zanzibar region → national",
+  deriveGeography({
+    country: "United Kingdom",
+    countryVerification: "verified_other",
+    region: "Mjini Magharibi",
+    eligibility: "tanzanians_eligible",
+    eligibilityEvidence: "open to applicants worldwide",
+  }) === "national"
+);
+assert(
+  "focus: foreign organizer + mainland region (Arusha) → national",
+  deriveGeography({ country: "United States", countryVerification: "verified_other", region: "Arusha" }) === "national"
+);
+assert(
+  "focus: a Zanzibar opportunity is determinate (publishable)",
+  hasDeterminateGeography(zanzibarByForeignOrganizer) === true
+);
+
+// (b) A Tanzania ministry/university/company call → National.
+assert(
+  "focus: Tanzania-specific call (verified_tanzania) → national",
+  deriveGeography({
+    country: "Tanzania",
+    countryVerification: "verified_tanzania",
+    eligibility: "tanzanians_eligible",
+    eligibilityEvidence: "open to Tanzanian citizens",
+  }) === "national"
+);
+assert(
+  "focus: Tanzania-focused eligibility wording alone → national",
+  deriveGeography({ eligibility: "tanzanians_eligible", eligibilityEvidence: "Tanzanian applicants are encouraged to apply" }) === "national"
+);
+
+// (c) A global/foreign opportunity genuinely open to Tanzanians → International.
+assert(
+  "focus: global call open to Tanzanians (worldwide wording, no TZ token) → international",
+  deriveGeography({ eligibility: "tanzanians_eligible", eligibilityEvidence: "open to applicants from any country worldwide" }) === "international"
+);
+assert(
+  "focus: foreign opportunity with evidenced access → international",
+  deriveGeography({
+    country: "Netherlands",
+    countryVerification: "verified_other",
+    eligibility: "tanzanians_eligible",
+    eligibilityEvidence: "open to early-career researchers worldwide",
+  }) === "international"
+);
+assert(
+  "focus: an international opportunity is determinate (publishable)",
+  hasDeterminateGeography(
+    opportunity({ trust: trust({ eligibilityDecision: "tanzanians_eligible", eligibilityEvidence: "open worldwide" }) })
+  ) === true
+);
+
+// (d) Insufficient geographic evidence → not publishable/classifiable, never Ambiguous.
+const insufficientEvidence = opportunity({
+  title: "Call for Applications",
+  location: null,
+  trust: trust({ eligibilityDecision: "unknown", eligibilityEvidence: null }),
+});
+assert("focus: insufficient evidence → null geography", geographyOf(insufficientEvidence) === null);
+assert(
+  "focus: insufficient evidence → NOT determinate (held out of the publishable corpus)",
+  hasDeterminateGeography(insufficientEvidence) === false
+);
+assert(
+  "focus: a foreign country alone is insufficient (never guessed to a group)",
+  hasDeterminateGeography(
+    opportunity({ location: location({ country: "Kenya" }), trust: trust({ countryVerification: "verified_other" }) })
+  ) === false
+);
+
+// isTanzaniaPlace reads real location evidence: exact whole-value only, never a substring.
+assert("focus: isTanzaniaPlace canonical region (Arusha) → true", isTanzaniaPlace("Arusha") === true);
+assert("focus: isTanzaniaPlace case-insensitive (mjini magharibi) → true", isTanzaniaPlace("mjini magharibi") === true);
+assert(
+  "focus: isTanzaniaPlace Zanzibar/Unguja/Pemba/Stone Town aliases → true",
+  isTanzaniaPlace("Zanzibar") && isTanzaniaPlace("Unguja") && isTanzaniaPlace("Pemba") && isTanzaniaPlace("Stone Town")
+);
+assert("focus: isTanzaniaPlace foreign city (Nairobi) → false", isTanzaniaPlace("Nairobi") === false);
+assert(
+  "focus: isTanzaniaPlace null/empty/whitespace → false",
+  isTanzaniaPlace(null) === false && isTanzaniaPlace("") === false && isTanzaniaPlace("   ") === false
+);
+assert("focus: isTanzaniaPlace is exact whole-value, never a substring", isTanzaniaPlace("Zanzibar International Airport") === false);
 
 // ------------------------------------------------------------------------------
 

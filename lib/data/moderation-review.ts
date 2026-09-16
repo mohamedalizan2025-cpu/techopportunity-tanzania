@@ -5,6 +5,7 @@ import {
   M31_QUALIFICATION_RULE_VERSION,
   type CountryVerification,
 } from "../opportunity-trust";
+import { deriveGeography, hasDeterminateGeography } from "../taxonomy";
 
 /**
  * Pure parsing/validation for the moderator review form. No database access —
@@ -194,6 +195,28 @@ export function parseReviewInput(formData: FormData): ParseReviewResult {
     return { ok: false, message: "Approval requires exact evidence that Tanzanians may apply." };
   }
 
+  // Publishable-corpus geography gate: an approved opportunity must classify as
+  // exactly National or International. Eligibility is already forced to
+  // `tanzanians_eligible` above, so this cannot reject valid input today — it
+  // makes the invariant explicit and holds the line if eligibility rules ever
+  // relax: an item with no trustworthy country/region/city/eligibility evidence
+  // stays out of the publishable corpus rather than being published Ambiguous.
+  const reviewGeography = deriveGeography({
+    country,
+    region,
+    city,
+    countryVerification,
+    eligibility: "tanzanians_eligible",
+    eligibilityEvidence,
+  });
+  if (reviewGeography === null) {
+    return {
+      ok: false,
+      message:
+        "Approval requires evidence that classifies this opportunity as National or International.",
+    };
+  }
+
   const organizationRaw = field(formData, "organizationId");
   let organizationId: string | null = null;
   if (organizationRaw !== "") {
@@ -352,5 +375,7 @@ export function satisfiesPublishedReviewContract(
     },
   };
 
-  return isAiSearchableOpportunity(reviewed, now);
+  // M31 evidence contract AND the geography-determinacy gate: a published row
+  // must be exactly National or International, never geographically indeterminate.
+  return isAiSearchableOpportunity(reviewed, now) && hasDeterminateGeography(reviewed);
 }

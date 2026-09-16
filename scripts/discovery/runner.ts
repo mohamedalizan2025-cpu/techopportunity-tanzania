@@ -345,6 +345,8 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
               : "verified_other";
         const derivedGeography = deriveGeography({
           country: candidate.country,
+          region: candidate.region,
+          city: candidate.city,
           countryVerification: derivedCountryVerification,
           eligibility: qualification.tanzaniaAccessibility,
           eligibilityEvidence: qualification.eligibilityEvidence,

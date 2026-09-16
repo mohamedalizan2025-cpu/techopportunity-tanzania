@@ -4,9 +4,54 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-16 taxonomy milestone CLOSED — migration 0017 APPLIED to production +
+  geography determinacy tightened (current; full `npm run verify` and
+  `npm run build` green).** Two bounded closing actions on the National /
+  International + opportunity-taxonomy milestone; no UI redesign, and the 2-hour
+  cadence, source registry and admission gates are UNCHANGED.
+  **(1) Migration 0017 applied.** The owner authorized applying
+  `supabase/migrations/0017_opportunity_taxonomy_categories.sql` to PRODUCTION ref
+  `jltuufukcwztugvojwjd`. A temporary, environment-guarded, idempotent script
+  (self-loaded `.env.local`, hard-asserted the production ref and failed closed on
+  any other target, `upsert … on conflict (slug) do nothing`, generated `id` never
+  supplied) applied it and was then deleted — never committed. Proof: before `0/3`
+  target slugs present; after, all three exist — `id=11 accelerator` ("Accelerator /
+  Incubator"), `id=12 research-call` ("Research Call"), `id=13 public-challenge`
+  ("Government / Public-Sector Challenge"); a second identical run found `3/3`
+  already present and changed nothing (idempotent). Discovery now admits these
+  three types instead of skipping them.
+  **(2) Geography determinacy.** `lib/taxonomy.ts` `deriveGeography` gained an
+  OPPORTUNITY-LOCATION-FIRST rule: a canonical Tanzania region or an unambiguous
+  Tanzania place (Zanzibar, Unguja, Pemba, Stone Town, Dar es Salaam) in the
+  opportunity's OWN region/city classifies **National even when the organizer's
+  country is foreign** — classification follows the OPPORTUNITY (where it happens /
+  who it is open to), never the organizer's nationality, so a foreign-run
+  event/challenge in Zanzibar is National; a Tanzania ministry/university/company
+  call stays National; a global/foreign call with evidenced Tanzanian access stays
+  International. Every opportunity entering the publishable corpus must now be
+  determinate: `parseReviewInput` and `satisfiesPublishedReviewContract`
+  (`lib/data/moderation-review.ts`) require a National/International classification
+  (`hasDeterminateGeography`), so an item with insufficient geographic evidence is
+  held OUT of the publishable corpus until evidence is established — never
+  published and never an "Ambiguous" bucket. Unknown still fails safe to `null` for
+  admission/pending (no admission blocker). The runner classification log now
+  passes region/city so discovery observability matches read-time classification
+  (observability only; writes nothing). Tests: 21 new focused assertions in
+  `tests/taxonomy.test.ts` (foreign organizer + Zanzibar = National;
+  Tanzania-specific call = National; global call open to Tanzanians =
+  International; insufficient evidence = not determinate/publishable) plus a
+  real-parser National gate test in `tests/moderation-review.test.ts`. Read-only
+  production probe: the 8 published rows classify `national=8 international=0
+  unknown=0`, and of the 2 M31-trusted rows `0` have unknown geography — the
+  trusted publishable corpus is fully determinate with no Ambiguous state. The
+  push-triggered Discovery sync CI at this commit's HEAD is the online proof the
+  runner change runs clean in production. Next milestone: **Showcase UI/UX
+  Readiness** (roadmap priority 8).
+
 - **2026-09-16 National/International classification + opportunity taxonomy
-  (current, implemented — full `npm run verify` green; migration 0017 owner-gated
-  and NOT applied; push-triggered CI green at exact HEAD `d370bf8`).** Roadmap
+  (implemented at HEAD `d370bf8`; superseded by the closure entry above, which
+  applies migration 0017 to production — full `npm run verify` green;
+  push-triggered CI green at `d370bf8`).** Roadmap
   priorities 6 + 7 delivered as one bounded milestone. `lib/taxonomy.ts` is the
   single deterministic classifier for three orthogonal dimensions, with no manual
   tagging: **TYPE** reuses the existing `categories` lookup
@@ -1848,12 +1893,20 @@ pending migration has not created. Unknown fails safe to `null` (never an
 "Ambiguous" workflow item). Discovery classifies every candidate systematically
 (`normalize.ts` type patterns + a runner classification log); public browse and
 the Moderator queue filter by group, sector and type. The only schema change is
-the additive, idempotent, owner-gated seed
-`supabase/migrations/0017_opportunity_taxonomy_categories.sql`; until the owner
-applies it, discovery gracefully skips the three new types (skip + warn, never
-crash — the `jobs`/0010 precedent). Full `npm run verify` is green; migration
-0017 is NOT applied and deployed-app production evidence is PENDING the push. It
-stays governed by the permanent source principle recorded in
+the additive, idempotent seed
+`supabase/migrations/0017_opportunity_taxonomy_categories.sql`, now **APPLIED to
+production** ref `jltuufukcwztugvojwjd` (owner-authorized, 2026-09-16): before
+`0/3`, after `id=11 accelerator` / `id=12 research-call` / `id=13 public-challenge`,
+idempotent on re-run — so discovery now admits these three types instead of
+skipping them. `deriveGeography` was then tightened with an OPPORTUNITY-LOCATION-FIRST
+rule (a canonical Tanzania region or unambiguous Tanzania place in the opportunity's
+own region/city is National even with a foreign organizer country), and the
+publishable corpus is gated on geography determinacy (`hasDeterminateGeography` in
+`parseReviewInput` + `satisfiesPublishedReviewContract`): insufficient geographic
+evidence keeps an item out of the publishable corpus, never an "Ambiguous" bucket.
+Full `npm run verify` and `npm run build` are green; a read-only production probe
+found the 8 published rows all National (`unknown=0`) and the 2 M31-trusted rows
+fully determinate. It stays governed by the permanent source principle recorded in
 [DISCOVERY_CHANNELS.md](DISCOVERY_CHANNELS.md) and
 [ENGINEERING_RULES.md](ENGINEERING_RULES.md): Tech Opportunity is
 organization-first and opportunity-only — authority belongs to the genuine
@@ -1866,14 +1919,16 @@ compete, submit, pitch, attend, train, receive funding, research, intern, work,
 exhibit); aggregators, reposts, unofficial accounts and secondary news remain
 discovery leads only.
 
-**Exact next milestone: roadmap priority 8 — Showcase readiness for Sahara Sparks
-and the Tech & AI Expo (NOT started).** Do not begin implementation without
-explicit owner authorization. Requirement 10 of the completed milestone expressly
-deferred UI redesign, profiles and AI matching; showcase readiness is the next
-ordered near-term priority in [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md) —
-presentation and readiness work over the now-trusted, now-classifiable corpus,
-not a new data model. The paragraph below preserves the original Source-Registry
-milestone framing (historical).
+**Exact next milestone: Showcase UI/UX Readiness (roadmap priority 8 — Sahara
+Sparks and the Tech & AI Expo; NOT started).** The National/International +
+opportunity-taxonomy milestone is now fully CLOSED (migration 0017 applied to
+production; geography determinacy tightened and gated). Do not begin
+implementation without explicit owner authorization. Requirement 10 of the
+completed milestone expressly deferred UI redesign, profiles and AI matching;
+Showcase UI/UX Readiness is the next ordered near-term priority in
+[PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md) — presentation and readiness work over
+the now-trusted, now-classifiable corpus, not a new data model. The paragraph
+below preserves the original Source-Registry milestone framing (historical).
 
 The controlled-run owner gate is satisfied (PASS above) and the 2-hour
 Discovery cadence is live on exact-HEAD scheduled observations. The next

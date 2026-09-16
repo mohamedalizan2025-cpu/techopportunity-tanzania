@@ -1,5 +1,6 @@
 import type { Opportunity, OpportunityCategory } from "./types";
 import type { CountryVerification, EligibilityDecision } from "./opportunity-trust";
+import { isCanonicalTanzaniaRegion } from "./tanzania-regions";
 
 /**
  * Opportunity taxonomy: three orthogonal dimensions.
@@ -9,8 +10,11 @@ import type { CountryVerification, EligibilityDecision } from "./opportunity-tru
  *                  single source of truth shared with the DB, discovery and
  *                  the submit form. Reused, never duplicated.
  *   2. GEOGRAPHY — exactly two top-level groups, National / International.
- *                  Cities and regions (Zanzibar, Dar es Salaam, Arusha, …)
- *                  stay metadata/filter dimensions, never top-level groups.
+ *                  Classification follows the OPPORTUNITY (where it happens /
+ *                  who it is open to), never the organizer's nationality: a
+ *                  foreign-run event in Zanzibar is National. Cities and
+ *                  regions stay metadata/filter dimensions, never top-level
+ *                  groups.
  *   3. SECTOR    — the subject area, classified SEPARATELY from type.
  *
  * Geography and sector are DERIVED, deterministic pure functions of evidence
@@ -24,7 +28,11 @@ import type { CountryVerification, EligibilityDecision } from "./opportunity-tru
  * Geography is never inferred from a foreign country, a source domain, or the
  * bare words "international"/"global"/"worldwide" alone; sector is never
  * forced. An unclassifiable dimension returns null and fails safe — it never
- * creates an "Ambiguous" workflow item and never blocks admission.
+ * creates an "Ambiguous" workflow item and never blocks ADMISSION (the row
+ * still enters/keeps its pending lifecycle). But because every published row
+ * must be exactly National or International, the moderator-approval gate holds
+ * a geographically indeterminate item OUT of the publishable corpus until real
+ * evidence resolves it (see lib/data/moderation-review.ts).
  */
 
 // --- Geography: exactly two top-level groups -------------------------------
@@ -85,9 +93,40 @@ export const SECTOR_LABELS: Record<Sector, string> = {
  */
 export interface GeographyEvidence {
   country?: string | null;
+  region?: string | null;
+  city?: string | null;
   countryVerification?: CountryVerification | "unknown" | null;
   eligibility?: EligibilityDecision | "unknown" | null;
   eligibilityEvidence?: string | null;
+}
+
+/**
+ * Unambiguous Tanzania place names that are NOT one of the 31 canonical
+ * regions but still locate an opportunity inside Tanzania (the islands, the
+ * common Zanzibar city name, the no-space Dar es Salaam variant). Kept tight
+ * and exact-match: a name counts only when it is the WHOLE stored value, never
+ * a substring, so classification reads real location evidence and never guesses.
+ */
+const TANZANIA_PLACE_ALIASES = new Set([
+  "tanzania",
+  "zanzibar",
+  "unguja",
+  "pemba",
+  "stone town",
+  "dar es salaam",
+  "daressalaam",
+]);
+
+/**
+ * True when a stored region/city value locates the opportunity inside
+ * Tanzania: either a canonical Tanzanian region (case-insensitive) or one of
+ * the tight place aliases above. Reads evidence already on the row; never
+ * assigns a location.
+ */
+export function isTanzaniaPlace(value: string | null | undefined): boolean {
+  const normalized = value?.trim().toLowerCase() ?? "";
+  if (normalized === "") return false;
+  return isCanonicalTanzaniaRegion(normalized) || TANZANIA_PLACE_ALIASES.has(normalized);
 }
 
 /**
@@ -100,31 +139,48 @@ export interface GeographyEvidence {
 const TANZANIA_FOCUS = /\btanzania(?:n|ns)?\b/i;
 
 /**
- * National / International classification.
+ * National / International classification. Follows the OPPORTUNITY (where it
+ * happens and who it is open to), never the organizer's nationality.
  *
- *   national      — Tanzania-based or Tanzania-focused on positive evidence:
- *                   a verified/structured Tanzania country, or eligibility
- *                   evidence explicitly naming Tanzania(n)s.
+ *   national      — Tanzania-based or Tanzania-focused on positive evidence,
+ *                   in priority order: (1) a verified/structured Tanzania
+ *                   country; (2) the opportunity's OWN region/city is a
+ *                   canonical Tanzanian region or unambiguous Tanzania place
+ *                   (Zanzibar, Unguja, Pemba, Dar es Salaam, …) — this wins
+ *                   EVEN IF the organizer's country is foreign, so a
+ *                   foreign-run event/challenge in Zanzibar is National;
+ *                   (3) eligibility evidence explicitly naming Tanzania(n)s.
  *   international — NOT Tanzania-based AND Tanzanians have EVIDENCED access
  *                   (eligibility `tanzanians_eligible`, i.e. an explicit
  *                   Tanzania / Africa-wide / worldwide / WBG-member statement).
  *                   Never inferred from a foreign country or generic worldwide
  *                   wording alone.
  *   null          — unknown. Fails safe: no group, no ambiguous workflow. The
- *                   row still enters/keeps its normal pending lifecycle and a
- *                   moderator can resolve country/eligibility later.
+ *                   row still enters/keeps its normal pending lifecycle; the
+ *                   publishable-corpus gate holds it out until a moderator
+ *                   resolves country/region/eligibility evidence.
  */
 export function deriveGeography(evidence: GeographyEvidence): Geography | null {
   const country = evidence.country?.trim().toLowerCase() ?? null;
   const verification = evidence.countryVerification ?? "unknown";
   const eligibility = evidence.eligibility ?? "unknown";
 
+  // 1. Verified/structured Tanzania country.
   if (verification === "verified_tanzania" || country === "tanzania") {
     return "national";
   }
+  // 2. OPPORTUNITY-LOCATION-FIRST: the opportunity's own region/city locates it
+  //    inside Tanzania. This wins over a foreign organizer country — a
+  //    foreign-run event/challenge in Zanzibar/Arusha is National, because
+  //    classification follows the opportunity, not the organizer's nationality.
+  if (isTanzaniaPlace(evidence.region) || isTanzaniaPlace(evidence.city)) {
+    return "national";
+  }
+  // 3. Positive Tanzania-focus wording in the eligibility evidence.
   if (TANZANIA_FOCUS.test(evidence.eligibilityEvidence ?? "")) {
     return "national";
   }
+  // 4. Evidenced access for Tanzanians to a non-Tanzania opportunity.
   if (eligibility === "tanzanians_eligible") {
     return "international";
   }
@@ -178,10 +234,24 @@ export function geographyOf(
 ): Geography | null {
   return deriveGeography({
     country: opportunity.location?.country ?? null,
+    region: opportunity.location?.region ?? null,
+    city: opportunity.location?.city ?? null,
     countryVerification: opportunity.trust?.countryVerification ?? "unknown",
     eligibility: opportunity.trust?.eligibilityDecision ?? "unknown",
     eligibilityEvidence: opportunity.trust?.eligibilityEvidence ?? null,
   });
+}
+
+/**
+ * True when the opportunity carries enough trustworthy evidence to be placed
+ * in exactly one geography group (National or International). The publishable
+ * corpus requires this: an indeterminate item is held out until evidence is
+ * established, never published and never parked in an "Ambiguous" bucket.
+ */
+export function hasDeterminateGeography(
+  opportunity: Pick<Opportunity, "location" | "trust">
+): boolean {
+  return geographyOf(opportunity) !== null;
 }
 
 export function sectorOf(

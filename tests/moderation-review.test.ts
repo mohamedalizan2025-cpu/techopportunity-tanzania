@@ -10,6 +10,7 @@ import {
   satisfiesPublishedReviewContract,
 } from "../lib/data/moderation-review";
 import { nextPendingAfter } from "../lib/data/moderation";
+import { deriveGeography } from "../lib/taxonomy";
 import type { Opportunity } from "../lib/types";
 
 let passed = 0;
@@ -224,6 +225,49 @@ if (audited.ok) {
       row.new_value === "Tanzania" &&
       row.evidence_url === PUBLISHED.url &&
       row.method === "moderator-review"
+    )
+  );
+}
+
+// Geography-determinacy publishable-corpus gate (National/International taxonomy).
+// Classification follows the OPPORTUNITY, not the organizer's nationality: a
+// foreign organizer running an opportunity in a canonical Tanzania region is
+// National, and the approval gate accepts it because it is geographically
+// determinate. BASE eligibility evidence carries NO Tanzania token, so the
+// region is the ONLY National signal here — isolating the location-first rule.
+const zanzibarApproval = parseReviewInput(form({
+  ...BASE,
+  country: "Germany",
+  country_verification: "verified_other",
+  country_evidence: "Official page states the organizer is headquartered in Berlin, Germany.",
+  region: "Mjini Magharibi",
+}));
+assert(
+  "geography gate: foreign organizer + Zanzibar region is accepted for approval",
+  zanzibarApproval.ok &&
+    zanzibarApproval.review.region === "Mjini Magharibi" &&
+    zanzibarApproval.review.country === "Germany"
+);
+if (zanzibarApproval.ok) {
+  assert(
+    "geography gate: foreign organizer + Zanzibar region classifies National (not the organizer's country)",
+    deriveGeography({
+      country: zanzibarApproval.review.country,
+      region: zanzibarApproval.review.region,
+      city: zanzibarApproval.review.city,
+      countryVerification: zanzibarApproval.review.countryVerification,
+      eligibility: "tanzanians_eligible",
+      eligibilityEvidence: zanzibarApproval.review.eligibilityEvidence,
+    }) === "national"
+  );
+  assert(
+    "geography gate: the same approval satisfies the published-review contract",
+    satisfiesPublishedReviewContract(
+      PUBLISHED,
+      zanzibarApproval.review,
+      "moderator-1",
+      "2026-09-12T12:00:00.000Z",
+      new Date("2026-09-12T12:00:00.000Z")
     )
   );
 }

@@ -90,18 +90,29 @@ added two DERIVED dimensions, all served by one deterministic classifier in
   "challenge"; a conference CFP stays a `conference`). They follow the exact
   `jobs`/0010 precedent: seed migration
   `0017_opportunity_taxonomy_categories.sql` is additive, idempotent
-  (`on conflict do nothing`), designed, NOT applied, OWNER GATE. Until it is
-  applied the runner skips those types loudly (skip + warn + `categorySkipped`);
-  nothing crashes and nothing mis-inserts.
+  (`on conflict do nothing`) and is now **APPLIED to production** (owner-authorized,
+  2026-09-16: `id=11 accelerator`, `id=12 research-call`, `id=13 public-challenge`),
+  so the runner admits those types. The `jobs`/0010 fail-safe stays intact: any
+  future unseeded slug is skipped loudly (skip + warn + `categorySkipped`) — nothing
+  crashes and nothing mis-inserts.
 - **GEOGRAPHY** is exactly two top-level groups, National / International, and is
-  DERIVED (never stored, no new columns): National on a verified/structured
-  Tanzania country or eligibility evidence explicitly naming Tanzania(n)s;
-  International only when NOT Tanzania-based AND Tanzanians have evidenced access
-  (`eligibility=tanzanians_eligible` from an Africa-wide / worldwide / WBG-member
-  statement). It is never inferred from a foreign country, a source domain, or the
-  bare words "international"/"global"/"worldwide" (ENGINEERING_RULES
-  data-integrity rule 4). Cities/regions (Zanzibar, Dar es Salaam, Arusha, …)
-  stay metadata.
+  DERIVED (never stored, no new columns). Classification follows the OPPORTUNITY,
+  not the organizer's nationality, in priority order: National on a
+  verified/structured Tanzania country; National when the opportunity's OWN
+  region/city is a canonical Tanzania region or an unambiguous Tanzania place
+  (Zanzibar, Unguja, Pemba, Stone Town, Dar es Salaam) — this wins EVEN IF the
+  organizer's country is foreign, so a foreign-run event/challenge in Zanzibar is
+  National; National on eligibility evidence explicitly naming Tanzania(n)s;
+  otherwise International only when NOT Tanzania-based AND Tanzanians have
+  evidenced access (`eligibility=tanzanians_eligible` from an Africa-wide /
+  worldwide / WBG-member statement). It is never inferred from a foreign country, a
+  source domain, or the bare words "international"/"global"/"worldwide"
+  (ENGINEERING_RULES data-integrity rule 4). Cities/regions stay metadata/filter
+  dimensions, never a top-level group. Unknown fails safe to `null` for admission,
+  but the publishable corpus is gated on determinacy: moderator approval
+  (`parseReviewInput` / `satisfiesPublishedReviewContract`) requires a
+  National/International classification, so an item with insufficient geographic
+  evidence is held out until evidence exists — never published "Ambiguous".
 - **SECTOR** is 13 practical slugs (AI/Data, Cybersecurity, Engineering, Health,
   Agriculture, Mining, Blue Economy, Climate/Environment, Tourism, Education,
   Finance, Energy, Entrepreneurship), classified independently from TYPE by a
