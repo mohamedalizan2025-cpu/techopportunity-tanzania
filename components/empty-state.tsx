@@ -6,6 +6,7 @@ interface EmptyStateProps {
   message: string;
   actionHref?: string;
   actionLabel?: string;
+  showBrowseAll?: boolean;
 }
 
 export function EmptyState({
@@ -13,6 +14,7 @@ export function EmptyState({
   message,
   actionHref,
   actionLabel,
+  showBrowseAll = false,
 }: EmptyStateProps) {
   return (
     <div role="status" className="state-panel w-full">
@@ -28,6 +30,11 @@ export function EmptyState({
       {actionHref && actionLabel ? (
         <Link href={actionHref} className="button-primary mt-2">
           {actionLabel}
+        </Link>
+      ) : null}
+      {showBrowseAll ? (
+        <Link href="/" className="button-secondary mt-2">
+          Browse all opportunities
         </Link>
       ) : null}
     </div>

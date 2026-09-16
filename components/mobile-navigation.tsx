@@ -1,12 +1,17 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { UiIcon } from "./ui-icon";
 
 export function MobileNavigation({ children }: { children: ReactNode }) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const [open, setOpen] = useState(false);
+  const panelId = "mobile-navigation-panel";
   return (
     <details
+      ref={detailsRef}
       className="mobile-menu sm:hidden"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
       onClick={(event) => {
         if ((event.target as HTMLElement).closest("a"))
           event.currentTarget.open = false;
@@ -18,10 +23,14 @@ export function MobileNavigation({ children }: { children: ReactNode }) {
         }
       }}
     >
-      <summary className="button-secondary min-h-11 px-3">
+      <summary
+        className="button-secondary min-h-11 px-3"
+        aria-expanded={open}
+        aria-controls={panelId}
+      >
         Menu <UiIcon name="chevron" />
       </summary>
-      <nav aria-label="Mobile navigation" className="menu-panel">
+      <nav id={panelId} aria-label="Mobile navigation" className="menu-panel">
         {children}
       </nav>
     </details>

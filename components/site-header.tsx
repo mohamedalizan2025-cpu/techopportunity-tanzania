@@ -10,7 +10,7 @@ export async function SiteHeader() {
   const user = await getAuthenticatedUser();
   const isStaff = user?.role === "moderator" || user?.role === "admin";
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[var(--line)] bg-[var(--surface)]/95 backdrop-blur">
+    <header className="sticky top-0 z-40 w-full border-b border-[var(--line)] bg-[var(--surface)]">
       <div className="page-shell flex min-h-[72px] items-center justify-between gap-3">
         <Link href="/" className="brand rounded-md">
           <span aria-hidden="true" className="brand-mark">

@@ -19,7 +19,6 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -37,6 +36,11 @@
     --accent: #15815e;
     --accent-strong: #87d9b8;
     --accent-soft: #183d2f;
+  }
+
+  .status-urgent {
+    background: #3d2f0a;
+    color: #ffd98a;
   }
 }
 
@@ -84,6 +88,25 @@ button:disabled {
   font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 9999px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.trust-badge-verified {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.section-heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--foreground);
 }
 .button-primary,
 .button-secondary {
@@ -170,7 +193,7 @@ button:disabled {
   width: 100%;
 }
 .hero-title {
-  font-size: clamp(2.3rem, 4.8vw, 4rem);
+  font-size: clamp(2.3rem, 4.5vw, 3.5rem);
   font-weight: 600;
   letter-spacing: -0.055em;
   line-height: 1.08;
@@ -180,6 +203,7 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  scroll-snap-type: x mandatory;
 }
 .category-links a {
   display: inline-flex;
@@ -191,6 +215,7 @@ button:disabled {
   font-size: 13px;
   font-weight: 550;
   background: var(--surface);
+  scroll-snap-align: start;
 }
 .category-links a:hover,
 .category-links a[aria-current] {
@@ -234,7 +259,7 @@ button:disabled {
 }
 .opportunity-card:hover {
   border-color: var(--line-strong);
-  box-shadow: 0 5px 20px #102a2108;
+  box-shadow: 0 5px 20px #102a211f;
 }
 .opportunity-card:focus-within {
   outline: 2px solid var(--accent);

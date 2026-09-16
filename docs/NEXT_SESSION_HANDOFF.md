@@ -49,8 +49,24 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   `state:success`, `workerErrors:0`, `sourcesSucceeded:20`, `sourcesFailed:0`,
   `insertedPending:0`, `categorySkipped:0` across all 20 sources — the applied 0017
   seeds mean no category is skipped for a missing seed; 2-hour cadence `on_time`) —
-  the online proof the runner change runs clean in production. Next milestone:
-  **Showcase UI/UX Readiness** (roadmap priority 8).
+  the online proof the runner change runs clean in production.
+
+### Showcase UI/UX Readiness — CLOSED 2026-09-16
+
+**Delivered:**
+- Performance: dropped unused Geist Mono font (~40KB), removed header backdrop-blur, disabled speculative prefetch on card links
+- Design system: added `.trust-badge` / `.section-heading` primitives, dark-mode status-urgent fix, scroll-snap category rail, tightened hero clamp
+- Icons: extended UiIcon set with shield, check, globe, close
+- Trust signals: `formatTrustBadge` helper surfaces "Evidence verified" badge on cards and detail pages (only for M31-trusted records)
+- Filters: sort control hoisted out of disclosure (always visible), active-filter chips above disclosure, geography hint text added
+- Hero: trust value-props now visible at all breakpoints (was hidden on mobile/tablet)
+- Pagination: PAGE_SIZE=24 on public browse, PAGE_SIZE=50 on moderation queue, "Show more" links
+- Mobile nav: aria-expanded/aria-controls accessibility added
+- Empty state: "Browse all opportunities" secondary link when filtered
+- Staff moderation: full palette reconciliation onto CSS variables (zinc/black → var(--background)/var(--surface)/var(--foreground)/var(--muted)/var(--line)/var(--accent)), semantic colors (amber/emerald/red) preserved, "Select none" added to bulk panel
+- All gates green: tsc, 27 test suites, 35 boundary invariants, Next.js build, eslint
+
+**Next milestone:** See PRODUCT_ROADMAP.md — all 8 near-term priorities are now closed.
 
 - **2026-09-16 National/International classification + opportunity taxonomy
   (implemented at HEAD `d370bf8`; superseded by the closure entry above, which
@@ -1923,16 +1939,24 @@ compete, submit, pitch, attend, train, receive funding, research, intern, work,
 exhibit); aggregators, reposts, unofficial accounts and secondary news remain
 discovery leads only.
 
-**Exact next milestone: Showcase UI/UX Readiness (roadmap priority 8 — Sahara
-Sparks and the Tech & AI Expo; NOT started).** The National/International +
-opportunity-taxonomy milestone is now fully CLOSED (migration 0017 applied to
-production; geography determinacy tightened and gated). Do not begin
-implementation without explicit owner authorization. Requirement 10 of the
-completed milestone expressly deferred UI redesign, profiles and AI matching;
-Showcase UI/UX Readiness is the next ordered near-term priority in
-[PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md) — presentation and readiness work over
-the now-trusted, now-classifiable corpus, not a new data model. The paragraph
-below preserves the original Source-Registry milestone framing (historical).
+### Showcase UI/UX Readiness — CLOSED 2026-09-16
+
+Roadmap priority 8 (Sahara Sparks and the Tech & AI Expo showcase readiness) is
+now **CLOSED**. All 8 near-term priorities in
+[PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md) are complete. Delivered: performance
+optimizations (dropped Geist Mono, removed backdrop-blur, disabled speculative
+prefetch), design-system primitives (`.trust-badge`, `.section-heading`, dark-mode
+fix, scroll-snap category rail), extended icon set (shield, check, globe, close),
+trust badge on M31-verified records, filter UX improvements (sort always visible,
+active-filter chips, geography hint), hero trust value-props at all breakpoints,
+pagination (24 public / 50 moderation with "Show more"), mobile nav accessibility
+(aria-expanded/aria-controls), empty-state secondary link, and full staff
+moderation palette reconciliation onto CSS variables with semantic colors
+preserved and "Select none" in the bulk panel. All gates green: tsc, 27 test
+suites, 35 boundary invariants, Next.js build, eslint.
+
+**Next milestone:** All near-term roadmap priorities closed. Next: owner-directed
+growth phase (see "Following product phases" in PRODUCT_ROADMAP.md).
 
 The controlled-run owner gate is satisfied (PASS above) and the 2-hour
 Discovery cadence is live on exact-HEAD scheduled observations. The next

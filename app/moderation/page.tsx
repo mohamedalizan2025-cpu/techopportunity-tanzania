@@ -36,6 +36,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+const PAGE_SIZE = 50;
+
 function formatSubmitted(iso: string): string {
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
@@ -57,14 +59,14 @@ function formatQueueDeadline(iso: string | null): string {
 }
 
 const signOutButtonClasses =
-  "inline-flex h-9 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50";
+  "inline-flex h-9 items-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]";
 
 function filterChipClasses(active: boolean): string {
   const base =
     "inline-flex h-8 items-center rounded-full border px-3 text-xs font-medium transition-colors ";
   return active
-    ? `${base} border-black bg-black text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-black`
-    : `${base} border-black/[.10] bg-white text-zinc-600 hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50`;
+    ? `${base} bg-[var(--accent)] text-white border-[var(--accent)]`
+    : `${base} border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)]`;
 }
 
 export default async function ModerationPage({
@@ -79,11 +81,11 @@ export default async function ModerationPage({
       redirect("/login?next=%2Fmoderation");
     }
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-zinc-50 px-6 py-24 text-center font-sans dark:bg-black">
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[var(--background)] px-6 py-24 text-center font-sans">
+        <h1 className="text-2xl font-semibold text-[var(--foreground)]">
           Access restricted
         </h1>
-        <p className="max-w-md text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+        <p className="max-w-md text-sm leading-6 text-[var(--muted)]">
           Your account does not have moderation permissions.
         </p>
         <form action={logOutAction}>
@@ -110,13 +112,21 @@ export default async function ModerationPage({
   // Server-side VIEW filters (Milestone 11): triage bucket + source. They
   // only narrow what this page renders — pending status, ordering and
   // decision logic are untouched, and the filter is always clearable.
-  const filter = parseQueueFilter(await searchParams);
+  const params = await searchParams;
+  const filter = parseQueueFilter(params);
   const filtered = !isQueueFilterEmpty(filter);
   const query = queueFilterQuery(filter);
   const visible = filterPendingQueue(pending, filter);
   // The suggested entry point only makes sense in the unfiltered view —
   // a filtered list already starts at the record type being batched.
   const suggested = filtered ? null : firstSuggestedReview(triageItems);
+
+  // Pagination: show up to `page * PAGE_SIZE` items with a "Show more" link.
+  const rawPage = Array.isArray(params.page) ? params.page[0] : params.page;
+  const page = Math.max(1, parseInt(rawPage ?? "1", 10) || 1);
+  const displayLimit = page * PAGE_SIZE;
+  const paginatedVisible = visible.slice(0, displayLimit);
+  const hasMore = visible.length > displayLimit;
 
   const bucketCounts = new Map<TriageBucket, number>();
   for (const item of triageItems) {
@@ -153,14 +163,14 @@ export default async function ModerationPage({
   );
 
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex flex-1 flex-col bg-[var(--background)] font-sans">
       <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-black sm:text-4xl dark:text-zinc-50">
+            <h1 className="text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
               Moderation queue
             </h1>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mt-2 text-sm text-[var(--muted)]">
               Signed in as {signedInAs} ·{" "}
               {pending.length === 0
                 ? "queue is empty"
@@ -169,7 +179,7 @@ export default async function ModerationPage({
             <p className="mt-1 text-sm">
               <Link
                 href="/published-management"
-                className="font-medium text-zinc-600 underline underline-offset-2 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
+                className="font-medium text-[var(--muted)] underline underline-offset-2 hover:text-[var(--foreground)]"
               >
                 Published records →
               </Link>
@@ -183,7 +193,7 @@ export default async function ModerationPage({
         </div>
 
         {pending.length === 0 ? (
-          <p className="mt-10 rounded-lg border border-dashed border-black/[.15] p-8 text-center text-sm text-zinc-500 dark:border-white/[.2] dark:text-zinc-400">
+          <p className="mt-10 rounded-lg border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--muted)]">
             No submissions are waiting for review right now.
           </p>
         ) : (
@@ -213,11 +223,11 @@ export default async function ModerationPage({
                   maxLength={120}
                   placeholder="Search pending titles…"
                   aria-label="Search pending titles"
-                  className="h-9 min-w-0 flex-1 rounded-full border border-black/[.10] bg-white px-4 text-sm text-black outline-none transition-colors focus:border-black/40 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-white/40"
+                  className="h-9 min-w-0 flex-1 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition-colors focus:border-[var(--accent)]"
                 />
                 <button
                   type="submit"
-                  className="inline-flex h-9 shrink-0 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+                  className="inline-flex h-9 shrink-0 items-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
                 >
                   Search
                 </button>
@@ -244,8 +254,8 @@ export default async function ModerationPage({
                   </Link>
                 ) : null}
               </div>
-              <details className="text-sm text-zinc-600 dark:text-zinc-400">
-                <summary className="cursor-pointer select-none text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              <details className="text-sm text-[var(--muted)]">
+                <summary className="cursor-pointer select-none text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
                   Filter by source ({sourceOptions.length})
                 </summary>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -268,13 +278,13 @@ export default async function ModerationPage({
                   ))}
                 </div>
               </details>
-              <details className="text-sm text-zinc-600 dark:text-zinc-400">
-                <summary className="cursor-pointer select-none text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              <details className="text-sm text-[var(--muted)]">
+                <summary className="cursor-pointer select-none text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
                   Filter by group &amp; sector
                 </summary>
                 <div className="mt-2 flex flex-col gap-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    <span className="text-xs font-medium text-[var(--muted)]">
                       Group:
                     </span>
                     {filter.geography ? (
@@ -301,7 +311,7 @@ export default async function ModerationPage({
                   </div>
                   {sectorOptions.length > 0 ? (
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                      <span className="text-xs font-medium text-[var(--muted)]">
                         Sector:
                       </span>
                       {filter.sector ? (
@@ -326,16 +336,16 @@ export default async function ModerationPage({
                 </div>
               </details>
               {filtered ? (
-                <p className="text-xs text-zinc-500 dark:text-zinc-500">
+                <p className="text-xs text-[var(--muted)]">
                   Filtered view — showing {visible.length} of {pending.length} pending ·{" "}
-                  <Link href="/moderation" className="font-medium underline underline-offset-2 hover:text-black dark:hover:text-zinc-50">
+                  <Link href="/moderation" className="font-medium underline underline-offset-2 hover:text-[var(--foreground)]">
                     Clear filter
                   </Link>
                 </p>
               ) : null}
             </div>
             {visible.length === 0 ? (
-              <p className="mt-6 rounded-lg border border-dashed border-black/[.15] p-8 text-center text-sm text-zinc-500 dark:border-white/[.2] dark:text-zinc-400">
+              <p className="mt-6 rounded-lg border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--muted)]">
                 No pending records match this filter — clear it to see the full queue.
               </p>
             ) : (
@@ -343,26 +353,26 @@ export default async function ModerationPage({
             {suggested ? (
               <Link
                 href={`/moderation/${suggested.id}`}
-                className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+                className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--accent)] px-6 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-strong)]"
               >
                 Start with a suggested high-value record →
               </Link>
             ) : null}
             <ul className="mt-6 flex flex-col gap-3">
-              {visible.map((opportunity) => {
+              {paginatedVisible.map((opportunity) => {
                 const bucket = bucketById.get(opportunity.id);
                 return (
                   <li key={opportunity.id}>
                     <Link
                       href={`/moderation/${opportunity.id}${query}`}
-                      className="block rounded-lg border border-black/[.08] bg-white p-4 transition-colors hover:border-black/30 dark:border-white/[.145] dark:bg-zinc-950 dark:hover:border-white/40"
+                      className="block rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 transition-colors hover:border-[var(--line-strong)]"
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="min-w-0 flex-1 break-words font-medium text-black dark:text-zinc-50">
+                        <p className="min-w-0 flex-1 break-words font-medium text-[var(--foreground)]">
                           {opportunity.title}
                         </p>
                         {bucket ? (
-                          <span className="shrink-0 rounded-full border border-black/[.08] bg-zinc-50 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-400">
+                          <span className="shrink-0 rounded-full border border-[var(--line)] bg-[var(--hero)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--muted)]">
                             {TRIAGE_BUCKET_SHORT[bucket]}
                           </span>
                         ) : null}
@@ -374,18 +384,18 @@ export default async function ModerationPage({
                           opportunity.location?.city ?? null,
                         ].filter((segment): segment is string => segment !== null && segment !== "");
                         return segments.length > 0 ? (
-                          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                          <p className="text-sm text-[var(--muted)]">
                             {segments.join(" · ")}
                           </p>
                         ) : null;
                       })()}
                       {opportunity.sourceName ? (
-                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                        <p className="mt-1 text-xs text-[var(--muted)]">
                           Auto-discovered · {opportunity.sourceName}
                           {opportunity.discoveryMethod ? ` · ${opportunity.discoveryMethod}` : ""}
                         </p>
                       ) : null}
-                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
                         Submitted {formatSubmitted(opportunity.createdAt)} · Deadline{" "}
                         {formatQueueDeadline(opportunity.deadline)}
                       </p>
@@ -394,8 +404,16 @@ export default async function ModerationPage({
                 );
               })}
             </ul>
+            {hasMore ? (
+              <Link
+                href={`/moderation${query}${query ? "&" : "?"}page=${page + 1}`}
+                className="mt-4 inline-flex h-9 items-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+              >
+                Show more ({visible.length - displayLimit} remaining)
+              </Link>
+            ) : null}
             <QueueBulkPanel
-              items={visible.map((opportunity) => ({
+              items={paginatedVisible.map((opportunity) => ({
                 id: opportunity.id,
                 title: opportunity.title,
                 flagged: false,
@@ -403,7 +421,7 @@ export default async function ModerationPage({
             />
               </>
             )}
-            <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-500">
+            <p className="mt-4 text-xs text-[var(--muted)]">
               {TRIAGE_HEURISTIC_NOTE} Furniture lists only exact reviewed
               site-furniture titles.
             </p>

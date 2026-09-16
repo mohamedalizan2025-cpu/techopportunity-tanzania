@@ -78,9 +78,13 @@ foreign-run event, a Tanzania-specific call is National, and a global call with
 evidenced Tanzanian access is International; every opportunity entering the
 publishable corpus must be determinate National/International, and an item with
 insufficient geographic evidence is held out until evidence exists (never
-"Ambiguous"). Full `npm run verify` and `npm run build` are green. Next milestone:
-Showcase UI/UX Readiness for Sahara Sparks and the Tech & AI Expo (roadmap
-priority 8).
+"Ambiguous"). Full `npm run verify` and `npm run build` are green.
+**Showcase UI/UX Readiness (roadmap priority 8) is now CLOSED (2026-09-16)** —
+performance, design-system primitives, trust badges, filter UX, pagination,
+accessibility, and full staff-moderation palette reconciliation delivered; all
+gates green (tsc, 27 tests, 35 boundaries, build, lint). All 8 near-term roadmap
+priorities are closed. Next: owner-directed growth phase (see "Following product
+phases" in [PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md)).
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

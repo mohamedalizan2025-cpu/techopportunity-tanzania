@@ -24,9 +24,9 @@ interface OrganizationOption {
 }
 
 const selectClasses =
-  "w-full rounded-lg border border-black/[.10] bg-white px-3 py-2 text-sm text-black outline-none transition-colors focus:border-black/40 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-white/40";
+  "w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] outline-none transition-colors focus:border-[var(--accent)]";
 const inputClasses = selectClasses;
-const labelClasses = "block text-sm font-medium text-black dark:text-zinc-50";
+const labelClasses = "block text-sm font-medium text-[var(--foreground)]";
 
 // Known-vs-unknown hints: a prefilled value was discovered automatically
 // (still worth a glance); an empty value is UNKNOWN and must only be filled
@@ -97,10 +97,10 @@ export function DecisionForm({
 
   if (state.status === "success") {
     return (
-      <div className="flex flex-col gap-4 rounded-lg border border-black/[.08] bg-white p-6 dark:border-white/[.145] dark:bg-zinc-950">
-        <p className="text-sm font-medium text-black dark:text-zinc-50">
+      <div className="flex flex-col gap-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-6">
+        <p className="text-sm font-medium text-[var(--foreground)]">
           {state.decision === "approve" ? "✅ Approved" : "⛔ Rejected"} —{" "}
-          <span className="font-normal text-zinc-600 dark:text-zinc-400">
+          <span className="font-normal text-[var(--muted)]">
             {state.message}
           </span>
         </p>
@@ -109,7 +109,7 @@ export function DecisionForm({
             <Link
               href={nextHref}
               autoFocus
-              className="inline-flex h-10 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-strong)]"
             >
               Review next in queue → (Enter)
             </Link>
@@ -118,8 +118,8 @@ export function DecisionForm({
             href={queueHref}
             className={
               nextHref
-                ? "inline-flex h-10 items-center rounded-full border border-black/[.10] bg-white px-5 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
-                : "inline-flex h-10 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+                ? "inline-flex h-10 items-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+                : "inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-strong)]"
             }
           >
             {mode === "published" ? "Back to published records" : "Back to queue"}
@@ -127,7 +127,7 @@ export function DecisionForm({
           {state.decision === "approve" && state.decidedSlug ? (
             <Link
               href={`/opportunities/${state.decidedSlug}`}
-              className="inline-flex h-10 items-center rounded-full border border-black/[.10] bg-white px-5 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+              className="inline-flex h-10 items-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             >
               View public page ↗
             </Link>
@@ -150,8 +150,8 @@ export function DecisionForm({
 
       <input type="hidden" name="opportunityId" value={opportunity.id} />
 
-      <fieldset className="flex flex-col gap-3 rounded-lg border border-black/[.08] bg-white p-4 dark:border-white/[.145] dark:bg-zinc-950">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <fieldset className="flex flex-col gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
           Opportunity
         </legend>
         <label className={labelClasses}>
@@ -203,13 +203,13 @@ export function DecisionForm({
         </label>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3 rounded-lg border border-black/[.08] bg-white p-4 dark:border-white/[.145] dark:bg-zinc-950">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <fieldset className="flex flex-col gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
           Organizer
         </legend>
         <label className={labelClasses}>
           Organization{" "}
-          <span className="font-normal text-zinc-500">(only when verified)</span>
+          <span className="font-normal text-[var(--muted)]">(only when verified)</span>
           <KnownHint hasValue={opportunity.organizationId != null} />
           <select
             name="organizationId"
@@ -226,8 +226,8 @@ export function DecisionForm({
         </label>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3 rounded-lg border border-black/[.08] bg-white p-4 dark:border-white/[.145] dark:bg-zinc-950">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <fieldset className="flex flex-col gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
           Location — only what the official source confirms
         </legend>
         <TextField label="Venue" name="venue_name" defaultValue={opportunity.location?.venueName ?? ""} />
@@ -282,8 +282,8 @@ export function DecisionForm({
         </label>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3 rounded-lg border border-black/[.08] bg-white p-4 dark:border-white/[.145] dark:bg-zinc-950">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <fieldset className="flex flex-col gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
           Deadline
         </legend>
         <TextField
@@ -311,8 +311,8 @@ export function DecisionForm({
         />
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3 rounded-lg border border-black/[.08] bg-white p-4 dark:border-white/[.145] dark:bg-zinc-950">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <fieldset className="flex flex-col gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
           Publication trust gate
         </legend>
         <TextField
@@ -346,7 +346,7 @@ export function DecisionForm({
           </legend>
           <label className={labelClasses}>
             Rejection reason{" "}
-            <span className="font-normal text-zinc-500">
+            <span className="font-normal text-[var(--muted)]">
               (required when rejecting)
             </span>
             <textarea
@@ -357,7 +357,7 @@ export function DecisionForm({
               className={`${inputClasses} mt-1.5`}
             />
           </label>
-          <p className="text-xs text-zinc-600 dark:text-zinc-400">
+          <p className="text-xs text-[var(--muted)]">
             Approval ignores this field. A rejection cannot be saved without a specific reason, and the reason is retained with the actor and decision time.
           </p>
         </fieldset>
@@ -365,14 +365,14 @@ export function DecisionForm({
 
       {/* Decision controls stay reachable at the bottom of long records;
           they submit the same form (no duplicated state). */}
-      <div className="sticky bottom-0 -mx-6 mt-2 flex flex-wrap gap-3 border-t border-black/[.08] bg-zinc-50 px-6 py-4 dark:border-white/[.145] dark:bg-black">
+      <div className="sticky bottom-0 -mx-6 mt-2 flex flex-wrap gap-3 border-t border-[var(--line)] bg-[var(--background)] px-6 py-4">
         <button
           type="submit"
           form="decision-form"
           name={mode === "pending" ? "decision" : undefined}
           value={mode === "pending" ? "approve" : undefined}
           disabled={isPending}
-          className="inline-flex h-11 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-colors hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-[#ccc]"
+          className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--accent)] px-6 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending
             ? "Working…"
@@ -387,14 +387,14 @@ export function DecisionForm({
             name="decision"
             value="reject"
             disabled={isPending}
-            className="inline-flex h-11 items-center justify-center rounded-full border border-black/[.10] bg-white px-6 text-sm font-medium text-zinc-600 transition-colors hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:text-red-300"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-6 text-sm font-medium text-[var(--muted)] transition-colors hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:border-red-900 dark:hover:text-red-300"
           >
             Reject (keeps record as discovered)
           </button>
         ) : null}
       </div>
 
-      <p className="text-xs text-zinc-500 dark:text-zinc-500">
+      <p className="text-xs text-[var(--muted)]">
         {mode === "published"
           ? "This action keeps the record published only when the complete current trust contract passes. Use the separate unpublish control when evidence is insufficient."
           : "Corrections are saved only when approving. Rejecting keeps the record exactly as discovered. Leave a field empty when the official source does not confirm it — unknown stays unknown."}

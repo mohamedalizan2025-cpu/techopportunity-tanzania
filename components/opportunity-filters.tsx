@@ -279,6 +279,35 @@ export function OpportunityFilters({
         </p>
       </form>
 
+      {activeChips.length > 0 ? (
+        <div className="w-full border-t border-[var(--line)] pt-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-xs font-bold uppercase tracking-[0.15em] text-[var(--subtle)]">
+              Active
+            </span>
+            {activeChips.map((chip) => (
+              <Link
+                key={chip.key}
+                href={`${chip.href}#opportunities`}
+                aria-label={`Remove ${chip.label}`}
+                className="inline-flex min-h-11 items-center rounded-full border border-[var(--line-strong)] bg-[var(--accent-soft)] px-3 text-xs font-semibold text-[var(--accent-strong)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              >
+                {chip.label}
+                <span aria-hidden="true" className="ml-2">
+                  ×
+                </span>
+              </Link>
+            ))}
+            <Link
+              href="/#opportunities"
+              className="inline-flex min-h-11 items-center px-2 text-xs font-semibold text-[var(--muted)] underline underline-offset-4 hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            >
+              Clear all
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
       <details
         className="filter-disclosure"
         open={Boolean(
@@ -287,7 +316,7 @@ export function OpportunityFilters({
       >
         <summary>
           <UiIcon name="filter" />
-          Filters &amp; sort
+          Filters
           <span className="ml-auto text-xs font-normal text-[var(--muted)]">
             {activeChips.length > 0
               ? `${activeChips.length} active`
@@ -324,6 +353,9 @@ export function OpportunityFilters({
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              National = within Tanzania · International = open beyond Tanzania
+            </p>
           </label>
 
           <label className="grid gap-1 text-xs font-semibold text-[var(--muted)]">
@@ -415,70 +447,41 @@ export function OpportunityFilters({
             Apply filters
           </button>
         </form>
-
-        <div className="flex w-full flex-col gap-2 border-t border-[var(--line)] pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--subtle)]">
-            Sort by
-          </span>
-          <ul className="flex flex-wrap gap-2" aria-label="Sort results">
-            {activeQuery ? (
-              <li>
-                <FilterLink
-                  href={`${buildHref(activeCategory, "relevance", shared)}#opportunities`}
-                  active={activeSort === "relevance"}
-                >
-                  Best match
-                </FilterLink>
-              </li>
-            ) : null}
-            <li>
-              <FilterLink
-                href={`${buildHref(activeCategory, "deadline", shared)}#opportunities`}
-                active={activeSort === "deadline"}
-              >
-                Deadline soonest
-              </FilterLink>
-            </li>
-            <li>
-              <FilterLink
-                href={`${buildHref(activeCategory, "newest", shared)}#opportunities`}
-                active={activeSort === "newest"}
-              >
-                Newest
-              </FilterLink>
-            </li>
-          </ul>
-        </div>
       </details>
 
-      {activeChips.length > 0 ? (
-        <div className="w-full border-t border-[var(--line)] pt-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-xs font-bold uppercase tracking-[0.15em] text-[var(--subtle)]">
-              Active
-            </span>
-            {activeChips.map((chip) => (
-              <Link
-                key={chip.key}
-                href={`${chip.href}#opportunities`}
-                aria-label={`Remove ${chip.label}`}
-                className="inline-flex min-h-11 items-center rounded-full border border-[var(--line-strong)] bg-[var(--accent-soft)] px-3 text-xs font-semibold text-[var(--accent-strong)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+      <div className="flex w-full flex-col gap-2 border-t border-[var(--line)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <span className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--subtle)]">
+          Sort by
+        </span>
+        <ul className="flex flex-wrap gap-2" aria-label="Sort results">
+          {activeQuery ? (
+            <li>
+              <FilterLink
+                href={`${buildHref(activeCategory, "relevance", shared)}#opportunities`}
+                active={activeSort === "relevance"}
               >
-                {chip.label}
-                <span aria-hidden="true" className="ml-2">
-                  ×
-                </span>
-              </Link>
-            ))}
-            <Link
-              href="/#opportunities"
-              className="inline-flex min-h-11 items-center px-2 text-xs font-semibold text-[var(--muted)] underline underline-offset-4 hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                Best match
+              </FilterLink>
+            </li>
+          ) : null}
+          <li>
+            <FilterLink
+              href={`${buildHref(activeCategory, "deadline", shared)}#opportunities`}
+              active={activeSort === "deadline"}
             >
-              Clear all
-            </Link>
-          </div>
-        </div>
-      ) : null}
+              Deadline soonest
+            </FilterLink>
+          </li>
+          <li>
+            <FilterLink
+              href={`${buildHref(activeCategory, "newest", shared)}#opportunities`}
+              active={activeSort === "newest"}
+            >
+              Newest
+            </FilterLink>
+          </li>
+        </ul>
+      </div>
     </nav>
   );
 }

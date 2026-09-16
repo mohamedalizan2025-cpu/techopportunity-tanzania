@@ -28,6 +28,18 @@ import { parseGeography, parseSector } from "@/lib/taxonomy";
 
 export const revalidate = 60;
 
+const PAGE_SIZE = 24;
+
+/** Append or update the `page` query param on a browse href, preserving any hash. */
+function buildPageHref(href: string, nextPage: number): string {
+  const [beforeHash, hash = ""] = href.split("#");
+  const [path, query = ""] = beforeHash.split("?");
+  const params = new URLSearchParams(query);
+  params.set("page", String(nextPage));
+  const qs = params.toString();
+  return `${path}${qs ? `?${qs}` : ""}${hash ? `#${hash}` : ""}`;
+}
+
 interface HomePageProps {
   searchParams: Promise<{
     category?: string;
@@ -38,6 +50,7 @@ interface HomePageProps {
     deadline?: string;
     geography?: string;
     sector?: string;
+    page?: string;
   }>;
 }
 
@@ -51,6 +64,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const deadline = parseDeadlineFilter(params.deadline);
   const geography = parseGeography(params.geography);
   const sector = parseSector(params.sector);
+  const page = Math.max(1, parseInt(params.page || "1", 10) || 1);
 
   const [browseData, liveCategories, user] = await Promise.all([
     getPublicBrowseData({ category, sort, q, city, region, deadline, geography, sector }),
@@ -75,7 +89,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     ? { closingSoon: [], recentlyAdded: [] }
     : buildHomepageSnapshot(opportunities, now);
   const browseHref = `${buildHref(category, sort, { q, city, region, deadline, geography, sector })}#opportunities`;
-  const resultLabel = formatResultCount(opportunities.length);
+  const visibleOpportunities = opportunities.slice(0, page * PAGE_SIZE);
+  const hasMore = opportunities.length > visibleOpportunities.length;
+  const showMoreHref = buildPageHref(browseHref, page + 1);
+  const resultLabel = hasMore
+    ? `Showing ${visibleOpportunities.length} of ${opportunities.length} opportunities`
+    : formatResultCount(opportunities.length);
 
   return (
     <main id="main-content" tabIndex={-1} className="flex-1">
@@ -118,11 +137,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             ) : null}
           </div>
           {!isFiltered ? (
-            <aside className="hidden border-l border-[var(--line-strong)] pl-8 lg:block">
+            <aside className="border-t border-[var(--line-strong)] pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
               <p className="text-lg font-semibold tracking-tight">
                 Know more before you apply.
               </p>
-              <ul className="mt-5 space-y-4 text-sm text-[var(--muted)]">
+              <ul className="mt-5 flex flex-col gap-3 text-sm text-[var(--muted)] sm:flex-row sm:flex-wrap sm:gap-6">
                 <li className="flex items-center gap-3">
                   <UiIcon name="source" />
                   Source links you can check yourself
@@ -192,7 +211,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             >
               {snapshot.closingSoon.length > 0 ? (
                 <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4">
-                  <h2 className="px-3 text-base font-semibold">Closing soon</h2>
+                  <h2 className="flex items-center gap-2 px-3 text-base font-semibold">
+                    <UiIcon name="clock" width="16" height="16" />
+                    Closing soon
+                  </h2>
                   <ul className="mt-2 divide-y divide-[var(--line)]">
                     {snapshot.closingSoon.map((item) => (
                       <li key={item.id}>
@@ -208,7 +230,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               ) : null}
               {snapshot.recentlyAdded.length > 0 ? (
                 <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4">
-                  <h2 className="px-3 text-base font-semibold">
+                  <h2 className="flex items-center gap-2 px-3 text-base font-semibold">
+                    <UiIcon name="arrow" width="16" height="16" />
                     Recently added
                   </h2>
                   <ul className="mt-2 divide-y divide-[var(--line)]">
@@ -270,21 +293,31 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 actionLabel={
                   isFiltered ? "Clear all filters" : "Submit an opportunity"
                 }
+                showBrowseAll={isFiltered}
               />
             ) : (
-              <ul className="grid gap-4 sm:grid-cols-2">
-                {opportunities.map((opportunity) => (
-                  <li key={opportunity.id} className="min-w-0">
-                    <OpportunityCard
-                      opportunity={opportunity}
-                      now={now}
-                      returnHref={browseHref}
-                      isSaved={savedIds.has(opportunity.id)}
-                      isAuthenticated={user !== null}
-                    />
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="grid gap-4 sm:grid-cols-2">
+                  {visibleOpportunities.map((opportunity) => (
+                    <li key={opportunity.id} className="min-w-0">
+                      <OpportunityCard
+                        opportunity={opportunity}
+                        now={now}
+                        returnHref={browseHref}
+                        isSaved={savedIds.has(opportunity.id)}
+                        isAuthenticated={user !== null}
+                      />
+                    </li>
+                  ))}
+                </ul>
+                {hasMore ? (
+                  <div className="mt-8 flex justify-center">
+                    <Link href={showMoreHref} className="button-secondary">
+                      Show more opportunities
+                    </Link>
+                  </div>
+                ) : null}
+              </>
             )}
           </div>
         </div>

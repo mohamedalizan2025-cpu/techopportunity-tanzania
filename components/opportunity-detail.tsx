@@ -6,6 +6,7 @@ import {
   formatDeadlinePresentation,
   formatDiscoveredDate,
   formatLocationDisplay,
+  formatTrustBadge,
   sourceHostname,
   sourcePresentation,
   UNKNOWN_TANZANIA_ELIGIBILITY,
@@ -30,6 +31,7 @@ export function OpportunityDetail({
   const added = formatAddedDate(opportunity.createdAt);
   const discovered = formatDiscoveredDate(opportunity.discoveredAt);
   const hostname = sourceHostname(opportunity.url);
+  const badge = formatTrustBadge(opportunity);
 
   return (
     <article>
@@ -42,6 +44,11 @@ export function OpportunityDetail({
             <UiIcon name="clock" width="14" height="14" />
             {deadline.label}
           </span>
+          {badge ? (
+            <span className="trust-badge trust-badge-verified">
+              <UiIcon name="shield" width="14" height="14" /> {badge.label}
+            </span>
+          ) : null}
         </div>
         <h1 className="mt-5 max-w-4xl break-words text-3xl font-semibold leading-[1.15] tracking-[-.04em] sm:text-4xl lg:text-5xl">
           {opportunity.title}
@@ -117,8 +124,14 @@ export function OpportunityDetail({
               <dt className="text-xs font-semibold text-[var(--muted)]">
                 Tanzania eligibility
               </dt>
-              <dd className="mt-1 text-sm leading-6">
-                {UNKNOWN_TANZANIA_ELIGIBILITY}
+              <dd className="mt-1 flex items-start gap-2 text-sm leading-6">
+                <UiIcon
+                  name="globe"
+                  width="16"
+                  height="16"
+                  className="mt-0.5 shrink-0"
+                />
+                <span>{UNKNOWN_TANZANIA_ELIGIBILITY}</span>
               </dd>
             </div>
           </dl>
@@ -164,6 +177,11 @@ export function OpportunityDetail({
                 <dd className="mt-1 font-medium">
                   {sourcePresentation(opportunity)}
                 </dd>
+                {hostname ? (
+                  <dd className="mt-1 break-all text-sm text-[var(--muted)]">
+                    {hostname}
+                  </dd>
+                ) : null}
               </div>
               <div>
                 <dt className="text-[var(--muted)]">Recorded</dt>

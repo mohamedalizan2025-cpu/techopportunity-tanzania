@@ -1,7 +1,7 @@
 import type { Opportunity, OpportunityLocation } from "./types";
 import { isActionableNow } from "./lifecycle";
 import { evaluateDeadline } from "./deadline-intelligence";
-import { isFeatureEligible } from "./opportunity-trust";
+import { isFeatureEligible, publicQualityBand } from "./opportunity-trust";
 
 export interface DeadlinePresentation {
   state: "active" | "urgent" | "expired" | "unknown";
@@ -107,6 +107,20 @@ export function sourcePresentation(opportunity: Opportunity): string {
   return source ? `Source: ${source}` : "Source page available";
 }
 
+/**
+ * Public trust badge config. Only surfaced for opportunities in the "trusted"
+ * quality band; every other band returns null so nothing is claimed that the
+ * evidence pipeline has not verified.
+ */
+export function formatTrustBadge(
+  opportunity: Opportunity
+): { tone: "verified"; label: "Evidence verified" } | null {
+  if (publicQualityBand(opportunity) === "trusted") {
+    return { tone: "verified", label: "Evidence verified" };
+  }
+  return null;
+}
+
 export function sourceHostname(url: string): string | null {
   try {
     return new URL(url).hostname.replace(/^www\./i, "") || null;
@@ -138,6 +152,7 @@ const BROWSE_QUERY_KEYS = new Set([
   "city",
   "region",
   "sort",
+  "page",
 ]);
 
 /** Accept only an internal homepage result URL or the protected saved list. */

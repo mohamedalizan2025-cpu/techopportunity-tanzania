@@ -6,6 +6,7 @@ import {
   formatAddedDate,
   formatCardLocation,
   formatDeadlinePresentation,
+  formatTrustBadge,
   opportunityExcerpt,
   opportunityHref,
   sourcePresentation,
@@ -29,12 +30,20 @@ export function OpportunityCard({
   const deadline = formatDeadlinePresentation(opportunity.deadline, now);
   const place = formatCardLocation(opportunity.location);
   const added = formatAddedDate(opportunity.createdAt);
+  const badge = formatTrustBadge(opportunity);
 
   return (
     <article className="opportunity-card group">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <span className="pt-1 text-xs font-semibold uppercase tracking-wider text-[var(--accent-strong)]">
-          {categoryLabel(opportunity.category)}
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="pt-1 text-xs font-semibold uppercase tracking-wider text-[var(--accent-strong)]">
+            {categoryLabel(opportunity.category)}
+          </span>
+          {badge && (
+            <span className="trust-badge trust-badge-verified">
+              <UiIcon name="shield" width="14" height="14" /> {badge.label}
+            </span>
+          )}
         </span>
         <span className={`status-label status-${deadline.state}`}>
           <UiIcon name="clock" width="14" height="14" />
@@ -45,6 +54,7 @@ export function OpportunityCard({
         <h3 className="text-xl font-semibold leading-7 tracking-tight">
           <Link
             href={opportunityHref(opportunity.slug, returnHref)}
+            prefetch={false}
             className="after:absolute after:inset-0 after:rounded-[14px] hover:text-[var(--accent-strong)]"
           >
             {opportunity.title}
@@ -70,18 +80,6 @@ export function OpportunityCard({
             <span>{place ?? "Location not specified"}</span>
           </dd>
         </div>
-        <div>
-          <dt className="sr-only">Eligibility</dt>
-          <dd className="flex items-start gap-2">
-            <UiIcon
-              name="info"
-              width="16"
-              height="16"
-              className="mt-0.5 shrink-0"
-            />
-            <span>{UNKNOWN_TANZANIA_ELIGIBILITY}</span>
-          </dd>
-        </div>
         {deadline.dateLabel ? (
           <div>
             <dt className="sr-only">Deadline date</dt>
@@ -97,6 +95,15 @@ export function OpportunityCard({
           </div>
         ) : null}
       </dl>
+      <p className="mt-2 flex items-start gap-2 text-xs text-[var(--muted)]">
+        <UiIcon
+          name="info"
+          width="14"
+          height="14"
+          className="mt-0.5 shrink-0"
+        />
+        <span>{UNKNOWN_TANZANIA_ELIGIBILITY}</span>
+      </p>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-4">
         <div>
           <span
@@ -135,6 +142,7 @@ export function SnapshotOpportunityLink({
   return (
     <Link
       href={opportunityHref(opportunity.slug, returnHref)}
+      prefetch={false}
       className="group flex min-h-20 items-center justify-between gap-4 rounded-xl border border-transparent px-3 py-3 transition hover:border-[var(--line)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
     >
       <span className="min-w-0">

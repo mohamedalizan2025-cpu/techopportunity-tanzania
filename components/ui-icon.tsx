@@ -10,7 +10,11 @@ type IconName =
   | "filter"
   | "source"
   | "info"
-  | "chevron";
+  | "chevron"
+  | "shield"
+  | "check"
+  | "globe"
+  | "close";
 
 const paths: Record<IconName, React.ReactNode> = {
   search: (
@@ -61,6 +65,20 @@ const paths: Record<IconName, React.ReactNode> = {
     </>
   ),
   chevron: <path d="m6 9 6 6 6-6" />,
+  shield: (
+    <>
+      <path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3Z" />
+    </>
+  ),
+  check: <path d="m5 13 4 4L19 7" />,
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z" />
+    </>
+  ),
+  close: <path d="M6 6l12 12M18 6 6 18" />,
 };
 
 export function UiIcon({
