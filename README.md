@@ -36,14 +36,25 @@ AfricaLics PhD VFP 2027), both future-deadline, relevant, non-excluded, and
 unduplicated, admitted — from the secondary origin OpportunityDesk — only with
 external application evidence. The repo-targeted 2-hour cadence is now live
 (Discovery sync `active`, `cron: '0 */2 * * *'`). The Authoritative Source
-Registry Expansion milestone's bounded first-party adapter batch is DELIVERED
-in-repo and owner-gated: two dedicated Tanzania listing sources (UDSM
-announcements view, NM-AIST events archive) now extract through narrow,
-fixture-backed adapters in `scripts/discovery/source-adapters.ts` — admission
-gate and 2-hour cadence unchanged — with seed rows in
-`supabase/seeds/0003_first_party_listing_adapters.sql` held back from
-production until the owner applies them. Next milestone (post activation):
-National/International classification + taxonomy.
+Registry Expansion milestone is **CLOSED (2026-09-16)**: the owner applied
+`supabase/seeds/0003_first_party_listing_adapters.sql` to production, activating
+exactly the two reviewed first-party listing adapters (UDSM announcements view,
+NM-AIST events archive) in `scripts/discovery/source-adapters.ts` — active
+registry 18 → 20, admission gate and 2-hour cadence unchanged. Two live
+Discovery runs were observed (`35106123095`, `35107041338`): UDSM admitted 5
+real opportunities and NM-AIST 1 Data-Science/AI scholarship item (all `pending`
+for human moderation; no institutional news admitted); NM-AIST's one transient
+fetch timeout self-cleared on re-run. Tech Opportunity is organization-first and
+opportunity-only — authority belongs to the genuine organization/channel
+(official sites, application portals, government/ministry/agency channels,
+universities/research institutions, companies/foundations/NGOs/hubs, verified or
+demonstrably official LinkedIn/Instagram/Facebook/X accounts, and official forms
+they link), never to general news; an item is an opportunity only when it carries
+a concrete user action (apply, register, compete, submit, pitch, attend, train,
+receive funding, research, intern, work, exhibit); aggregators, reposts,
+unofficial accounts and secondary news remain discovery leads only. Next
+milestone: National/International classification + opportunity taxonomy (not
+started).
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

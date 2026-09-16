@@ -4,6 +4,21 @@ Status: **AUDIT ONLY**. No connector code was added. Every external channel
 below was checked against its CURRENT official developer documentation where
 reachable from this environment, per the no-stale-memory rule.
 
+## Source authority principle (permanent — organization-first, opportunity-only)
+
+**Tech Opportunity is organization-first and opportunity-only. Authority belongs
+to the genuine organization/channel, not only to its website.** Authoritative
+first-party evidence may come from: official organization/programme websites;
+official application portals; government/ministry/agency channels;
+universities/research institutions; companies/foundations/NGOs/hubs; verified or
+demonstrably official LinkedIn, Instagram, Facebook, or X accounts; and official
+forms linked by those organizations. Do NOT ingest general news. An item is an
+opportunity only when it carries a concrete user action — apply, register,
+compete, submit, pitch, attend, train, receive funding, research, intern, work,
+exhibit, etc. Aggregators, reposts, unofficial accounts and secondary news remain
+discovery leads only, never authority. This principle governs every
+source-registry expansion and admission-evidence decision recorded below.
+
 ## Why this audit exists
 
 The official-website sources yield thin opportunity volume because
@@ -167,7 +182,7 @@ No source was activated or deactivated. Zindi, Devpost and MLH need a bounded,
 testable item-level adapter plus per-item eligibility evidence before a registry
 row is justified; adding them today would produce zero or misleading yield.
 
-## Bounded first-party LISTING adapters (2026-09-16, owner-gated)
+## Bounded first-party LISTING adapters (2026-09-16, ACTIVATED in production)
 
 The Authoritative Source Registry Expansion milestone was executed via the
 narrow adapter path — not by adding zero-yield registry rows to inflate the
@@ -186,14 +201,29 @@ normalize → validate → qualify → shouldAdmitCandidate.
 | University of Dar es Salaam | `https://www.udsm.ac.tz/announcement` | intra-host `/announcement/<slug>` detail links (Drupal view; distinct from the active homepage) | 191 cards parsed, **5 admitted** (AI/climate scholarships, CS/data-engineering PhD, energy/digital-innovation grants) |
 | NM-AIST | `https://nm-aist.ac.tz/event/` | intra-host `/event/<slug>/` cards, archive self-link excluded (WordPress; distinct from the active homepage) | 10 cards parsed, **1 admitted** (Samia Data-Science/AI scholarship) |
 
-**Owner-gating.** Each adapter is keyed to a LISTING base_url that is added
-ONLY by `supabase/seeds/0003_first_party_listing_adapters.sql`. That seed is a
-forward, idempotent file and is deliberately NOT applied to production. The
+**Activation (owner-executed, 2026-09-16).** Each adapter is keyed to a LISTING
+base_url added ONLY by `supabase/seeds/0003_first_party_listing_adapters.sql`.
+The owner authorized and applied that forward, idempotent seed to production
+(target-guarded, `ON CONFLICT (base_url) DO NOTHING`), making exactly the two
+reviewed listing rows `active=true` and lifting the active registry 18 → 20. The
 already-active homepage rows (`https://www.udsm.ac.tz`, `https://nm-aist.ac.tz`)
-do not match any adapter key and stay inert for generic HTML, so a live
-2-hour dry-run after this change still reports those two sources at `admitted=0`
-and never sees the new listing rows — nothing activates until the owner applies
-the seed.
+still do not match any adapter key and stay inert for generic HTML.
+
+**Observed production evidence (closure gate).** Two live 2-hour Discovery runs
+were observed. Run `35106123095`: UDSM `ok:true` — 191 cards, 186
+institutional/off-scope rejected, **5 admitted**; NM-AIST `/event/` took one
+transient 20 s fetch timeout (`sourcesFailed:1`, `errors:1`,
+`sourceHealthFailures:0`) while its homepage fetched `ok:true` on the same host —
+a path-level timeout, not host egress/geo-blocking. Run `35107041338`:
+`sourcesSucceeded:20`, `sourcesFailed:0`, `errors:0`; NM-AIST fetched cleanly and
+**admitted 1** Data-Science/AI scholarship item; UDSM's 5 deduped. A read-only
+production query confirmed all admitted rows are real, actionable opportunities
+(PhD/MSc scholarships and research-fund awards in Computer & IT Systems
+Engineering, AI, and Climate-Change/Green-Development research), each `pending`
+with `eligibility:unknown` for human moderation; no institutional news was
+admitted. The admission gate and 2-hour cadence are UNCHANGED. The single
+NM-AIST item is a "50 shortlisted names" scholarship follow-up — a genuine DS/AI
+award correctly held for moderation rather than auto-published.
 
 **Rejected rather than accommodated.** SUA (parses 47 anchors, 0 relevant —
 agriculture/admissions, no product scope), COSTECH/ICTC (0 clean boundaries),

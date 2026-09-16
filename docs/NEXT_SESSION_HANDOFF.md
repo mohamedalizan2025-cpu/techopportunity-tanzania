@@ -4,10 +4,13 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- **2026-09-16 reconciliation (current).** Repo HEAD is `27ab009` (Authority
-  audit fix; parent `7f0f318` Authoritative Discovery + Active Lifecycle
-  Hardening), clean and equal to `origin/main`. Both are implemented but not
-  deployed to the production runtime (last promotion remains `1645973`). The
+- **2026-09-16 reconciliation (current).** Repo HEAD is `944652f` (bounded
+  first-party listing adapters for UDSM/NM-AIST; lineage `18736b7`
+  reconciliation ← `27ab009` authority audit fix ← `7f0f318` Authoritative
+  Discovery + Active Lifecycle Hardening), clean and equal to `origin/main`. The
+  web-app runtime promotion remains `1645973`; the discovery worker runs at HEAD
+  via GitHub Actions, so the adapter batch and the now-applied seed `0003` are
+  live in discovery. The
   200-row corpus reset and manual legacy cleanup are abandoned; the legacy
   `flag=ambiguous` queue filter is retired. The owner-gated controlled
   Discovery run was **executed and PASSED** (`run 35088590079`, HEAD `27ab009`):
@@ -15,10 +18,21 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   `workerErrors: 2` being the known transient HESLB / Ministry-of-Agriculture
   aborts. **Discovery sync is now ENABLED on the live 2-hour schedule**
   (state `active`, `cron: '0 */2 * * *'`). The **Authoritative Source Registry
-  Expansion** milestone's bounded first-party adapter batch is DELIVERED
-  in-repo and owner-gated (see *Exact next milestone*); the two new dedicated
-  listing sources are NOT active in production — activation is gated on the
-  owner applying `supabase/seeds/0003_first_party_listing_adapters.sql`.
+  Expansion** milestone is **CLOSED (2026-09-16)**: the owner applied
+  `supabase/seeds/0003_first_party_listing_adapters.sql` to production, so
+  exactly the two reviewed listing rows are `active=true` (registry 18 → 20;
+  UDSM `https://www.udsm.ac.tz/announcement`, NM-AIST
+  `https://nm-aist.ac.tz/event/`). Two live 2-hour Discovery runs were observed
+  (`35106123095`, `35107041338`): UDSM admitted **5** genuine opportunities
+  (Computer & IT Systems Engineering PhD sponsorship; AI + climate-change
+  research scholarships; climate/green-development MSc scholarships) and NM-AIST
+  admitted **1** Data-Science/AI scholarship item — all `pending` for human
+  moderation, `eligibility unknown`, with 186 UDSM + 9 NM-AIST
+  institutional/off-scope items correctly rejected (no institutional news
+  admitted). NM-AIST's `/event/` fetch timed out once in run 1 (20 s cap) and
+  self-cleared in run 2 (`sourcesFailed: 0`, `errors: 0`). The admission gate and
+  2-hour cadence are UNCHANGED. Next milestone: **National/International
+  classification + opportunity taxonomy** (not started).
 
 - The last pushed documentation closure before this disposition is
   `f8d531d` on `origin/main`. The runtime source SHA remains exact capability
@@ -992,10 +1006,10 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
    - safe partial-failure handling
    - view-only furniture flag
 3. **Authoritative Discovery + Active Lifecycle Hardening** *(implemented 2026-09-16, unpromoted; controlled run PASS 2026-09-16 — 2 pending inserts; 2-hour cadence live)*
-4. **Authoritative Source Registry Expansion** *(CURRENT next milestone — expand allow-listed authoritative first-party origins)*
+4. **Authoritative Source Registry Expansion** *(CLOSED 2026-09-16 — seed `0003` applied to production; UDSM announcements + NM-AIST events listing adapters active; two Discovery runs observed; admitted rows verified as real opportunities)*
 5. **Discovery quality review and 2-hour cadence verification** *(2-hour cadence live; exact-SHA scheduled observations rebuild the baseline from zero)*
-6. **National vs International classification**
-7. **Opportunity taxonomy improvement**
+6. **National vs International classification** *(CURRENT next milestone, with #7 — not started)*
+7. **Opportunity taxonomy improvement** *(CURRENT next milestone, with #6 — not started)*
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**
 
 ## Ambiguous-queue batch planning — completed read-only
@@ -1716,27 +1730,48 @@ stay as history; they authorize nothing further.
 
 ## Exact next milestone
 
-**Authoritative Source Registry Expansion — bounded first-party adapter batch
-delivered in-repo, owner-gated (2026-09-16).** This round took the narrow
-adapter path rather than padding the registry with zero-yield rows. Two
-dedicated Tanzania first-party LISTING sources — the UDSM announcements view
-(`https://www.udsm.ac.tz/announcement`) and the NM-AIST events archive
-(`https://nm-aist.ac.tz/event/`) — now have fixture-backed, exact-base_url-
-keyed extraction in `scripts/discovery/source-adapters.ts`, dispatched by the
-discovery worker (`runner.ts`) and the read-only dry-run. The admission gate,
-`source-policy.ts` generic-HTML block and the 2-hour cadence are UNCHANGED;
-the adapters fire only for those two distinct listing base_urls, never for the
-already-active site homepages, so nothing auto-activates on the live schedule.
-Seed rows live in `supabase/seeds/0003_first_party_listing_adapters.sql` and
-are deliberately NOT applied to production — activation is owner-gated. Live,
-worker-representative yield through the unchanged gate: UDSM 5 admitted,
-NM-AIST 1 admitted (news, undergraduate-admissions and stale calls correctly
-rejected). Every other reachable first-party candidate (SUA, COSTECH, ICTC,
-NIMR, IfM, UDOM, hubs) produced zero clean actionable fixtures and was
-rejected rather than accommodated by weakening the parser. Once the owner
-applies the seed and a production observation confirms useful yield, the next
-milestone is **National/International classification + taxonomy**. The
-paragraph below preserves the original milestone framing.
+**Authoritative Source Registry Expansion — CLOSED (2026-09-16).** The owner
+authorized and executed the prepared production activation of
+`supabase/seeds/0003_first_party_listing_adapters.sql` (target-guarded,
+idempotent `ON CONFLICT (base_url) DO NOTHING`), making exactly the two reviewed
+listing rows `active=true` — UDSM `https://www.udsm.ac.tz/announcement` and
+NM-AIST `https://nm-aist.ac.tz/event/` — and lifting the active registry 18 → 20.
+The already-active site homepages stay inert for generic HTML, and the admission
+gate, `source-policy.ts` block and 2-hour cadence are UNCHANGED.
+
+Two live 2-hour Discovery runs were observed as the closure gate. Run
+`35106123095`: UDSM `ok:true` — 191 cards parsed, 186 institutional/off-scope
+rejected, **5 admitted**; NM-AIST `/event/` took one transient 20 s fetch timeout
+(`sourcesFailed:1`, `errors:1`, `sourceHealthFailures:0`) while its homepage on
+the same host fetched `ok:true` — proving a path-level timeout, not host
+egress/geo-blocking. Run `35107041338`: `sourcesSucceeded:20`, `sourcesFailed:0`,
+`errors:0`; NM-AIST fetched cleanly and **admitted 1** Data-Science/AI
+scholarship item, UDSM's 5 deduped (`insertedPending:0`). A read-only production
+query confirmed every admitted row is a real, actionable opportunity (PhD/MSc
+scholarships and research-fund awards in Computer & IT Systems Engineering,
+Artificial Intelligence, and Climate-Change/Green-Development research), each
+`status:pending` with `eligibility:unknown` for human moderation — no
+institutional news (graduations, appointments, vacancies, MoUs, condolences,
+generic mobility) was admitted. The single NM-AIST item is a "50 shortlisted
+names" scholarship follow-up: topically a genuine DS/AI award, correctly held in
+the moderation queue rather than auto-published — the title-only gate plus human
+review working as designed.
+
+**Exact next milestone: National/International classification + opportunity
+taxonomy (NOT started).** Do not begin implementation without explicit owner
+authorization. It is governed by the permanent source principle recorded in
+[DISCOVERY_CHANNELS.md](DISCOVERY_CHANNELS.md) and
+[ENGINEERING_RULES.md](ENGINEERING_RULES.md): Tech Opportunity is
+organization-first and opportunity-only — authority belongs to the genuine
+organization/channel (official sites, application portals, government/ministry/
+agency channels, universities/research institutions, companies/foundations/
+NGOs/hubs, verified or demonstrably official LinkedIn/Instagram/Facebook/X
+accounts, and official forms they link), never to general news; an item is an
+opportunity only when it carries a concrete user action (apply, register,
+compete, submit, pitch, attend, train, receive funding, research, intern, work,
+exhibit); aggregators, reposts, unofficial accounts and secondary news remain
+discovery leads only. The paragraph below preserves the original Source-Registry
+milestone framing (historical).
 
 The controlled-run owner gate is satisfied (PASS above) and the 2-hour
 Discovery cadence is live on exact-HEAD scheduled observations. The next

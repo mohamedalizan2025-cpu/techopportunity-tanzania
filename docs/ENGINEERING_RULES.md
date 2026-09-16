@@ -50,6 +50,16 @@ briefs may narrow scope but do not weaken these boundaries.
    restrictions, authentication, or platform protections.
 7. Source activation and extraction expansion require representative evidence and
    fixtures. Row volume is not a quality metric.
+8. Tech Opportunity is organization-first and opportunity-only. Authority belongs
+   to the genuine organization/channel, not only to its website: official
+   organization/programme sites, official application portals, government/
+   ministry/agency channels, universities/research institutions, companies/
+   foundations/NGOs/hubs, verified or demonstrably official LinkedIn/Instagram/
+   Facebook/X accounts, and official forms those organizations link. Do not ingest
+   general news. An item is an opportunity only when it carries a concrete user
+   action (apply, register, compete, submit, pitch, attend, train, receive
+   funding, research, intern, work, exhibit). Aggregators, reposts, unofficial
+   accounts and secondary news are discovery leads only, never authority.
 
 ## Database and recovery
 
