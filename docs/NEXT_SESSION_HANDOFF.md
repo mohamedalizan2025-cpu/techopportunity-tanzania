@@ -1,8 +1,21 @@
 # Current engineering handoff
 
-Updated: 2026-09-15. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
 ## Current verified state
+
+- **2026-09-16 reconciliation (current).** Repo HEAD is `27ab009` (Authority
+  audit fix; parent `7f0f318` Authoritative Discovery + Active Lifecycle
+  Hardening), clean and equal to `origin/main`. Both are implemented but not
+  deployed to the production runtime (last promotion remains `1645973`). The
+  200-row corpus reset and manual legacy cleanup are abandoned; the legacy
+  `flag=ambiguous` queue filter is retired. The owner-gated controlled
+  Discovery run was **executed and PASSED** (`run 35088590079`, HEAD `27ab009`):
+  `insertedPending: 2` (Kectil Program 2027, AfricaLics PhD VFP 2027),
+  `workerErrors: 2` being the known transient HESLB / Ministry-of-Agriculture
+  aborts. **Discovery sync is now ENABLED on the live 2-hour schedule**
+  (state `active`, `cron: '0 */2 * * *'`). The exact next milestone is
+  **Authoritative Source Registry Expansion**.
 
 - The last pushed documentation closure before this disposition is
   `f8d531d` on `origin/main`. The runtime source SHA remains exact capability
@@ -975,9 +988,9 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
    - per-record attribution/audit
    - safe partial-failure handling
    - view-only furniture flag
-3. **Authoritative Discovery + Active Lifecycle Hardening** *(implemented 2026-09-16, unpromoted; one controlled real run is the next gate)*
-4. **Source credibility/source registry**
-5. **Discovery quality review and 2-hour cadence verification** *(repo targets 2h; schedule stays paused until the controlled run proves clean)*
+3. **Authoritative Discovery + Active Lifecycle Hardening** *(implemented 2026-09-16, unpromoted; controlled run PASS 2026-09-16 — 2 pending inserts; 2-hour cadence live)*
+4. **Authoritative Source Registry Expansion** *(CURRENT next milestone — expand allow-listed authoritative first-party origins)*
+5. **Discovery quality review and 2-hour cadence verification** *(2-hour cadence live; exact-SHA scheduled observations rebuild the baseline from zero)*
 6. **National vs International classification**
 7. **Opportunity taxonomy improvement**
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**
@@ -1679,28 +1692,39 @@ Verification (this turn, local, unpromoted HEAD):
   (correctly noise-filtered). Admitted vs rejected inspection satisfies the
   authoritative contract; no past-deadline candidate would admit (unit-proven).
 
-Not done here (owner gates): ONE controlled real Discovery run (GitHub
-`workflow_dispatch` with secrets, exact-SHA health artifact review); only
-if that run is clean, enable the 2-hour schedule (remove `disabled_manually`)
-and let exact-SHA scheduled observations rebuild the baseline from zero —
-prior 6-hour history does not prove 2-hour repeatability. No Moderator
-token was requested or used. The sealed pre-reset snapshot and all prior
-frozen cohorts stay as history; they authorize nothing further.
+Controlled-run gate — executed and PASS (2026-09-16): the owner dispatched
+exactly one `Discovery sync` `workflow_dispatch` (`run 35088590079`) at the
+promoted HEAD `27ab009`. It succeeded; `workerErrors: 2` were the known
+transient HESLB and Ministry-of-Agriculture aborts (isolated per source, not
+a run failure); it inserted `insertedPending: 2`, both from the secondary
+origin OpportunityDesk. A bounded read-only re-check of production
+(`jltuufukcwztugvojwjd`) confirmed both rows satisfy the admission contract:
+future deadlines (Kectil Program 2027 `2026-11-15`; AfricaLics PhD Visiting
+Fellowship 2027 `2026-10-02`), `relevance_decision=relevant`, eligibility
+`unknown` (no explicit Tanzania exclusion), one row per URL (no duplicate),
+and — because `other` is not an authoritative source type — admission was
+possible only via `hasAuthoritativeEvidence` (external application portal).
+No Moderator token was requested or used and no historical row was touched.
+The 2-hour schedule is therefore ENABLED: Discovery sync reads back `active`
+(`cron: '0 */2 * * *'`), so exact-SHA scheduled observations now rebuild the
+2-hour baseline from zero (prior 6-hour history does not prove 2-hour
+repeatability). The sealed pre-reset snapshot and all prior frozen cohorts
+stay as history; they authorize nothing further.
 
 ## Exact next milestone
 
-**ONE controlled real Discovery run — owner gate only.**
+**Authoritative Source Registry Expansion.**
 
-With Discovery still paused in GitHub, the owner dispatches exactly one
-`Discovery sync` `workflow_dispatch` on the promoted HEAD, then reviews the
-retained `discovery-health/report.json`: all admitted rows must be unexpired,
-qualified, and authoritative-origin or externally-evidenced; authority
-rejections must explain every secondary withholding; zero `insertedPending`
-rows may carry a past deadline. If clean, the owner removes
-`disabled_manually` so the repo-targeted `0 */2 * * *` schedule goes live,
-then watches exact-SHA 2-hour scheduled observations rebuild readiness.
-If not clean, keep paused and fix the gate — never loosen qualification.
-This handoff authorizes nothing by itself.
+The controlled-run owner gate is satisfied (PASS above) and the 2-hour
+Discovery cadence is live on exact-HEAD scheduled observations. The next
+milestone is roadmap priority 4: expand the allow-listed source registry with
+additional credible authoritative first-party origins (universities,
+government agencies, and sector NGOs/hubs), each backed by representative
+extraction evidence and fixtures before activation, following
+[DISCOVERY_CHANNELS.md](DISCOVERY_CHANNELS.md) and the standing quality rule
+that row volume is not a quality metric. Registry additions are owner-gated
+seeds/migrations and require their own explicit authorization and staging
+proof; this milestone names the work only and authorizes nothing by itself.
 
 ## Continuing constraints
 

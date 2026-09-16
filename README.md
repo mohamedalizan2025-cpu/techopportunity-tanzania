@@ -22,15 +22,21 @@ EBID pair, and the Batch 3 AWARD single then followed with exact reasons
 and per-record audits, and the furniture sweep's first confirmation rejected
 50 rows. Manual legacy cleanup and the 200-row corpus reset are abandoned:
 the historical corpus stays physically untouched with full history preserved.
-Authoritative Discovery + Active Lifecycle Hardening is implemented but
-unpromoted: public active browse and the moderator active queue exclude
-expired lifecycle at query/view time (no status sweeper, no deletions;
-direct detail keeps "Deadline passed"), new discovery admits only unexpired
-qualified candidates from authoritative origins or with resolved external
-application evidence, and the legacy ambiguous queue filter is retired.
-Discovery stays paused; one controlled real run, then the repo-targeted
-2-hour cadence, remain owner-gated. The exact next milestone is that
-controlled run under explicit owner authorization.
+Authoritative Discovery + Active Lifecycle Hardening is implemented (HEAD
+`27ab009`; not yet deployed to the production runtime): public active browse
+and the moderator active queue exclude expired lifecycle at query/view time
+(no status sweeper, no deletions; direct detail keeps "Deadline passed"), new
+discovery admits only unexpired qualified candidates from authoritative
+origins or with resolved external application evidence, and the legacy
+ambiguous queue filter is retired. Manual legacy cleanup and the 200-row
+corpus reset are abandoned — the historical corpus stays physically untouched.
+The owner-gated controlled Discovery run was executed and PASSED (run
+`35088590079` at `27ab009`): two pending inserts (Kectil Program 2027,
+AfricaLics PhD VFP 2027), both future-deadline, relevant, non-excluded, and
+unduplicated, admitted — from the secondary origin OpportunityDesk — only with
+external application evidence. The repo-targeted 2-hour cadence is now live
+(Discovery sync `active`, `cron: '0 */2 * * *'`). The exact next milestone is
+Authoritative Source Registry Expansion.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
@@ -64,7 +70,7 @@ could reuse the same Supabase backend unchanged; see
 ├── docs/
 │   └── architecture.md# Architecture decisions; current state in NEXT_SESSION_HANDOFF.md
 ├── public/            # Static assets
-├── scripts/discovery/ # TypeScript discovery pipeline (GitHub Actions every six hours)
+├── scripts/discovery/ # TypeScript discovery pipeline (GitHub Actions every two hours)
 ├── supabase/          # Migrations + source-registry seeds
 └── .env.example       # Required variable NAMES (values never committed)
 ```
