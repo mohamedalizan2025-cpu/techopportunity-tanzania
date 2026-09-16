@@ -6,7 +6,7 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 - **2026-09-16 National/International classification + opportunity taxonomy
   (current, implemented — full `npm run verify` green; migration 0017 owner-gated
-  and NOT applied; deployed-app production evidence PENDING the push).** Roadmap
+  and NOT applied; push-triggered CI green at exact HEAD `d370bf8`).** Roadmap
   priorities 6 + 7 delivered as one bounded milestone. `lib/taxonomy.ts` is the
   single deterministic classifier for three orthogonal dimensions, with no manual
   tagging: **TYPE** reuses the existing `categories` lookup
@@ -41,8 +41,17 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   Tests: new `tests/taxonomy.test.ts` (69 assertions) plus geography/sector cases
   in `queue-filter`, new-type buckets in `triage-bucket`, and new-type inference
   in `acquisition`. Admission gates, lifecycle rules, the source registry and the
-  2-hour cadence are UNCHANGED. Next milestone: roadmap priority 8 — showcase
-  readiness (Sahara Sparks / Tech & AI Expo).
+  2-hour cadence are UNCHANGED. Production evidence: all four push-triggered CI
+  runs are green at exact HEAD `d370bf8` (Discovery sync `35128856062`, Milestone
+  verification `35128856031`, Discovery schedule health `35128856042`, Deadline
+  alert evaluation `35128859662`); the live Discovery worker ran clean
+  (`sourcesSucceeded: 20`, `sourcesFailed: 0`, `insertedPending: 1`,
+  `duplicatesSkipped: 6`, `categorySkipped: 0`) and emitted the new
+  derived-classification logs — e.g. a "Global Entrepreneurship Festival" candidate
+  logged `geography=unknown sector=finance`, confirming the bare-word "Global"
+  fail-safe (never auto-International without evidenced Tanzanian access) holds in
+  production. Next milestone: roadmap priority 8 — showcase readiness (Sahara
+  Sparks / Tech & AI Expo).
 
 - **2026-09-16 reconciliation (current).** Repo HEAD is `944652f` (bounded
   first-party listing adapters for UDSM/NM-AIST; lineage `18736b7`
