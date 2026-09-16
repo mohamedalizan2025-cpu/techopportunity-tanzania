@@ -13,6 +13,8 @@ import {
   shouldEnterModerationQueue,
 } from "./qualification";
 import { createBoundedDetailAcquirer } from "./detail";
+import { sourceAcquisitionPolicy } from "./source-policy";
+import { extractSourceAdapterCandidates, findSourceAdapter } from "./source-adapters";
 import type { CandidateOpportunity, SourceRecord } from "./types";
 
 /**
@@ -52,7 +54,17 @@ for (const source of activeSources) {
   try {
     const html = await fetchPage(source.base_url);
     totals.fetched += 1;
-    const raw = extractAllCandidates(html, source.id, source.base_url);
+    // Worker-representative extraction: the same acquisition policy the
+    // runner applies (institutional generic-HTML stays blocked) plus the
+    // narrow, fixture-backed source-specific adapter opt-in. Without this
+    // the dry-run would over-report by running the generic extractor the
+    // worker never uses.
+    const raw = extractAllCandidates(html, source.id, source.base_url, {
+      allowGenericHtml: sourceAcquisitionPolicy(source).allowGenericHtml,
+    });
+    if (findSourceAdapter(source)) {
+      raw.push(...extractSourceAdapterCandidates(html, source));
+    }
     const feedUrls = discoverFeedUrls(html, source.base_url).slice(0, 2);
     for (const feedUrl of feedUrls) {
       try {

@@ -35,8 +35,15 @@ The owner-gated controlled Discovery run was executed and PASSED (run
 AfricaLics PhD VFP 2027), both future-deadline, relevant, non-excluded, and
 unduplicated, admitted — from the secondary origin OpportunityDesk — only with
 external application evidence. The repo-targeted 2-hour cadence is now live
-(Discovery sync `active`, `cron: '0 */2 * * *'`). The exact next milestone is
-Authoritative Source Registry Expansion.
+(Discovery sync `active`, `cron: '0 */2 * * *'`). The Authoritative Source
+Registry Expansion milestone's bounded first-party adapter batch is DELIVERED
+in-repo and owner-gated: two dedicated Tanzania listing sources (UDSM
+announcements view, NM-AIST events archive) now extract through narrow,
+fixture-backed adapters in `scripts/discovery/source-adapters.ts` — admission
+gate and 2-hour cadence unchanged — with seed rows in
+`supabase/seeds/0003_first_party_listing_adapters.sql` held back from
+production until the owner applies them. Next milestone (post activation):
+National/International classification + taxonomy.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

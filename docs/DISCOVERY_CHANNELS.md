@@ -166,3 +166,39 @@ classification (not a registry mutation):
 No source was activated or deactivated. Zindi, Devpost and MLH need a bounded,
 testable item-level adapter plus per-item eligibility evidence before a registry
 row is justified; adding them today would produce zero or misleading yield.
+
+## Bounded first-party LISTING adapters (2026-09-16, owner-gated)
+
+The Authoritative Source Registry Expansion milestone was executed via the
+narrow adapter path — not by adding zero-yield registry rows to inflate the
+count. `source-policy.ts` has always reserved exactly one exception for
+institutional sources: "a future source-specific adapter may opt in only with
+measured fixtures." That exception is now implemented in
+`scripts/discovery/source-adapters.ts`: pure functions keyed to an EXACT
+registry `base_url`, each backed by a representative fixture and assertions in
+`tests/source-adapters.test.ts`. They are structural only (a precise
+detail-page link boundary) — the admission gate, `source-policy.ts` block and
+2-hour cadence are unchanged, and every emitted candidate still runs
+normalize → validate → qualify → shouldAdmitCandidate.
+
+| Source | Dedicated listing base_url | Boundary contract | Live yield (unchanged gate) |
+|---|---|---|---|
+| University of Dar es Salaam | `https://www.udsm.ac.tz/announcement` | intra-host `/announcement/<slug>` detail links (Drupal view; distinct from the active homepage) | 191 cards parsed, **5 admitted** (AI/climate scholarships, CS/data-engineering PhD, energy/digital-innovation grants) |
+| NM-AIST | `https://nm-aist.ac.tz/event/` | intra-host `/event/<slug>/` cards, archive self-link excluded (WordPress; distinct from the active homepage) | 10 cards parsed, **1 admitted** (Samia Data-Science/AI scholarship) |
+
+**Owner-gating.** Each adapter is keyed to a LISTING base_url that is added
+ONLY by `supabase/seeds/0003_first_party_listing_adapters.sql`. That seed is a
+forward, idempotent file and is deliberately NOT applied to production. The
+already-active homepage rows (`https://www.udsm.ac.tz`, `https://nm-aist.ac.tz`)
+do not match any adapter key and stay inert for generic HTML, so a live
+2-hour dry-run after this change still reports those two sources at `admitted=0`
+and never sees the new listing rows — nothing activates until the owner applies
+the seed.
+
+**Rejected rather than accommodated.** SUA (parses 47 anchors, 0 relevant —
+agriculture/admissions, no product scope), COSTECH/ICTC (0 clean boundaries),
+and NIMR/IfM/UDOM/hubs (unreachable or 0) each failed to produce a clean
+actionable fixture. Consistent with the standing rule, they were dropped
+instead of loosening the parser; a 3rd adapter was sought and legitimately not
+found, so the batch ships at two.
+

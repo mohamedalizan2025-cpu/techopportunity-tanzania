@@ -14,8 +14,11 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   `insertedPending: 2` (Kectil Program 2027, AfricaLics PhD VFP 2027),
   `workerErrors: 2` being the known transient HESLB / Ministry-of-Agriculture
   aborts. **Discovery sync is now ENABLED on the live 2-hour schedule**
-  (state `active`, `cron: '0 */2 * * *'`). The exact next milestone is
-  **Authoritative Source Registry Expansion**.
+  (state `active`, `cron: '0 */2 * * *'`). The **Authoritative Source Registry
+  Expansion** milestone's bounded first-party adapter batch is DELIVERED
+  in-repo and owner-gated (see *Exact next milestone*); the two new dedicated
+  listing sources are NOT active in production — activation is gated on the
+  owner applying `supabase/seeds/0003_first_party_listing_adapters.sql`.
 
 - The last pushed documentation closure before this disposition is
   `f8d531d` on `origin/main`. The runtime source SHA remains exact capability
@@ -1713,7 +1716,27 @@ stay as history; they authorize nothing further.
 
 ## Exact next milestone
 
-**Authoritative Source Registry Expansion.**
+**Authoritative Source Registry Expansion — bounded first-party adapter batch
+delivered in-repo, owner-gated (2026-09-16).** This round took the narrow
+adapter path rather than padding the registry with zero-yield rows. Two
+dedicated Tanzania first-party LISTING sources — the UDSM announcements view
+(`https://www.udsm.ac.tz/announcement`) and the NM-AIST events archive
+(`https://nm-aist.ac.tz/event/`) — now have fixture-backed, exact-base_url-
+keyed extraction in `scripts/discovery/source-adapters.ts`, dispatched by the
+discovery worker (`runner.ts`) and the read-only dry-run. The admission gate,
+`source-policy.ts` generic-HTML block and the 2-hour cadence are UNCHANGED;
+the adapters fire only for those two distinct listing base_urls, never for the
+already-active site homepages, so nothing auto-activates on the live schedule.
+Seed rows live in `supabase/seeds/0003_first_party_listing_adapters.sql` and
+are deliberately NOT applied to production — activation is owner-gated. Live,
+worker-representative yield through the unchanged gate: UDSM 5 admitted,
+NM-AIST 1 admitted (news, undergraduate-admissions and stale calls correctly
+rejected). Every other reachable first-party candidate (SUA, COSTECH, ICTC,
+NIMR, IfM, UDOM, hubs) produced zero clean actionable fixtures and was
+rejected rather than accommodated by weakening the parser. Once the owner
+applies the seed and a production observation confirms useful yield, the next
+milestone is **National/International classification + taxonomy**. The
+paragraph below preserves the original milestone framing.
 
 The controlled-run owner gate is satisfied (PASS above) and the 2-hour
 Discovery cadence is live on exact-HEAD scheduled observations. The next

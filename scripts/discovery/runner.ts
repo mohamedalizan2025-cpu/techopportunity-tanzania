@@ -18,6 +18,7 @@ import {
 import { createBoundedDetailAcquirer } from "./detail";
 import { loadActiveSources } from "./sources";
 import { sourceAcquisitionPolicy } from "./source-policy";
+import { extractSourceAdapterCandidates, findSourceAdapter } from "./source-adapters";
 import { reconcileDiscoverySummary } from "./summary";
 import type { CandidateOpportunity, DiscoverySummary, SourceRunResult } from "./types";
 
@@ -130,6 +131,16 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
       const rawCandidates = extractAllCandidates(html, source.id, source.base_url, {
         allowGenericHtml: acquisitionPolicy.allowGenericHtml,
       });
+
+      // Narrow, fixture-backed source-specific adapter opt-in (see
+      // source-adapters.ts). Fires ONLY for a registry base_url that has a
+      // measured listing fixture — never for a generic institutional
+      // homepage. It supplements, never replaces, the content-sniffing
+      // extractors, and every candidate it emits still runs the FULL
+      // unchanged normalize -> validate -> qualify -> admit chain below.
+      if (findSourceAdapter(source)) {
+        rawCandidates.push(...extractSourceAdapterCandidates(html, source));
+      }
 
       // Advertised feeds (link rel=alternate only, capped at 2 per source)
       // carry item-level title/link/description evidence the homepage HTML
