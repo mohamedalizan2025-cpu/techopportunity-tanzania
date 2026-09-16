@@ -583,3 +583,93 @@ No Moderator session was used and no production moderation action ran. The exact
 next milestone is the attributable two-record resolution with separate owner
 authorization; do not reject either record, resume Batch 2B2, or start bulk
 moderation or later roadmap work.
+
+## Talent profile foundation (0018) staging checkpoint (2026-09-16)
+
+The owner explicitly authorized rollout verification for the profile foundation
+only — no saved-search/digests, AI, CV parsing, monetization, provider
+dashboards, or institution dashboards. Migration 0018, SHA-256
+`79ced7a7ead2a206718d0a0695ffcd3e8770da823b16433afa2b7555ab70bc13`, was applied
+to exact staging ref `pumzofcwfjqswkiwfqty` in a single transaction behind
+`ON_ERROR_STOP` after a read-only pre-change guard bound the ref and confirmed
+`public.talent_profiles` did not yet exist. The migration is purely additive: one
+owner-scoped table (1:1 with `auth.users`, `on delete cascade`), one
+`set_updated_at` trigger reusing the existing `public.set_updated_at()` function,
+RLS with three owner-only policies, and least-privilege grants
+(`revoke all … from anon, authenticated`; `grant select, insert, update … to
+authenticated`). No existing table, policy, function, trigger, or row was
+touched; the documented rollback is a single `drop table public.talent_profiles`.
+
+Staging behavioral proof ran in a single rolled-back transaction with a synthetic
+owner identity: owner create/update/read succeeded; a second user could neither
+read nor write the row; anon was denied select and insert; and no staff or
+organization read path exists. Explore remained fully functional with no profile,
+and the profile proved progressively skippable/clearable. A representative student
+profile drove a deterministic, explainable For You end-to-end run over a
+rolled-back synthetic corpus mapped through the real column-to-row code: Explore
+showed every published/active/non-test row; National and International both
+classified correctly; type and sector signals behaved; For You returned identical
+ranked, human-readable reasons across repeated runs (a subset of Explore, with no
+numeric score or percentage) and never padded an unmatched corpus; over the
+standing staging fixtures For You was honestly empty. `npm run build` was green
+with `/for-you` and `/profile` present in desktop and mobile nav. The transaction
+rolled back, leaving live staging unchanged (2 published rows, 0 talent
+profiles).
+
+## Talent profile foundation (0018) production checkpoint (2026-09-16)
+
+After the clean staging gate, the owner-authorized promotion applied the same
+canonical migration (SHA-256 recorded above, verified byte-identical inside the
+production tooling container) to exact production ref `jltuufukcwztugvojwjd`
+(PostgreSQL 17.6) idempotently in a single transaction inside a failure-stop
+wrapper. The pre-change guard bound the ref, confirmed `public.talent_profiles`
+was absent, and snapshotted the corpus. A fresh protected recovery export preceded
+the change at
+`C:\Users\hp\.tech-opportunity-backups\20260916T213810Z-0018-talent-profile-production\`
+(schema-only custom-format dump, 353,000 bytes, 667 archive-list entries, plus a
+read-only pre-change snapshot and manifest; scope minimized to schema because
+0018 is purely additive with a single-`DROP` rollback and copies no private row).
+Manifest SHA-256: schema dump
+`46f3e51c0d8e4b55dfabd4641dcd6f24d39a002c1b28c617484ff44d148aa3ad`, pre-change
+snapshot `b774a7de967f1655c67cdb696c45a4c4111e44e61efc4ab56dfd54bd8ef7e453`.
+
+Post-change structural proof: `relrowsecurity=true` /
+`relforcerowsecurity=false`; all eleven columns with correct nullability and
+defaults; eight CHECK constraints plus the primary key and the `auth.users`
+foreign key (`on delete cascade`); the `talent_profiles_set_updated_at` trigger;
+three owner-only policies (select/insert/update, each
+`(select auth.uid()) = user_id`); grants `authenticated=INSERT,SELECT,UPDATE`
+with `anon_grant_rows=0` and zero DELETE/TRUNCATE/REFERENCES/TRIGGER grants;
+`public_tables` 11 to 12 and `public_policies` 25 to 28. Zero corpus drift:
+`talent_profiles_rows=0`, opportunities 298 (8 published / 204 pending / 86
+rejected), 537 references, 75 enrichments, 3 auth users, 3 profiles — identical
+to the pre-change snapshot. RLS/privacy denial probes (one rolled-back
+transaction, fake UUIDs, no real row): anon still saw exactly the 8 published
+opportunities (Explore unaffected) but was denied select and insert on
+`talent_profiles`; a non-owner authenticated identity saw 0 rows; authenticated
+delete was denied (no grant); and a cross-user insert was denied by the WITH
+CHECK policy. The positive owner read-write path is guaranteed transitively by the
+byte-identical migration proven on staging — no synthetic production user and no
+real-user row were created (data minimization).
+
+For You was verified against production READ-ONLY: the 8 published opportunities
+were exported (published count and `talent_profiles` unchanged before and after),
+then the real pure functions ran locally over that corpus at a fixed instant.
+Explore showed 6 of 8 (the two already-closed rows dropped deterministically), all
+classified National (the live corpus is all-National today; the International
+signal was proven on the staging E2E). With no profile — production reality,
+`talent_profiles` empty — For You was honestly empty while Explore stayed
+complete; a representative in-memory student profile produced 4 deterministic,
+explainable recommendations (a subset of Explore, human-readable reasons, no
+numeric score), stable across repeated runs; a minimal core profile still ranked
+and a cleared profile returned none. No production user data was modified.
+
+Cleanup: the throwaway `.rollout-tmp/` tooling (probe/apply/recovery/verify
+scripts and the read-only exported JSON) was deleted; the protected credentials
+and recovery export remain outside the repository. The post-cleanup consolidated
+gate passed the complete regression suite (including the 38 talent-profile /
+personalization assertions), TypeScript, lint, all 35 permanent boundaries,
+change classification (migration-review selected, production evidence required),
+and the milestone report. The exact next milestone is to STOP for owner direction
+on the next commercial/product milestone; do not build saved-search/digests, AI,
+CV parsing, monetization, provider dashboards, or institution dashboards yet.

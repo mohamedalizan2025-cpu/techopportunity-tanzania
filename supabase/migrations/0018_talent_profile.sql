@@ -79,9 +79,13 @@ create policy "users update own talent profile"
   using ((select auth.uid()) = user_id)
   with check ((select auth.uid()) = user_id);
 
--- Declare least privilege explicitly. No anonymous access; no delete (a user
--- clears their profile by saving empty fields, preserving the single row).
-revoke all on table public.talent_profiles from anon;
+-- Declare least privilege explicitly, overriding Supabase's broad DEFAULT table
+-- grants (a new public table otherwise inherits ALL privileges for anon and
+-- authenticated). Revoke from BOTH, then grant authenticated ONLY select,
+-- insert and update. There is deliberately no delete/truncate/references/
+-- trigger for authenticated: a user clears their profile by saving empty
+-- fields, preserving the single owner-scoped row. anon keeps nothing.
+revoke all on table public.talent_profiles from anon, authenticated;
 grant select, insert, update on table public.talent_profiles to authenticated;
 
 -- Reversal, if explicitly approved before user profile data matters:

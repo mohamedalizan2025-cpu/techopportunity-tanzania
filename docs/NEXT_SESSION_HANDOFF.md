@@ -5,8 +5,9 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 ## Current verified state
 
 - **2026-09-16 User Profile + Personalized Opportunity Foundation IMPLEMENTED
-  (talent side only; migration 0018 DESIGNED — NOT APPLIED, OWNER GATE; full
-  `npm run verify` and `npm run build` green).** This records the permanent
+  and migration 0018 ROLLED OUT to isolated staging then production (talent side
+  only; owner-authorized rollout verification complete; full `npm run verify` and
+  `npm run build` green).** This records the permanent
   three-sided platform architecture in `docs/PLATFORM_ARCHITECTURE.md`
   (TALENT — implemented now; OPPORTUNITY PROVIDERS and INSTITUTIONS — future,
   documented only so present design stays compatible) and builds the smallest
@@ -41,10 +42,11 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   personal user data is never exposed to organizations. The server action
   (`lib/data/talent-profile-actions.ts`) derives `user_id` from authenticated
   claims via `getAuthenticatedUser()` and never trusts a client-supplied id;
-  upsert uses `onConflict: "user_id"`. Reads/writes degrade gracefully when the
-  owner has not yet applied the migration (`missingProfileSchema`, PGRST205 /
-  42P01): Explore is unaffected and For You shows an honest "not available yet"
-  state rather than fabricating matches.
+  upsert uses `onConflict: "user_id"`. Reads/writes still degrade gracefully if
+  the schema is ever absent (`missingProfileSchema`, PGRST205 / 42P01): Explore is
+  unaffected and For You shows an honest "not available yet" state rather than
+  fabricating matches (0018 is now applied on both staging and production, so this
+  path is defensive only).
   **Matching-input contract.** `lib/personalization.ts` is a PURE, deterministic
   module (no DB/network/service-role). It normalizes any profile source into a
   versioned `MatchingInput` (`schemaVersion: 1`) through bounded/whitelist
@@ -79,13 +81,29 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   UNCHANGED — the equivalent talent-profile invariants live in the dedicated test
   suite instead (the file's single `\n`-in-regex-literal on line 241 is corrupted
   by the current edit tooling, so it was restored pristine via `git checkout`).
-  **Exact next milestone.** The owner applies
-  `supabase/migrations/0018_talent_profile.sql` to ISOLATED STAGING first, then
-  verifies profile save/read and For You end-to-end against the real trusted
-  corpus, then promotes to production (owner gate) — Explore is already live and
-  unaffected either way. The following product milestone (only after that) is the
+  **Rollout checkpoint (2026-09-16, owner-authorized).** Migration 0018 (SHA-256
+  `79ced7a7ead2a206718d0a0695ffcd3e8770da823b16433afa2b7555ab70bc13`) was applied
+  to isolated STAGING (`pumzofcwfjqswkiwfqty`) first and, after a clean staging
+  gate, promoted idempotently to PRODUCTION (`jltuufukcwztugvojwjd`) in a single
+  transaction behind a fresh protected schema-only recovery export
+  (`20260916T213810Z-0018-talent-profile-production` under the protected
+  `.tech-opportunity-backups` directory). Staging proved owner CRUD, cross-user
+  deny, anon deny, no staff/org read, Explore fully functional with no profile,
+  progressive skip/clear, and a deterministic explainable For You E2E
+  (National/International/type/sector signals) plus a green mobile build.
+  Production post-change proof: RLS enabled, three owner-only policies, grants
+  `authenticated=INSERT,SELECT,UPDATE` with `anon_grant_rows=0` and no
+  DELETE/TRUNCATE/REFERENCES/TRIGGER, ZERO corpus drift (298 opportunities
+  8/204/86, 537 references, 75 enrichments, 3 auth users, 3 profiles), and
+  RLS/privacy denial probes (fake UUIDs, rolled back, no real row) all correct; a
+  READ-ONLY For You run over the live published corpus returned deterministic
+  explainable recs with zero mutation. Full evidence is in
+  `docs/M31_STAGING_RUNBOOK.md`. **Exact next milestone:** STOP for owner
+  direction on the next commercial/product milestone (for example the
   deterministic saved-search / digest layer in the roadmap's Personalization
-  phase; NO LLM/AI recommendations until the AI readiness contract passes.
+  phase). Do NOT build saved-search/digests, AI, CV parsing, monetization,
+  provider dashboards, or institution dashboards yet; NO LLM/AI recommendations
+  until the AI readiness contract passes.
 
 - **2026-09-16 taxonomy milestone CLOSED — migration 0017 APPLIED to production +
   geography determinacy tightened (current; full `npm run verify` and

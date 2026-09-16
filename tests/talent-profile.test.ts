@@ -371,9 +371,12 @@ test("migration enables RLS and binds every policy to the owner", () => {
 
 test("migration grants no staff/organization read and revokes anonymous access", () => {
   assert.doesNotMatch(migration, /is_staff\(\)/);
-  assert.match(migration, /revoke all on table public\.talent_profiles from anon/);
+  // Supabase auto-grants ALL on a new public table to anon AND authenticated, so
+  // least privilege requires revoking from both before the narrow re-grant.
+  assert.match(migration, /revoke all on table public\.talent_profiles from anon, authenticated/);
   assert.match(migration, /grant select, insert, update on table public\.talent_profiles to authenticated/);
   assert.doesNotMatch(migration, /grant delete/i);
+  assert.doesNotMatch(migration, /grant[^;]*\bdelete\b[^;]*to authenticated/i);
 });
 
 test("migration bounds the arrays to keep the matching input deterministic", () => {

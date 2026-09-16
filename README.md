@@ -86,9 +86,10 @@ gates green (tsc, 27 tests, 35 boundaries, build, lint). All 8 near-term roadmap
 priorities are closed. Next: owner-directed growth phase (see "Following product
 phases" in [PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md)).
 
-**User Profile + Personalized Opportunity Foundation is now implemented
-(2026-09-16, talent side only; migration 0018 DESIGNED — NOT APPLIED, OWNER
-GATE).** The permanent three-sided platform architecture (TALENT now;
+**User Profile + Personalized Opportunity Foundation is now implemented and
+migration 0018 is rolled out to production (2026-09-16, talent side only;
+owner-authorized rollout verified on isolated staging then production).** The
+permanent three-sided platform architecture (TALENT now;
 OPPORTUNITY PROVIDERS and INSTITUTIONS future, documented only) lives in
 [PLATFORM_ARCHITECTURE.md](docs/PLATFORM_ARCHITECTURE.md). Explore stays the
 complete trusted opportunity universe for everyone and is never gated by
@@ -99,8 +100,11 @@ deterministic matching-input contract with human-readable reasons
 (`lib/personalization.ts`) — no percentages, no score gimmicks, no LLM/AI, no CV
 parsing. The profile table is OWNER-ONLY RLS (never staff- or org-readable, no
 anonymous access, identity from authenticated claims), so personal user data is
-never exposed to organizations. All gates green (tsc, tests incl. the new
-`test:personalization`, 35 boundaries, build, lint).
+never exposed to organizations. Migration 0018 (`public.talent_profiles`) is
+applied to isolated staging and production with owner-only RLS verified and zero
+corpus drift; rollout evidence is in
+[M31_STAGING_RUNBOOK.md](docs/M31_STAGING_RUNBOOK.md). All gates green (tsc,
+tests incl. the new `test:personalization`, 35 boundaries, build, lint).
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

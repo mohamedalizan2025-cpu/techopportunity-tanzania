@@ -137,8 +137,9 @@ phases gated by their own bounded authorization.
 
 - **Delivered 2026-09-16 (talent side only): User Profile + Personalized
   Opportunity Foundation.** Structured, owner-only talent profile
-  (`public.talent_profiles`, migration 0018 — DESIGNED, OWNER GATE, not yet
-  applied) collected by progressive, fully skippable profiling; a permanent
+  (`public.talent_profiles`, migration 0018 — APPLIED to staging then production
+  2026-09-16, owner-authorized, zero corpus drift) collected by progressive,
+  fully skippable profiling; a permanent
   Explore (complete trusted universe, never gated by personalization) vs For You
   (separate personalized layer over the SAME trusted corpus) boundary; and a
   clean, deterministic, versioned matching-input contract with explainable
@@ -148,8 +149,9 @@ phases gated by their own bounded authorization.
 - Add an optional CV with clear privacy and retention controls (deferred; not
   built).
 - Provide deterministic saved-search and digest value before generative features
-  (the exact next personalization milestone, after the owner applies migration
-  0018 and verifies For You end-to-end).
+  (the next personalization milestone; migration 0018 is now applied and For You
+  is verified end-to-end on staging and production, so this awaits owner
+  direction).
 - Activate explainable recommendations only over a trusted, sufficiently complete
   corpus, with user control and evaluation against non-AI baselines.
 - Add application readiness, an Opportunity Passport, application tracking, and
