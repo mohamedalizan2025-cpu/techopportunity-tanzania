@@ -129,14 +129,33 @@ before publishing, obey platform terms, and never use unauthorized social scrapi
 
 ### Personalization
 
-- Add structured user profiles and an optional CV with clear privacy and retention
-  controls.
-- Provide deterministic saved-search and digest value before generative features.
+Permanent three-sided platform architecture (TALENT now; OPPORTUNITY PROVIDERS
+and INSTITUTIONS future) is recorded in
+[PLATFORM_ARCHITECTURE.md](PLATFORM_ARCHITECTURE.md); provider/institution
+dashboards, targeting, consent-based connection, and monetization remain future
+phases gated by their own bounded authorization.
+
+- **Delivered 2026-09-16 (talent side only): User Profile + Personalized
+  Opportunity Foundation.** Structured, owner-only talent profile
+  (`public.talent_profiles`, migration 0018 — DESIGNED, OWNER GATE, not yet
+  applied) collected by progressive, fully skippable profiling; a permanent
+  Explore (complete trusted universe, never gated by personalization) vs For You
+  (separate personalized layer over the SAME trusted corpus) boundary; and a
+  clean, deterministic, versioned matching-input contract with explainable
+  human-readable reasons (`lib/personalization.ts`) — no percentages, no numeric
+  score, no fabrication from missing data. No CV, no LLM/AI recommendations, no
+  monetization, no provider/institution dashboards.
+- Add an optional CV with clear privacy and retention controls (deferred; not
+  built).
+- Provide deterministic saved-search and digest value before generative features
+  (the exact next personalization milestone, after the owner applies migration
+  0018 and verifies For You end-to-end).
 - Activate explainable recommendations only over a trusted, sufficiently complete
   corpus, with user control and evaluation against non-AI baselines.
 - Add application readiness, an Opportunity Passport, application tracking, and
   carefully bounded application assistance only after the underlying profile and
-  opportunity facts are trustworthy.
+  opportunity facts are trustworthy. The data model already leaves room for
+  future `saved / interested / applying / applied` states (only `saved` is live).
 
 ### Intelligence and platform growth
 

@@ -4,6 +4,89 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-16 User Profile + Personalized Opportunity Foundation IMPLEMENTED
+  (talent side only; migration 0018 DESIGNED — NOT APPLIED, OWNER GATE; full
+  `npm run verify` and `npm run build` green).** This records the permanent
+  three-sided platform architecture in `docs/PLATFORM_ARCHITECTURE.md`
+  (TALENT — implemented now; OPPORTUNITY PROVIDERS and INSTITUTIONS — future,
+  documented only so present design stays compatible) and builds the smallest
+  talent-side personalization foundation. No provider/institution dashboards, no
+  monetization, no LLM/AI recommendations, no CV parsing, no percentages/match
+  gimmicks, and no UI redesign were added.
+  **Permanent talent UX boundary.** *Explore* (`app/(home)/page.tsx`) stays the
+  complete trusted opportunity universe for everyone, including visitors with no
+  account and signed-in users with no profile; personalization never gates,
+  hides, or down-ranks it. *For You* (`app/for-you/page.tsx`) is a separate,
+  optional personalized layer over the **same** trusted corpus: it calls
+  `getPublicBrowseData({})` (identical published, unexpired set as Explore) and
+  only re-orders/explains it — it never introduces new or untrusted records.
+  **Profile schema.** `supabase/migrations/0018_talent_profile.sql` adds ONE new
+  table `public.talent_profiles`, 1:1 with `auth.users` (`user_id` primary key,
+  `on delete cascade`). It is deliberately SEPARATE from the existing auth
+  `public.profiles` (display_name/role) so talent personalization never conflates
+  with staff identity. Core columns: `career_level`, `field_discipline`,
+  `sectors text[]`, `preferred_types text[]`. Optional/progressive: `skills
+  text[]`, `region`, `experience_level`, `goals`. Every field is nullable (a user
+  can skip profiling entirely); arrays are bounded (sectors ≤ 13, preferred_types
+  ≤ 20, skills ≤ 30) and text is length-bounded, keeping rows small and the
+  matching input deterministic. `sectors`/`preferred_types` reuse the existing
+  taxonomy vocabularies (`lib/taxonomy.ts` SECTORS, `OPPORTUNITY_CATEGORIES`) —
+  no parallel category system. A `set_updated_at` trigger maintains `updated_at`.
+  **Privacy / RLS (permanent).** The table is OWNER-ONLY and strictly stronger
+  than staff-readable: RLS enabled with three policies (select/insert/update)
+  each bound to `(select auth.uid()) = user_id`; `revoke all … from anon`; grant
+  only `select, insert, update` to `authenticated` (NO delete — a user clears
+  their profile by saving empty fields). There is deliberately NO staff or
+  organization read policy: staff moderation never reads talent profiles and
+  personal user data is never exposed to organizations. The server action
+  (`lib/data/talent-profile-actions.ts`) derives `user_id` from authenticated
+  claims via `getAuthenticatedUser()` and never trusts a client-supplied id;
+  upsert uses `onConflict: "user_id"`. Reads/writes degrade gracefully when the
+  owner has not yet applied the migration (`missingProfileSchema`, PGRST205 /
+  42P01): Explore is unaffected and For You shows an honest "not available yet"
+  state rather than fabricating matches.
+  **Matching-input contract.** `lib/personalization.ts` is a PURE, deterministic
+  module (no DB/network/service-role). It normalizes any profile source into a
+  versioned `MatchingInput` (`schemaVersion: 1`) through bounded/whitelist
+  normalizers, exposes `hasCoreProfile` (true when at least one core signal
+  exists — until then For You stays honestly empty rather than guessing), and
+  produces explainable rankings via `explainMatch`/`rankForYou`. Every
+  recommendation carries human-readable reasons ("A type you follow: X", "In your
+  field: X", "Matches your discipline: X", "Uses your skill: X" capped at 2, "In
+  your region: X"); ranking orders by count of matched signals, then soonest
+  known deadline (unknown last), then title/id — never a percentage or numeric
+  score. Unknown stays unknown: a blank field is absent, never inferred. This is
+  the stable input contract a future grounded recommender can build on without
+  reshaping the data model.
+  **Progressive profiling UX.** `app/profile/page.tsx` + `components/profile-form.tsx`
+  (mobile-first, `useActionState`): a "Core profile" fieldset (career level,
+  field/discipline, sectors, preferred types) and an "Optional details" fieldset
+  (skills, region, experience level, goals). No field is `required`; a "Skip for
+  now — continue exploring" link returns to Explore. Nav gains "For You" and
+  "Profile" links (desktop + mobile) for authenticated users only; both routes
+  redirect unauthenticated visitors to `/login?next=…` and are `noindex`.
+  **Future activity states.** The design leaves room for `saved / interested /
+  applying / applied` without building them now; only `saved` (existing) is live.
+  **Tests / verification.** New `tests/talent-profile.test.ts` (38 assertions:
+  normalization + determinism, explainability with no percentages, ranking order,
+  form parsing, owner-from-claims, For You reuses the same corpus, Explore never
+  gated) wired into `npm test` as `test:personalization`. All gates green: `npm
+  test` (all suites), `npx tsc --noEmit`, `npm run lint` (clean), `npm run
+  verify:boundaries` (35 invariants), `npm run build` (routes `/for-you`,
+  `/profile` present), and `npm run verify:plan -- --after-gates` (every-milestone
+  gates passed; migration-review + production evidence correctly flagged as owner
+  actions). NOTE: `scripts/verification/boundaries.ts` was intentionally left
+  UNCHANGED — the equivalent talent-profile invariants live in the dedicated test
+  suite instead (the file's single `\n`-in-regex-literal on line 241 is corrupted
+  by the current edit tooling, so it was restored pristine via `git checkout`).
+  **Exact next milestone.** The owner applies
+  `supabase/migrations/0018_talent_profile.sql` to ISOLATED STAGING first, then
+  verifies profile save/read and For You end-to-end against the real trusted
+  corpus, then promotes to production (owner gate) — Explore is already live and
+  unaffected either way. The following product milestone (only after that) is the
+  deterministic saved-search / digest layer in the roadmap's Personalization
+  phase; NO LLM/AI recommendations until the AI readiness contract passes.
+
 - **2026-09-16 taxonomy milestone CLOSED — migration 0017 APPLIED to production +
   geography determinacy tightened (current; full `npm run verify` and
   `npm run build` green).** Two bounded closing actions on the National /

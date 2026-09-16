@@ -26,8 +26,14 @@ export async function SiteHeader() {
           </Link>
           {user ? (
             <>
+              <Link href="/for-you" className={linkClasses}>
+                For You
+              </Link>
               <Link href="/saved" className={linkClasses}>
                 Saved
+              </Link>
+              <Link href="/profile" className={linkClasses}>
+                Profile
               </Link>
               {isStaff ? (
                 <Link href="/moderation" className={linkClasses}>
@@ -60,6 +66,12 @@ export async function SiteHeader() {
           </Link>
           {user ? (
             <>
+              <Link href="/for-you" className={linkClasses}>
+                For You
+              </Link>
+              <Link href="/profile" className={linkClasses}>
+                Your profile
+              </Link>
               <p className="break-words px-3 py-2 text-xs text-[var(--muted)]">
                 Signed in as {user.displayName ?? user.email ?? "your account"}
               </p>
