@@ -36,6 +36,31 @@ const SECONDARY_EVIDENCE_HOSTS: ReadonlySet<string> = new Set([
   "tiktok.com",
 ]);
 
+/**
+ * Generic form/survey/shortener hosts. An apply link on one of these proves
+ * nothing about organizer authorization from the aggregator page alone: any
+ * third party can host a form there, and this pipeline never fetches the
+ * organizer site to confirm the linkage. Fail closed — the organizer's own
+ * authoritative source remains the admission path. Measured trigger: a
+ * 2026 Uganda-only fellowship whose aggregator apply link lives on a generic
+ * form host (organizer-authorized, yet Tanzania-excluded — correctly refused
+ * on eligibility instead).
+ */
+const GENERIC_FORM_HOSTS: ReadonlySet<string> = new Set([
+  "tfaforms.com",
+  "forms.gle",
+  "docs.google.com",
+  "forms.office.com",
+  "jotform.com",
+  "jotform.me",
+  "typeform.com",
+  "surveymonkey.com",
+  "airtable.com",
+  "bit.ly",
+  "tinyurl.com",
+  "linktr.ee",
+]);
+
 function hostOf(value: string | null | undefined): string | null {
   if (!value) return null;
   try {
@@ -61,14 +86,17 @@ export function isExpiredCandidate(
 /**
  * Resolved authoritative evidence for a secondary-origin candidate: an
  * explicit application URL pointing outside known secondary/aggregator
- * hosts and outside the candidate's own page host. An apply link on the
- * same aggregator host is not an external authoritative portal.
+ * hosts, outside generic form/survey/shortener hosts, and outside the
+ * candidate's own page host. An apply link on the same aggregator host —
+ * or on a host where anyone can publish a form — is not a verifiable
+ * authoritative portal from the aggregator page alone.
  */
 export function hasAuthoritativeEvidence(candidate: CandidateOpportunity): boolean {
   const applicationUrl = candidate.detailEvidence?.applicationUrl;
   if (!applicationUrl) return false;
   const appHost = hostOf(applicationUrl);
   if (!appHost || SECONDARY_EVIDENCE_HOSTS.has(appHost)) return false;
+  if (GENERIC_FORM_HOSTS.has(appHost)) return false;
   const candidateHost = hostOf(candidate.url);
   if (candidateHost && appHost === candidateHost) return false;
   return true;
@@ -142,11 +170,14 @@ const RESEARCH_DOMAIN =
 
 // Evidence-backed nationalities seen in the live inventory. This deliberately
 // stays small: broad country guessing would create false exclusions.
+// Measured additions: ugandans (2026 Teach for Uganda STEM Fellowship, female
+// Ugandan-citizen requirement) plus the AWARD-type six-country set members
+// missing here (egyptians, moroccans, senegalese, sierra leoneans).
 const EXPLICIT_OTHER_NATIONALITY_TITLE =
-  /\b(?:for|open to)\s+(?:young\s+)?(?:kenyans?|nigerians?|south africans?|ghanaians?|canadians?|asians?|eritreans?)\b|\b(?:kenyans?|nigerians?|south africans?|ghanaians?|canadians?|asians?|eritreans?)\s+(?:citizens?|nationals?|residents?|graduates?|startups?|innovators?|entrepreneurs?|changemakers?|students?|women|youth)\b/i;
+  /\b(?:for|open to)\s+(?:young\s+)?(?:kenyans?|nigerians?|south africans?|ghanaians?|canadians?|asians?|eritreans?|ugandans?|egyptians?|moroccans?|senegalese|sierra leoneans?)\b|\b(?:kenyans?|nigerians?|south africans?|ghanaians?|canadians?|asians?|eritreans?|ugandans?|egyptians?|moroccans?|senegalese|sierra leoneans?)\s+(?:citizens?|nationals?|residents?|graduates?|startups?|innovators?|entrepreneurs?|changemakers?|students?|women|youth)\b/i;
 
 const EXPLICIT_OTHER_NATIONALITY_BODY =
-  /\b(?:eligibility|requirements|who can apply|applicants? must)\b[\s\S]{0,240}\b(?:only\s+)?(?:kenyans?|nigerians?|south africans?|ghanaians?|canadians?|asians?|eritreans?)\b/i;
+  /\b(?:eligibility|requirements|who can apply|applicants? must)\b[\s\S]{0,240}\b(?:only\s+)?(?:kenyans?|nigerians?|south africans?|ghanaians?|canadians?|asians?|eritreans?|ugandans?|egyptians?|moroccans?|senegalese|sierra leoneans?)\b/i;
 
 // Some programmes express the same exclusion as an exhaustive operating-
 // location requirement rather than a nationality requirement. This is

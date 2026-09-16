@@ -47,6 +47,12 @@ assert("explicit exclusion does not enter moderation", !shouldEnterModerationQue
 assert("exclusion retains supporting text", Boolean(kenyaOnly.eligibilityEvidence?.match(/Kenyan/i)));
 const southAfricansOnly = qualifyOpportunity(candidate("Graduate Programme 2027 for young South Africans"));
 assert("plural other-nationality restriction is excluded", southAfricansOnly.tanzaniaAccessibility === "tanzanians_not_eligible");
+const ugandaOnly = qualifyOpportunity(candidate(
+  "Teach for Uganda STEM Fellowship 2026",
+  "Eligibility: applicants must be female Ugandan citizens or refugees residing in Uganda."
+));
+assert("explicit Ugandan-citizen restriction excludes Tanzanians", ugandaOnly.tanzaniaAccessibility === "tanzanians_not_eligible");
+assert("Uganda-only call does not enter moderation", !shouldEnterModerationQueue(ugandaOnly));
 
 const foreignLocationOnly = qualifyOpportunity(candidate(
   "Intuit IDEAS Program 2026 for Small Businesses",

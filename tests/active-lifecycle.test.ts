@@ -213,5 +213,55 @@ const externalEvidence = candidate({
 });
 assert("external application portal is authoritative evidence", hasAuthoritativeEvidence(externalEvidence));
 
+assert(
+  "generic form host is not authoritative evidence (anyone can publish there)",
+  !hasAuthoritativeEvidence(
+    candidate({
+      url: "https://opportunitydesk.org/item/",
+      detailEvidence: {
+        canonicalTitle: null,
+        opportunityUrl: "https://opportunitydesk.org/item/",
+        evidenceUrl: "https://opportunitydesk.org/item/",
+        description: null,
+        applicationUrl: "https://www.tfaforms.com/5212267",
+        deadline: null,
+        deadlineKind: "unknown",
+        deadlineEvidence: null,
+        location: null,
+        eligibilityEvidence: "African applicants may apply",
+        relevanceEvidence: "Applications are now open",
+      },
+    })
+  )
+);
+
+// --- discovery admission: Tanzania exclusion (measured 2026 cases) ------------
+
+const ugandaOnlyCandidate = candidate({
+  title: "Teach for Uganda STEM Fellowship 2026",
+  description: "Eligibility: applicants must be female Ugandan citizens or refugees residing in Uganda.",
+  url: "https://opportunitydesk.org/2026/09/16/teach-for-uganda-stem-fellowship-2026/",
+  detailEvidence: {
+    canonicalTitle: null,
+    opportunityUrl: "https://opportunitydesk.org/2026/09/16/teach-for-uganda-stem-fellowship-2026/",
+    evidenceUrl: "https://opportunitydesk.org/2026/09/16/teach-for-uganda-stem-fellowship-2026/",
+    description: null,
+    applicationUrl: "https://www.tfaforms.com/5212267",
+    deadline: null,
+    deadlineKind: "unknown",
+    deadlineEvidence: null,
+    location: null,
+    eligibilityEvidence: "Must be a female Ugandan citizen or a refugee currently residing in Uganda.",
+    relevanceEvidence: "Applications are open for",
+  },
+});
+const ugandaOnly = qualifyOpportunity(ugandaOnlyCandidate, NOW, { sourceType: "other" });
+assert("explicit Ugandan-citizen restriction excludes Tanzanians", ugandaOnly.tanzaniaAccessibility === "tanzanians_not_eligible");
+assert("Uganda-only call never enters moderation", !shouldEnterModerationQueue(ugandaOnly));
+assert(
+  "Uganda-only call never admitted even with an external apply link",
+  !shouldAdmitCandidate(ugandaOnlyCandidate, ugandaOnly, "other", NOW)
+);
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;

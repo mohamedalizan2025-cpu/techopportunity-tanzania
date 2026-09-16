@@ -352,6 +352,7 @@ invariant("active browsing and queue exclude expired lifecycle without status wr
 invariant("authoritative admission gates secondary origins and past deadlines", () => {
   const qualification = read("scripts/discovery/qualification.ts");
   assert.match(qualification, /AUTHORITATIVE_SOURCE_TYPES/);
+  assert.match(qualification, /GENERIC_FORM_HOSTS/);
   assert.match(qualification, /shouldAdmitCandidate/);
   assert.match(qualification, /hasAuthoritativeEvidence/);
   assert.match(qualification, /isExpiredCandidate/);
