@@ -50,7 +50,13 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   the admission gate, the 2-hour cadence, the source registry and the legacy
   corpus are UNCHANGED; the one already-inserted production `pending` row is left
   for the human Moderator (no retrospective DB mutation without owner
-  authorization).
+  authorization). The push-triggered exact-HEAD Discovery run `35110471270`
+  (CI `35110471380`, both green, `sourcesSucceeded:20`, `errors:0`) confirmed it
+  in production: the guard withheld 7 real selection-result items across NM-AIST,
+  UDSM and SUZA (`Majina 50 Wanaotakiwa …`, `NOTICE TO SUCCESSFUL APPLICANTS …`,
+  `WRITTEN INTERVIEW RESULTS` ×4, `TANGAZO KWA WAOMBAJI WALIOCHAGULIWA …`), took
+  NM-AIST from 1 admitted to 0, and left UDSM's 5 legitimate opportunities
+  unchanged — a class rule, not one title, with no genuine open call lost.
 
 - The last pushed documentation closure before this disposition is
   `f8d531d` on `origin/main`. The runtime source SHA remains exact capability

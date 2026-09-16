@@ -258,6 +258,18 @@ and the legacy corpus are unchanged. Proven by focused cases in
 `tests/qualification.test.ts` and by new extracted-but-withheld cards in the
 UDSM and NM-AIST listing fixtures (`tests/source-adapters.test.ts`).
 
+**Production confirmation (run `35110471270`, exact HEAD `a624d95`).** The push
+ran the live worker and Milestone-verification CI (`35110471380`, both green,
+`sourcesSucceeded:20`, `sourcesFailed:0`, `errors:0`). The guard withheld **7
+real selection-result items across three different sources** — NM-AIST `Majina
+50 Wanaotakiwa Kuomba ufadhili …` (last session's single NM-AIST admission, now
+rejected with evidence `Majina 50 Wanaotakiwa`), UDSM `NOTICE TO SUCCESSFUL
+APPLICANTS …`, `WRITTEN INTERVIEW RESULTS` (×4), and SUZA `TANGAZO KWA WAOMBAJI
+WALIOCHAGULIWA …` — so it is demonstrably a class rule, not a fix for one title.
+NM-AIST went from 9 rejected / 1 admitted to **10 rejected / 0 admitted**;
+UDSM still passed its **5** legitimate opportunities unchanged (deduped against
+their existing pending rows). No genuine open call was lost.
+
 **Rejected rather than accommodated.** SUA (parses 47 anchors, 0 relevant —
 agriculture/admissions, no product scope), COSTECH/ICTC (0 clean boundaries),
 and NIMR/IfM/UDOM/hubs (unreachable or 0) each failed to produce a clean
