@@ -339,9 +339,16 @@ function sameText(left: string | null | undefined, right: string): boolean {
 }
 
 /**
- * Pure M28 query semantics over a bounded corpus already protected by the
- * published-only database predicate and RLS. The status filter remains here as
- * defence in depth and is explicitly covered by tests.
+ * Pure active-browse query semantics over a bounded corpus already protected
+ * by the published-only database predicate and RLS. The status filter
+ * remains here as defence in depth and is explicitly covered by tests.
+ *
+ * Active lifecycle hardening: explicit past deadlines derive "expired" and
+ * are excluded from the NORMAL active listing. Expired rows remain stored
+ * and stay reachable via direct detail (`getOpportunityBySlug`, which keeps
+ * its status-only predicate and renders "Deadline passed") — this function
+ * is the active-browse boundary, not a deletion. Unknown/null deadlines stay
+ * visible: absence of evidence is not expiry.
  */
 export function applyPublicOpportunityQuery(
   corpus: Opportunity[],
@@ -356,6 +363,7 @@ export function applyPublicOpportunityQuery(
   const matched = corpus.flatMap((opportunity) => {
     if (opportunity.status !== "published") return [];
     if (isTestOrPlaceholderOpportunity(opportunity)) return [];
+    if (deriveLifecycleState(opportunity.deadline, now) === "expired") return [];
     if (query.category && opportunity.category !== query.category) return [];
     if (city && !sameText(opportunity.location?.city, city)) return [];
     if (region && !sameText(opportunity.location?.region, region)) return [];
@@ -462,11 +470,15 @@ export interface PublishedLocations {
   regions: string[];
 }
 
-export function derivePublishedLocations(corpus: Opportunity[]): PublishedLocations {
+export function derivePublishedLocations(
+  corpus: Opportunity[],
+  now: Date = new Date()
+): PublishedLocations {
   const cities = new Set<string>();
   const regions = new Set<string>();
   for (const opportunity of corpus) {
     if (opportunity.status !== "published") continue;
+    if (deriveLifecycleState(opportunity.deadline, now) === "expired") continue;
     const city = opportunity.location?.city?.trim();
     const region = opportunity.location?.region?.trim();
     if (city) cities.add(city);
@@ -488,9 +500,10 @@ export async function getPublicBrowseData(
   query: OpportunityQuery
 ): Promise<PublicBrowseData> {
   const corpus = await fetchPublishedOpportunityCorpus();
+  const now = new Date();
   return {
-    opportunities: applyPublicOpportunityQuery(corpus, query),
-    locations: derivePublishedLocations(corpus),
+    opportunities: applyPublicOpportunityQuery(corpus, query, now),
+    locations: derivePublishedLocations(corpus, now),
   };
 }
 

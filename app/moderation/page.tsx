@@ -16,7 +16,6 @@ import {
   TRIAGE_BUCKET_SHORT,
   TRIAGE_HEURISTIC_NOTE,
   firstSuggestedReview,
-  isAmbiguousQueueItem,
   isFurnitureQueueItem,
   triageBucketOf,
   type TriageBucket,
@@ -114,16 +113,6 @@ export default async function ModerationPage({
   for (const item of triageItems) {
     bucketCounts.set(item.bucket, (bucketCounts.get(item.bucket) ?? 0) + 1);
   }
-  // Ambiguous / weak-evidence REVIEW FLAG: bucket 7 (ambiguous) or 8
-  // (news-like heuristic) — the same labeled hints as the badges, now
-  // filterable. Hint only; the moderator still decides every record.
-  const flaggedById = new Map(
-    pending.map((opportunity) => [
-      opportunity.id,
-      isAmbiguousQueueItem(opportunity.category, opportunity.title),
-    ])
-  );
-  const flaggedCount = [...flaggedById.values()].filter(Boolean).length;
   // Frozen site-furniture REVIEW FLAG: exact reviewed titles only (hint, not
   // a verdict). Counted over the full pending list so the chip shows the
   // whole batch even inside another filtered view.
@@ -217,14 +206,6 @@ export default async function ModerationPage({
                     {TRIAGE_BUCKET_SHORT[bucket]} · {bucketCounts.get(bucket)}
                   </Link>
                 ))}
-                {flaggedCount > 0 ? (
-                  <Link
-                    href={`/moderation${queueFilterQuery({ ...filter, flag: "ambiguous" })}`}
-                    className={filterChipClasses(filter.flag === "ambiguous")}
-                  >
-                    Flagged · {flaggedCount}
-                  </Link>
-                ) : null}
                 {furnitureCount > 0 ? (
                   <Link
                     href={`/moderation${queueFilterQuery({ ...filter, flag: "furniture" })}`}
@@ -331,15 +312,14 @@ export default async function ModerationPage({
               items={visible.map((opportunity) => ({
                 id: opportunity.id,
                 title: opportunity.title,
-                flagged: flaggedById.get(opportunity.id) ?? false,
+                flagged: false,
               }))}
             />
               </>
             )}
             <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-500">
-              {TRIAGE_HEURISTIC_NOTE} Flagged means triage bucket 7
-              (ambiguous) or 8 (news-like) — the same hints, filterable.
-              Furniture lists only exact reviewed site-furniture titles.
+              {TRIAGE_HEURISTIC_NOTE} Furniture lists only exact reviewed
+              site-furniture titles.
             </p>
           </>
         )}

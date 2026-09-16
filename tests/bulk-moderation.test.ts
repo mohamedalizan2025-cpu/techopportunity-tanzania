@@ -10,7 +10,7 @@ import {
   parseQueueFilter,
   queueFilterQuery,
 } from "../lib/data/moderation";
-import { isAmbiguousQueueItem, isFurnitureQueueItem } from "../lib/triage-bucket";
+import { isFurnitureQueueItem } from "../lib/triage-bucket";
 import type { Opportunity } from "../lib/types";
 
 const root = process.cwd();
@@ -42,12 +42,9 @@ function row(overrides: Partial<Opportunity>): Opportunity {
 const ID_A = "11111111-1111-4111-8111-111111111111";
 const ID_B = "22222222-2222-4222-8222-222222222222";
 
-test("ambiguous flag reuses the labeled heuristic buckets and nothing else", () => {
-  assert.equal(isAmbiguousQueueItem("other", "Ordinary page without signals"), true);
-  assert.equal(isAmbiguousQueueItem("other", "WAZIRI AKAGUA MIRADI YA HEET"), true);
-  assert.equal(isAmbiguousQueueItem("scholarship", "Anything at all"), false);
-  assert.equal(isAmbiguousQueueItem("other", "Call for Applications 2026"), false);
-  assert.equal(isAmbiguousQueueItem(null, "Latest News roundup"), true);
+test("legacy ambiguous flag is retired: only furniture remains a flag", () => {
+  assert.equal(parseQueueFilter({ flag: "ambiguous" }).flag, null);
+  assert.equal(parseQueueFilter({ flag: "furniture" }).flag, "furniture");
 });
 
 test("furniture flag matches exact reviewed titles and nothing else", () => {
@@ -75,15 +72,15 @@ test("queue search and flag params parse fail-closed", () => {
   assert.equal(parseQueueFilter({ q: "   " }).q, null);
   assert.equal(parseQueueFilter({ q: "x".repeat(121) }).q, null);
   assert.equal(parseQueueFilter({ q: ["first", "second"] }).q, "first");
-  assert.equal(parseQueueFilter({ flag: "ambiguous" }).flag, "ambiguous");
+  assert.equal(parseQueueFilter({ flag: "ambiguous" }).flag, null);
   assert.equal(parseQueueFilter({ flag: "Ambiguous" }).flag, null);
   assert.equal(parseQueueFilter({ flag: "all" }).flag, null);
-  assert.equal(parseQueueFilter({ flag: ["ambiguous", "x"] }).flag, "ambiguous");
+  assert.equal(parseQueueFilter({ flag: ["ambiguous", "x"] }).flag, null);
   assert.equal(parseQueueFilter({ flag: "furniture" }).flag, "furniture");
   assert.equal(parseQueueFilter({ flag: "Furniture" }).flag, null);
   assert.equal(parseQueueFilter({ flag: ["furniture", "x"] }).flag, "furniture");
-  const combined = parseQueueFilter({ bucket: "2", source: "Twaweza", q: "AI", flag: "ambiguous" });
-  assert.deepEqual(combined, { bucket: 2, sourceName: "Twaweza", q: "AI", flag: "ambiguous" });
+  const combined = parseQueueFilter({ bucket: "2", source: "Twaweza", q: "AI", flag: "furniture" });
+  assert.deepEqual(combined, { bucket: 2, sourceName: "Twaweza", q: "AI", flag: "furniture" });
 });
 
 test("search and flag narrow the rendered view only, combined with AND", () => {
@@ -93,14 +90,13 @@ test("search and flag narrow the rendered view only, combined with AND", () => {
   assert.equal(matchesQueueFilter(a, { ...base, q: "sahara" }), true);
   assert.equal(matchesQueueFilter(a, { ...base, q: "SAHARA" }), true);
   assert.equal(matchesQueueFilter(a, { ...base, q: "aas" }), false);
-  assert.equal(matchesQueueFilter(b, { ...base, flag: "ambiguous" }), true);
-  assert.equal(matchesQueueFilter(a, { ...base, flag: "ambiguous" }), false);
   assert.equal(
-    matchesQueueFilter(b, { ...base, sourceName: "Twaweza", q: "waziri", flag: "ambiguous" }),
-    true
+    matchesQueueFilter(b, { ...base, sourceName: "Twaweza", q: "waziri", flag: "furniture" }),
+    false,
+    "non-furniture rows never match the furniture flag"
   );
   assert.equal(
-    matchesQueueFilter(b, { ...base, sourceName: "Elsewhere", q: "waziri", flag: "ambiguous" }),
+    matchesQueueFilter(b, { ...base, sourceName: "Elsewhere", q: "waziri", flag: null }),
     false
   );
   const c = row({ id: "c", title: "Quick Links", sourceName: "Twaweza" });
@@ -119,9 +115,9 @@ test("search and flag narrow the rendered view only, combined with AND", () => {
 });
 
 test("search and flag survive the URL round-trip", () => {
-  const query = queueFilterQuery({ bucket: 2, sourceName: "Twaweza", q: "AI & Health", flag: "ambiguous" });
+  const query = queueFilterQuery({ bucket: 2, sourceName: "Twaweza", q: "AI & Health", flag: "furniture" });
   const parsed = parseQueueFilter({ ...Object.fromEntries(new URLSearchParams(query)) });
-  assert.deepEqual(parsed, { bucket: 2, sourceName: "Twaweza", q: "AI & Health", flag: "ambiguous" });
+  assert.deepEqual(parsed, { bucket: 2, sourceName: "Twaweza", q: "AI & Health", flag: "furniture" });
   const furnitureQuery = queueFilterQuery({ bucket: null, sourceName: null, q: null, flag: "furniture" });
   assert.equal(furnitureQuery, "?flag=furniture");
   assert.deepEqual(
@@ -189,14 +185,12 @@ test("the bulk panel keeps selection client-side and results per-record", () => 
 test("the queue page guards, searches, flags, and hosts the panel", () => {
   assert.match(queuePage, /getModerationAccess\(\)/);
   assert.match(queuePage, /name="q"/);
-  assert.match(queuePage, /name="flag"/);
   assert.match(queuePage, /QueueBulkPanel/);
-  assert.match(queuePage, /flaggedById/);
-  assert.match(queuePage, /isAmbiguousQueueItem/);
+  assert.doesNotMatch(queuePage, /isAmbiguousQueueItem/);
   assert.match(queuePage, /isFurnitureQueueItem/);
   assert.match(queuePage, /Furniture/);
   assert.match(queuePage, /flag: "furniture"/);
-  assert.match(moderation, /isAmbiguousQueueItem/);
+  assert.doesNotMatch(moderation, /isAmbiguousQueueItem/);
   assert.match(moderation, /isFurnitureQueueItem/);
   assert.match(staffState, /BULK_REJECT_CONFIRM_TOKEN = "bulk-reject"/);
   assert.match(staffState, /BULK_REJECT_MAX_ITEMS = 50/);

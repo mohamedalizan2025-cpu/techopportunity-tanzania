@@ -7,7 +7,11 @@ import { isDuplicate, sameUrl } from "./dedupe";
 import { validateCandidate } from "./validate";
 import {
   M31_QUALIFICATION_RULE_VERSION,
+  hasAuthoritativeEvidence,
+  isAuthoritativeSourceType,
+  isExpiredCandidate,
   qualifyOpportunity,
+  shouldAdmitCandidate,
   shouldEnterModerationQueue,
   type OpportunityQualification,
 } from "./qualification";
@@ -248,6 +252,28 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
           console.log(
             `[${source.name}] qualification rejected '${candidate.title.slice(0, 70)}' — ` +
               (qualification.relevanceEvidence ?? qualification.eligibilityEvidence ?? "explicit rule")
+          );
+          continue;
+        }
+        // Active Lifecycle Hardening: explicit expiry never enters, even if
+        // qualification text looks relevant (defence in depth — qualification
+        // already marks past deadlines not_relevant; this keeps the reason
+        // explicit at the admission boundary).
+        if (isExpiredCandidate(candidate, qualificationNow)) {
+          sourceResult.relevanceRejected += 1;
+          console.log(
+            `[${source.name}] admission rejected (expired) '${candidate.title.slice(0, 70)}' — explicit deadline already passed`
+          );
+          continue;
+        }
+        // Authoritative-source admission gate: secondary origins need resolved
+        // first-party evidence (external application portal). Unverified leads
+        // stay outside the active corpus; no ambiguous queue item is created.
+        if (!shouldAdmitCandidate(candidate, qualification, source.source_type, qualificationNow)) {
+          sourceResult.relevanceRejected += 1;
+          console.log(
+            `[${source.name}] admission rejected (authority) '${candidate.title.slice(0, 70)}' — ` +
+              `secondary origin without authoritative evidence (authoritative=${isAuthoritativeSourceType(source.source_type)}, hasEvidence=${hasAuthoritativeEvidence(candidate)})`
           );
           continue;
         }

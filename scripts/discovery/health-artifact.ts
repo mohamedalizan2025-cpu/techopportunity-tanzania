@@ -74,7 +74,7 @@ function healthMarkdown(report: DiscoveryHealthReport): string {
     `- Candidates / qualified / inserted pending: ${report.pipelineHealth.metrics.candidatesFound} / ${report.pipelineHealth.metrics.qualifiedCandidates} / ${report.pipelineHealth.metrics.insertedPending}`,
     `- Baseline: **${report.baseline.state}** (${report.baseline.historyDepth}/${report.baseline.requiredHistory} successful prior observations)`,
     `- Anomalies: ${counts.critical} critical, ${counts.warning} warning, ${counts.informational} informational`,
-    `- Six-hour readiness: **${report.readiness.state}**`,
+    `- Two-hour readiness: **${report.readiness.state}**`,
     "",
   ].join("\n");
 }

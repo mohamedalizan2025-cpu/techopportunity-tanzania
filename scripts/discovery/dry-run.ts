@@ -4,7 +4,14 @@ import { extractAllCandidates, extractFeedCandidates } from "./adapters";
 import { discoverFeedUrls } from "./extract";
 import { normalizeCandidate } from "./normalize";
 import { isObviousSectionLabel, isValidOpportunityUrl, validateCandidate } from "./validate";
-import { qualifyOpportunity, shouldEnterModerationQueue } from "./qualification";
+import {
+  hasAuthoritativeEvidence,
+  isAuthoritativeSourceType,
+  isExpiredCandidate,
+  qualifyOpportunity,
+  shouldAdmitCandidate,
+  shouldEnterModerationQueue,
+} from "./qualification";
 import { createBoundedDetailAcquirer } from "./detail";
 import type { CandidateOpportunity, SourceRecord } from "./types";
 
@@ -35,7 +42,7 @@ const { data: sources } = await client
 
 const activeSources = (sources ?? []) as unknown as SourceRecord[];
 
-const totals = { sources: 0, fetched: 0, failures: 0, candidates: 0, valid: 0, withLocation: 0, withDeadline: 0, withBoth: 0, withNeither: 0, noiseFiltered: 0, relevanceRejected: 0, eligibilityRejected: 0, eligibilityUnknown: 0, detailFetches: 0, detailSucceeded: 0, detailFailures: 0, detailDeadlineFound: 0, detailEligibilityFound: 0, detailApplicationFound: 0 };
+const totals = { sources: 0, fetched: 0, failures: 0, candidates: 0, valid: 0, withLocation: 0, withDeadline: 0, withBoth: 0, withNeither: 0, noiseFiltered: 0, relevanceRejected: 0, eligibilityRejected: 0, expiredRejected: 0, authorityRejected: 0, admitted: 0, authoritativeOrigins: 0, authoritativeEvidence: 0, eligibilityUnknown: 0, detailFetches: 0, detailSucceeded: 0, detailFailures: 0, detailDeadlineFound: 0, detailEligibilityFound: 0, detailApplicationFound: 0 };
 
 
 
@@ -80,8 +87,19 @@ for (const source of activeSources) {
     }));
     totals.relevanceRejected += qualified.filter((x) => x.qualification.relevance === "not_relevant").length;
     totals.eligibilityRejected += qualified.filter((x) => x.qualification.relevance !== "not_relevant" && x.qualification.tanzaniaAccessibility === "tanzanians_not_eligible").length;
-    const survivors = qualified.filter((x) => shouldEnterModerationQueue(x.qualification));
+    const queueEligible = qualified.filter((x) => shouldEnterModerationQueue(x.qualification));
+    totals.expiredRejected += queueEligible.filter((x) => isExpiredCandidate(x.candidate, qualificationNow)).length;
+    const unexpired = queueEligible.filter((x) => !isExpiredCandidate(x.candidate, qualificationNow));
+    totals.authorityRejected += unexpired.filter(
+      (x) => !shouldAdmitCandidate(x.candidate, x.qualification, source.source_type, qualificationNow)
+    ).length;
+    const survivors = unexpired.filter((x) =>
+      shouldAdmitCandidate(x.candidate, x.qualification, source.source_type, qualificationNow)
+    );
     const valid = survivors.map((x) => x.candidate);
+    totals.admitted += valid.length;
+    if (isAuthoritativeSourceType(source.source_type)) totals.authoritativeOrigins += 1;
+    totals.authoritativeEvidence += survivors.filter((x) => hasAuthoritativeEvidence(x.candidate)).length;
     totals.eligibilityUnknown += survivors.filter((x) => x.qualification.tanzaniaAccessibility === "unknown").length;
     const labelNoise = normalized.filter((x) => !validateCandidate(x.n) && isObviousSectionLabel(x.n.title) && x.c.url && isValidOpportunityUrl(x.c.url));
     totals.noiseFiltered += labelNoise.length;
@@ -102,7 +120,8 @@ for (const source of activeSources) {
     totals.withBoth += withBoth.length;
     totals.withNeither += valid.length - withLoc.length - withDl.length + withBoth.length;
 
-    console.log(`=== ${source.name} | candidates=${valid.length} location=${withLoc.length} deadline=${withDl.length} both=${withBoth.length} feeds=${feedUrls.length} details=${detailMetrics.succeeded}/${detailMetrics.fetches}`);
+    const admittedWithEvidence = valid.filter((c) => hasAuthoritativeEvidence(c)).length;
+    console.log(`=== ${source.name} [${source.source_type}${isAuthoritativeSourceType(source.source_type) ? "/authoritative" : "/secondary"}] | admitted=${valid.length} (evidence=${admittedWithEvidence}) location=${withLoc.length} deadline=${withDl.length} both=${withBoth.length} feeds=${feedUrls.length} details=${detailMetrics.succeeded}/${detailMetrics.fetches}`);
     for (const c of withLoc) {
       console.log(`    LOC ${c.title.slice(0, 60)} -> venue=${c.venueName} city=${c.city} region=${c.region} url=${c.url.slice(0, 60)}`);
     }

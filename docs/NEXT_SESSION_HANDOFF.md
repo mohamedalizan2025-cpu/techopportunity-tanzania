@@ -966,7 +966,7 @@ deployment, Auth/configuration change, discovery change, or later roadmap work r
 The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order is:
 
 1. **Pending Rejection Attribution Hardening** *(promoted and both real pending records resolved with full attribution; closed)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted as exact `1645973`; the authorized Nordic single-record disposition is complete; ambiguous-queue batch planning next)*
+2. **Bulk Moderator Actions** *(promoted as exact `1645973`; Nordic/EBID/AWARD dispositions complete; record-by-record legacy cleanup abandoned — history preserved, active surfaces filter at query time; ambiguous flag retired)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold
@@ -974,10 +974,10 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
    - confirmation
    - per-record attribution/audit
    - safe partial-failure handling
-   - filter/flag for likely ambiguous or weak-evidence records
-3. **Finish legacy public-corpus cleanup**
+   - view-only furniture flag
+3. **Authoritative Discovery + Active Lifecycle Hardening** *(implemented 2026-09-16, unpromoted; one controlled real run is the next gate)*
 4. **Source credibility/source registry**
-5. **Discovery quality review and move from ~6-hour cadence toward ~2-hour cadence if verified safe**
+5. **Discovery quality review and 2-hour cadence verification** *(repo targets 2h; schedule stays paused until the controlled run proves clean)*
 6. **National vs International classification**
 7. **Opportunity taxonomy improvement**
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**
@@ -1615,32 +1615,92 @@ stop with remaining list, HTTP-500 stop with remaining list, and resume of
 exactly the remainder. Sahara/AAS stay published (already authoritative);
 needs-evidence rows are untouched by the frozen scope.
 
+## Authoritative Discovery + Active Lifecycle Hardening — implemented, unpromoted (2026-09-16)
+
+Manual legacy cleanup and the 200-row corpus reset are abandoned. No
+production row, status, reference, audit, Moderator token, or cleanup
+confirmation was touched in this milestone. The historical corpus stays
+physically stored with full history; active surfaces filter lifecycle at
+query/view time only.
+
+Code (20 files, no migration, no deletion, no sweeper):
+
+- Public active browse (`lib/data/opportunities.ts`): `applyPublicOpportunityQuery`
+  excludes lifecycle `expired`; `derivePublishedLocations` matches. Direct
+  detail (`getOpportunityBySlug`) is unchanged and keeps "Deadline passed".
+  Unknown/null deadlines stay visible.
+- Moderator active queue (`lib/data/moderation.ts`): `listPendingOpportunities`
+  filters via new `isActivePendingOpportunity` (derived expiry); direct
+  `getPendingOpportunityById` is preserved for intentional historical access.
+- Discovery admission (`scripts/discovery/qualification.ts` + `runner.ts`):
+  past explicit deadlines qualify `not_relevant` and never admit;
+  `AUTHORITATIVE_SOURCE_TYPES` (university/government/ngo/company/
+  innovation_hub/scholarship_provider/fellowship_provider) admit directly;
+  secondary origins (`other`/`hackathon_platform`/`conference`, incl.
+  aggregators/social) admit only with resolved external application evidence
+  (`hasAuthoritativeEvidence`: explicit apply URL outside known secondary
+  hosts and outside the candidate's own host). Unverified leads stay outside
+  the active corpus; no ambiguous queue item is created. Furniture/news/
+  duplicate/stale/malformed/Tanzania-excluded rejections remain via the
+  existing validate/qualify/dedupe path.
+- Ambiguous workflow retired: `isAmbiguousQueueItem` removed from
+  `lib/triage-bucket.ts`; `QueueFilter.flag` is `furniture|null` only;
+  queue page drops the Flagged chip/count. Bucket badges, priority
+  suggestion, and the temporary furniture flag are unchanged.
+- Cadence repo-target is now 2 hours: `discovery.yml` (`0 */2 * * *`,
+  expected/target `2`), `discovery-health.yml` (`30 */2 * * *`, `2`),
+  `health.ts` defaults/target `2` with even-hour nominal slots,
+  `health-monitor.ts`/`health-artifact.ts` report two-hour readiness,
+  `index.ts` target fallback `2`. GitHub schedule stays `disabled_manually`
+  (paused) until the owner enables it — the repo change does not unpause.
+
+Verification (this turn, local, unpromoted HEAD):
+
+- `npm test`: all suites pass incl. new `test:active-lifecycle` (22/22:
+  active browse/queue expiry exclusion, direct-detail preservation,
+  past-deadline and authority admission contract).
+- `npx tsc --noEmit`: pass. Focused `eslint` on changed files: pass
+  (full `npm run lint` exceeds the 120s tool window on this machine;
+  unchanged from baseline behavior).
+- `verify:boundaries`: 35/35 (incl. two new active-lifecycle/authority
+  invariants; schedule invariants now assert the 2-hour cadence).
+- `verify:plan -- --after-gates`: 20 changed files; build,
+  discovery-regression, discovery-health, qualification-regression,
+  moderation-auth, workflow-review selected; production evidence required.
+- `npm run build`: pass (Next.js 16.3.2, 11/11 static pages).
+- Read-only dry-run (`npx tsx --env-file=.env.local
+  scripts/discovery/dry-run.ts`, writes nothing): 18 sources, 32 fetches,
+  2 transient source aborts (HESLB, Ministry of Agriculture — isolated per
+  source, not a run failure), 156 relevanceRejected (noise/furniture/news/
+  scope), 0 eligibilityRejected, 0 expiredRejected, 7 authorityRejected
+  (secondary without evidence withheld), 4 admitted — all OpportunityDesk
+  with external application evidence and future Oct/Nov 2026 deadlines,
+  eligibility unknown (moderator decides). Institutional sources admitted 0
+  (correctly noise-filtered). Admitted vs rejected inspection satisfies the
+  authoritative contract; no past-deadline candidate would admit (unit-proven).
+
+Not done here (owner gates): ONE controlled real Discovery run (GitHub
+`workflow_dispatch` with secrets, exact-SHA health artifact review); only
+if that run is clean, enable the 2-hour schedule (remove `disabled_manually`)
+and let exact-SHA scheduled observations rebuild the baseline from zero —
+prior 6-hour history does not prove 2-hour repeatability. No Moderator
+token was requested or used. The sealed pre-reset snapshot and all prior
+frozen cohorts stay as history; they authorize nothing further.
+
 ## Exact next milestone
 
-**Corpus reset execution — ONE owner gate (clipboard pipe, no typing into any prompt).**
+**ONE controlled real Discovery run — owner gate only.**
 
-The 20-confirmation browser plan is superseded and must not be executed, and
-no token is ever pasted into chat or typed at a shell prompt (a pasted JWT
-at a normal prompt executes nothing remote, but the revoked-session incident
-settled the procedure). The owner copies the live token once, from the
-production browser at DevTools → Application → Local Storage → the
-`sb-<ref>-auth-token` entry → its `access_token` value, using the clipboard
-only — never pasting it anywhere. The runner takes it solely through an
-in-memory pipe from `Get-Clipboard -Raw`: never in argv, env, disk, history,
-logs, or chat. The clipboard-pipe path is mock-proven end to end (piped
-happy path through the real script, empty-clipboard fail-closed with zero
-backend contact, plus the stale/HTTP-500/resume suite), and the trailing
-clear step is proven to overwrite the clipboard. The owner is asked to run
-exactly one local PowerShell command (any directory; nothing secret in it,
-safe for history); it pipes the clipboard into the scripted RPC run plus its
-built-in final verification, then overwrites the clipboard. On the script's
-DONE line, sign out of the Moderator account immediately to revoke the
-session. Residual risk is stated plainly: the token grants full Moderator
-power while live and sits in the clipboard for the run's duration; scope is
-enforced by frozen IDs, exact reasons, and fail-closed stops. If this
-handoff is unacceptable, the fallback is the documented 20-confirmation
-browser plan, not service-role impersonation. This handoff authorizes
-nothing by itself.
+With Discovery still paused in GitHub, the owner dispatches exactly one
+`Discovery sync` `workflow_dispatch` on the promoted HEAD, then reviews the
+retained `discovery-health/report.json`: all admitted rows must be unexpired,
+qualified, and authoritative-origin or externally-evidenced; authority
+rejections must explain every secondary withholding; zero `insertedPending`
+rows may carry a past deadline. If clean, the owner removes
+`disabled_manually` so the repo-targeted `0 */2 * * *` schedule goes live,
+then watches exact-SHA 2-hour scheduled observations rebuild readiness.
+If not clean, keep paused and fix the gate — never loosen qualification.
+This handoff authorizes nothing by itself.
 
 ## Continuing constraints
 

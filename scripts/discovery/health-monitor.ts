@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   DEFAULT_EXPECTED_INTERVAL_HOURS,
   MIN_BASELINE_OBSERVATIONS,
-  SIX_HOUR_TARGET_INTERVAL,
+  TWO_HOUR_TARGET_INTERVAL,
   assessSchedule,
   isComparableHealthObservation,
   type HealthAnomaly,
@@ -22,7 +22,7 @@ const expectedIntervalHours = positiveNumber(
 );
 const targetIntervalHours = positiveNumber(
   process.env.DISCOVERY_TARGET_INTERVAL_HOURS,
-  SIX_HOUR_TARGET_INTERVAL
+  TWO_HOUR_TARGET_INTERVAL
 );
 const history = loadHealthHistory(process.env.DISCOVERY_HEALTH_HISTORY_PATH);
 const schedule = assessSchedule(history.observations, evaluatedAt, expectedIntervalHours);
@@ -71,7 +71,7 @@ const report = {
       }
     : null,
   anomaly,
-  sixHourReadiness: expectedIntervalHours <= targetIntervalHours
+  twoHourReadiness: expectedIntervalHours <= targetIntervalHours
     && successfulScheduledObservations.length > 0
     && schedule.state !== "missed"
     ? "PARTIALLY_PROVEN" as const
@@ -95,7 +95,7 @@ if (process.env.GITHUB_STEP_SUMMARY) {
       `- Nominal slot / dispatch latency: ${schedule.nominalSlot ?? "unknown"} / ${schedule.dispatchLatencyMinutes === null ? "unknown" : `${schedule.dispatchLatencyMinutes} minutes`}`,
       `- Retained scheduled observations: ${scheduledObservations.length}`,
       `- Baseline: **${report.baseline.state}** (${report.baseline.observations}/${report.baseline.requiredObservations})`,
-      `- Six-hour readiness: **${report.sixHourReadiness}**`,
+      `- Two-hour readiness: **${report.twoHourReadiness}**`,
       "",
     ].join("\n"),
     "utf8"

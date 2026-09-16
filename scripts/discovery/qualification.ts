@@ -1,7 +1,96 @@
 import type { CandidateOpportunity, SourceType } from "./types";
 import { M31_QUALIFICATION_RULE_VERSION } from "../../lib/opportunity-trust";
+import { evaluateDeadline } from "../../lib/deadline-intelligence";
 
 export { M31_QUALIFICATION_RULE_VERSION };
+
+/**
+ * Authoritative-source admission contract (Active Lifecycle Hardening).
+ *
+ * No authoritative evidence = no active opportunity record. Aggregators,
+ * social, community posts, news and other secondary channels may remain
+ * discovery leads, but a candidate enters the active Moderator queue only
+ * from a credible authoritative first-party origin OR with resolved
+ * authoritative evidence (an explicit external application portal).
+ * Unverified leads stay outside the active corpus; ambiguity is never an
+ * active-queue state (ambiguous relevance is already withheld below).
+ */
+export const AUTHORITATIVE_SOURCE_TYPES: ReadonlySet<SourceType> = new Set([
+  "university",
+  "government",
+  "ngo",
+  "company",
+  "innovation_hub",
+  "scholarship_provider",
+  "fellowship_provider",
+]);
+
+const SECONDARY_EVIDENCE_HOSTS: ReadonlySet<string> = new Set([
+  "opportunitydesk.org",
+  "opportunitiesforafricans.com",
+  "linkedin.com",
+  "instagram.com",
+  "facebook.com",
+  "x.com",
+  "twitter.com",
+  "tiktok.com",
+]);
+
+function hostOf(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    return new URL(value).hostname.toLowerCase().replace(/^www\./, "") || null;
+  } catch {
+    return null;
+  }
+}
+
+export function isAuthoritativeSourceType(sourceType?: SourceType): boolean {
+  return sourceType !== undefined && AUTHORITATIVE_SOURCE_TYPES.has(sourceType);
+}
+
+/** Explicit past deadline (lifecycle "expired") — never actionable. */
+export function isExpiredCandidate(
+  candidate: Pick<CandidateOpportunity, "deadline">,
+  now: Date = new Date()
+): boolean {
+  if (!candidate.deadline) return false;
+  return evaluateDeadline({ deadline: candidate.deadline }, now).status === "closed";
+}
+
+/**
+ * Resolved authoritative evidence for a secondary-origin candidate: an
+ * explicit application URL pointing outside known secondary/aggregator
+ * hosts and outside the candidate's own page host. An apply link on the
+ * same aggregator host is not an external authoritative portal.
+ */
+export function hasAuthoritativeEvidence(candidate: CandidateOpportunity): boolean {
+  const applicationUrl = candidate.detailEvidence?.applicationUrl;
+  if (!applicationUrl) return false;
+  const appHost = hostOf(applicationUrl);
+  if (!appHost || SECONDARY_EVIDENCE_HOSTS.has(appHost)) return false;
+  const candidateHost = hostOf(candidate.url);
+  if (candidateHost && appHost === candidateHost) return false;
+  return true;
+}
+
+/**
+ * Single admission predicate for the active Moderator queue. Combines the
+ * existing qualification verdict with the two active-hardening gates:
+ * explicit expiry and authoritative origin/evidence. Historical rows are
+ * untouched — this gates INSERTION only.
+ */
+export function shouldAdmitCandidate(
+  candidate: CandidateOpportunity,
+  qualification: OpportunityQualification,
+  sourceType?: SourceType,
+  now: Date = new Date()
+): boolean {
+  if (!shouldEnterModerationQueue(qualification)) return false;
+  if (isExpiredCandidate(candidate, now)) return false;
+  if (isAuthoritativeSourceType(sourceType)) return true;
+  return hasAuthoritativeEvidence(candidate);
+}
 
 export type OpportunityRelevance = "relevant" | "ambiguous" | "not_relevant";
 export type TanzaniaAccessibility =
@@ -121,6 +210,9 @@ export function qualifyOpportunity(
   const detailEligibility = candidate.detailEvidence?.eligibilityEvidence ?? "";
   const body = `${candidate.title}\n${candidate.description}\n${detailEligibility}`;
 
+  const expiredEvidence = isExpiredCandidate(candidate, now)
+    ? `explicit deadline already passed: ${candidate.deadline}`.slice(0, 240)
+    : null;
   const nonOpportunityEvidence = matchedEvidence(title, CLEARLY_NON_OPPORTUNITY_TITLES);
   const reportingEvidence = !ACTION_CALL.test(title) && NEWS_REPORTING_TITLE.test(title)
     ? matchedEvidence(title, [NEWS_REPORTING_TITLE])
@@ -149,9 +241,10 @@ export function qualifyOpportunity(
 
   let relevance: OpportunityRelevance = "ambiguous";
   let relevanceEvidence: string | null = null;
-  if (nonOpportunityEvidence || reportingEvidence || staleEvidence || detailHasNoAction || excludedAdmission || outsideProductScope) {
+  if (expiredEvidence || nonOpportunityEvidence || reportingEvidence || staleEvidence || detailHasNoAction || excludedAdmission || outsideProductScope) {
     relevance = "not_relevant";
-    relevanceEvidence = nonOpportunityEvidence
+    relevanceEvidence = expiredEvidence
+      ?? nonOpportunityEvidence
       ?? reportingEvidence
       ?? staleEvidence
       ?? (detailHasNoAction

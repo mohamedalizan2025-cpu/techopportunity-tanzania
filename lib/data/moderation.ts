@@ -1,7 +1,8 @@
 import type { Opportunity, OpportunityCategory } from "../types";
 import { OPPORTUNITY_CATEGORIES } from "../types";
 import { BULK_REJECT_MAX_ITEMS } from "../staff-form-state";
-import { triageBucketOf, isAmbiguousQueueItem, isFurnitureQueueItem, type TriageBucket } from "../triage-bucket";
+import { deriveLifecycleState } from "../lifecycle";
+import { triageBucketOf, isFurnitureQueueItem, type TriageBucket } from "../triage-bucket";
 import {
   createSupabaseAuthServerClient,
   getAuthenticatedUser,
@@ -117,10 +118,12 @@ export interface QueueFilter {
   /** Case-insensitive title substring; null when absent. View-only. */
   q: string | null;
   /**
-   * Row hint to narrow by. `"ambiguous"` shows the bucket 7/8 review hints;
-   * `"furniture"` shows only exact frozen site-furniture titles. View-only.
+   * Row hint to narrow by. `"furniture"` shows only exact frozen
+   * site-furniture titles. View-only. The legacy `"ambiguous"` flag is
+   * retired: new admission never creates ambiguous queue items
+   * (withheld before insertion), so no active-workflow filter needs it.
    */
-  flag: "ambiguous" | "furniture" | null;
+  flag: "furniture" | null;
 }
 
 export const EMPTY_QUEUE_FILTER: QueueFilter = { bucket: null, sourceName: null, q: null, flag: null };
@@ -158,9 +161,9 @@ export function parseQueueFilter(
       q = trimmed;
     }
   }
-  let flag: "ambiguous" | "furniture" | null = null;
+  let flag: "furniture" | null = null;
   const flagRaw = firstParam(raw.flag);
-  if (flagRaw === "ambiguous" || flagRaw === "furniture") {
+  if (flagRaw === "furniture") {
     flag = flagRaw;
   }
   return { bucket, sourceName, q, flag };
@@ -185,9 +188,6 @@ export function matchesQueueFilter(
     return false;
   }
   if (filter.q !== null && !opportunity.title.toLowerCase().includes(filter.q.toLowerCase())) {
-    return false;
-  }
-  if (filter.flag === "ambiguous" && !isAmbiguousQueueItem(opportunity.category, opportunity.title)) {
     return false;
   }
   if (filter.flag === "furniture" && !isFurnitureQueueItem(opportunity.title)) {
@@ -287,6 +287,20 @@ export async function getQueueNavigation(
   );
 }
 
+/**
+ * Active-queue lifecycle predicate: explicit past deadlines derive "expired"
+ * and are excluded from the NORMAL active review workflow. Expired rows
+ * remain stored with `status='pending'` and stay reachable via direct
+ * `getPendingOpportunityById` — this list is the active-workflow boundary,
+ * not a status mutation. Unknown/null deadlines stay visible.
+ */
+export function isActivePendingOpportunity(
+  opportunity: Pick<Opportunity, "deadline">,
+  now: Date = new Date()
+): boolean {
+  return deriveLifecycleState(opportunity.deadline, now) !== "expired";
+}
+
 export async function listPendingOpportunities(): Promise<Opportunity[]> {
   const access = await getModerationAccess();
   if (!access.ok) return [];
@@ -315,7 +329,10 @@ export async function listPendingOpportunities(): Promise<Opportunity[]> {
     );
   }
 
-  return rows.map((row) => mapOpportunityRow(row, "pending"));
+  const now = new Date();
+  return rows
+    .map((row) => mapOpportunityRow(row, "pending"))
+    .filter((opportunity) => isActivePendingOpportunity(opportunity, now));
 }
 
 export async function getPendingOpportunityById(

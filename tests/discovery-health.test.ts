@@ -129,23 +129,23 @@ test("schedule is unknown without a retained scheduled run", () => {
 
 test("dispatch latency is measured against the nominal UTC slot", () => {
   assert.deepEqual(nominalDispatchLatency("2026-09-03T18:19:45Z"), {
-    nominalSlot: "2026-09-03T15:00:00.000Z",
-    dispatchLatencyMinutes: 200,
+    nominalSlot: "2026-09-03T18:00:00.000Z",
+    dispatchLatencyMinutes: 20,
   });
 });
 
 test("schedule is on-time inside the interval plus tolerance", () => {
-  const result = assessSchedule([observation(0)], "2026-09-01T07:59:00Z", 6, "schedule");
+  const result = assessSchedule([observation(0)], "2026-09-01T03:59:00Z", 2, "schedule");
   assert.equal(result.state, "on_time");
   assert.equal(result.toleranceHours, 2);
 });
 
 test("late completed execution is delayed before a second interval", () => {
-  assert.equal(assessSchedule([observation(0)], "2026-09-01T09:00:00Z", 6, "schedule").state, "delayed");
+  assert.equal(assessSchedule([observation(0)], "2026-09-01T05:00:00Z", 2, "schedule").state, "delayed");
 });
 
 test("absent execution beyond tolerance is missed", () => {
-  assert.equal(assessSchedule([observation(0)], "2026-09-01T09:00:00Z", 6).state, "missed");
+  assert.equal(assessSchedule([observation(0)], "2026-09-01T05:00:00Z", 2).state, "missed");
 });
 
 test("invalid schedule time remains unknown", () => {
@@ -153,7 +153,7 @@ test("invalid schedule time remains unknown", () => {
 });
 
 test("manual and push runs never satisfy scheduled evidence", () => {
-  assert.equal(assessSchedule([observation(0, {}, "workflow_dispatch"), observation(1, {}, "push")], "2026-09-01T02:00:00Z", 6).state, "unknown");
+  assert.equal(assessSchedule([observation(0, {}, "workflow_dispatch"), observation(1, {}, "push")], "2026-09-01T02:00:00Z", 2).state, "unknown");
 });
 
 test("trigger identity distinguishes scheduled, manual, push, and other runs", () => {
@@ -371,8 +371,8 @@ test("unmeasured source duration is explicitly unavailable", () => {
   assert.equal(report.sourceHealth.sources[0].metrics.durationMs, null);
 });
 
-test("daily configuration cannot claim six-hour readiness", () => {
-  const report = buildHealthReport({ summary: summary([source()]), identity: identity(0), expectedIntervalHours: 24, targetIntervalHours: 6, verificationPassed: true });
+test("daily configuration cannot claim two-hour readiness", () => {
+  const report = buildHealthReport({ summary: summary([source()]), identity: identity(0), expectedIntervalHours: 24, targetIntervalHours: 2, verificationPassed: true });
   assert.equal(report.schedule.configuredForTarget, false);
   assert.equal(report.readiness.state, "NOT_YET_PROVEN");
 });
@@ -381,8 +381,8 @@ test("one real scheduled success is only partially proven", () => {
   const report = buildHealthReport({
     summary: summary([source()]),
     identity: identity(0, "schedule"),
-    expectedIntervalHours: 6,
-    targetIntervalHours: 6,
+    expectedIntervalHours: 2,
+    targetIntervalHours: 2,
     verificationPassed: true,
   });
   assert.equal(report.readiness.state, "PARTIALLY_PROVEN");
@@ -392,10 +392,10 @@ test("one real scheduled success is only partially proven", () => {
 test("three on-time scheduled successes satisfy the readiness contract", () => {
   const report = buildHealthReport({
     summary: summary([source()], identity(12, "schedule").startedAt, identity(12, "schedule").finishedAt),
-    history: history([observation(0), observation(6)]),
+    history: history([observation(8), observation(10)]),
     identity: identity(12, "schedule"),
-    expectedIntervalHours: 6,
-    targetIntervalHours: 6,
+    expectedIntervalHours: 2,
+    targetIntervalHours: 2,
     verificationPassed: true,
   });
   assert.equal(report.schedule.state, "on_time");
@@ -451,8 +451,8 @@ test("a retry cannot satisfy readiness by double-counting one logical scheduled 
     summary: summary([source()], retry.identity.startedAt, retry.identity.finishedAt),
     history: history([first]),
     identity: retry.identity,
-    expectedIntervalHours: 6,
-    targetIntervalHours: 6,
+    expectedIntervalHours: 2,
+    targetIntervalHours: 2,
     verificationPassed: true,
   });
   assert.equal(report.readiness.state, "PARTIALLY_PROVEN");

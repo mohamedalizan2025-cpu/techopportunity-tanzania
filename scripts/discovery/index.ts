@@ -42,7 +42,7 @@ async function main() {
       history,
       identity: identity(summary.startedAt, finishedAt),
       expectedIntervalHours: positiveNumber(process.env.DISCOVERY_EXPECTED_INTERVAL_HOURS, 24),
-      targetIntervalHours: positiveNumber(process.env.DISCOVERY_TARGET_INTERVAL_HOURS, 6),
+      targetIntervalHours: positiveNumber(process.env.DISCOVERY_TARGET_INTERVAL_HOURS, 2),
       verificationPassed: process.env.DISCOVERY_VERIFICATION_PASSED === "true",
     });
     retainHealthReport(health, history, reportPaths());
@@ -67,7 +67,7 @@ async function main() {
       history,
       identity: identity(processStartedAt, new Date().toISOString()),
       expectedIntervalHours: positiveNumber(process.env.DISCOVERY_EXPECTED_INTERVAL_HOURS, 24),
-      targetIntervalHours: positiveNumber(process.env.DISCOVERY_TARGET_INTERVAL_HOURS, 6),
+      targetIntervalHours: positiveNumber(process.env.DISCOVERY_TARGET_INTERVAL_HOURS, 2),
       verificationPassed: process.env.DISCOVERY_VERIFICATION_PASSED === "true",
     });
     retainHealthReport(health, history, reportPaths());

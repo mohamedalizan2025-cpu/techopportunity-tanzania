@@ -54,8 +54,8 @@ const candidate = (url = "https://opportunitydesk.org/2026/09/01/example-program
 
 const africaHtml = `
   <html><body><article>
-    <h1>Exact Africa Technology Fellowship 2026</h1>
-    <p>Application Deadline: 13 September 2026, 17:00 EAT</p>
+    <h1>Exact Africa Technology Fellowship 2027</h1>
+    <p>Application Deadline: 13 March 2027, 17:00 EAT</p>
     <p>Applications are now open for the fellowship.</p>
     <h2>Requirements</h2>
     <p>Be a citizen of an African Union Member State. Applicants must have two years of experience.</p>
@@ -64,9 +64,9 @@ const africaHtml = `
   </article></body></html>`;
 
 const africa = extractDetailEvidence(africaHtml, candidate().url);
-assert("canonical detail title extracted", africa.canonicalTitle === "Exact Africa Technology Fellowship 2026");
-assert("explicit application deadline parsed", africa.deadline === "2026-09-13T00:00:00.000Z", String(africa.deadline));
-assert("deadline text preserved exactly", africa.deadlineEvidence === "Application Deadline: 13 September 2026, 17:00 EAT");
+assert("canonical detail title extracted", africa.canonicalTitle === "Exact Africa Technology Fellowship 2027");
+assert("explicit application deadline parsed", africa.deadline === "2027-03-13T00:00:00.000Z", String(africa.deadline));
+assert("deadline text preserved exactly", africa.deadlineEvidence === "Application Deadline: 13 March 2027, 17:00 EAT");
 assert("application URL extracted without fetching it", africa.applicationUrl === "https://apply.example.org/africa-fellowship");
 assert("eligibility section preserved", Boolean(africa.eligibilityEvidence?.includes("African Union Member State")));
 assert("relevance action preserved", Boolean(africa.relevanceEvidence?.match(/Applications are now open/i)));

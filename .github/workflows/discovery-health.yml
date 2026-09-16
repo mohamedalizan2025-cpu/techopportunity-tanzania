@@ -4,7 +4,7 @@ on:
   # Credential-free observer, 30 minutes after each discovery window. It does
   # not run discovery; it detects a stale/missed retained production observation.
   schedule:
-    - cron: '30 3/6 * * *'
+    - cron: '30 */2 * * *'
   workflow_dispatch:
   push:
     branches: [main]
@@ -52,8 +52,8 @@ jobs:
         env:
           DISCOVERY_HEALTH_HISTORY_PATH: discovery-health/history.json
           DISCOVERY_SCHEDULE_REPORT_PATH: discovery-health/schedule-report.json
-          DISCOVERY_EXPECTED_INTERVAL_HOURS: '6'
-          DISCOVERY_TARGET_INTERVAL_HOURS: '6'
+          DISCOVERY_EXPECTED_INTERVAL_HOURS: '2'
+          DISCOVERY_TARGET_INTERVAL_HOURS: '2'
         run: npm run health:monitor
 
       - name: Upload schedule health evidence

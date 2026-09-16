@@ -45,7 +45,7 @@ bounded authorization and verification; this roadmap does not authorize
 implementation or production mutation.
 
 1. **Pending Rejection Attribution Hardening** *(completed 2026-09-14: promoted plus both real pending records resolved with full attribution)*
-2. **Bulk Moderator Actions + Ambiguous Queue Cleanup** *(promoted to production 2026-09-15 as exact capability `1645973`; the authorized Nordic single-record disposition is complete; batch planning complete; Batch 1 expired-calls cleanup complete; Batch 2 EBID pair complete; Batch 3 AWARD complete; furniture sweep first confirmation done (50 rows); bounded legacy-cleanup phase superseded by Authoritative Corpus Reset (Discovery paused, pre-reset snapshot sealed, reset execution next)*
+2. **Bulk Moderator Actions** *(promoted to production 2026-09-15 as exact capability `1645973`; Nordic/EBID/AWARD single-record dispositions complete; furniture sweep first confirmation done (50 rows); record-by-record legacy cleanup abandoned 2026-09-16 — historical corpus stays stored, active surfaces filter lifecycle at query time)*
    - multi-select
    - select-all-visible
    - bulk reject/withhold
@@ -53,10 +53,10 @@ implementation or production mutation.
    - confirmation
    - per-record attribution/audit
    - safe partial-failure handling
-   - filter/flag for likely ambiguous or weak-evidence records
-3. **Finish legacy public-corpus cleanup**
+   - view-only furniture flag (legacy ambiguous flag retired: new admission never creates ambiguous queue items)
+3. **Authoritative Discovery + Active Lifecycle Hardening** *(implemented 2026-09-16, unpromoted: public active browse and moderator active queue exclude expired lifecycle via query/view filter with no status writes; discovery admits only unexpired, qualified candidates from authoritative origins or with resolved external application evidence; legacy corpus untouched; Discovery paused; one controlled real run then 2-hour cadence remain owner-gated)*
 4. **Source credibility/source registry**
-5. **Discovery quality review and move from ~6-hour cadence toward ~2-hour cadence if verified safe**
+5. **Discovery quality review and 2-hour cadence verification** *(repo targets `0 */2 * * *`; GitHub schedule stays paused until one controlled real run proves clean)*
 6. **National vs International classification**
 7. **Opportunity taxonomy improvement**
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo**

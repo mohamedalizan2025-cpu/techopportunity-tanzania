@@ -149,10 +149,11 @@ invariant("bulk queue aids stay honest view-only filters", () => {
   const triageBucket = read("lib/triage-bucket.ts");
   const bulkPanel = read("app/moderation/queue-bulk-panel.tsx");
   const queuePage = read("app/moderation/page.tsx");
-  assert.match(moderationData, /isAmbiguousQueueItem/);
+  assert.doesNotMatch(moderationData, /isAmbiguousQueueItem/);
   assert.match(moderationData, /isFurnitureQueueItem/);
   assert.match(triageBucket, /export function isFurnitureQueueItem/);
-  assert.match(queuePage, /isAmbiguousQueueItem/);
+  assert.doesNotMatch(triageBucket, /isAmbiguousQueueItem/);
+  assert.doesNotMatch(queuePage, /isAmbiguousQueueItem/);
   assert.match(queuePage, /isFurnitureQueueItem/);
   assert.match(queuePage, /QueueBulkPanel/);
   assert.match(queuePage, /flag: "furniture"/);
@@ -225,11 +226,12 @@ invariant("email confirmation uses a canonical callback and safe internal destin
   assert.doesNotMatch(authRedirect, /request\.headers|headers\(\)|x-forwarded-host/i);
 });
 
-invariant("discovery uses one authoritative six-hour UTC schedule and the pending-only worker", () => {
-  assert.match(discoveryWorkflow, /cron: ['"]0 3\/6 \* \* \*['"]/);
-  assert.doesNotMatch(discoveryWorkflow, /cron: ['"]0 3 \* \* \*['"]/);
+invariant("discovery uses one authoritative two-hour UTC schedule and the pending-only worker", () => {
+  assert.match(discoveryWorkflow, /cron: ['"]0 \*\/2 \* \* \*['"]/);
+  assert.doesNotMatch(discoveryWorkflow, /cron: ['"]0 3\/6 \* \* \*['"]/);
   assert.equal((discoveryWorkflow.match(/\bcron:/g) ?? []).length, 1);
-  assert.match(discoveryWorkflow, /DISCOVERY_EXPECTED_INTERVAL_HOURS: ['"]6['"]/);
+  assert.match(discoveryWorkflow, /DISCOVERY_EXPECTED_INTERVAL_HOURS: ['"]2['"]/);
+  assert.match(discoveryWorkflow, /DISCOVERY_TARGET_INTERVAL_HOURS: ['"]2['"]/);
   assert.match(discoveryWorkflow, /run: npm run verify/);
   assert.match(discoveryWorkflow, /run: node --import tsx scripts\/discovery\/index\.ts/);
 });
@@ -269,8 +271,9 @@ invariant("discovery workflow retains bounded machine-readable health evidence",
 });
 
 invariant("schedule monitor is credential-free and cannot execute discovery", () => {
-  assert.match(healthWorkflow, /cron: ['"]30 3\/6 \* \* \*['"]/);
-  assert.match(healthWorkflow, /DISCOVERY_EXPECTED_INTERVAL_HOURS: ['"]6['"]/);
+  assert.match(healthWorkflow, /cron: ['"]30 \*\/2 \* \* \*['"]/);
+  assert.match(healthWorkflow, /DISCOVERY_EXPECTED_INTERVAL_HOURS: ['"]2['"]/);
+  assert.match(healthWorkflow, /DISCOVERY_TARGET_INTERVAL_HOURS: ['"]2['"]/);
   assert.match(healthWorkflow, /run: npm run health:monitor/);
   assert.doesNotMatch(healthWorkflow, /secrets\.|SUPABASE_SERVICE_ROLE_KEY|scripts\/discovery\/index\.ts/);
 });
@@ -333,6 +336,28 @@ invariant("M31 source hardening disables generic institutional HTML", () => {
   assert.match(m31SourcePolicy, /GENERIC_HTML_DENY_TYPES/);
   assert.match(m31SourcePolicy, /allowGenericHtml: false/);
   assert.match(runnerSource, /sourceAcquisitionPolicy/);
+});
+
+invariant("active browsing and queue exclude expired lifecycle without status writes", () => {
+  assert.match(opportunitiesData, /deriveLifecycleState\(opportunity\.deadline, now\) === "expired"/);
+  assert.match(opportunitiesData, /export function derivePublishedLocations\(/);
+  assert.doesNotMatch(opportunitiesData, /set status = 'expired'|status: "expired"/);
+  const moderationDataActive = read("lib/data/moderation.ts");
+  assert.match(moderationDataActive, /isActivePendingOpportunity/);
+  assert.match(moderationDataActive, /deriveLifecycleState\(opportunity\.deadline/);
+  assert.doesNotMatch(moderationDataActive, /set status = 'expired'|status: "expired"/);
+  assert.doesNotMatch(runnerSource, /set status = 'expired'|status: "expired"/);
+});
+
+invariant("authoritative admission gates secondary origins and past deadlines", () => {
+  const qualification = read("scripts/discovery/qualification.ts");
+  assert.match(qualification, /AUTHORITATIVE_SOURCE_TYPES/);
+  assert.match(qualification, /shouldAdmitCandidate/);
+  assert.match(qualification, /hasAuthoritativeEvidence/);
+  assert.match(qualification, /isExpiredCandidate/);
+  assert.match(runnerSource, /shouldAdmitCandidate/);
+  assert.match(runnerSource, /isExpiredCandidate/);
+  assert.doesNotMatch(qualification, /flag.*ambiguous.*filter/i);
 });
 
 invariant("M31 remediation is confirmation-gated status-only preservation", () => {

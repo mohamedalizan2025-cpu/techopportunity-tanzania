@@ -150,8 +150,15 @@ assert.deepEqual(
   ["ai-title", "research-fellowship"],
   "recorded country is searchable without implying applicant eligibility"
 );
-assert.equal(applyPublicOpportunityQuery(corpus, { q: "   " }, NOW).length, 4);
-assert.equal(applyPublicOpportunityQuery(corpus, { q: "" }, NOW).length, 4);
+// Active lifecycle hardening: expired rows remain stored but leave the
+// normal active listing (direct detail still renders "Deadline passed").
+assert.equal(applyPublicOpportunityQuery(corpus, { q: "   " }, NOW).length, 3);
+assert.equal(applyPublicOpportunityQuery(corpus, { q: "" }, NOW).length, 3);
+assert.equal(
+  applyPublicOpportunityQuery(corpus, {}, NOW).some((item) => item.slug === "expired-hackathon"),
+  false,
+  "expired published rows are excluded from active browsing"
+);
 assert.equal(sanitizeSearchQuery("  AI,%()';\\  "), "AI");
 assert.equal(sanitizeSearchQuery("x"), null);
 assert.equal(sanitizeSearchQuery("a".repeat(200))?.length, 120);
@@ -195,18 +202,19 @@ assert.equal(parseDeadlineFilter("soon"), "soon");
 assert.equal(parseDeadlineFilter("yesterday"), null);
 assert.equal(sanitizeFilterValue("  Dar es Salaam  "), "Dar es Salaam");
 
-// Sorting: future deadlines first, unknown next, expired last; all ties stable.
+// Sorting: future deadlines first, unknown next; expired rows are excluded
+// from active browsing (stored historically, reachable via direct detail).
 assert.deepEqual(
   applyPublicOpportunityQuery(corpus, { sort: "deadline" }, NOW).map(
     (item) => item.slug
   ),
-  ["ai-title", "ai-description", "research-fellowship", "expired-hackathon"]
+  ["ai-title", "ai-description", "research-fellowship"]
 );
 assert.deepEqual(
   applyPublicOpportunityQuery(corpus, { sort: "newest" }, NOW).map(
     (item) => item.slug
   ),
-  ["ai-description", "research-fellowship", "ai-title", "expired-hackathon"]
+  ["ai-description", "research-fellowship", "ai-title"]
 );
 assert.equal(parseOpportunitySort(undefined, true), "relevance");
 assert.equal(parseOpportunitySort("relevance", false), "deadline");
@@ -219,7 +227,7 @@ assert.equal(
   ),
   false
 );
-assert.deepEqual(derivePublishedLocations(corpus), {
+assert.deepEqual(derivePublishedLocations(corpus, NOW), {
   cities: ["Arusha", "Moshi"],
   regions: ["Arusha", "Kilimanjaro"],
 });

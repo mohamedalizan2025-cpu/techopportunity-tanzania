@@ -2,8 +2,9 @@ import type { DiscoverySummary, SourceRunResult } from "./types";
 
 export const HEALTH_HISTORY_LIMIT = 24;
 export const MIN_BASELINE_OBSERVATIONS = 5;
-export const DEFAULT_EXPECTED_INTERVAL_HOURS = 6;
-export const SIX_HOUR_TARGET_INTERVAL = 6;
+export const DEFAULT_EXPECTED_INTERVAL_HOURS = 2;
+export const SIX_HOUR_TARGET_INTERVAL = 2;
+export const TWO_HOUR_TARGET_INTERVAL = 2;
 
 export type ScheduleState = "on_time" | "delayed" | "missed" | "unknown";
 export type BaselineState = "established" | "insufficient_history";
@@ -444,7 +445,7 @@ function toleranceFor(intervalHours: number): number {
   return Math.max(2, intervalHours * 0.25);
 }
 
-/** Nominal M25/M31 cron slots: 03:00, 09:00, 15:00 and 21:00 UTC. */
+/** Nominal two-hour cron slots: every even UTC hour at minute 0. */
 export function nominalDispatchLatency(startedAt: string): {
   nominalSlot: string | null;
   dispatchLatencyMinutes: number | null;
@@ -455,11 +456,11 @@ export function nominalDispatchLatency(startedAt: string): {
   }
   const slot = new Date(started);
   slot.setUTCMinutes(0, 0, 0);
-  const hours = [3, 9, 15, 21];
+  const hours = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
   const sameDay = [...hours].reverse().find((hour) => hour <= started.getUTCHours());
   if (sameDay === undefined) {
     slot.setUTCDate(slot.getUTCDate() - 1);
-    slot.setUTCHours(21);
+    slot.setUTCHours(22);
   } else {
     slot.setUTCHours(sameDay);
   }
@@ -652,7 +653,7 @@ function readinessCriteria(
     appendObservation({ schemaVersion: 1, observations: history }, observation).observations
   );
   return [
-    { id: "scheduler_configured", passed: configuredForTarget, evidence: configuredForTarget ? "Configured interval meets the six-hour target." : "Configured discovery interval does not yet meet the six-hour target." },
+    { id: "scheduler_configured", passed: configuredForTarget, evidence: configuredForTarget ? "Configured interval meets the two-hour target." : "Configured discovery interval does not yet meet the two-hour target." },
     { id: "workflow_executes", passed: observation.identity.workflowRunId !== null, evidence: observation.identity.workflowRunId ? `Workflow run ${observation.identity.workflowRunId} captured.` : "No workflow run identifier captured." },
     { id: "worker_succeeds", passed: observation.executionState === "success", evidence: `Worker state: ${observation.executionState}.` },
     { id: "sources_reachable", passed: observation.sourcesAttempted > 0 && observation.sourcesSucceeded / observation.sourcesAttempted >= 0.8, evidence: `${observation.sourcesSucceeded}/${observation.sourcesAttempted} sources succeeded.` },

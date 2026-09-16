@@ -9,9 +9,9 @@ Hardening is now promoted to production (migration 0016 plus capability `71f4a33
 with a zero-row corpus delta; no production moderation action was used for proof.
 Both real pending records have since been rejected through the authenticated
 Moderator path with exact attributable reasons, one at a time with independent
-verification. Bulk Moderator Actions plus Ambiguous Queue Cleanup is promoted
-to production at exact capability commit `1645973` (ten files, no migration;
-GitHub Production deployment `6454270624`); no production moderation action
+verification. Bulk Moderator Actions is promoted
+to production at exact capability commit `1645973`;
+no production moderation action
 was used for proof. The push Discovery run inserted five pending records and
 six references; read-only reconciliation accepts the delta as legitimate
 mechanical growth (all pending-only, no corruption). The one Tanzania-excluded
@@ -20,12 +20,17 @@ path with exact reason, attribution, timestamp, and audit; the other four delta
 rows remain untouched. The Batch 1 expired-calls cleanup, the Batch 2
 EBID pair, and the Batch 3 AWARD single then followed with exact reasons
 and per-record audits, and the furniture sweep's first confirmation rejected
-50 rows. Production holds 199 pending / 8 published / 81 rejected. Strategy
-has changed to an Authoritative Corpus Reset: scheduled Discovery is paused,
-a full protected pre-reset snapshot is sealed, and the legacy corpus leaves
-active use through existing attributable status transitions only (Sahara and
-AAS stay published as already-authoritative). The exact next milestone is
-reset execution only under explicit owner authorization.
+50 rows. Manual legacy cleanup and the 200-row corpus reset are abandoned:
+the historical corpus stays physically untouched with full history preserved.
+Authoritative Discovery + Active Lifecycle Hardening is implemented but
+unpromoted: public active browse and the moderator active queue exclude
+expired lifecycle at query/view time (no status sweeper, no deletions;
+direct detail keeps "Deadline passed"), new discovery admits only unexpired
+qualified candidates from authoritative origins or with resolved external
+application evidence, and the legacy ambiguous queue filter is retired.
+Discovery stays paused; one controlled real run, then the repo-targeted
+2-hour cadence, remain owner-gated. The exact next milestone is that
+controlled run under explicit owner authorization.
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 
