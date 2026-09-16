@@ -4,6 +4,46 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-16 National/International classification + opportunity taxonomy
+  (current, implemented — full `npm run verify` green; migration 0017 owner-gated
+  and NOT applied; deployed-app production evidence PENDING the push).** Roadmap
+  priorities 6 + 7 delivered as one bounded milestone. `lib/taxonomy.ts` is the
+  single deterministic classifier for three orthogonal dimensions, with no manual
+  tagging: **TYPE** reuses the existing `categories` lookup
+  (`OPPORTUNITY_CATEGORIES`), extended by exactly three owner-gated slugs
+  (`accelerator`, `research-call`, `public-challenge`) so the type list covers
+  scholarship, fellowship, internship, job, hackathon, competition/challenge,
+  grant/funding, accelerator/incubator, conference/event, training/workshop,
+  research call and government/public-sector challenge; **GEOGRAPHY** is exactly
+  two top-level groups — National (verified/structured Tanzania country, or
+  eligibility evidence explicitly naming Tanzania(n)s) and International (NOT
+  Tanzania-based AND Tanzanians have evidenced access via `tanzanians_eligible`
+  from an Africa-wide / worldwide / WBG-member statement) — with cities/regions
+  (Zanzibar, Dar es Salaam, Arusha, …) kept as metadata, never a group;
+  **SECTOR** is 13 practical slugs (AI/Data, Cybersecurity, Engineering, Health,
+  Agriculture, Mining, Blue Economy, Climate/Environment, Tourism, Education,
+  Finance, Energy, Entrepreneurship), classified independently from type.
+  Geography and sector are DERIVED pure functions of evidence already on the row —
+  NO new columns — so the discovery worker never writes a column a pending
+  migration has not created. Unknown fails safe to `null` (never an "Ambiguous"
+  workflow item, never an admission blocker), preserving the authoritative-source
+  and lifecycle admission rules. Discovery classifies systematically:
+  `scripts/discovery/normalize.ts` gained three ordered type patterns and the
+  runner logs each admitted candidate's derived type/geography/sector. Public
+  browse (`components/opportunity-filters.tsx`, `lib/data/opportunities.ts`,
+  `app/(home)/page.tsx`) and the Moderator queue (`lib/data/moderation.ts`,
+  `app/moderation/page.tsx`) filter by group + sector + type. The only schema
+  change is the additive, idempotent, owner-gated seed
+  `supabase/migrations/0017_opportunity_taxonomy_categories.sql` (three
+  `categories` rows, `on conflict do nothing`); until the owner applies it,
+  discovery gracefully skips those three types (skip + warn, never crash — the
+  `jobs`/0010 precedent) and the submit/review UIs never offer an unseeded slug.
+  Tests: new `tests/taxonomy.test.ts` (69 assertions) plus geography/sector cases
+  in `queue-filter`, new-type buckets in `triage-bucket`, and new-type inference
+  in `acquisition`. Admission gates, lifecycle rules, the source registry and the
+  2-hour cadence are UNCHANGED. Next milestone: roadmap priority 8 — showcase
+  readiness (Sahara Sparks / Tech & AI Expo).
+
 - **2026-09-16 reconciliation (current).** Repo HEAD is `944652f` (bounded
   first-party listing adapters for UDSM/NM-AIST; lineage `18736b7`
   reconciliation ← `27ab009` authority audit fix ← `7f0f318` Authoritative
@@ -32,7 +72,9 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   admitted). NM-AIST's `/event/` fetch timed out once in run 1 (20 s cap) and
   self-cleared in run 2 (`sourcesFailed: 0`, `errors: 0`). The admission gate and
   2-hour cadence are UNCHANGED. Next milestone: **National/International
-  classification + opportunity taxonomy** (not started).
+  classification + opportunity taxonomy** — now IMPLEMENTED (see the 2026-09-16
+  taxonomy entry above); the exact next milestone is roadmap priority 8,
+  showcase readiness.
 
 - **2026-09-16 opportunity-only actionability guard (current).** Before the next
   milestone, one systemic admission gap the closed registry milestone exposed was
@@ -1785,9 +1827,24 @@ by the opportunity-only actionability guard added in
 so it can no longer reach the active Moderator queue; the one already-inserted
 production `pending` row is left for the human Moderator.
 
-**Exact next milestone: National/International classification + opportunity
-taxonomy (NOT started).** Do not begin implementation without explicit owner
-authorization. It is governed by the permanent source principle recorded in
+**Milestone just completed: National/International classification + opportunity
+taxonomy (IMPLEMENTED 2026-09-16; roadmap priorities 6 + 7).** `lib/taxonomy.ts`
+is the single deterministic classifier for three orthogonal dimensions — TYPE
+(the existing `categories` lookup plus three owner-gated slugs: `accelerator`,
+`research-call`, `public-challenge`), GEOGRAPHY (exactly two groups, National /
+International, derived from stored country and eligibility evidence) and SECTOR
+(13 practical slugs, independent from type). Geography and sector are DERIVED,
+never stored: no new columns, so the discovery worker never writes a column a
+pending migration has not created. Unknown fails safe to `null` (never an
+"Ambiguous" workflow item). Discovery classifies every candidate systematically
+(`normalize.ts` type patterns + a runner classification log); public browse and
+the Moderator queue filter by group, sector and type. The only schema change is
+the additive, idempotent, owner-gated seed
+`supabase/migrations/0017_opportunity_taxonomy_categories.sql`; until the owner
+applies it, discovery gracefully skips the three new types (skip + warn, never
+crash — the `jobs`/0010 precedent). Full `npm run verify` is green; migration
+0017 is NOT applied and deployed-app production evidence is PENDING the push. It
+stays governed by the permanent source principle recorded in
 [DISCOVERY_CHANNELS.md](DISCOVERY_CHANNELS.md) and
 [ENGINEERING_RULES.md](ENGINEERING_RULES.md): Tech Opportunity is
 organization-first and opportunity-only — authority belongs to the genuine
@@ -1798,7 +1855,15 @@ accounts, and official forms they link), never to general news; an item is an
 opportunity only when it carries a concrete user action (apply, register,
 compete, submit, pitch, attend, train, receive funding, research, intern, work,
 exhibit); aggregators, reposts, unofficial accounts and secondary news remain
-discovery leads only. The paragraph below preserves the original Source-Registry
+discovery leads only.
+
+**Exact next milestone: roadmap priority 8 — Showcase readiness for Sahara Sparks
+and the Tech & AI Expo (NOT started).** Do not begin implementation without
+explicit owner authorization. Requirement 10 of the completed milestone expressly
+deferred UI redesign, profiles and AI matching; showcase readiness is the next
+ordered near-term priority in [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md) —
+presentation and readiness work over the now-trusted, now-classifiable corpus,
+not a new data model. The paragraph below preserves the original Source-Registry
 milestone framing (historical).
 
 The controlled-run owner gate is satisfied (PASS above) and the 2-hour

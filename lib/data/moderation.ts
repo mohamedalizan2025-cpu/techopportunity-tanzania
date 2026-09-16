@@ -4,6 +4,14 @@ import { BULK_REJECT_MAX_ITEMS } from "../staff-form-state";
 import { deriveLifecycleState } from "../lifecycle";
 import { triageBucketOf, isFurnitureQueueItem, type TriageBucket } from "../triage-bucket";
 import {
+  geographyOf,
+  sectorOf,
+  parseGeography,
+  parseSector,
+  type Geography,
+  type Sector,
+} from "../taxonomy";
+import {
   createSupabaseAuthServerClient,
   getAuthenticatedUser,
 } from "./supabase-auth";
@@ -124,9 +132,24 @@ export interface QueueFilter {
    * (withheld before insertion), so no active-workflow filter needs it.
    */
   flag: "furniture" | null;
+  /**
+   * National / International group (derived, never stored). Optional so a
+   * filter literal may omit it; absent === null === "no group constraint".
+   * View-only, same contract as every other dimension here.
+   */
+  geography?: Geography | null;
+  /** Subject-area sector, independent from type (derived). View-only. */
+  sector?: Sector | null;
 }
 
-export const EMPTY_QUEUE_FILTER: QueueFilter = { bucket: null, sourceName: null, q: null, flag: null };
+export const EMPTY_QUEUE_FILTER: QueueFilter = {
+  bucket: null,
+  sourceName: null,
+  q: null,
+  flag: null,
+  geography: null,
+  sector: null,
+};
 
 const MAX_SOURCE_PARAM_LENGTH = 120;
 const MAX_SEARCH_PARAM_LENGTH = 120;
@@ -166,16 +189,28 @@ export function parseQueueFilter(
   if (flagRaw === "furniture") {
     flag = flagRaw;
   }
-  return { bucket, sourceName, q, flag };
+  const geography = parseGeography(firstParam(raw.geography));
+  const sector = parseSector(firstParam(raw.sector));
+  return { bucket, sourceName, q, flag, geography, sector };
 }
 
 export function isQueueFilterEmpty(filter: QueueFilter): boolean {
-  return filter.bucket === null && filter.sourceName === null && filter.q === null && filter.flag === null;
+  return (
+    filter.bucket === null &&
+    filter.sourceName === null &&
+    filter.q === null &&
+    filter.flag === null &&
+    (filter.geography ?? null) === null &&
+    (filter.sector ?? null) === null
+  );
 }
 
 /** Pure predicate: all active conditions must match (AND). */
 export function matchesQueueFilter(
-  opportunity: Pick<Opportunity, "category" | "title" | "sourceName">,
+  opportunity: Pick<
+    Opportunity,
+    "category" | "title" | "sourceName" | "description" | "location" | "trust"
+  >,
   filter: QueueFilter
 ): boolean {
   if (
@@ -191,6 +226,16 @@ export function matchesQueueFilter(
     return false;
   }
   if (filter.flag === "furniture" && !isFurnitureQueueItem(opportunity.title)) {
+    return false;
+  }
+  // Geography and sector are DERIVED here by the same pure classifier the
+  // public browse uses (lib/taxonomy.ts) — one taxonomy, two entry points.
+  // A row whose derived dimension is unknown (null) never matches a concrete
+  // geography/sector filter; it stays reachable when that filter is cleared.
+  if (filter.geography && geographyOf(opportunity) !== filter.geography) {
+    return false;
+  }
+  if (filter.sector && sectorOf(opportunity) !== filter.sector) {
     return false;
   }
   return true;
@@ -212,6 +257,8 @@ export function queueFilterQuery(filter: QueueFilter): string {
   if (filter.sourceName !== null) params.set("source", filter.sourceName);
   if (filter.q !== null) params.set("q", filter.q);
   if (filter.flag !== null) params.set("flag", filter.flag);
+  if (filter.geography) params.set("geography", filter.geography);
+  if (filter.sector) params.set("sector", filter.sector);
   const query = params.toString();
   return query === "" ? "" : `?${query}`;
 }

@@ -80,7 +80,7 @@ test("queue search and flag params parse fail-closed", () => {
   assert.equal(parseQueueFilter({ flag: "Furniture" }).flag, null);
   assert.equal(parseQueueFilter({ flag: ["furniture", "x"] }).flag, "furniture");
   const combined = parseQueueFilter({ bucket: "2", source: "Twaweza", q: "AI", flag: "furniture" });
-  assert.deepEqual(combined, { bucket: 2, sourceName: "Twaweza", q: "AI", flag: "furniture" });
+  assert.deepEqual(combined, { bucket: 2, sourceName: "Twaweza", q: "AI", flag: "furniture", geography: null, sector: null });
 });
 
 test("search and flag narrow the rendered view only, combined with AND", () => {
@@ -117,12 +117,12 @@ test("search and flag narrow the rendered view only, combined with AND", () => {
 test("search and flag survive the URL round-trip", () => {
   const query = queueFilterQuery({ bucket: 2, sourceName: "Twaweza", q: "AI & Health", flag: "furniture" });
   const parsed = parseQueueFilter({ ...Object.fromEntries(new URLSearchParams(query)) });
-  assert.deepEqual(parsed, { bucket: 2, sourceName: "Twaweza", q: "AI & Health", flag: "furniture" });
+  assert.deepEqual(parsed, { bucket: 2, sourceName: "Twaweza", q: "AI & Health", flag: "furniture", geography: null, sector: null });
   const furnitureQuery = queueFilterQuery({ bucket: null, sourceName: null, q: null, flag: "furniture" });
   assert.equal(furnitureQuery, "?flag=furniture");
   assert.deepEqual(
     parseQueueFilter({ ...Object.fromEntries(new URLSearchParams(furnitureQuery)) }),
-    { bucket: null, sourceName: null, q: null, flag: "furniture" }
+    { bucket: null, sourceName: null, q: null, flag: "furniture", geography: null, sector: null }
   );
   assert.equal(queueFilterQuery(EMPTY_QUEUE_FILTER), "");
 });

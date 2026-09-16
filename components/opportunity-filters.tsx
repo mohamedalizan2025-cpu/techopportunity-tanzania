@@ -12,6 +12,15 @@ import type {
   OpportunitySort,
   PublishedLocations,
 } from "@/lib/data/opportunities";
+import {
+  GEOGRAPHY_GROUPS,
+  GEOGRAPHY_HINTS,
+  GEOGRAPHY_LABELS,
+  SECTORS,
+  SECTOR_LABELS,
+  type Geography,
+  type Sector,
+} from "@/lib/taxonomy";
 
 interface OpportunityFiltersProps {
   activeCategory: OpportunityCategory | null;
@@ -20,6 +29,8 @@ interface OpportunityFiltersProps {
   activeCity?: string | null;
   activeRegion?: string | null;
   activeDeadline?: DeadlineFilter | null;
+  activeGeography?: Geography | null;
+  activeSector?: Sector | null;
   locations?: PublishedLocations;
 }
 
@@ -28,6 +39,8 @@ interface FilterValues {
   city?: string | null;
   region?: string | null;
   deadline?: DeadlineFilter | null;
+  geography?: Geography | null;
+  sector?: Sector | null;
 }
 
 export function buildHref(
@@ -41,6 +54,8 @@ export function buildHref(
   const defaultSort: OpportunitySort = q ? "relevance" : "deadline";
   if (q) params.set("q", q);
   if (category) params.set("category", category);
+  if (filters.geography) params.set("geography", filters.geography);
+  if (filters.sector) params.set("sector", filters.sector);
   if (filters.deadline) params.set("deadline", filters.deadline);
   if (filters.city) params.set("city", filters.city);
   if (filters.region) params.set("region", filters.region);
@@ -105,6 +120,8 @@ export function OpportunityFilters({
   activeCity = null,
   activeRegion = null,
   activeDeadline = null,
+  activeGeography = null,
+  activeSector = null,
   locations = { cities: [], regions: [] },
 }: OpportunityFiltersProps) {
   const hasLocations =
@@ -116,6 +133,8 @@ export function OpportunityFilters({
     city: activeCity,
     region: activeRegion,
     deadline: activeDeadline,
+    geography: activeGeography,
+    sector: activeSector,
   };
   const activeChips = [
     activeQuery
@@ -133,6 +152,26 @@ export function OpportunityFilters({
           key: "category",
           label: `Type: ${categoryLabel(activeCategory)}`,
           href: buildHref(null, activeSort, shared),
+        }
+      : null,
+    activeGeography
+      ? {
+          key: "geography",
+          label: `Group: ${GEOGRAPHY_LABELS[activeGeography]}`,
+          href: buildHref(activeCategory, activeSort, {
+            ...shared,
+            geography: null,
+          }),
+        }
+      : null,
+    activeSector
+      ? {
+          key: "sector",
+          label: `Sector: ${SECTOR_LABELS[activeSector]}`,
+          href: buildHref(activeCategory, activeSort, {
+            ...shared,
+            sector: null,
+          }),
         }
       : null,
     activeDeadline
@@ -200,6 +239,12 @@ export function OpportunityFilters({
         {activeDeadline ? (
           <input type="hidden" name="deadline" value={activeDeadline} />
         ) : null}
+        {activeGeography ? (
+          <input type="hidden" name="geography" value={activeGeography} />
+        ) : null}
+        {activeSector ? (
+          <input type="hidden" name="sector" value={activeSector} />
+        ) : null}
         <label
           htmlFor="opportunity-search"
           className="mb-2 block text-sm font-semibold text-[var(--foreground)]"
@@ -236,7 +281,9 @@ export function OpportunityFilters({
 
       <details
         className="filter-disclosure"
-        open={Boolean(activeDeadline || activeCity || activeRegion)}
+        open={Boolean(
+          activeDeadline || activeCity || activeRegion || activeGeography || activeSector,
+        )}
       >
         <summary>
           <UiIcon name="filter" />
@@ -262,6 +309,38 @@ export function OpportunityFilters({
           {activeQuery ? (
             <input type="hidden" name="q" value={activeQuery} />
           ) : null}
+
+          <label className="grid gap-1 text-xs font-semibold text-[var(--muted)]">
+            Group
+            <select
+              name="geography"
+              defaultValue={activeGeography ?? ""}
+              className={selectClasses}
+            >
+              <option value="">Any group</option>
+              {GEOGRAPHY_GROUPS.map((group) => (
+                <option key={group} value={group}>
+                  {GEOGRAPHY_LABELS[group]} — {GEOGRAPHY_HINTS[group]}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="grid gap-1 text-xs font-semibold text-[var(--muted)]">
+            Sector
+            <select
+              name="sector"
+              defaultValue={activeSector ?? ""}
+              className={selectClasses}
+            >
+              <option value="">Any sector</option>
+              {SECTORS.map((sector) => (
+                <option key={sector} value={sector}>
+                  {SECTOR_LABELS[sector]}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <label className="grid gap-1 text-xs font-semibold text-[var(--muted)]">
             Deadline

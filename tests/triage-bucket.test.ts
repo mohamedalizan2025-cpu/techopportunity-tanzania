@@ -40,6 +40,11 @@ assert("bucket: competition → 5", triageBucketOf("competition", "Anything") ==
 assert("bucket: workshop → 6", triageBucketOf("workshop", "Anything") === 6);
 assert("bucket: conference → 6", triageBucketOf("conference", "Anything") === 6);
 assert("bucket: tech-event → 6", triageBucketOf("tech-event", "Anything") === 6);
+// New opportunity-TYPE slugs (owner-gated seed 0017) each map to a concrete,
+// NON-ambiguous bucket — requirement 6: a new/unknown type never becomes 7.
+assert("bucket: accelerator → 2 (high value, non-ambiguous)", triageBucketOf("accelerator", "Anything") === 2);
+assert("bucket: research-call → 2 (non-ambiguous)", triageBucketOf("research-call", "Anything") === 2);
+assert("bucket: public-challenge → 5 (non-ambiguous)", triageBucketOf("public-challenge", "Anything") === 5);
 assert("bucket: category wins over title", triageBucketOf("workshop", "Waziri akagua miradi") === 6);
 
 // --- triage buckets: title heuristics for `other` ---------------------------

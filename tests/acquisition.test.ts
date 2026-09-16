@@ -96,5 +96,28 @@ assert(
   inferCategory(["New Officer position announced"]) !== "jobs"
 );
 
+// ---- 7. new opportunity-TYPE inference (owner-gated seed 0017) --------------
+// Conservative, ordered patterns: distinctive programme nouns only, each placed
+// so a broader category cannot steal it. Unmatched text stays "other".
+assert("N1 'accelerator' infers accelerator", inferCategory(["Startup Accelerator Programme"]) === "accelerator");
+assert("N2 qualified 'business incubation' infers accelerator", inferCategory(["Business Incubation Hub"]) === "accelerator");
+assert(
+  "N3 agricultural 'egg incubation training' is NOT an accelerator (stays workshop)",
+  inferCategory(["Poultry Egg Incubation Training"]) === "workshop"
+);
+assert(
+  "N4 government challenge infers public-challenge (beats competition)",
+  inferCategory(["Government Innovation Challenge"]) === "public-challenge"
+);
+assert("N5 'call for abstracts' infers research-call", inferCategory(["Call for Abstracts"]) === "research-call");
+assert(
+  "N6 a conference CFP stays conference (research-call ordered after conference)",
+  inferCategory(["Call for Papers — National AI Conference"]) === "conference"
+);
+assert(
+  "N7 'call for proposals' stays grant (research-call deliberately excludes it)",
+  inferCategory(["Call for Proposals 2026"]) === "grant"
+);
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;

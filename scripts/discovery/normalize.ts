@@ -134,6 +134,11 @@ const CATEGORY_PATTERNS: Array<[string, RegExp]> = [
   ["hackathon", /\bhack(?:athon|fest)\b/i],
   ["scholarship", /\bscholarship\b|bursary|\budhamini\b/i],
   ["fellowship", /\bfellowship\b/i],
+  // accelerator/incubator (owner-gated seed 0017): distinctive programme
+  // nouns. "incubation" is qualified (programme/hub/centre/cohort, or a
+  // business/startup/innovation prefix) so medical/agricultural "egg
+  // incubation" never becomes an accelerator row.
+  ["accelerator", /\baccelerators?\b|\bincubators?\b|\bincubation\s+(?:programme|program|hub|centre|center|cohort)\b|\b(?:business|startup|start-up|enterprise|innovation|technology|tech)\s+incubation\b/i],
   ["grant", /\bgrants?\b|call for proposals|\bfunding\b/i],
   ["internship", /\binternship(s)?\b|\bintern(s)?\b/i],
   // jobs/vacancies (owner-gated seed 0010): deliberately conservative —
@@ -141,9 +146,20 @@ const CATEGORY_PATTERNS: Array<[string, RegExp]> = [
   // like "position", "career(s)" or "officer" stay UNMAPPED: they are
   // frequent in news headlines and would turn noise into job rows.
   ["jobs", /\bvacanc(?:y|ies)\b|\bjobs?\b|\bajira\b|nafasi za kazi/i],
+  // government/public-sector challenge (owner-gated seed 0017): MUST sit
+  // before `competition` — competition already claims the bare word
+  // "challenge", so a civic/government challenge is matched here first.
+  // A known qualifier is required so a generic "national challenge" or a
+  // news headline ("ministry said the challenge ...") never matches.
+  ["public-challenge", /\b(?:government|public[- ]sector|ministry|municipal|civic)\s+(?:innovation\s+|digital\s+|procurement\s+|service\s+|open\s+|national\s+)?challenge\b/i],
   ["competition", /competiti|\bchallenge\b|\bpitch\b|\baward(s)?\b|\bprize\b|\bmashindano\b|\bshindano\b/i],
   ["workshop", /\bworkshop\b|\bbootcamp\b|\btraining\b|\bmafunzo\b/i],
   ["conference", /conference|\bsummit\b|\bforum\b|\bkongamano\b/i],
+  // research call (owner-gated seed 0017): placed AFTER conference so an
+  // explicit "Call for Papers: X Conference" stays a conference, while a
+  // bare "Call for Abstracts/Papers" or "Research Programme" is a research
+  // call. "call for proposals" is deliberately left to `grant` above.
+  ["research-call", /\bcall\s+for\s+(?:abstracts?|papers?)\b|\bresearch\s+(?:call|opportunity|programme|program)\b|\bcalls?\s+for\s+research\b/i],
   ["tech-event", /\bmeetup\b|tech\s+week|tech\s+talk|\bdevfest\b|\bmakerspace\b/i],
 ];
 

@@ -132,6 +132,8 @@ const BROWSE_RETURN_FALLBACK = "/#opportunities";
 const BROWSE_QUERY_KEYS = new Set([
   "q",
   "category",
+  "geography",
+  "sector",
   "deadline",
   "city",
   "region",

@@ -17,10 +17,10 @@ export type TriageBucket = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export const TRIAGE_BUCKET_LABEL: Record<TriageBucket, string> = {
   1: "actionable-looking (heuristic — verify)",
-  2: "scholarship / fellowship / grant / internship",
+  2: "scholarship / fellowship / grant / internship / accelerator / research call",
   3: "jobs",
   4: "admissions / programmes",
-  5: "hackathon / competition",
+  5: "hackathon / competition / public-sector challenge",
   6: "workshop / conference / tech-event",
   7: "ambiguous",
   8: "news/institutional-looking (heuristic — verify)",
@@ -60,6 +60,8 @@ export function triageBucketOf(
     case "fellowship":
     case "grant":
     case "internship":
+    case "accelerator":
+    case "research-call":
       return 2;
     case "jobs":
       return 3;
@@ -67,6 +69,7 @@ export function triageBucketOf(
       return 4;
     case "hackathon":
     case "competition":
+    case "public-challenge":
       return 5;
     case "workshop":
     case "conference":

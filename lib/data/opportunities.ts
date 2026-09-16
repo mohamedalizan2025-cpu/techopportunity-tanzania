@@ -17,6 +17,12 @@ import type {
   EligibilityDecision,
   RelevanceDecision,
 } from "../opportunity-trust";
+import {
+  geographyOf,
+  sectorOf,
+  type Geography,
+  type Sector,
+} from "../taxonomy";
 import { createSupabaseServerClient } from "./supabase-client";
 
 export type OpportunitySort = "deadline" | "newest" | "relevance";
@@ -30,6 +36,10 @@ export interface OpportunityQuery {
   city?: string | null;
   region?: string | null;
   deadline?: DeadlineFilter | null;
+  /** National / International top-level group (derived, never stored). */
+  geography?: Geography | null;
+  /** Subject-area sector, independent from type (derived, never stored). */
+  sector?: Sector | null;
 }
 
 export interface OpportunityRow {
@@ -365,6 +375,8 @@ export function applyPublicOpportunityQuery(
     if (isTestOrPlaceholderOpportunity(opportunity)) return [];
     if (deriveLifecycleState(opportunity.deadline, now) === "expired") return [];
     if (query.category && opportunity.category !== query.category) return [];
+    if (query.geography && geographyOf(opportunity) !== query.geography) return [];
+    if (query.sector && sectorOf(opportunity) !== query.sector) return [];
     if (city && !sameText(opportunity.location?.city, city)) return [];
     if (region && !sameText(opportunity.location?.region, region)) return [];
 

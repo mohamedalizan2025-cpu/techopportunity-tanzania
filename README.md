@@ -59,8 +59,21 @@ narrow, title-only **opportunity-only actionability guard** in
 shortlisted/successful-applicant and awardee lists, and administrative follow-ups
 addressed only to already-selected people **before** they reach the Moderator
 queue (a class rule, not one title — genuine open calls that merely mention
-selection criteria still pass). Next milestone: National/International
-classification + opportunity taxonomy (not started).
+selection criteria still pass). The **National/International classification +
+opportunity taxonomy** milestone is now implemented: `lib/taxonomy.ts` is the
+single deterministic classifier for three dimensions — TYPE (the existing
+categories plus three owner-gated slugs: accelerator/incubator, research call,
+government/public-sector challenge), GEOGRAPHY (exactly two groups, National /
+International, derived from stored country + eligibility evidence, with cities and
+regions kept as metadata) and SECTOR (13 practical slugs, independent from type).
+Geography and sector are derived, not stored (no new columns); unknown fails safe
+to null (never an "Ambiguous" workflow); discovery classifies every candidate
+automatically; public browse and the Moderator queue filter by group, sector and
+type. The only schema change is the additive, idempotent, owner-gated seed
+`supabase/migrations/0017_opportunity_taxonomy_categories.sql` (not yet applied —
+discovery gracefully skips the three new types until it is). Full `npm run verify`
+is green. Next milestone: showcase readiness for Sahara Sparks and the Tech & AI
+Expo (roadmap priority 8).
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

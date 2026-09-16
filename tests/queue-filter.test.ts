@@ -19,7 +19,8 @@ import {
   queueNavigationFromIds,
 } from "../lib/data/moderation";
 import { triageBucketOf } from "../lib/triage-bucket";
-import type { Opportunity } from "../lib/types";
+import type { Opportunity, OpportunityLocation } from "../lib/types";
+import type { OpportunityTrust } from "../lib/opportunity-trust";
 
 let passed = 0;
 let failed = 0;
@@ -45,6 +46,30 @@ function row(overrides: Partial<Opportunity>): Opportunity {
     sourceName: null,
     ...overrides,
   } as Opportunity;
+}
+
+function loc(country: string | null): OpportunityLocation {
+  return {
+    venueName: null, address: null, city: null, region: null,
+    country, latitude: null, longitude: null,
+  };
+}
+
+function trustWith(overrides: Partial<OpportunityTrust>): OpportunityTrust {
+  return {
+    relevanceDecision: "relevant",
+    relevanceEvidence: "call for applications",
+    eligibilityDecision: "unknown",
+    eligibilityEvidence: null,
+    qualificationRuleVersion: "m31-test",
+    countryVerification: "unknown",
+    countryEvidence: null,
+    lastVerifiedAt: null,
+    decidedBy: null,
+    decidedAt: null,
+    canonicalEvidenceUrl: null,
+    ...overrides,
+  };
 }
 
 // --- parseQueueFilter: hostile-input safety ---------------------------------
@@ -135,6 +160,86 @@ assert(
   navOut.position === null && navOut.total === 2 && navOut.nextId === null
 );
 assert("nav: empty filtered view", queueNavigationFromIds([], "a").total === 0);
+
+// --- geography + sector dimensions (National/International taxonomy) ---------
+// The queue filter reuses the SAME derived classifier as public browse
+// (lib/taxonomy.ts): one taxonomy, two entry points. A row whose derived
+// dimension is unknown never matches a concrete filter and stays reachable
+// once the filter is cleared.
+
+const tz = row({ id: "tz", category: "scholarship", title: "Public Health Fellowship", location: loc("Tanzania") });
+const intl = row({
+  id: "intl",
+  category: "fellowship",
+  title: "Pan-African Leaders Fellowship",
+  location: null,
+  trust: trustWith({ eligibilityDecision: "tanzanians_eligible", eligibilityEvidence: "open to applicants from all African countries" }),
+});
+const unknown = row({ id: "unk", category: "other", title: "Ordinary page", location: null });
+
+assert("geo: parse geography=national", parseQueueFilter({ geography: "national" }).geography === "national");
+assert("geo: parse geography=international", parseQueueFilter({ geography: "international" }).geography === "international");
+assert("geo: hostile geography ignored (city is not a group)", parseQueueFilter({ geography: "zanzibar" }).geography === null);
+assert("geo: parse sector=health", parseQueueFilter({ sector: "health" }).sector === "health");
+assert("geo: hostile sector ignored", parseQueueFilter({ sector: "not-a-sector" }).sector === null);
+assert(
+  "geo: a geography-only filter is not empty",
+  !isQueueFilterEmpty({ ...EMPTY_QUEUE_FILTER, geography: "national" })
+);
+assert(
+  "geo: Tanzania row matches national, not international",
+  matchesQueueFilter(tz, { ...EMPTY_QUEUE_FILTER, geography: "national" }) &&
+    !matchesQueueFilter(tz, { ...EMPTY_QUEUE_FILTER, geography: "international" })
+);
+assert(
+  "geo: Africa-wide eligible row matches international",
+  matchesQueueFilter(intl, { ...EMPTY_QUEUE_FILTER, geography: "international" })
+);
+assert(
+  "geo: unknown-geography row matches no concrete group (fails safe)",
+  !matchesQueueFilter(unknown, { ...EMPTY_QUEUE_FILTER, geography: "national" }) &&
+    !matchesQueueFilter(unknown, { ...EMPTY_QUEUE_FILTER, geography: "international" })
+);
+assert(
+  "geo: sector derived from title+description",
+  matchesQueueFilter(tz, { ...EMPTY_QUEUE_FILTER, sector: "health" }) &&
+    !matchesQueueFilter(intl, { ...EMPTY_QUEUE_FILTER, sector: "health" })
+);
+assert(
+  "geo: geography AND sector must both hold",
+  !matchesQueueFilter(tz, { ...EMPTY_QUEUE_FILTER, geography: "national", sector: "finance" }) &&
+    matchesQueueFilter(tz, { ...EMPTY_QUEUE_FILTER, geography: "national", sector: "health" })
+);
+
+const geoQueue = [tz, intl, unknown];
+const nationals = filterPendingQueue(geoQueue, { ...EMPTY_QUEUE_FILTER, geography: "national" });
+assert(
+  "geo: national filter yields only the national row, order preserved",
+  nationals.length === 1 && nationals[0].id === "tz"
+);
+const internationals = filterPendingQueue(geoQueue, { ...EMPTY_QUEUE_FILTER, geography: "international" });
+assert(
+  "geo: international filter yields only the international row",
+  internationals.length === 1 && internationals[0].id === "intl"
+);
+
+assert(
+  "geo: query emits geography",
+  queueFilterQuery({ ...EMPTY_QUEUE_FILTER, geography: "international" }) === "?geography=international"
+);
+assert(
+  "geo: query emits sector",
+  queueFilterQuery({ ...EMPTY_QUEUE_FILTER, sector: "ai-data" }) === "?sector=ai-data"
+);
+const geoRoundTrip = parseQueueFilter(
+  Object.fromEntries(
+    new URLSearchParams(queueFilterQuery({ ...EMPTY_QUEUE_FILTER, geography: "national", sector: "health" }))
+  )
+);
+assert(
+  "geo: build→parse round-trips geography + sector",
+  geoRoundTrip.geography === "national" && geoRoundTrip.sector === "health"
+);
 
 // --- the filter is a view, not a verdict -------------------------------------
 

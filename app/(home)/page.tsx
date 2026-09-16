@@ -24,6 +24,7 @@ import {
   buildHomepageSnapshot,
   formatResultCount,
 } from "@/lib/opportunity-presentation";
+import { parseGeography, parseSector } from "@/lib/taxonomy";
 
 export const revalidate = 60;
 
@@ -35,6 +36,8 @@ interface HomePageProps {
     city?: string;
     region?: string;
     deadline?: string;
+    geography?: string;
+    sector?: string;
   }>;
 }
 
@@ -46,9 +49,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const city = sanitizeFilterValue(params.city);
   const region = sanitizeFilterValue(params.region);
   const deadline = parseDeadlineFilter(params.deadline);
+  const geography = parseGeography(params.geography);
+  const sector = parseSector(params.sector);
 
   const [browseData, liveCategories, user] = await Promise.all([
-    getPublicBrowseData({ category, sort, q, city, region, deadline }),
+    getPublicBrowseData({ category, sort, q, city, region, deadline, geography, sector }),
     listLiveCategories(),
     getAuthenticatedUser(),
   ]);
@@ -62,12 +67,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     q !== null ||
     city !== null ||
     region !== null ||
-    deadline !== null;
+    deadline !== null ||
+    geography !== null ||
+    sector !== null;
   const now = new Date();
   const snapshot = isFiltered
     ? { closingSoon: [], recentlyAdded: [] }
     : buildHomepageSnapshot(opportunities, now);
-  const browseHref = `${buildHref(category, sort, { q, city, region, deadline })}#opportunities`;
+  const browseHref = `${buildHref(category, sort, { q, city, region, deadline, geography, sector })}#opportunities`;
   const resultLabel = formatResultCount(opportunities.length);
 
   return (
@@ -147,6 +154,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             activeCity={city}
             activeRegion={region}
             activeDeadline={deadline}
+            activeGeography={geography}
+            activeSector={sector}
             locations={locations}
           />
           {liveCategories.length > 0 ? (
@@ -154,7 +163,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               <ul className="category-links">
                 <li>
                   <Link
-                    href={`${buildHref(null, sort, { q, city, region, deadline })}#opportunities`}
+                    href={`${buildHref(null, sort, { q, city, region, deadline, geography, sector })}#opportunities`}
                     aria-current={category === null ? "page" : undefined}
                   >
                     All opportunities
@@ -163,7 +172,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 {liveCategories.map(({ slug, label }) => (
                   <li key={slug}>
                     <Link
-                      href={`${buildHref(slug, sort, { q, city, region, deadline })}#opportunities`}
+                      href={`${buildHref(slug, sort, { q, city, region, deadline, geography, sector })}#opportunities`}
                       aria-current={category === slug ? "page" : undefined}
                     >
                       {label}

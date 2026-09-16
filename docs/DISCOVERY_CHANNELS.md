@@ -73,6 +73,47 @@ NOT applied, OWNER GATE. Until the seed is applied the runner skips `jobs`
 candidates loudly (skip + warn + `categorySkipped` counter); nothing
 crashes and nothing mis-inserts.
 
+## Opportunity taxonomy — three dimensions (2026-09-16, seed is owner-gated)
+
+The National/International + opportunity-taxonomy milestone extended TYPE and
+added two DERIVED dimensions, all served by one deterministic classifier in
+`lib/taxonomy.ts` (no manual tagging, no per-opportunity hand-classification):
+
+- **TYPE** reuses the existing `categories` lookup. Three slugs were added —
+  `accelerator` ("Accelerator / Incubator"), `research-call` ("Research Call"),
+  `public-challenge` ("Government / Public-Sector Challenge") — with
+  conservative, ordered inference in `scripts/discovery/normalize.ts` (an
+  "incubation" match requires a programme/hub/centre/cohort qualifier or a
+  business/startup/innovation prefix, so agricultural/medical "egg incubation"
+  never becomes an accelerator; `public-challenge` is matched before
+  `competition` so a civic challenge is not folded into the generic word
+  "challenge"; a conference CFP stays a `conference`). They follow the exact
+  `jobs`/0010 precedent: seed migration
+  `0017_opportunity_taxonomy_categories.sql` is additive, idempotent
+  (`on conflict do nothing`), designed, NOT applied, OWNER GATE. Until it is
+  applied the runner skips those types loudly (skip + warn + `categorySkipped`);
+  nothing crashes and nothing mis-inserts.
+- **GEOGRAPHY** is exactly two top-level groups, National / International, and is
+  DERIVED (never stored, no new columns): National on a verified/structured
+  Tanzania country or eligibility evidence explicitly naming Tanzania(n)s;
+  International only when NOT Tanzania-based AND Tanzanians have evidenced access
+  (`eligibility=tanzanians_eligible` from an Africa-wide / worldwide / WBG-member
+  statement). It is never inferred from a foreign country, a source domain, or the
+  bare words "international"/"global"/"worldwide" (ENGINEERING_RULES
+  data-integrity rule 4). Cities/regions (Zanzibar, Dar es Salaam, Arusha, …)
+  stay metadata.
+- **SECTOR** is 13 practical slugs (AI/Data, Cybersecurity, Engineering, Health,
+  Agriculture, Mining, Blue Economy, Climate/Environment, Tourism, Education,
+  Finance, Energy, Entrepreneurship), classified independently from TYPE by a
+  first-match ordered pattern over title + description.
+
+Unknown geography or sector fails safe to `null` — it never creates an
+"Ambiguous" workflow item and never blocks admission. Because both are pure
+functions of evidence already on the row, every candidate is classified
+systematically at discovery (the runner logs each admitted candidate's derived
+type/geography/sector) and the same classifier powers public browse and the
+Moderator queue filters — one taxonomy, two entry points, no divergence.
+
 ## IMPLEMENTED (2026-02): Africa-wide aggregator feeds
 
 Two aggregator sources were adopted after live feed probing (HTTP 200,

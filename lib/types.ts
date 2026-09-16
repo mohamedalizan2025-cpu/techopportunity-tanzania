@@ -14,6 +14,14 @@ export const OPPORTUNITY_CATEGORIES = [
   // Owner-gated migration 0010 seeds this row; discovery skips `jobs`
   // candidates (skip + warn, never crash) until the seed exists.
   "jobs",
+  // Owner-gated migration 0017 seeds these three opportunity-TYPE rows
+  // (accelerator/incubator, research call, government/public-sector
+  // challenge). Same graceful-skip contract as `jobs`: until the seed is
+  // applied, discovery skips candidates of these types (skip + warn, never
+  // crash) and the submit/review UIs never offer an unseeded slug.
+  "accelerator",
+  "research-call",
+  "public-challenge",
   "other",
 ] as const;
 

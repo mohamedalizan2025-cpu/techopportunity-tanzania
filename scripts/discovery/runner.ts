@@ -20,6 +20,7 @@ import { loadActiveSources } from "./sources";
 import { sourceAcquisitionPolicy } from "./source-policy";
 import { extractSourceAdapterCandidates, findSourceAdapter } from "./source-adapters";
 import { reconcileDiscoverySummary } from "./summary";
+import { deriveGeography, inferSector } from "../../lib/taxonomy";
 import type { CandidateOpportunity, DiscoverySummary, SourceRunResult } from "./types";
 
 // Category identity comes ONLY from the database. The previous hardcoded
@@ -327,6 +328,32 @@ export async function runDiscovery(): Promise<DiscoverySummary> {
         rowsToInsert.push(row);
         insertedEvidenceUrls.push(candidate.evidenceUrl ?? candidate.url);
         existingRows.push({ id: "", url: candidate.url, source_id: candidate.sourceId, title: candidate.title, deadline: candidate.deadline });
+
+        // Systematic taxonomy classification for every admitted Discovery
+        // candidate (milestone: National/International + type + sector).
+        // TYPE is the stored category slug; GEOGRAPHY and SECTOR are derived
+        // here by the SAME pure classifier that powers public and Moderator
+        // filtering (lib/taxonomy.ts), so discovery classification never
+        // depends on manual tagging. Observability only: this writes nothing
+        // and changes no admission or persistence behavior. An unknown
+        // dimension logs "unknown" and fails safe — never an ambiguous state.
+        const derivedCountryVerification =
+          candidate.country === null
+            ? "unknown"
+            : candidate.country.trim().toLowerCase() === "tanzania"
+              ? "verified_tanzania"
+              : "verified_other";
+        const derivedGeography = deriveGeography({
+          country: candidate.country,
+          countryVerification: derivedCountryVerification,
+          eligibility: qualification.tanzaniaAccessibility,
+          eligibilityEvidence: qualification.eligibilityEvidence,
+        });
+        const derivedSector = inferSector([candidate.title, candidate.description]);
+        console.log(
+          `[${source.name}] classified '${candidate.title.slice(0, 60)}' — ` +
+            `type=${candidate.category} geography=${derivedGeography ?? "unknown"} sector=${derivedSector ?? "unknown"}`
+        );
       }
 
       if (rowsToInsert.length > 0) {

@@ -20,6 +20,15 @@ import {
   triageBucketOf,
   type TriageBucket,
 } from "@/lib/triage-bucket";
+import {
+  GEOGRAPHY_GROUPS,
+  GEOGRAPHY_LABELS,
+  SECTOR_LABELS,
+  geographyOf,
+  sectorOf,
+  type Geography,
+  type Sector,
+} from "@/lib/taxonomy";
 import { QueueBulkPanel } from "./queue-bulk-panel";
 
 export const metadata: Metadata = {
@@ -128,6 +137,20 @@ export default async function ModerationPage({
   const sourceOptions = [...sourceCounts.entries()].sort(
     (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
   );
+  // Derived taxonomy counts (National/International group + sector) over the
+  // full pending list, so each chip shows the whole batch even inside another
+  // filtered view. Unknown dimensions are simply absent — never fabricated.
+  const geographyCounts = new Map<Geography, number>();
+  const sectorCounts = new Map<Sector, number>();
+  for (const opportunity of pending) {
+    const group = geographyOf(opportunity);
+    if (group !== null) geographyCounts.set(group, (geographyCounts.get(group) ?? 0) + 1);
+    const sector = sectorOf(opportunity);
+    if (sector !== null) sectorCounts.set(sector, (sectorCounts.get(sector) ?? 0) + 1);
+  }
+  const sectorOptions = [...sectorCounts.entries()].sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
+  );
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 font-sans dark:bg-black">
@@ -176,6 +199,12 @@ export default async function ModerationPage({
                 ) : null}
                 {filter.flag !== null ? (
                   <input type="hidden" name="flag" value={filter.flag} />
+                ) : null}
+                {filter.geography ? (
+                  <input type="hidden" name="geography" value={filter.geography} />
+                ) : null}
+                {filter.sector ? (
+                  <input type="hidden" name="sector" value={filter.sector} />
                 ) : null}
                 <input
                   type="search"
@@ -237,6 +266,63 @@ export default async function ModerationPage({
                       {name} · {count}
                     </Link>
                   ))}
+                </div>
+              </details>
+              <details className="text-sm text-zinc-600 dark:text-zinc-400">
+                <summary className="cursor-pointer select-none text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  Filter by group &amp; sector
+                </summary>
+                <div className="mt-2 flex flex-col gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                      Group:
+                    </span>
+                    {filter.geography ? (
+                      <Link
+                        href={`/moderation${queueFilterQuery({ ...filter, geography: null })}`}
+                        className={filterChipClasses(false)}
+                      >
+                        Any group
+                      </Link>
+                    ) : null}
+                    {GEOGRAPHY_GROUPS.map((group) => {
+                      const count = geographyCounts.get(group) ?? 0;
+                      if (count === 0) return null;
+                      return (
+                        <Link
+                          key={group}
+                          href={`/moderation${queueFilterQuery({ ...filter, geography: group })}`}
+                          className={filterChipClasses(filter.geography === group)}
+                        >
+                          {GEOGRAPHY_LABELS[group]} · {count}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  {sectorOptions.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        Sector:
+                      </span>
+                      {filter.sector ? (
+                        <Link
+                          href={`/moderation${queueFilterQuery({ ...filter, sector: null })}`}
+                          className={filterChipClasses(false)}
+                        >
+                          Any sector
+                        </Link>
+                      ) : null}
+                      {sectorOptions.map(([sector, count]) => (
+                        <Link
+                          key={sector}
+                          href={`/moderation${queueFilterQuery({ ...filter, sector })}`}
+                          className={filterChipClasses(filter.sector === sector)}
+                        >
+                          {SECTOR_LABELS[sector]} · {count}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               </details>
               {filtered ? (
