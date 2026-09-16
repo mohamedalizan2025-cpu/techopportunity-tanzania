@@ -221,9 +221,42 @@ production query confirmed all admitted rows are real, actionable opportunities
 (PhD/MSc scholarships and research-fund awards in Computer & IT Systems
 Engineering, AI, and Climate-Change/Green-Development research), each `pending`
 with `eligibility:unknown` for human moderation; no institutional news was
-admitted. The admission gate and 2-hour cadence are UNCHANGED. The single
-NM-AIST item is a "50 shortlisted names" scholarship follow-up — a genuine DS/AI
-award correctly held for moderation rather than auto-published.
+admitted. The admission gate's other dimensions and the 2-hour cadence are
+UNCHANGED. The single NM-AIST item was a "50 shortlisted names" follow-up — a
+selection result, not an open opportunity; that whole class is now withheld at
+admission by the opportunity-only actionability guard (below), and the
+already-inserted production `pending` row is left for the human Moderator.
+
+## Opportunity-only actionability guard (2026-09-16, implemented)
+
+The registry milestone's observed run admitted one item that should never have
+reached the queue: an NM-AIST `Majina 50 Wanaotakiwa Kuomba ufadhili …` notice —
+a list of already-selected names told to complete their applications. It is
+topically a DS/AI award, but it is a **selection result**, not an open call:
+nobody can act on it by applying. ENGINEERING_RULES rule 8 says an item is an
+opportunity only when it carries a concrete user action, so this class must be
+withheld before insertion rather than routed to moderation.
+
+`scripts/discovery/qualification.ts` gained a narrow, title-only **actionability
+guard** — `SELECTION_RESULT_OR_CLOSED_LIST` matched against the candidate title
+and suppressed by an explicit `OPEN_CALL_OVERRIDE`. It rejects the concept class
+— "shortlisted / selected / successful applicants", "list of selected names",
+"selection / interview results", "award recipients / awardees / beneficiary
+lists", "instructions for selected …" — plus the measured Swahili forms
+(`majina … wanaotakiwa`, `orodha ya waliochaguliwa`, `waliofuzu`, `matokeo ya
+…`). A title that also carries an open call ("call for applications",
+"applications open", "expressions of interest", "register now", …) is never
+treated as a selection artifact, so a genuine call that merely references
+selection or shortlisting criteria still passes. It is a class rule, not a match
+for one title.
+
+Boundary: the guard lives inside `qualifyOpportunity`, so a match yields a
+`not_relevant` verdict the runner counts as `relevanceRejected` and skips
+**before** dedupe and insertion — no such row can enter the active Moderator
+queue. Every other admission dimension, the 2-hour cadence, the source registry
+and the legacy corpus are unchanged. Proven by focused cases in
+`tests/qualification.test.ts` and by new extracted-but-withheld cards in the
+UDSM and NM-AIST listing fixtures (`tests/source-adapters.test.ts`).
 
 **Rejected rather than accommodated.** SUA (parses 47 anchors, 0 relevant —
 agriculture/admissions, no product scope), COSTECH/ICTC (0 clean boundaries),

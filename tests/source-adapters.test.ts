@@ -73,7 +73,7 @@ assert("foreign listing path triggers no adapter", findSourceAdapter({ base_url:
 // ---- 2. UDSM structural extraction -----------------------------------------
 const udsm = loadFixture("udsm-announcements-listing.html");
 const udsmExtracted = extractedTitles(udsm, "https://www.udsm.ac.tz/announcement");
-assert("UDSM: six announcement detail cards extracted", udsmExtracted.size === 6, [...udsmExtracted].join(" | "));
+assert("UDSM: seven announcement detail cards extracted", udsmExtracted.size === 7, [...udsmExtracted].join(" | "));
 assert("UDSM: listing self-link excluded", ![...udsmExtracted].some((t) => t === "Announcements"));
 assert("UDSM: short nav anchor excluded", ![...udsmExtracted].some((t) => t === "News"));
 assert("UDSM: off-host social anchor excluded", ![...udsmExtracted].some((t) => /twitter/i.test(t)));
@@ -88,11 +88,12 @@ assert("UDSM: exactly three candidates admit", udsmAdmitted.size === 3, [...udsm
 assert("UDSM: news keynote extracted but rejected", udsmExtracted.has("Vice Chancellor Delivers Keynote at the 56th Graduation Ceremony for the Class of 2026") && !udsmAdmitted.has("Vice Chancellor Delivers Keynote at the 56th Graduation Ceremony for the Class of 2026"));
 assert("UDSM: undergraduate admissions extracted but rejected (excludedAdmission)", udsmExtracted.has("Applications for Undergraduate Admissions 2026 Now Open") && !udsmAdmitted.has("Applications for Undergraduate Admissions 2026 Now Open"));
 assert("UDSM: stale 2024 call extracted but rejected", udsmExtracted.has("Call for Applications for Masters Scholarships 2024") && !udsmAdmitted.has("Call for Applications for Masters Scholarships 2024"));
+assert("UDSM: successful-applicants selection list extracted but withheld (actionability guard)", udsmExtracted.has("List of Successful Applicants for the Artificial Intelligence Research Internship 2026") && !udsmAdmitted.has("List of Successful Applicants for the Artificial Intelligence Research Internship 2026"));
 
 // ---- 4. NM-AIST structural extraction --------------------------------------
 const nmaist = loadFixture("nmaist-events-listing.html");
 const nmaistExtracted = extractedTitles(nmaist, "https://nm-aist.ac.tz/event/");
-assert("NM-AIST: four event cards extracted (Continue Reading deduped)", nmaistExtracted.size === 4, [...nmaistExtracted].join(" | "));
+assert("NM-AIST: five event cards extracted (Continue Reading deduped)", nmaistExtracted.size === 5, [...nmaistExtracted].join(" | "));
 assert("NM-AIST: archive self-link excluded", ![...nmaistExtracted].some((t) => t === "Events"));
 assert("NM-AIST: Continue Reading junk never becomes a title", ![...nmaistExtracted].some((t) => /continue reading/i.test(t)));
 assert("NM-AIST: off-host social + home excluded", ![...nmaistExtracted].some((t) => /facebook|home/i.test(t)));
@@ -104,6 +105,7 @@ assert("NM-AIST: Applied AI programme call admits", nmaistAdmitted.has("Call for
 assert("NM-AIST: exactly two candidates admit", nmaistAdmitted.size === 2, [...nmaistAdmitted].join(" | "));
 assert("NM-AIST: stale 2025 ceremony extracted but rejected", nmaistExtracted.has("NM-AIST Graduation and Prize Giving Ceremony 2025") && !nmaistAdmitted.has("NM-AIST Graduation and Prize Giving Ceremony 2025"));
 assert("NM-AIST: open-day extracted but rejected", nmaistExtracted.has("Open Day and Campus Tour for Prospective Students and Parents") && !nmaistAdmitted.has("Open Day and Campus Tour for Prospective Students and Parents"));
+assert("NM-AIST: shortlisted-names notice extracted but withheld (actionability guard)", nmaistExtracted.has("Majina 50 Wanaotakiwa Kuomba ufadhili wa Samia Scholarship Extended(DS/AI+) 2026") && !nmaistAdmitted.has("Majina 50 Wanaotakiwa Kuomba ufadhili wa Samia Scholarship Extended(DS/AI+) 2026"));
 
 // ---- 6. adapter does not weaken the generic path ---------------------------
 // With institutional generic-HTML blocked (as the worker enforces), the

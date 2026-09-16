@@ -148,6 +148,44 @@ const CLEARLY_NON_OPPORTUNITY_TITLES = [
   /^(?:orodha ya waliochaguliwa|majina ya waliochaguliwa)\b/i,
 ];
 
+/**
+ * Opportunity-only ACTIONABILITY guard (ENGINEERING_RULES rule 8). A selection
+ * result, shortlisted/successful-applicant list, awardee/beneficiary
+ * announcement, or administrative follow-up addressed only to people ALREADY
+ * chosen is not an OPEN opportunity — nobody can act on it by applying — so it
+ * must never enter the active Moderator queue. Title-only and deliberately
+ * narrow: it keys on selection-artifact nouns ("list of selected", "successful
+ * applicants", "selection results", "majina ... wanaotakiwa", "orodha ya
+ * waliochaguliwa"), never a bare mention of applying or a generic
+ * selection-criteria sentence. `OPEN_CALL_OVERRIDE` below keeps genuine open
+ * calls that merely reference selection/shortlisting, so this is a class rule,
+ * not a match for one title.
+ */
+const SELECTION_RESULT_OR_CLOSED_LIST = [
+  /\b(?:list|lists|listing|name|names)\s+of\s+(?:the\s+)?(?:selected|short[- ]?listed|shortlist(?:ed)?|successful|approved|merit|chosen)\b/i,
+  /\b(?:selected|short[- ]?listed|shortlist(?:ed)?|successful|approved|chosen)\s+(?:candidates?|applicants?|names?|students?|beneficiaries?|beneficiary|recipients?|participants?)\b/i,
+  /\b(?:selection|shortlisting|short[- ]?listing|interview|written|merit|entrance)\s+results?\b/i,
+  /\bresults?\s+(?:of|for|on)\s+(?:the\s+)?(?:selection|shortlisting|interview|applications?|call|candidate|scholarship|award|list)\b/i,
+  /\b(?:awardees?|award\s+recipients?|recipients?\s+of\s+the\s+awards?|beneficiaries\s+list|list\s+of\s+beneficiaries|merit\s+list)\b/i,
+  /\b(?:announcement|publication|intimation)\s+of\s+(?:the\s+)?(?:selection|results?|successful|selected|shortlisted|awardees?)\b/i,
+  /\binstructions?\s+(?:only\s+)?for\s+(?:the\s+)?(?:selected|successful|short[- ]?listed|chosen|awardees?|beneficiaries)\b/i,
+  // Swahili institutional forms measured in the live TZ corpus.
+  /\b(?:orodha|majina|warasha)(?:\s+\d+)?\s+ya\s+(?:waliochaguliwa|waliotakiwa|wanaotakiwa|waliofuzu|walioitwa|waliochujwa|waliohusika)\b/i,
+  /\bmajina\s+\d+\s+(?:wanaotakiwa|waliotakiwa|waliochaguliwa|waliofuzu|walioitwa)\b/i,
+  /\b(?:waliochaguliwa|waliotakiwa|wanaotakiwa|waliofuzu|walioitwa|waliochujwa)\b/i,
+  /\bmatokeo\s+ya\s+(?:uteuzi|uchaguzi|usaili|mahojiano|usajili|maombi)\b/i,
+];
+
+/**
+ * Explicit OPEN-call wording. When present, the title is a live invitation to
+ * act and is never treated as a closed selection artifact, even if it also
+ * mentions selected/shortlisted candidates as a description of what happens
+ * after applying. This is the false-positive brake that keeps the guard from
+ * rejecting genuine calls that merely reference selection criteria.
+ */
+const OPEN_CALL_OVERRIDE =
+  /\b(?:call\s+for\s+(?:applications?|proposals?|nominations?|entries|abstracts?|papers?|expressions?\s+of\s+interest)|applications?\s+(?:are\s+)?(?:now\s+)?(?:open|invited|being\s+(?:accepted|received))|applications?\s+open|open\s+(?:for\s+)?applications?|nominations?\s+(?:are\s+)?(?:now\s+)?open|register\s+(?:now|today|here)|expressions?\s+of\s+interest|we\s+(?:are\s+)?(?:looking\s+for|seeking|invit(?:e|ing))|invit(?:e|ation)\s+to\s+apply|are\s+invited\s+to\s+apply|apply\s+(?:now|before|by|online|today)|opportunit(?:y|ies)\s+for|fomu\s+ya\s+maombi|tangazo\s+la\s+(?:kuitwa|udahili|maombi))\b/i;
+
 const NEWS_REPORTING_TITLE =
   /\b(showcases?|challenged|celebrates?|visited?|signs? (?:an? )?agreement|to collaborate with|implements? vision|akagua|asisitiza|yaweka historia|yaendelea kukuza|yapongeza|yafanya kikao|kuimarisha ushirikiano|zajadili utekelezaji)\b/i;
 
@@ -245,6 +283,9 @@ export function qualifyOpportunity(
     ? `explicit deadline already passed: ${candidate.deadline}`.slice(0, 240)
     : null;
   const nonOpportunityEvidence = matchedEvidence(title, CLEARLY_NON_OPPORTUNITY_TITLES);
+  const selectionResultEvidence = OPEN_CALL_OVERRIDE.test(title)
+    ? null
+    : matchedEvidence(title, SELECTION_RESULT_OR_CLOSED_LIST);
   const reportingEvidence = !ACTION_CALL.test(title) && NEWS_REPORTING_TITLE.test(title)
     ? matchedEvidence(title, [NEWS_REPORTING_TITLE])
     : null;
@@ -272,10 +313,11 @@ export function qualifyOpportunity(
 
   let relevance: OpportunityRelevance = "ambiguous";
   let relevanceEvidence: string | null = null;
-  if (expiredEvidence || nonOpportunityEvidence || reportingEvidence || staleEvidence || detailHasNoAction || excludedAdmission || outsideProductScope) {
+  if (expiredEvidence || nonOpportunityEvidence || selectionResultEvidence || reportingEvidence || staleEvidence || detailHasNoAction || excludedAdmission || outsideProductScope) {
     relevance = "not_relevant";
     relevanceEvidence = expiredEvidence
       ?? nonOpportunityEvidence
+      ?? selectionResultEvidence
       ?? reportingEvidence
       ?? staleEvidence
       ?? (detailHasNoAction

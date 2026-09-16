@@ -166,5 +166,38 @@ const institutionalExplicit = qualifyOpportunity(
 );
 assert("institutional candidate with explicit opportunity evidence survives", institutionalExplicit.relevance === "relevant");
 
+// ---- opportunity-only ACTIONABILITY guard (selection results / closed lists) ----
+// A selection result, shortlisted/successful-applicant list, awardee list or
+// administrative follow-up addressed only to already-chosen people is not an
+// OPEN opportunity and must be withheld. The guard is a class rule, so the
+// evidence it reports is the selection match itself (not a missing-scope or
+// stale fallback), and genuine open calls that merely mention selection
+// criteria must still pass.
+const institutional = { sourceType: "university" as const };
+const withheld = [
+  ["Majina 50 Wanaotakiwa Kuomba ufadhili wa Samia Scholarship Extended(DS/AI+) 2026", /wanaotakiwa/i],
+  ["List of Successful Applicants for the MSc in Data Science 2026", /list of successful/i],
+  ["Announcement of Shortlisted Candidates for the AI Bootcamp Interview", /shortlisted candidates|announcement of shortlisted/i],
+  ["Selection Results: Digital Innovation Grant Cohort 2026", /selection results/i],
+  ["Instructions for Selected Scholars: Registration and Next Steps", /instructions for selected/i],
+  ["Award Recipients of the Green Tech Research Fund 2026", /award recipients/i],
+  ["Orodha ya Waliochaguliwa wa Ufadhili wa Utafiti wa Kompyuta 2026", /waliochaguliwa/i],
+] as const;
+for (const [title, evidence] of withheld) {
+  const q = qualifyOpportunity(candidate(title), new Date("2026-09-16T00:00:00Z"), institutional);
+  assert(`withheld: ${title.slice(0, 44)}`, q.relevance === "not_relevant" && !shouldEnterModerationQueue(q), q.relevanceEvidence ?? "");
+  assert(`withheld evidence names the selection artifact: ${title.slice(0, 30)}`,
+    Boolean(q.relevanceEvidence?.match(evidence)), q.relevanceEvidence ?? "");
+}
+const stillOpen = [
+  "Call for Applications: PhD in Artificial Intelligence \u2014 selected candidates will be notified by email",
+  "Applications Open: Renewable Energy Innovation Challenge 2026 (shortlisting based on technical merit)",
+  "Call for Proposals for AI Research Grants 2026 \u2014 successful applicants receive funding",
+];
+for (const title of stillOpen) {
+  const q = qualifyOpportunity(candidate(title), new Date("2026-09-16T00:00:00Z"), institutional);
+  assert(`open call mentioning selection still passes: ${title.slice(0, 40)}`, q.relevance === "relevant" && shouldEnterModerationQueue(q), q.relevanceEvidence ?? "");
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;

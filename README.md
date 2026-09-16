@@ -52,9 +52,15 @@ demonstrably official LinkedIn/Instagram/Facebook/X accounts, and official forms
 they link), never to general news; an item is an opportunity only when it carries
 a concrete user action (apply, register, compete, submit, pitch, attend, train,
 receive funding, research, intern, work, exhibit); aggregators, reposts,
-unofficial accounts and secondary news remain discovery leads only. Next
-milestone: National/International classification + opportunity taxonomy (not
-started).
+unofficial accounts and secondary news remain discovery leads only. Immediately
+after closure one systemic admission gap the run exposed was fixed at the gate: a
+narrow, title-only **opportunity-only actionability guard** in
+`scripts/discovery/qualification.ts` now withholds selection results,
+shortlisted/successful-applicant and awardee lists, and administrative follow-ups
+addressed only to already-selected people **before** they reach the Moderator
+queue (a class rule, not one title — genuine open calls that merely mention
+selection criteria still pass). Next milestone: National/International
+classification + opportunity taxonomy (not started).
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

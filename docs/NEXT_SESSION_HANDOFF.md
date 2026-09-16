@@ -34,6 +34,24 @@ Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   2-hour cadence are UNCHANGED. Next milestone: **National/International
   classification + opportunity taxonomy** (not started).
 
+- **2026-09-16 opportunity-only actionability guard (current).** Before the next
+  milestone, one systemic admission gap the closed registry milestone exposed was
+  fixed at the gate. The activation run had admitted an NM-AIST `Majina 50
+  Wanaotakiwa Kuomba …` shortlisted-names notice — a selection result addressed
+  only to already-chosen applicants, not an open opportunity. `qualification.ts`
+  now withholds that class BEFORE insertion via a narrow, title-only guard
+  (`SELECTION_RESULT_OR_CLOSED_LIST` + `OPEN_CALL_OVERRIDE`) implementing
+  ENGINEERING_RULES rule 8: selection results, shortlisted/successful-applicant
+  and awardee lists, and administrative follow-ups for already-selected people are
+  rejected as `not_relevant`; genuine open calls that merely mention selection or
+  shortlisting criteria still pass. It is a class rule, not a match for one title
+  — proven by focused `tests/qualification.test.ts` cases and new
+  extracted-but-withheld cards in the UDSM/NM-AIST listing fixtures. The rest of
+  the admission gate, the 2-hour cadence, the source registry and the legacy
+  corpus are UNCHANGED; the one already-inserted production `pending` row is left
+  for the human Moderator (no retrospective DB mutation without owner
+  authorization).
+
 - The last pushed documentation closure before this disposition is
   `f8d531d` on `origin/main`. The runtime source SHA remains exact capability
   commit `1645973`, with
@@ -1007,6 +1025,7 @@ The authoritative roadmap is [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md). Its order
    - view-only furniture flag
 3. **Authoritative Discovery + Active Lifecycle Hardening** *(implemented 2026-09-16, unpromoted; controlled run PASS 2026-09-16 — 2 pending inserts; 2-hour cadence live)*
 4. **Authoritative Source Registry Expansion** *(CLOSED 2026-09-16 — seed `0003` applied to production; UDSM announcements + NM-AIST events listing adapters active; two Discovery runs observed; admitted rows verified as real opportunities)*
+   - follow-on *(done 2026-09-16)*: **opportunity-only actionability guard** — selection results / shortlisted-applicant & awardee lists / already-selected follow-ups withheld before insertion; cadence, source registry and legacy corpus unchanged
 5. **Discovery quality review and 2-hour cadence verification** *(2-hour cadence live; exact-SHA scheduled observations rebuild the baseline from zero)*
 6. **National vs International classification** *(CURRENT next milestone, with #7 — not started)*
 7. **Opportunity taxonomy improvement** *(CURRENT next milestone, with #6 — not started)*
@@ -1752,10 +1771,13 @@ scholarships and research-fund awards in Computer & IT Systems Engineering,
 Artificial Intelligence, and Climate-Change/Green-Development research), each
 `status:pending` with `eligibility:unknown` for human moderation — no
 institutional news (graduations, appointments, vacancies, MoUs, condolences,
-generic mobility) was admitted. The single NM-AIST item is a "50 shortlisted
-names" scholarship follow-up: topically a genuine DS/AI award, correctly held in
-the moderation queue rather than auto-published — the title-only gate plus human
-review working as designed.
+generic mobility) was admitted. The single NM-AIST item was a "50 shortlisted
+names" follow-up — topically a genuine DS/AI award but a **selection result**,
+not an open opportunity. That class is now withheld at the admission gate itself
+by the opportunity-only actionability guard added in
+`scripts/discovery/qualification.ts` (see [DISCOVERY_CHANNELS.md](DISCOVERY_CHANNELS.md)),
+so it can no longer reach the active Moderator queue; the one already-inserted
+production `pending` row is left for the human Moderator.
 
 **Exact next milestone: National/International classification + opportunity
 taxonomy (NOT started).** Do not begin implementation without explicit owner
