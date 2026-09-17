@@ -8,6 +8,7 @@ import {
   reviewAuditRows,
   reviewedOpportunityUpdate,
   satisfiesPublishedReviewContract,
+  type ReviewInput,
 } from "../lib/data/moderation-review";
 import { nextPendingAfter } from "../lib/data/moderation";
 import { deriveGeography } from "../lib/taxonomy";
@@ -265,6 +266,105 @@ if (zanzibarApproval.ok) {
     satisfiesPublishedReviewContract(
       PUBLISHED,
       zanzibarApproval.review,
+      "moderator-1",
+      "2026-09-12T12:00:00.000Z",
+      new Date("2026-09-12T12:00:00.000Z")
+    )
+  );
+}
+
+// --- Milestone A regression scenarios (moderator gate + published contract) ---
+// The four owner-mandated scenarios at the moderation layer, complementing the
+// pure-classifier cases in tests/taxonomy.test.ts.
+
+// (b) South Africa-only opportunity => NOT National and not treated as Tanzania.
+//     A moderator cannot approve it as-is: with no evidenced Tanzanian access the
+//     eligibility gate holds it out, and the geography classifier returns null.
+const southAfricaOnly = parseReviewInput(form({
+  ...BASE,
+  country: "South Africa",
+  country_verification: "verified_other",
+  country_evidence: "Official page states the programme is hosted in Cape Town, South Africa.",
+  eligibility: "tanzanians_not_eligible",
+  eligibility_evidence: "Official page limits eligibility to South African citizens only.",
+}));
+assert(
+  "scenario B: South Africa-only (Tanzanians not eligible) → approval rejected",
+  !southAfricaOnly.ok && southAfricaOnly.message.includes("eligibility")
+);
+assert(
+  "scenario B: South Africa-only geography → null, never national (not treated as Tanzania)",
+  deriveGeography({
+    country: "South Africa",
+    countryVerification: "verified_other",
+    eligibility: "tanzanians_not_eligible",
+    eligibilityEvidence: "Official page limits eligibility to South African citizens only.",
+  }) === null
+);
+
+// (c) Kenya-hosted opportunity genuinely open to Tanzanians => International when
+//     access is evidenced. Approvable (eligibility gate satisfied); National is
+//     never inferred from the foreign country.
+const kenyaApproval = parseReviewInput(form({
+  ...BASE,
+  country: "Kenya",
+  country_verification: "verified_other",
+  country_evidence: "Official page states the programme is hosted in Nairobi, Kenya.",
+  city: "Nairobi",
+  eligibility_evidence: "Official page: open to applicants from all East African countries.",
+}));
+assert("scenario C: Kenya-hosted + evidenced Tanzanian access is approvable", kenyaApproval.ok);
+if (kenyaApproval.ok) {
+  assert(
+    "scenario C: Kenya-hosted + evidenced access classifies International (never National)",
+    deriveGeography({
+      country: kenyaApproval.review.country,
+      region: kenyaApproval.review.region,
+      city: kenyaApproval.review.city,
+      countryVerification: kenyaApproval.review.countryVerification,
+      eligibility: "tanzanians_eligible",
+      eligibilityEvidence: kenyaApproval.review.eligibilityEvidence,
+    }) === "international"
+  );
+}
+
+// (d) Unknown geography stays NON-PUBLISHABLE until resolved.
+//   (i) A row whose Tanzanian eligibility cannot be verified is held out by the
+//       approval gate (the reachable non-publishable gate; see also rE1 above).
+//   (ii) The classifier the publishable-corpus gate relies on returns null for
+//       fully-unknown evidence, so geography is indeterminate (never Ambiguous).
+//   (iii) The retired unevidenced-Tanzania artifact (bare country + verification
+//       'unknown' + no country evidence) now fails hasConsistentCountryTruth, so
+//       satisfiesPublishedReviewContract rejects it (non-publishable).
+// NOTE: parseReviewInput's OWN geography-determinacy message is defensive-by-
+// design: eligibility is independently forced to tanzanians_eligible upstream
+// (see the gate comment in lib/data/moderation-review.ts), so a valid form always
+// reaches at least International and the null-geography branch is unreachable
+// today. It holds the line only if the eligibility rule ever relaxes.
+const unresolvedEligibility = parseReviewInput(form({ ...BASE, eligibility: "unknown", eligibility_evidence: "" }));
+assert(
+  "scenario D: unresolved eligibility → approval rejected (row stays pending, non-publishable)",
+  !unresolvedEligibility.ok
+);
+assert(
+  "scenario D: fully-unknown geography evidence → deriveGeography null (indeterminate)",
+  deriveGeography({
+    country: null, region: null, city: null,
+    countryVerification: "unknown", eligibility: "unknown", eligibilityEvidence: null,
+  }) === null
+);
+if (r1.ok) {
+  const unevidencedTanzaniaReview: ReviewInput = {
+    ...r1.review,
+    country: "Tanzania",
+    countryVerification: "unknown",
+    countryEvidence: null,
+  };
+  assert(
+    "scenario D: unevidenced 'Tanzania' artifact fails the published-review contract (non-publishable)",
+    !satisfiesPublishedReviewContract(
+      PUBLISHED,
+      unevidencedTanzaniaReview,
       "moderator-1",
       "2026-09-12T12:00:00.000Z",
       new Date("2026-09-12T12:00:00.000Z")

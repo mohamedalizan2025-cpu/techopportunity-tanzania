@@ -92,6 +92,13 @@ export const SECTOR_LABELS: Record<Sector, string> = {
  * schema is live) and discovery (a candidate plus its qualification verdict).
  */
 export interface GeographyEvidence {
+  /**
+   * Raw country string. Carried as metadata by every call site (geographyOf,
+   * moderation-review, the discovery runner) but DELIBERATELY NOT READ by
+   * deriveGeography: the classifier keys off countryVerification EVIDENCE
+   * (verified_tanzania / verified_other), never the bare country word, so an
+   * unevidenced 'Tanzania' can never manufacture a National classification.
+   */
   country?: string | null;
   region?: string | null;
   city?: string | null;
@@ -106,9 +113,14 @@ export interface GeographyEvidence {
  * common Zanzibar city name, the no-space Dar es Salaam variant). Kept tight
  * and exact-match: a name counts only when it is the WHOLE stored value, never
  * a substring, so classification reads real location evidence and never guesses.
+ * The COUNTRY name 'Tanzania' is deliberately EXCLUDED: it is not a
+ * sub-national place, and honouring a bare city/region 'Tanzania' (free text in
+ * the submit/moderator forms) would re-open the same bare-string -> National
+ * defect that branch 1 rejects. A Tanzania location is proven by a canonical
+ * region, a real place alias, or verified_tanzania country evidence — never by
+ * the bare country word sitting in a city/region field.
  */
 const TANZANIA_PLACE_ALIASES = new Set([
-  "tanzania",
   "zanzibar",
   "unguja",
   "pemba",
@@ -143,13 +155,23 @@ const TANZANIA_FOCUS = /\btanzania(?:n|ns)?\b/i;
  * happens and who it is open to), never the organizer's nationality.
  *
  *   national      — Tanzania-based or Tanzania-focused on positive evidence,
- *                   in priority order: (1) a verified/structured Tanzania
- *                   country; (2) the opportunity's OWN region/city is a
+ *                   in priority order: (1) a VERIFIED Tanzania country
+ *                   (country_verification === 'verified_tanzania') — a bare,
+ *                   unevidenced country string is NOT enough (that artifact
+ *                   used to misclassify foreign rows as National); (2) the
+ *                   opportunity's OWN region/city is a
  *                   canonical Tanzanian region or unambiguous Tanzania place
  *                   (Zanzibar, Unguja, Pemba, Dar es Salaam, …) — this wins
  *                   EVEN IF the organizer's country is foreign, so a
- *                   foreign-run event/challenge in Zanzibar is National;
- *                   (3) eligibility evidence explicitly naming Tanzania(n)s.
+ *                   foreign-run event/challenge in Zanzibar is National. The
+ *                   COUNTRY name 'Tanzania' is NOT a place alias, so a bare
+ *                   city/region 'Tanzania' stays null, never National;
+ *                   (3) Tanzania-focused eligibility wording that is NOT an
+ *                   exclusion (tanzanians_not_eligible) AND does not merely
+ *                   accompany an EVIDENCED foreign country: a verified_other
+ *                   (e.g. Kenya-hosted) call open to "Kenyan and Tanzanian
+ *                   citizens" is International, so the Tanzania token never
+ *                   overrides real foreign-country evidence.
  *   international — NOT Tanzania-based AND Tanzanians have EVIDENCED access
  *                   (eligibility `tanzanians_eligible`, i.e. an explicit
  *                   Tanzania / Africa-wide / worldwide / WBG-member statement).
@@ -161,12 +183,16 @@ const TANZANIA_FOCUS = /\btanzania(?:n|ns)?\b/i;
  *                   resolves country/region/eligibility evidence.
  */
 export function deriveGeography(evidence: GeographyEvidence): Geography | null {
-  const country = evidence.country?.trim().toLowerCase() ?? null;
   const verification = evidence.countryVerification ?? "unknown";
   const eligibility = evidence.eligibility ?? "unknown";
 
-  // 1. Verified/structured Tanzania country.
-  if (verification === "verified_tanzania" || country === "tanzania") {
+  // 1. Verified/structured Tanzania country — requires EVIDENCE.
+  //    A bare, unevidenced country string (e.g. the retired DB default
+  //    'Tanzania' with country_verification='unknown') must NOT short-circuit
+  //    to National: that was the root cause of foreign opportunities being
+  //    classified as Tanzania / National. Only a verified Tanzania country is
+  //    positive evidence of a Tanzania location.
+  if (verification === "verified_tanzania") {
     return "national";
   }
   // 2. OPPORTUNITY-LOCATION-FIRST: the opportunity's own region/city locates it
@@ -176,13 +202,28 @@ export function deriveGeography(evidence: GeographyEvidence): Geography | null {
   if (isTanzaniaPlace(evidence.region) || isTanzaniaPlace(evidence.city)) {
     return "national";
   }
-  // 3. Positive Tanzania-focus wording in the eligibility evidence.
-  if (TANZANIA_FOCUS.test(evidence.eligibilityEvidence ?? "")) {
+  // 3. Tanzania-focus wording in the eligibility evidence, but NEVER on an
+  //    exclusion: a string like "Tanzanians are NOT eligible" contains the
+  //    token yet is the opposite of a Tanzania-focused call.
+  const tanzaniaFocus =
+    TANZANIA_FOCUS.test(evidence.eligibilityEvidence ?? "") &&
+    eligibility !== "tanzanians_not_eligible";
+  // 3a. Tanzania-focused wording AND NOT an evidenced foreign country => national.
+  //     A verified_other (e.g. Kenya-hosted) call that merely mentions Tanzanian
+  //     citizens is International, not National: the token must not override real
+  //     foreign-country evidence when Tanzanians have evidenced access.
+  if (tanzaniaFocus && verification !== "verified_other") {
     return "national";
   }
-  // 4. Evidenced access for Tanzanians to a non-Tanzania opportunity.
+  // 4. Evidenced access for Tanzanians to a non-Tanzania opportunity => international.
   if (eligibility === "tanzanians_eligible") {
     return "international";
+  }
+  // 3b. Tanzania-focused wording even alongside verified_other => national, but
+  //     only when branch 4 did NOT fire (access is not evidenced
+  //     tanzanians_eligible), i.e. the focus wording is the only, stronger signal.
+  if (tanzaniaFocus) {
+    return "national";
   }
   return null;
 }

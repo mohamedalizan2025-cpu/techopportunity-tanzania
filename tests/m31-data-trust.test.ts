@@ -125,6 +125,22 @@ test("unverified Tanzania text stays unverified and cannot substitute for eligib
   assert.equal(isAiSearchableOpportunity(mapped), false);
 });
 
+// Milestone A (SECONDARY fix): the unevidenced-Tanzania artifact — a bare
+// country:'Tanzania' carried with country_verification:'unknown' and
+// country_evidence:null (exactly the retired DB default) — is an INCONSISTENT
+// country truth. hasConsistentCountryTruth must now be FALSE so the trust /
+// AI-searchable gate rejects it, instead of passing it as "honestly unknown".
+test("bare unevidenced Tanzania country (verification unknown) is inconsistent country truth", () => {
+  const mapped = mappedCountryRow({
+    country: "Tanzania", country_verification: "unknown", country_evidence: null,
+  });
+  assert.equal(mapped.location?.country, "Tanzania");
+  assert.equal(mapped.trust?.countryVerification, "unknown");
+  assert.equal(mapped.trust?.countryEvidence, null);
+  assert.equal(hasConsistentCountryTruth(mapped), false);
+  assert.equal(isAiSearchableOpportunity(mapped), false);
+});
+
 test("country-only verified label still requires country evidence", () => {
   const mapped = mappedCountryRow({ country_evidence: null });
   assert.equal(mapped.location?.country, "Tanzania");
@@ -257,6 +273,29 @@ test("new pending rows persist qualification, country and deadline truth", () =>
   assert.equal(row.country_verification, "unknown");
   assert.equal("country" in row, false);
   assert.match(String(row.deadline_evidence), /Structured source value/);
+});
+
+// A candidate carrying a structured FOREIGN country threads through
+// buildPendingRow into country + verified_other + country_evidence — exercising
+// runner.ts's PRE-EXISTING mapping (the candidate is constructed directly here,
+// NOT produced by extract.ts). Fail-safe opposite of an unevidenced 'Tanzania'.
+test("discovered foreign country threads into verified_other country evidence", () => {
+  const candidate: CandidateOpportunity = {
+    title: "East Africa Developer Summit 2027",
+    description: "A regional developer summit hosted in Nairobi with an explicit agenda, speakers, and eligibility section for attendees.",
+    category: "conference", organization: null, url: "https://official.example/summit",
+    deadline: null, venueName: "KICC", address: null, city: "Nairobi",
+    region: null, country: "Kenya", sourceId: "source", sourceUrl: "https://official.example/feed",
+    evidenceUrl: "https://official.example/feed", referenceKind: "source-base", discoveryMethod: "json-ld",
+  };
+  const row = buildPendingRow(candidate, 7, {
+    relevance: "relevant", tanzaniaAccessibility: "tanzanians_eligible",
+    evidenceQuality: "explicit", relevanceEvidence: "Regional developer summit",
+    eligibilityEvidence: "Open to all East African nationals",
+  }, "2026-09-04T00:00:00Z");
+  assert.equal(row.country, "Kenya");
+  assert.equal(row.country_verification, "verified_other");
+  assert.match(String(row.country_evidence), /Kenya/);
 });
 
 test("forward migration preserves rows and removes the unsafe country default", () => {

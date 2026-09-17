@@ -1,8 +1,28 @@
 # Current engineering handoff
 
-Updated: 2026-09-16. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
 ## Current verified state
+
+- **2026-09-17 geography/source-data quality hardening — bare-Tanzania evidence
+  defect CLOSED in code (uncommitted prior-agent work preserved and verified;
+  no migration, no production mutation).** `deriveGeography`
+  (`lib/taxonomy.ts`) no longer reads the bare country string: National now
+  requires `verified_tanzania` evidence, a canonical Tanzania region/place in
+  the opportunity's OWN region/city, or non-exclusion Tanzania-focus wording
+  that does not merely accompany an evidenced foreign country; `Tanzania` was
+  removed from `TANZANIA_PLACE_ALIASES` so a free-text city/region `Tanzania`
+  stays null. `hasConsistentCountryTruth` (`lib/opportunity-trust.ts`) now
+  fails the retired `country=Tanzania + verification=unknown + evidence=null`
+  artifact instead of passing it as honestly unknown, so the M31
+  AI-searchable/publishable gates reject it. Moderator approval and the
+  published-review contract hold indeterminate geography out of the publishable
+  corpus (never Ambiguous). Tests: 106 taxonomy, 20 M31, 40 review, 47 queue
+  assertions green; full `npm test`, `tsc`, `lint`, 35 boundaries, `npm run
+  build` green at this commit. No discovery/source-registry/schedule change;
+  legacy corpus untouched (no backfill); forward migrations 0013/0008 remain
+  owner-gated. Exact next: unified talent activity, then staff-gated campaign
+  pilot (see commercial-growth mission in this handoff).
 
 - **2026-09-16 User Profile + Personalized Opportunity Foundation IMPLEMENTED
   and migration 0018 ROLLED OUT to isolated staging then production (talent side

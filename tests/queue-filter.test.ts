@@ -167,7 +167,18 @@ assert("nav: empty filtered view", queueNavigationFromIds([], "a").total === 0);
 // dimension is unknown never matches a concrete filter and stays reachable
 // once the filter is cleared.
 
-const tz = row({ id: "tz", category: "scholarship", title: "Public Health Fellowship", location: loc("Tanzania") });
+// CORRECTED (Milestone A): a Tanzania row is National only WITH country
+// evidence. The bare, unevidenced location.country 'Tanzania' (the retired DB
+// default carried with country_verification 'unknown') no longer classifies as
+// National, so this fixture now carries verified_tanzania trust — the row still
+// matches the national filter, but on real evidence rather than a bare string.
+const tz = row({
+  id: "tz",
+  category: "scholarship",
+  title: "Public Health Fellowship",
+  location: loc("Tanzania"),
+  trust: trustWith({ countryVerification: "verified_tanzania", countryEvidence: "Official programme location: Tanzania" }),
+});
 const intl = row({
   id: "intl",
   category: "fellowship",
@@ -176,6 +187,16 @@ const intl = row({
   trust: trustWith({ eligibilityDecision: "tanzanians_eligible", eligibilityEvidence: "open to applicants from all African countries" }),
 });
 const unknown = row({ id: "unk", category: "other", title: "Ordinary page", location: null });
+// MILESTONE A REMEDIATION: a bare, UNEVIDENCED country AND city 'Tanzania' with
+// NO verified trust must NOT match the national filter. 'tanzania' was removed
+// from TANZANIA_PLACE_ALIASES, so the free-text city/region field can no longer
+// re-open the bare-string → National defect (reachable via submit + moderator forms).
+const bareTanzania = row({
+  id: "bare-tz",
+  category: "other",
+  title: "Unevidenced Tanzania row",
+  location: { venueName: null, address: null, city: "Tanzania", region: null, country: "Tanzania", latitude: null, longitude: null },
+});
 
 assert("geo: parse geography=national", parseQueueFilter({ geography: "national" }).geography === "national");
 assert("geo: parse geography=international", parseQueueFilter({ geography: "international" }).geography === "international");
@@ -199,6 +220,10 @@ assert(
   "geo: unknown-geography row matches no concrete group (fails safe)",
   !matchesQueueFilter(unknown, { ...EMPTY_QUEUE_FILTER, geography: "national" }) &&
     !matchesQueueFilter(unknown, { ...EMPTY_QUEUE_FILTER, geography: "international" })
+);
+assert(
+  "geo: bare unevidenced country/city 'Tanzania' (no verified trust) does NOT match national",
+  !matchesQueueFilter(bareTanzania, { ...EMPTY_QUEUE_FILTER, geography: "national" })
 );
 assert(
   "geo: sector derived from title+description",

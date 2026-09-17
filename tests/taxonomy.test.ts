@@ -105,13 +105,37 @@ assert(
   "geo: verified_tanzania → national",
   deriveGeography({ countryVerification: "verified_tanzania" }) === "national"
 );
+// CORRECTED (Milestone A): National now REQUIRES country evidence. A bare,
+// unevidenced country string — the retired DB default 'Tanzania' carried with
+// country_verification 'unknown' and country_evidence null — was the ROOT CAUSE
+// of foreign opportunities being classified National. It must now yield null.
 assert(
-  "geo: structured country 'Tanzania' → national",
-  deriveGeography({ country: "Tanzania" }) === "national"
+  "geo: bare unevidenced country 'Tanzania' (verification defaults unknown) → null, NOT national",
+  deriveGeography({ country: "Tanzania" }) === null
 );
 assert(
-  "geo: country evidence is trimmed + case-folded, not invented",
-  deriveGeography({ country: "  tAnZaNiA  " }) === "national"
+  "geo: bare country 'Tanzania' is not rescued by trimming/case-folding → null",
+  deriveGeography({ country: "  tAnZaNiA  " }) === null
+);
+assert(
+  "geo: explicit countryVerification 'unknown' + country 'Tanzania' → null",
+  deriveGeography({ country: "Tanzania", countryVerification: "unknown" }) === null
+);
+// POSITIVE: a VERIFIED Tanzania country is genuine evidence → National.
+assert(
+  "geo: country 'Tanzania' + verified_tanzania → national (evidence present)",
+  deriveGeography({ country: "Tanzania", countryVerification: "verified_tanzania" }) === "national"
+);
+// REGRESSION: the unevidenced-Tanzania artifact with evidenced foreign access
+// must fall through to International (branch 4), NEVER National (branch 1).
+assert(
+  "geo: unevidenced 'Tanzania' + tanzanians_eligible foreign access → international, never national",
+  deriveGeography({
+    country: "Tanzania",
+    countryVerification: "unknown",
+    eligibility: "tanzanians_eligible",
+    eligibilityEvidence: "open to all African nationals",
+  }) === "international"
 );
 assert(
   "geo: Tanzania-focused eligibility ('open to all Tanzanians') → national",
@@ -229,9 +253,12 @@ assert("sector: empty + nullish text → null", inferSector([null, "", undefined
 
 // --- 6. Convenience wrappers over an Opportunity -----------------------------
 
+// CORRECTED (Milestone A): with trust absent, countryVerification defaults to
+// 'unknown', so a bare location.country 'Tanzania' is UNEVIDENCED and must not
+// be read as National. Unknown geography stays null (non-publishable).
 assert(
-  "geographyOf: reads location.country when trust is absent",
-  geographyOf({ location: location({ country: "Tanzania" }) }) === "national"
+  "geographyOf: bare location.country 'Tanzania' with trust absent → null (unevidenced)",
+  geographyOf({ location: location({ country: "Tanzania" }) }) === null
 );
 assert(
   "geographyOf: foreign verified_other + unknown eligibility → null",
@@ -253,12 +280,19 @@ assert(
   sectorOf({ title: "National AI Olympiad", description: "" }) === "ai-data"
 );
 
+// CORRECTED (Milestone A): geography requires evidence, so the Tanzania country
+// is paired with verified_tanzania trust (a bare country string alone is now
+// null). Type is reused from the category; sector is text-derived — unchanged.
 const classified = classifyOpportunity(
   opportunity({
     category: "scholarship",
     title: "Machine Learning Scholarship",
     description: "Study AI in Tanzania",
     location: location({ country: "Tanzania" }),
+    trust: trust({
+      countryVerification: "verified_tanzania",
+      countryEvidence: "Official programme location: Tanzania",
+    }),
   })
 );
 assert(
@@ -405,6 +439,144 @@ assert(
   isTanzaniaPlace(null) === false && isTanzaniaPlace("") === false && isTanzaniaPlace("   ") === false
 );
 assert("focus: isTanzaniaPlace is exact whole-value, never a substring", isTanzaniaPlace("Zanzibar International Airport") === false);
+
+// --- 10. Milestone A regression scenarios (geography follows EVIDENCE) -------
+// Four owner-mandated scenarios proving the CLASS defect is fixed: a bare or
+// foreign country never becomes National, a Tanzania-hosted event stays National
+// regardless of organizer nationality, evidenced foreign access is International,
+// and unknown geography stays null (non-publishable) — never an "Ambiguous" state.
+
+// (a) Foreign organizer + Zanzibar/Tanzania event => National (location-first).
+assert(
+  "scenario A: foreign organizer (South Africa) + Zanzibar city → national",
+  deriveGeography({
+    country: "South Africa",
+    countryVerification: "verified_other",
+    city: "Zanzibar",
+    eligibility: "tanzanians_eligible",
+    eligibilityEvidence: "open to all African nationals",
+  }) === "national"
+);
+assert(
+  "scenario A: foreign organizer (Germany) + Tanzania region (Arusha), no eligibility → national",
+  deriveGeography({ country: "Germany", countryVerification: "verified_other", region: "Arusha" }) === "national"
+);
+
+// (b) South Africa-only opportunity => NOT National AND not treated as Tanzania.
+assert(
+  "scenario B: South Africa-only (verified_other, no access) → null, never national",
+  deriveGeography({ country: "South Africa", countryVerification: "verified_other" }) === null
+);
+assert(
+  "scenario B: South Africa-only + tanzanians_not_eligible → null (Tanzania excluded)",
+  deriveGeography({
+    country: "South Africa",
+    countryVerification: "verified_other",
+    eligibility: "tanzanians_not_eligible",
+    eligibilityEvidence: "open to South African citizens only",
+  }) === null
+);
+assert(
+  "scenario B: South Africa-only is never classified national (not treated as Tanzania)",
+  deriveGeography({
+    country: "South Africa",
+    countryVerification: "verified_other",
+    eligibility: "tanzanians_not_eligible",
+    eligibilityEvidence: "open to South African citizens only",
+  }) !== "national"
+);
+
+// (c) Kenya-hosted / global opportunity open to Tanzanians => International when
+//     access is EVIDENCED (eligibility tanzanians_eligible, no Tanzania-focus token).
+assert(
+  "scenario C: Kenya-hosted (Nairobi) + evidenced Tanzanian access → international",
+  deriveGeography({
+    country: "Kenya",
+    countryVerification: "verified_other",
+    city: "Nairobi",
+    eligibility: "tanzanians_eligible",
+    eligibilityEvidence: "open to applicants from all East African countries",
+  }) === "international"
+);
+assert(
+  "scenario C: global programme + evidenced Tanzanian access → international",
+  deriveGeography({
+    eligibility: "tanzanians_eligible",
+    eligibilityEvidence: "open to applicants from any country worldwide",
+  }) === "international"
+);
+
+// (d) Unknown geography stays null / non-publishable until resolved (never Ambiguous).
+const unknownGeography = opportunity({
+  title: "Unresolved Call for Applications",
+  location: null,
+  trust: trust({ countryVerification: "unknown", eligibilityDecision: "unknown", eligibilityEvidence: null }),
+});
+assert(
+  "scenario D: fully-unknown evidence → null geography",
+  deriveGeography({
+    country: null, region: null, city: null,
+    countryVerification: "unknown", eligibility: "unknown", eligibilityEvidence: null,
+  }) === null
+);
+assert(
+  "scenario D: unknown geography → hasDeterminateGeography false (non-publishable)",
+  hasDeterminateGeography(unknownGeography) === false
+);
+assert(
+  "scenario D: unknown geography → null group (never 'ambiguous', never national)",
+  geographyOf(unknownGeography) === null
+);
+
+// --- 11. Milestone A REMEDIATION regressions (bare-string + branch-3 holes) ----
+// The 3-dimension review found the SAME bare-string defect could re-enter through
+// other fields: a free-text city/region 'Tanzania' (place-alias set) and a mere
+// "Tanzania(n)" token in eligibilityEvidence overriding an EVIDENCED foreign
+// country. These pin the closures adversarially.
+
+// (1) A bare city/region 'Tanzania' is NOT a sub-national place → never National.
+assert(
+  "remediation: bare city 'Tanzania' (verification unknown) → null, NOT national",
+  deriveGeography({ city: "Tanzania", countryVerification: "unknown", eligibility: "unknown" }) === null
+);
+assert(
+  "remediation: bare region 'Tanzania' (verification unknown) → null, NOT national",
+  deriveGeography({ region: "Tanzania", countryVerification: "unknown", eligibility: "unknown" }) === null
+);
+
+// (2) A mere "Tanzanian" token must NOT override an evidenced foreign country: a
+//     Kenya-hosted (verified_other) call open to "Kenyan and Tanzanian citizens"
+//     with evidenced access is International, never National.
+assert(
+  "remediation: Kenya verified_other + Nairobi + Tanzania mention + evidenced access → international, NOT national",
+  deriveGeography({
+    country: "Kenya",
+    countryVerification: "verified_other",
+    city: "Nairobi",
+    eligibility: "tanzanians_eligible",
+    eligibilityEvidence: "Official page: open to Kenyan and Tanzanian citizens",
+  }) === "international"
+);
+
+// (3) Exclusion wording must NOT read as Tanzania-focus: "Tanzanians are NOT
+//     eligible" contains the token yet is the opposite of a Tanzania-focused call.
+assert(
+  "remediation: tanzanians_not_eligible + 'Tanzanians are NOT eligible' → null, NOT national",
+  deriveGeography({
+    eligibility: "tanzanians_not_eligible",
+    eligibilityEvidence: "open to Kenyan citizens only; Tanzanians are NOT eligible",
+  }) === null
+);
+
+// (4) isTanzaniaPlace: the COUNTRY name is not a place; real places still are.
+assert(
+  "remediation: isTanzaniaPlace('Tanzania') → false (country name is not a sub-national place)",
+  isTanzaniaPlace("Tanzania") === false
+);
+assert(
+  "remediation: isTanzaniaPlace('Zanzibar') and ('Arusha') still → true",
+  isTanzaniaPlace("Zanzibar") === true && isTanzaniaPlace("Arusha") === true
+);
 
 // ------------------------------------------------------------------------------
 

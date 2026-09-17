@@ -132,8 +132,19 @@ export function hasConsistentDeadlineTruth(
 export function hasConsistentCountryTruth(opportunity: Opportunity): boolean {
   const trust = opportunity.trust;
   if (!trust) return false;
-  if (trust.countryVerification === "unknown") return trust.countryEvidence === null;
-  const country = opportunity.location?.country?.trim().toLowerCase();
+  // `|| null` (not `?? null`): a present-but-empty/whitespace-only country
+  // collapses to null — blank means absent, so it can never masquerade as a
+  // real value in the verified_tanzania / verified_other checks below.
+  const country = opportunity.location?.country?.trim().toLowerCase() || null;
+  if (trust.countryVerification === "unknown") {
+    // Unknown verification is consistent ONLY when there is genuinely no
+    // country evidence AND no country value. A bare, unevidenced country
+    // string (e.g. the retired 'Tanzania' DB default carried with
+    // country_verification='unknown' + country_evidence=null) asserts a
+    // location it has no evidence for, so it must fail the trust /
+    // AI-searchable gate rather than pass as "honestly unknown".
+    return trust.countryEvidence === null && country === null;
+  }
   if (!country || !trust.countryEvidence) return false;
   return trust.countryVerification === "verified_tanzania"
     ? country === "tanzania"
