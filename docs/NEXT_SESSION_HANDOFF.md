@@ -4,21 +4,22 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- **2026-09-17 rollout retry #2: STILL BLOCKED — both credential files
-  unchanged and both refs rejected (no mutation performed).** Owner
-  signalled refreshed credentials, but `staging-db.env` /
-  `production-db.env` on this machine are byte-identical to the failing
-  state (79 bytes each, mtime 2026-09-09) and read-only probes return
-  `FATAL: password authentication failed` for BOTH `pumzofcwfjqswkiwfqty`
-  (staging) and `jltuufukcwztugvojwjd` (production) — so the refresh did
-  not land in these files (or a different file/path holds it). Guard
-  binding, routing, and password delivery re-verified working. Frozen
-  migration hashes intact, worktree clean, all gates stand. NO DDL,
-  recovery export, or live-target probe was possible. Exact next: GATE —
-  owner writes the CURRENT Supabase postgres-role passwords into the two
-  protected files above (or provides exact new paths); then execute
-  0019 staging → 0019 production → 0020 staging → 0020 production with
-  the frozen bytes and ready tooling.
+- **2026-09-17 rollout retry #3: STILL BLOCKED — files touched but password
+  still rejected (no mutation performed).** Both credential files show new
+  mtimes (2026-09-17 ~07:30Z) and 79→78 bytes, but read-only probes still
+  return `FATAL: password authentication failed` for staging
+  `pumzofcwfjqswkiwfqty` (production probe not retried — same file shape,
+  same failure mode; will probe on next retry). Parsing verified exact
+  (2 lines, expected keys, 13-char ASCII password, no `=`, no whitespace —
+  delivery into the tooling container proven). Diagnostic for the owner:
+  13 chars is unusually short for a Supabase postgres password (dashboard
+  generates much longer values) — please check for a truncated paste, and
+  confirm the value by testing it in the Supabase dashboard (Connect dialog)
+  before re-saving the files. Guard/routing/delivery all proven working;
+  frozen hashes intact; worktree clean; all gates stand. Exact next: GATE —
+  owner saves the VERIFIED-working password into the two protected files;
+  then execute 0019 staging → 0019 production → 0020 staging → 0020
+  production with the frozen bytes and ready tooling.
 
 - **2026-09-17 closure 2/3/4 — unified activity + REAL campaign aggregates
   CODE-COMPLETE, migration bytes FROZEN and behavior-PROVEN locally
