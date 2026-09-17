@@ -4,6 +4,24 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-17 rollout retry: STILL BLOCKED — protected credential files
+  unchanged and still rejected (no mutation performed).** Owner signalled a
+  credential refresh, but `staging-db.env` / `production-db.env` are
+  byte-identical to the failing state (79 bytes, mtime 2026-09-09, same
+  13-char password shape) and the pooler still returns `FATAL: password
+  authentication failed` for both refs — retested 2026-09-17T07:12Z staging
+  plus once more after a 3-minute propagation wait (same FATAL, so not
+  propagation lag). Guard binding, target routing, and password delivery
+  into the tooling container all verified working; the stored password
+  simply does not match the live postgres role. Frozen migration hashes
+  re-verified intact (0019 `545134d1…927474`, 0020 `713557df…ac15b6`),
+  worktree clean, all prior green gates stand. NO DDL, recovery export, or
+  live-target probe was possible. Exact next: GATE — owner writes the
+  CURRENT Supabase postgres-role passwords into the two protected files
+  (or provides exact new paths); then immediately execute the ready guarded
+  rollout (0019 staging → 0019 production → 0020 staging → 0020 production)
+   with the frozen bytes.
+
 - **2026-09-17 closure 2/3/4 — unified activity + REAL campaign aggregates
   CODE-COMPLETE, migration bytes FROZEN and behavior-PROVEN locally
   (NOT yet applied anywhere; live rollout BLOCKED on stale DB
