@@ -39,9 +39,14 @@ export async function SiteHeader() {
                 Profile
               </Link>
               {isStaff ? (
-                <Link href="/moderation" className={linkClasses}>
-                  Staff
-                </Link>
+                <>
+                  <Link href="/moderation" className={linkClasses}>
+                    Staff
+                  </Link>
+                  <Link href="/campaigns" className={linkClasses}>
+                    Campaigns
+                  </Link>
+                </>
               ) : null}
               <form action={logOutAction}>
                 <button type="submit" className={linkClasses}>
@@ -82,9 +87,14 @@ export async function SiteHeader() {
                 Signed in as {user.displayName ?? user.email ?? "your account"}
               </p>
               {isStaff ? (
-                <Link href="/moderation" className={linkClasses}>
-                  Staff moderation
-                </Link>
+                <>
+                  <Link href="/moderation" className={linkClasses}>
+                    Staff moderation
+                  </Link>
+                  <Link href="/campaigns" className={linkClasses}>
+                    Campaign pilot
+                  </Link>
+                </>
               ) : null}
               <form action={logOutAction}>
                 <button type="submit" className={linkClasses}>

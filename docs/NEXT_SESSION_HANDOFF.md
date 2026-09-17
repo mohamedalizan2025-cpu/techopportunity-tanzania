@@ -4,6 +4,32 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-17 Provider Campaign Pilot CODE-COMPLETE (migration 0020
+  DESIGNED-NOT-APPLIED, owner-gated staging-first; no production mutation).**
+  Internal staff-only pilot rehearsing Verified Opportunity → Relevant
+  Audience → Engagement Funnel on public corpus data only: `provider_campaigns`
+  (one published opportunity + targeting notes + draft/active/paused/completed
+  pipeline, `supabase/migrations/0020_provider_campaign_pilot.sql`) with
+  `is_staff()` RLS on all four policies and least-privilege grants; pure
+  domain `lib/provider-campaign-state.ts`; staff-scoped reads
+  `lib/data/provider-campaigns.ts` (graceful `available:false` when 0020 is
+  absent); staff actions `lib/data/provider-campaign-actions.ts`
+  (creator from staff session, published-only link guard); pure aggregate
+  analytics `lib/campaign-analytics.ts` (audience sizing + funnel counts over
+  staff-visible inventory — imports no private layer); staff routes
+  `/campaigns` + `/campaigns/[id]` (`getModerationAccess`, `noindex`,
+  honest schema-pending states) and staff header links. Privacy proof: no
+  reference to talent_profiles/saved/activity/alert tables in migration DDL,
+  analytics, actions, or UI (asserted in tests); per-talent engagement
+  analytics remain explicitly NOT BUILT (future consent + suppression design).
+  Tests: new `test:campaign` (21 assertions) wired into `npm test`; full
+  `npm test`, `tsc`, `lint`, 35 boundaries, `npm run build`
+  (`/campaigns`, `/campaigns/[id]` present) green. `verify:plan` selects
+  build (passed) + migration-review with one owner action (review/approve
+  0020 before any staging/production apply). No public provider signup, no
+  payments, no institution dashboards. Exact next: commercial demo
+  integration (Explore → For You → Activity; campaign detail chain).
+
 - **2026-09-17 unified talent activity CODE-COMPLETE (migration 0019
   DESIGNED-NOT-APPLIED, owner-gated staging-first; no production mutation).**
   `saved` (existing bookmark) is untouched; new funnel states

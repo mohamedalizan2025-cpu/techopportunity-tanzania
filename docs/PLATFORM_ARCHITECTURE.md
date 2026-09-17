@@ -45,12 +45,18 @@ Universities, hubs, NGOs, and government agencies that serve a community.
 - Student / community opportunity distribution.
 - Engagement and outcome analytics (aggregate, privacy-safe).
 
-## Current scope: talent side only
+## Current scope: talent side + internal campaign pilot
 
-Only the **talent** side is implemented. Provider and institution dashboards,
-verified publishing/promotion, targeting, campaign analytics, consent-based
+Only the **talent** side is implemented, plus one **internal staff-only**
+campaign pilot (2026-09-17, code-complete behind owner-gated migration 0020):
+staff rehearse Verified Opportunity → Relevant Audience → Engagement Funnel
+on public corpus data with aggregate counts only. Provider/institution
+dashboards, verified publishing/promotion, targeting, consent-based
 connection, monetization, and paid features are explicitly **not** built now.
-They are recorded here so the current design stays compatible with them.
+Per-talent engagement analytics are explicitly **not** built (they require a
+future consent + suppression design). The pilot is recorded here so the
+current design stays compatible with future revenue without touching private
+talent data.
 
 ## Permanent talent UX
 
