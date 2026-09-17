@@ -19,6 +19,8 @@
 -- analytics later must use privacy-safe counts only, never these rows.
 -- =====================================================================
 
+begin;
+
 create table public.talent_opportunity_activity (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null references auth.users (id) on delete cascade,
@@ -89,6 +91,8 @@ create policy "users remove own activity"
 revoke all on table public.talent_opportunity_activity from anon;
 revoke all on table public.talent_opportunity_activity from authenticated;
 grant select, insert, update, delete on table public.talent_opportunity_activity to authenticated;
+
+commit;
 
 -- Reversal, if explicitly approved before user activity data matters:
 -- drop table public.talent_opportunity_activity;

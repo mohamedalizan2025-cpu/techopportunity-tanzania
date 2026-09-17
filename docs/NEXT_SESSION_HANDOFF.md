@@ -4,6 +4,18 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-17 closure audit 1/2 — geography semantics: NO CORRECTION
+  REQUIRED (implementation unchanged).** All 7 permanent-rule cases traced
+  to code with 106 taxonomy + 40 review + 20 M31 assertions green:
+  verified_tanzania country → National; canonical region/place (31 regions
+  incl. Arusha/Dar es Salaam/Mwanza + Zanzibar aliases) → National even for
+  a foreign organizer; Tanzania-targeted wording → National; evidenced
+  foreign access → International; exclusion → held out by the eligibility
+  gate; bare/default/unevidenced `Tanzania` → null (never National);
+  unknown → non-publishable (never Ambiguous). The moderator form always
+  pairs real location evidence with verified country, so no legitimate
+  Tanzania-hosted case is stranded. No bulk cleanup performed.
+
 - **2026-09-17 reminder/preferences verdict: NO NEW BUILD (mission gate not
   met + foundation already exists).** The mission allowed this only if items
   1–4 were fully green *including rollout*: code is green but migrations

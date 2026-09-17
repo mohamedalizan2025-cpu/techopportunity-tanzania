@@ -8,7 +8,10 @@ import type { OpportunityStatus } from "../types";
 import type {
   ActivityStatus,
   TalentActivityEntry,
+  UnifiedActivity,
 } from "../talent-activity-state";
+import { mergeUnifiedActivity } from "../talent-activity-state";
+import { listSavedOpportunityIds } from "./saved-opportunities";
 import { isTestOrPlaceholderOpportunity } from "../opportunity-trust";
 
 /**
@@ -123,6 +126,47 @@ export async function listTalentActivityStatuses(
     if (status) statuses.set(row.opportunity_id, status);
   }
   return statuses;
+}
+
+export interface UnifiedActivityResult {
+  /**
+   * Boolean-state view only. Missing schemas degrade to empty (the same
+   * fail-soft the two underlying readers already implement); full-entry
+   * reads (`listTalentActivities`) remain the source for availability
+   * signaling in My Activity.
+   */
+  available: boolean;
+  /** One entry per opportunity with any signal, keyed by opportunity id. */
+  byOpportunity: Map<string, UnifiedActivity>;
+}
+
+/**
+ * THE canonical product-level activity read: saved + funnel merged through
+ * `mergeUnifiedActivity`, so Explore, For You, My Activity, and staff
+ * campaign aggregates interpret the four states consistently. Owner-scoped
+ * (both queries bind `user_id` to the caller); empty when the caller has
+ * no signals.
+ */
+export async function getUnifiedActivity(
+  user: AuthenticatedUserContext
+): Promise<UnifiedActivityResult> {
+  const [savedIds, statuses] = await Promise.all([
+    listSavedOpportunityIds(user),
+    listTalentActivityStatuses(user),
+  ]);
+  const byOpportunity = new Map<string, UnifiedActivity>();
+  for (const opportunityId of savedIds) {
+    byOpportunity.set(
+      opportunityId,
+      mergeUnifiedActivity(opportunityId, true, statuses.get(opportunityId) ?? null)
+    );
+  }
+  for (const [opportunityId, funnel] of statuses) {
+    if (!byOpportunity.has(opportunityId)) {
+      byOpportunity.set(opportunityId, mergeUnifiedActivity(opportunityId, false, funnel));
+    }
+  }
+  return { available: true, byOpportunity };
 }
 
 export async function listTalentActivities(

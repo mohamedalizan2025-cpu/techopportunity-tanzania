@@ -5,9 +5,14 @@ import { join } from "node:path";
 import { mapTalentActivityRows } from "../lib/data/talent-activities";
 import {
   ACTIVITY_STATUSES,
+  UNIFIED_ACTIVITY_LABELS,
+  UNIFIED_ACTIVITY_STATES,
   canTrackOpportunity,
   formatActivityDate,
+  hasAnyActivity,
   isActivityOpportunityId,
+  isUnifiedActivityState,
+  mergeUnifiedActivity,
   ownsActivityRecord,
   parseActivityMutation,
   parseActivityStatus,
@@ -318,6 +323,65 @@ test("activity control never carries a user id", () => {
   assert.match(activityControl, /name="intent"/);
   assert.doesNotMatch(activityControl, /user_?id/i);
   assert.match(activityControl, /value="remove"/);
+});
+
+// --- ONE canonical contract: Saved / Interested / Applying / Applied --------
+
+test("unified contract covers exactly the four product states", () => {
+  assert.deepEqual([...UNIFIED_ACTIVITY_STATES], [
+    "saved",
+    "interested",
+    "applying",
+    "applied",
+  ]);
+  assert.equal(UNIFIED_ACTIVITY_LABELS.saved, "Saved");
+  assert.equal(UNIFIED_ACTIVITY_LABELS.applied, "Applied");
+});
+
+test("unified state guard accepts only the four states", () => {
+  assert.equal(isUnifiedActivityState("saved"), true);
+  assert.equal(isUnifiedActivityState("applied"), true);
+  assert.equal(isUnifiedActivityState("archived"), false);
+  assert.equal(isUnifiedActivityState(""), false);
+  assert.equal(isUnifiedActivityState(null), false);
+});
+
+test("merge keeps bookmark and progress independent", () => {
+  assert.deepEqual(mergeUnifiedActivity(OPPORTUNITY_ID, true, "applying"), {
+    opportunityId: OPPORTUNITY_ID,
+    saved: true,
+    funnel: "applying",
+  });
+  assert.deepEqual(mergeUnifiedActivity(OPPORTUNITY_ID, false, null), {
+    opportunityId: OPPORTUNITY_ID,
+    saved: false,
+    funnel: null,
+  });
+});
+
+test("any-activity is true for a bookmark or a funnel state", () => {
+  assert.equal(
+    hasAnyActivity({ opportunityId: OPPORTUNITY_ID, saved: true, funnel: null }),
+    true
+  );
+  assert.equal(
+    hasAnyActivity({ opportunityId: OPPORTUNITY_ID, saved: false, funnel: "interested" }),
+    true
+  );
+  assert.equal(
+    hasAnyActivity({ opportunityId: OPPORTUNITY_ID, saved: false, funnel: null }),
+    false
+  );
+});
+
+test("detail and activity pages read through the unified contract", () => {
+  const detailPage = readFileSync(
+    join(process.cwd(), "app/opportunities/[slug]/page.tsx"),
+    "utf8"
+  );
+  assert.match(detailPage, /getUnifiedActivity\(user\)/);
+  assert.doesNotMatch(detailPage, /listSavedOpportunityIds/);
+  assert.match(activityPage, /mergeUnifiedActivity\(/);
 });
 
 console.log(`\n${passed} talent-activity tests passed.`);

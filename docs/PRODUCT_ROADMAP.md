@@ -165,10 +165,12 @@ phases gated by their own bounded authorization.
 ### Intelligence and platform growth
 
 - Consider grounded conversational discovery after the AI readiness contract passes.
-- Internal Provider Campaign Pilot is code-complete (2026-09-17, staff-only,
-  aggregate analytics over public corpus data, migration 0020
-  DESIGNED-NOT-APPLIED, owner-gated staging-first; no provider-facing
-  dashboards, no monetization, no private talent data). Build
+- Internal Provider Campaign Pilot is code-complete (2026-09-17, staff-only;
+  REAL Saved/Interested/Applying/Applied aggregates from stored activity
+  plus a real matching-profile audience count, both via staff-only
+  integer-only RPCs in migration 0020, DESIGNED-NOT-APPLIED, owner-gated
+  staging-first; no provider-facing dashboards, no monetization, no
+  private talent data). Build
   institutional/B2B/B2G submission, verification, and partner workflows without
   weakening moderation or RLS; evaluate monetization only after durable user value.
 - Grow hackathon, challenge, showcase, accelerator, and commercial opportunity depth.

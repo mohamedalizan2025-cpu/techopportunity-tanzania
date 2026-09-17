@@ -75,10 +75,15 @@ test("campaign index shows the aggregate engagement funnel", () => {
   assert.match(campaigns, /summarizeFunnel\(campaigns\.campaigns\)/);
 });
 
-test("campaign detail walks Verified Opportunity to Relevant Audience", () => {
+test("campaign detail walks Verified Opportunity to real aggregates", () => {
   assert.match(campaignDetail, /1 · Verified opportunity/);
-  assert.match(campaignDetail, /2 · Relevant audience \(public corpus\)/);
-  assert.match(campaignDetail, /estimateAudience\(corpus/);
+  assert.match(campaignDetail, /2 · Relevant audience \(talent\)/);
+  assert.match(campaignDetail, /3 · Engagement funnel \(real activity\)/);
+  assert.match(campaignDetail, /getCampaignEngagement\(access\.staff\.client/);
+  assert.match(campaignDetail, /getCampaignAudience\(access\.staff\.client/);
+  // Opportunity counts must never masquerade as talent audience.
+  assert.doesNotMatch(campaignDetail, /Relevant audience \(public corpus\)/);
+  assert.doesNotMatch(campaignDetail, /estimateAudience/);
 });
 
 test("staff navigation exposes the pilot behind the staff guard", () => {

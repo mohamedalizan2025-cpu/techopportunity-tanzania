@@ -3,8 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OpportunityDetail } from "@/components/opportunity-detail";
 import { getOpportunityBySlug } from "@/lib/data/opportunities";
-import { listSavedOpportunityIds } from "@/lib/data/saved-opportunities";
-import { listTalentActivityStatuses } from "@/lib/data/talent-activities";
+import { getUnifiedActivity } from "@/lib/data/talent-activities";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 import {
   opportunityHref,
@@ -44,12 +43,12 @@ export default async function OpportunityDetailPage({
   ]);
 
   if (!opportunity) notFound();
-  const savedIds = user
-    ? await listSavedOpportunityIds(user)
-    : new Set<string>();
-  const activityStatuses = user
-    ? await listTalentActivityStatuses(user)
-    : new Map<string, import("@/lib/talent-activity-state").ActivityStatus>();
+  // ONE canonical activity read: saved + funnel merged, so the detail view
+  // can never disagree with My Activity about this opportunity's states.
+  const unified = user
+    ? await getUnifiedActivity(user)
+    : { available: true, byOpportunity: new Map() } as const;
+  const detailState = unified.byOpportunity.get(opportunity.id) ?? null;
   const detailHref = opportunityHref(
     opportunity.slug,
     rawReturn ? returnHref : undefined,
@@ -81,9 +80,9 @@ export default async function OpportunityDetailPage({
         <div className="mt-5">
           <OpportunityDetail
             opportunity={opportunity}
-            isSaved={savedIds.has(opportunity.id)}
+            isSaved={detailState?.saved ?? false}
             isAuthenticated={user !== null}
-            activityStatus={activityStatuses.get(opportunity.id) ?? null}
+            activityStatus={detailState?.funnel ?? null}
             returnTo={detailHref}
           />
         </div>

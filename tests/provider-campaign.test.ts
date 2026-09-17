@@ -1,8 +1,8 @@
-/** Internal Provider Campaign Pilot: staff-gated, aggregate-only, privacy-safe. */
+/** Internal Provider Campaign Pilot: staff-gated, REAL aggregates, privacy-safe. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { estimateAudience, summarizeFunnel } from "../lib/campaign-analytics";
+import { summarizeFunnel } from "../lib/campaign-analytics";
 import {
   CAMPAIGN_STATUSES,
   isCampaignId,
@@ -12,7 +12,6 @@ import {
   sanitizeCampaignName,
 } from "../lib/provider-campaign-state";
 import { mapProviderCampaignRow } from "../lib/data/provider-campaigns";
-import type { Opportunity } from "../lib/types";
 
 let passed = 0;
 function test(name: string, run: () => void) {
@@ -27,49 +26,6 @@ function form(entries: Record<string, string>): FormData {
   const data = new FormData();
   for (const [key, value] of Object.entries(entries)) data.set(key, value);
   return data;
-}
-
-function opportunity(overrides: Partial<Opportunity> = {}): Opportunity {
-  return {
-    id: OPPORTUNITY_ID,
-    slug: "example-ai-fellowship",
-    title: "Example AI Fellowship",
-    description: "A machine learning fellowship for data scientists in Tanzania.",
-    category: "fellowship",
-    organization: "Example Org",
-    url: "https://example.org/opportunity",
-    location: {
-      venueName: null,
-      address: null,
-      city: "Dar es Salaam",
-      region: "Dar es Salaam",
-      country: "Tanzania",
-      latitude: null,
-      longitude: null,
-    },
-    deadline: null,
-    deadlinePrecision: "unknown",
-    deadlineEvidence: null,
-    sourceName: "Example Source",
-    discoveredAt: "2026-09-01T00:00:00Z",
-    discoveryMethod: "test",
-    createdAt: "2026-09-01T00:00:00Z",
-    status: "published",
-    trust: {
-      relevanceDecision: "relevant",
-      relevanceEvidence: "Official page describes an AI fellowship.",
-      eligibilityDecision: "tanzanians_eligible",
-      eligibilityEvidence: "Official page opens the call to Tanzanian applicants.",
-      qualificationRuleVersion: "m31-2026-09-04-v1",
-      countryVerification: "verified_tanzania",
-      countryEvidence: "Official programme location: Tanzania.",
-      lastVerifiedAt: "2026-09-01T00:00:00Z",
-      decidedBy: "11111111-1111-4111-8111-111111111111",
-      decidedAt: "2026-09-01T00:00:00Z",
-      canonicalEvidenceUrl: "https://example.org/opportunity",
-    },
-    ...overrides,
-  } as Opportunity;
 }
 
 // --- Pure domain ------------------------------------------------------------
@@ -186,43 +142,7 @@ test("mapper drops hostile statuses", () => {
   assert.equal(campaign, null);
 });
 
-// --- Aggregate analytics (public corpus only) ----------------------------------
-
-test("audience sizing counts matching public inventory", () => {
-  const corpus = [opportunity(), opportunity({ category: "grant", title: "Climate grant for farmers growing maize" })];
-  const estimate = estimateAudience(corpus, {
-    geography: "national",
-    sector: null,
-    opportunityType: "fellowship",
-  });
-  assert.equal(estimate.corpusSize, 2);
-  assert.equal(estimate.matched, 1);
-  assert.equal(estimate.matchedNational, 1);
-  assert.equal(estimate.matchedInternational, 0);
-});
-
-test("empty targeting matches the whole corpus", () => {
-  const estimate = estimateAudience([opportunity()], {
-    geography: null,
-    sector: null,
-    opportunityType: null,
-  });
-  assert.equal(estimate.matched, 1);
-});
-
-test("empty corpus yields honest zeros", () => {
-  const estimate = estimateAudience([], {
-    geography: "national",
-    sector: "ai-data",
-    opportunityType: null,
-  });
-  assert.deepEqual(estimate, {
-    corpusSize: 0,
-    matched: 0,
-    matchedNational: 0,
-    matchedInternational: 0,
-  });
-});
+// --- Aggregate helpers (pipeline counts only) ----------------------------------
 
 test("funnel summary counts pipeline stages only", () => {
   assert.deepEqual(
@@ -237,11 +157,16 @@ test("funnel summary counts pipeline stages only", () => {
   );
 });
 
-test("analytics module never touches private talent data", () => {
+test("analytics module contains no audience estimator and no private reads", () => {
   const source = readFileSync(
     join(process.cwd(), "lib/campaign-analytics.ts"),
     "utf8"
   );
+  // Engagement + audience are REAL database aggregates (migration 0020
+  // RPCs); counting opportunities here and calling the result "audience"
+  // would be fabrication, so no estimator may exist.
+  assert.doesNotMatch(source, /estimateAudience/);
+  assert.doesNotMatch(source, /AudienceEstimate/);
   for (const forbidden of [
     "talent_profiles",
     "saved_opportunities",
@@ -249,10 +174,28 @@ test("analytics module never touches private talent data", () => {
     "user_alert_preferences",
     "deadline_alert_events",
     "supabase",
-    "auth.uid",
+    ".rpc(",
+    ".from(",
   ]) {
     assert.doesNotMatch(source, new RegExp(forbidden.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
+});
+
+test("engagement reader calls only the staff RPCs and floors counts", () => {
+  const source = readFileSync(
+    join(process.cwd(), "lib/data/campaign-engagement.ts"),
+    "utf8"
+  );
+  assert.match(source, /\.rpc\("get_campaign_engagement"/);
+  assert.match(source, /\.rpc\("get_campaign_audience"/);
+  // Individual private rows never load into the UI: no direct table reads.
+  assert.doesNotMatch(source, /\.from\("saved_opportunities"\)/);
+  assert.doesNotMatch(source, /\.from\("talent_opportunity_activity"\)/);
+  assert.doesNotMatch(source, /\.from\("talent_profiles"\)/);
+  // Honest unavailable state while migration 0020 is not applied.
+  assert.match(source, /PGRST202/);
+  assert.match(source, /42883/);
+  assert.doesNotMatch(source, /user_id|email|display_name/i);
 });
 
 // --- Migration contract ---------------------------------------------------------
@@ -284,10 +227,13 @@ test("campaign migration is staff-only with a published guard", () => {
   );
 });
 
-test("campaign migration never references private talent tables", () => {
-  // Strip SQL comments: the header names the forbidden tables to declare the
-  // negative, but no DDL statement may touch them.
+test("campaign table DDL never references private talent tables", () => {
+  // Only the table + policy section: the aggregate RPCs below legitimately
+  // COUNT private rows (never returning them), so scope this negative to
+  // the DDL above the first function definition. Header comments are
+  // excluded the same way.
   const ddl = migration
+    .slice(0, migration.indexOf("create or replace function"))
     .split("\n")
     .filter((line) => !line.trimStart().startsWith("--"))
     .join("\n");
@@ -300,6 +246,66 @@ test("campaign migration never references private talent tables", () => {
   ]) {
     assert.doesNotMatch(ddl, new RegExp(forbidden));
   }
+  assert.doesNotMatch(ddl, /is_staff\(\)[\s\S]*talent/);
+});
+
+test("engagement RPC is staff-gated and returns counts only", () => {
+  assert.match(migration, /create or replace function public\.get_campaign_engagement\(p_campaign_id uuid\)/);
+  assert.match(migration, /security definer/);
+  assert.match(
+    migration,
+    /get_campaign_engagement[\s\S]{0,800}?raise insufficient_privilege using/
+  );
+  // Four integer outputs — saved + three funnel states — never identities.
+  assert.match(
+    migration,
+    /returns table \(\s*saved bigint,\s*interested bigint,\s*applying bigint,\s*applied bigint\s*\)/
+  );
+  assert.doesNotMatch(migration, /returns table \([^)]*user_id[^)]*\)/);
+  // REAL rows: saved_opportunities + talent_opportunity_activity, counted
+  // only while the opportunity is currently published (talent-UI parity).
+  assert.match(migration, /from public\.saved_opportunities/);
+  assert.match(migration, /from public\.talent_opportunity_activity/);
+  assert.ok(
+    (migration.match(/activity\.status = '(interested|applying|applied)'/g) ?? []).length === 3
+  );
+  // Least-privilege execution: no anon/service-role, authenticated only.
+  assert.match(
+    migration,
+    /revoke all on function public\.get_campaign_engagement\(uuid\)\s+from public, anon, service_role/
+  );
+  assert.match(
+    migration,
+    /grant execute on function public\.get_campaign_engagement\(uuid\)\s+to authenticated/
+  );
+});
+
+test("audience RPC counts real matching profiles as one integer", () => {
+  assert.match(migration, /create or replace function public\.get_campaign_audience\(p_campaign_id uuid\)/);
+  assert.match(migration, /returns integer/);
+  assert.match(
+    migration,
+    /get_campaign_audience[\s\S]{0,800}?raise insufficient_privilege using/
+  );
+  assert.match(migration, /from public\.talent_profiles/);
+  // Core-complete rule + sector/type overlap; null targeting matches all.
+  assert.match(migration, /profile\.career_level is not null/);
+  assert.match(migration, /target_sector is null or target_sector = any/);
+  assert.match(migration, /target_type is null or target_type = any/);
+  assert.match(
+    migration,
+    /revoke all on function public\.get_campaign_audience\(uuid\)\s+from public, anon, service_role/
+  );
+  assert.match(
+    migration,
+    /grant execute on function public\.get_campaign_audience\(uuid\)\s+to authenticated/
+  );
+});
+
+test("aggregate RPCs expose no identities", () => {
+  const rpc = migration.slice(migration.indexOf("create or replace function"));
+  assert.doesNotMatch(rpc, /email|display_name|full_name/i);
+  assert.doesNotMatch(rpc, /returning .*user_id/i);
 });
 
 // --- Action + page contracts ------------------------------------------------------
@@ -332,7 +338,21 @@ test("campaign pages are staff-gated, private, and aggregate-only", () => {
     assert.match(page, /Access restricted/);
   }
   assert.match(campaignsPage, /talent profile[\s\S]*?is read or shown[\s\S]*?here/);
-  assert.match(campaignDetail, /never[\s\S]*?from talent profiles or private activity/);
+  assert.match(campaignDetail, /counts only — individual[\s\S]*?rows never leave the database/);
+});
+
+test("campaign detail shows real engagement and honest audience states", () => {
+  assert.match(campaignDetail, /2 · Relevant audience \(talent\)/);
+  assert.match(campaignDetail, /3 · Engagement funnel \(real activity\)/);
+  assert.match(campaignDetail, /getCampaignEngagement\(access\.staff\.client/);
+  assert.match(campaignDetail, /getCampaignAudience\(access\.staff\.client/);
+  // Honest unavailable states while migration 0020 is not applied.
+  assert.match(campaignDetail, /Audience estimate unavailable/);
+  assert.match(campaignDetail, /Engagement aggregates unavailable/);
+  // No opportunity-counting masquerading as talent audience.
+  assert.doesNotMatch(campaignDetail, /audience\.corpusSize|audience\.matched\b/);
+  assert.doesNotMatch(campaignDetail, /Relevant audience \(public corpus\)/);
+  assert.doesNotMatch(campaignDetail, /estimateAudience/);
 });
 
 test("campaign UI never carries a user id or private metric", () => {

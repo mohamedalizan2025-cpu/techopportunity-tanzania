@@ -6,10 +6,10 @@ import { OpportunityCard } from "@/components/opportunity-card";
 import { getModerationAccess } from "@/lib/data/moderation";
 import { getProviderCampaign } from "@/lib/data/provider-campaigns";
 import {
-  getPublishedOpportunityById,
-  listManagedPublishedOpportunities,
-} from "@/lib/data/published-management";
-import { estimateAudience } from "@/lib/campaign-analytics";
+  getCampaignAudience,
+  getCampaignEngagement,
+} from "@/lib/data/campaign-engagement";
+import { getPublishedOpportunityById } from "@/lib/data/published-management";
 import {
   CAMPAIGN_STATUS_LABELS,
   CAMPAIGN_STATUS_DESCRIPTIONS,
@@ -77,15 +77,14 @@ export default async function CampaignDetailPage({
   }
   if (!campaign) notFound();
 
-  const [linked, corpus] = await Promise.all([
+  // REAL aggregates from stored talent activity (counts only — individual
+  // rows never leave the database). Unavailable only while migration 0020
+  // is not yet applied; zero is an honest zero.
+  const [linked, engagement, audience] = await Promise.all([
     getPublishedOpportunityById(campaign.opportunityId),
-    listManagedPublishedOpportunities(),
+    getCampaignEngagement(access.staff.client, campaign.id),
+    getCampaignAudience(access.staff.client, campaign.id),
   ]);
-  const audience = estimateAudience(corpus, {
-    geography: campaign.geography,
-    sector: campaign.sector,
-    opportunityType: campaign.opportunityType,
-  });
 
   return (
     <main
@@ -151,7 +150,7 @@ export default async function CampaignDetailPage({
             id="relevant-audience-heading"
             className="text-2xl font-semibold text-[var(--foreground)]"
           >
-            2 · Relevant audience (public corpus)
+            2 · Relevant audience (talent)
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
             Targeting:{" "}
@@ -160,48 +159,89 @@ export default async function CampaignDetailPage({
               campaign.sector ?? "any sector",
               campaign.opportunityType ?? "any type",
             ].join(" · ")}
-            . Sized from published inventory staff can already read — never
-            from talent profiles or private activity.
+            . Counts core-complete talent profiles whose sector/type focus
+            overlaps this targeting — aggregate only, no identities. Geography
+            targeting stays descriptive.
           </p>
-          <dl className="mt-4 grid gap-3 sm:grid-cols-4">
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
-              <dt className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
-                Corpus
-              </dt>
-              <dd className="mt-1 text-3xl font-semibold text-[var(--foreground)]">
-                {audience.corpusSize}
-              </dd>
-            </div>
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
-              <dt className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
-                Matched
-              </dt>
-              <dd className="mt-1 text-3xl font-semibold text-[var(--foreground)]">
-                {audience.matched}
-              </dd>
-            </div>
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
-              <dt className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
-                National
-              </dt>
-              <dd className="mt-1 text-3xl font-semibold text-[var(--foreground)]">
-                {audience.matchedNational}
-              </dd>
-            </div>
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
-              <dt className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
-                International
-              </dt>
-              <dd className="mt-1 text-3xl font-semibold text-[var(--foreground)]">
-                {audience.matchedInternational}
-              </dd>
-            </div>
-          </dl>
+          {!audience.available ? (
+            <p
+              role="alert"
+              className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+            >
+              Audience estimate unavailable (aggregate schema pending).
+            </p>
+          ) : (
+            <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
+                <dt className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
+                  Matching profiles
+                </dt>
+                <dd className="mt-1 text-3xl font-semibold text-[var(--foreground)]">
+                  {audience.audience}
+                </dd>
+                <dd className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                  {audience.audience === 0
+                    ? "No matching profiles yet — 0 is valid until talent complete profiles."
+                    : "Aggregate count only — no names, emails, or profile rows."}
+                </dd>
+              </div>
+            </dl>
+          )}
           {campaign.goalText ? (
             <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--muted)]">
               Pilot goal: {campaign.goalText}
             </p>
           ) : null}
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="engagement-heading"
+        className="border-t border-[var(--line)]"
+      >
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
+          <h2
+            id="engagement-heading"
+            className="text-2xl font-semibold text-[var(--foreground)]"
+          >
+            3 · Engagement funnel (real activity)
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+            Saved, Interested, Applying, and Applied counts from real stored
+            talent activity for the linked opportunity — aggregate only, no
+            identities. A talent may appear in Saved and one funnel stage.
+          </p>
+          {!engagement.available ? (
+            <p
+              role="alert"
+              className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+            >
+              Engagement aggregates unavailable (aggregate schema pending).
+            </p>
+          ) : (
+            <dl className="mt-4 grid gap-3 sm:grid-cols-4">
+              {(
+                [
+                  ["Saved", engagement.engagement.saved],
+                  ["Interested", engagement.engagement.interested],
+                  ["Applying", engagement.engagement.applying],
+                  ["Applied", engagement.engagement.applied],
+                ] as const
+              ).map(([label, count]) => (
+                <div
+                  key={label}
+                  className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4"
+                >
+                  <dt className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
+                    {label}
+                  </dt>
+                  <dd className="mt-1 text-3xl font-semibold text-[var(--foreground)]">
+                    {count}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
         </div>
       </section>
     </main>

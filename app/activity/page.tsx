@@ -16,6 +16,7 @@ import {
   ACTIVITY_STATUS_DESCRIPTIONS,
   ACTIVITY_STATUS_LABELS,
   formatActivityDate,
+  mergeUnifiedActivity,
   type ActivityStatus,
 } from "@/lib/talent-activity-state";
 
@@ -43,6 +44,10 @@ export default async function ActivityPage() {
   ]);
   const signedInAs = user.displayName ?? user.email ?? "your account";
   const trackedTotal = activity.entries.length;
+  // Per-opportunity state through the ONE canonical contract, so this page
+  // can never disagree with Explore/For You about saved vs funnel states.
+  const unifiedFor = (opportunityId: string, funnel: ActivityStatus) =>
+    mergeUnifiedActivity(opportunityId, savedIds.has(opportunityId), funnel);
 
   return (
     <main
@@ -167,21 +172,21 @@ export default async function ActivityPage() {
                             <OpportunityCard
                               opportunity={entry.opportunity}
                               returnHref="/activity"
-                              isSaved={savedIds.has(entry.opportunityId)}
+                              isSaved={unifiedFor(entry.opportunityId, entry.activityStatus).saved}
                               isAuthenticated
                             />
                             <div className="mt-3 flex flex-wrap gap-3">
                               <ActivityControl
                                 opportunityId={entry.opportunityId}
                                 opportunityTitle={entry.opportunity.title}
-                                currentStatus={entry.activityStatus}
+                                currentStatus={unifiedFor(entry.opportunityId, entry.activityStatus).funnel}
                                 isAuthenticated
                                 returnTo="/activity"
                               />
                               <SaveOpportunityControl
                                 opportunityId={entry.opportunityId}
                                 opportunityTitle={entry.opportunity.title}
-                                isSaved={savedIds.has(entry.opportunityId)}
+                                isSaved={unifiedFor(entry.opportunityId, entry.activityStatus).saved}
                                 isAuthenticated
                                 returnTo="/activity"
                               />

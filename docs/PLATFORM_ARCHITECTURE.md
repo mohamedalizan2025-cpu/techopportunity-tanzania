@@ -50,9 +50,11 @@ Universities, hubs, NGOs, and government agencies that serve a community.
 Only the **talent** side is implemented, plus one **internal staff-only**
 campaign pilot (2026-09-17, code-complete behind owner-gated migration 0020):
 staff rehearse Verified Opportunity → Relevant Audience → Engagement Funnel
-on public corpus data with aggregate counts only. Provider/institution
-dashboards, verified publishing/promotion, targeting, consent-based
-connection, monetization, and paid features are explicitly **not** built now.
+with REAL aggregate counts (Saved/Interested/Applying/Applied from stored
+activity; audience from matching profiles) via staff-only RPCs that return
+integers only. Provider/institution dashboards, verified
+publishing/promotion, targeting, consent-based connection, monetization,
+and paid features are explicitly **not** built now.
 Per-talent engagement analytics are explicitly **not** built (they require a
 future consent + suppression design). The pilot is recorded here so the
 current design stays compatible with future revenue without touching private
