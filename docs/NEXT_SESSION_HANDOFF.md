@@ -4,6 +4,21 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-17 reminder/preferences verdict: NO NEW BUILD (mission gate not
+  met + foundation already exists).** The mission allowed this only if items
+  1–4 were fully green *including rollout*: code is green but migrations
+  0019 (activity) and 0020 (campaign pilot) are DESIGNED-NOT-APPLIED awaiting
+  owner staging proof, so the gate is honestly NOT met. No new reminder code
+  was added. The small foundation already exists and is unchanged:
+  in-app deadline alerts for saved opportunities (preference +
+  generated-only events, migration 0012 owner-gated, worker + schedule
+  owner-gated, no email delivery — see `test:deadline-alerts`, 35
+  boundaries). Deterministic saved-search/digest value stays explicitly
+  deferred awaiting owner direction (roadmap Personalization phase). Exact
+  next: OWNER ROLLOUT — apply 0019 then 0020 to isolated staging first
+  (recovery + RLS proof + zero-drift each), then production; see remaining
+  owner gates below.
+
 - **2026-09-17 commercial demo integration COMPLETE (UI links only; no
   schema, no production mutation, no owner gate).** Talent journey
   Explore → For You → Activity is now walkable both directions:
