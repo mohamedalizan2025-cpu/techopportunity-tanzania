@@ -4,22 +4,45 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- **2026-09-17 rollout retry #3: STILL BLOCKED — files touched but password
-  still rejected (no mutation performed).** Both credential files show new
-  mtimes (2026-09-17 ~07:30Z) and 79→78 bytes, but read-only probes still
-  return `FATAL: password authentication failed` for staging
-  `pumzofcwfjqswkiwfqty` (production probe not retried — same file shape,
-  same failure mode; will probe on next retry). Parsing verified exact
-  (2 lines, expected keys, 13-char ASCII password, no `=`, no whitespace —
-  delivery into the tooling container proven). Diagnostic for the owner:
-  13 chars is unusually short for a Supabase postgres password (dashboard
-  generates much longer values) — please check for a truncated paste, and
-  confirm the value by testing it in the Supabase dashboard (Connect dialog)
-  before re-saving the files. Guard/routing/delivery all proven working;
-  frozen hashes intact; worktree clean; all gates stand. Exact next: GATE —
-  owner saves the VERIFIED-working password into the two protected files;
-  then execute 0019 staging → 0019 production → 0020 staging → 0020
-  production with the frozen bytes and ready tooling.
+- **2026-09-17 ROLLOUT: 0019 + 0020 LIVE ON STAGING, production BLOCKED on
+  its credential (no production mutation performed).** Session pooler
+  `aws-0-eu-central-1.pooler.supabase.com:5432` (transaction pooler 6543
+  rejects even valid passwords — use 5432). Staging auth proven
+  (`current_database()=postgres`, `current_user()=postgres`).
+- **0019 staging PROOF (applied, single failure-stop txn, frozen hash
+  `545134d1…927474` matched).** Pre: 6 opps (3 pending/2 published/1
+  rejected), 9 refs, 0 users, table absent. Post: table `rls=true`, 6
+  columns, 4 exact policies, anon grants 0, authenticated
+  DELETE/INSERT/SELECT/UPDATE, drift zero. Behavioral (rolled-back
+  synthetic identities, savepoint-guarded): owner save/track/read/update
+  (interested→applying→applied)/delete/re-insert ok; cross-user read 0 +
+  forge denied (RLS); anon read+insert denied (no grants); residue 0.
+  Unified-contract E2E at the data layer complete (same functions the
+  pages call, via anon-client + owner/claims probes).
+- **0020 staging PROOF (applied after 0019, frozen hash `713557df…ac15b6`
+  matched).** Table `rls=true`, 4 staff policies, 2 RPCs present and
+  `security definer`, anon table grants 0, RPC execute anon 0 /
+  authenticated 2, drift zero (corpus 6, users 0). Behavioral + REAL
+  aggregates (rolled-back synthetic staff/talents, all writes through real
+  RLS): staff campaign insert ok; talent admin denied; unpublished-link
+  denied; **engagement `2,1,0,1`** (unpublished rows excluded);
+  **audience `1`** (ai-data+fellowship) and **`2`** (open targeting);
+  talent/anon RPC calls rejected inside the functions; unknown campaign
+  zeros; OUT params exactly 4×bigint; residue campaigns/activity/users 0.
+- **Staging app proof (post-migration local build, all 15 routes):**
+  Explore 200 public (68KB, anon strip absent); /activity + /campaigns 307
+  → login; /login 200. Authenticated page-render E2E deferred: Auth email
+  signup is rate-limited (429) after today's probes and SQL-provisioned
+  password login is rejected by GoTrue for undetermined reasons (aud/role,
+  identity row, and confirmation state all set correctly; bcrypt shape
+  `$2a$06$`); synthetic user fully removed (users 0, corpus 6/9 exact).
+  DB-level E2E plus contract tests cover the behavior; re-attempt authed
+  render after the email limit resets.
+- **Production: NOT TOUCHED.** `jltuufukcwztugvojwjd` rejects its protected
+  password on 5432 (same FATAL). Per order, production work stopped; no
+  recovery export, no DDL, no prod probes. Exact next: GATE — owner fixes
+  the production DB password file, then 0019 production (recovery → apply
+  → proof) → 0020 production → honest production E2E (zero-states valid).
 
 - **2026-09-17 closure 2/3/4 — unified activity + REAL campaign aggregates
   CODE-COMPLETE, migration bytes FROZEN and behavior-PROVEN locally
