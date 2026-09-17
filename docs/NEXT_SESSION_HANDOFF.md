@@ -4,6 +4,28 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-17 ADOPTION SPRINT (validation only; no architecture changes).**
+  Production smoke green, read-only, desktop + mobile: `/` 200 (Explore
+  renders, no error banners), detail 200 with live Save + Activity
+  controls, `/login` + `/submit` 200, all authed/staff routes 307 → login
+  with identical bytes across UAs. **No blockers found; no code fixed.**
+  Owner testing enabled via `docs/ADOPTION_TESTING.md` (talent checklist §A,
+  moderator checklist §B incl. aggregate-reaction + no-identity checks,
+  5–10 tester script §C, demo-campaign policy §D). Demo campaign DECISION:
+  none created — the empty funnel + create form demonstrates honestly, and
+  the owner can mint the single `[INTERNAL DEMO]` vessel during their own
+  moderator pass if wanted (never via SQL; never a customer claim).
+  External testers: documented 6-question script over existing channels, no
+  new system (feedback link awaits owner's contact address). Demo script:
+  `docs/COMMERCIAL_DEMO.md` (A–E story, live-vs-future table, zero-honesty
+  rule). AI READINESS (direction only, nothing built): deterministic For You
+  stays source-of-truth; any future layer uses external/free APIs behind a
+  swappable provider abstraction, $0-spend-first, adds
+  explanation/eligibility/readiness help without replacing trust rules, and
+  sends no private profile/CV data to free APIs without an explicit privacy
+  design — start only on evidence from real-tester feedback. Exact next:
+  owner runs §§A–B + first testers, then report findings.
+
 - **2026-09-17 PRODUCTION CLOSURE: 0019 + 0020 LIVE ON PRODUCTION
   (`jltuufukcwztugvojwjd`), zero drift, all safeguards green.** Production
   credential valid after a propagation wait (5432 session pooler; 6543
