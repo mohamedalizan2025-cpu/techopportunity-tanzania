@@ -4,6 +4,33 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-17 closure 2/3/4 — unified activity + REAL campaign aggregates
+  CODE-COMPLETE, migration bytes FROZEN and behavior-PROVEN locally
+  (NOT yet applied anywhere; live rollout BLOCKED on stale DB
+  credentials — see gate below).** ONE canonical contract
+  (`UNIFIED_ACTIVITY_STATES` saved/interested/applying/applied,
+  `mergeUnifiedActivity`; detail + Activity pages read through it; saved
+  storage untouched). Campaign analytics rebuilt on REAL stored activity:
+  staff-only `SECURITY DEFINER` RPCs `get_campaign_engagement(uuid)` →
+  Saved/Interested/Applying/Applied counts and `get_campaign_audience(uuid)`
+  → matching-profile integer (migration 0020 strengthened; owner-only RLS
+  NOT weakened; per-talent rows never leave the DB). Opportunity-counting
+  "audience" REMOVED as fabrication; UI shows real counts or honest
+  "unavailable", zero is valid. Frozen hashes — 0019
+  `545134d1…927474`, 0020 `713557df…ac15b6` (full values in rollout
+  tooling). Local PG17 harness: 24/24 green incl. exact engagement
+  `2,1,0,1`, audiences `1`/`2`, all RLS/RPC denials, grants. Full `npm
+  test` (32 activity + 23 campaign + 11 demo), `tsc`, `lint`, 35
+  boundaries, `npm run build` green at `337f084`. Staging app proof
+  (pre-migration, staging-pointed local build): Explore 200 public with no
+  authed strip for anon; /activity + /campaigns 307 → login; /login 200.
+  Production alias already serves the new route guards (anon 307s).
+  NO database mutation performed anywhere: both protected credential files
+  fail pooler auth (password rejected), so staging/production DDL, recovery
+  exports, and live-target RLS proofs are PENDING owner credential refresh.
+  Exact next: GATE — owner re-verifies DB credentials, then run the ready
+  guarded rollout (tooling in temp `rollout/`, hashes above).
+
 - **2026-09-17 closure audit 1/2 — geography semantics: NO CORRECTION
   REQUIRED (implementation unchanged).** All 7 permanent-rule cases traced
   to code with 106 taxonomy + 40 review + 20 M31 assertions green:
