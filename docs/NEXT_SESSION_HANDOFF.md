@@ -4,6 +4,26 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **END-OF-DAY CLOSURE 2026-09-17: work clean, next milestone is NOT an
+  engineering build.** HEAD `beb8e9d`, tree clean, `origin/main` current.
+  Verified today: production smoke green, no blockers, adoption/demo docs
+  live (`docs/ADOPTION_TESTING.md`, `docs/COMMERCIAL_DEMO.md`), 0019 + 0020
+  live in production with zero drift. No new product work started.
+  NEXT ACTION (owner, tomorrow): (1) complete the normal-user production
+  checklist; (2) complete the moderator checklist; (3) run the first 2–3
+  external testers through the product; (4) collect the real feedback;
+  (5) the next milestone will be chosen from that evidence — not before.
+  PRODUCT CONTROL (unchanged): Explore = full trusted opportunity
+  universe; For You = personalized layer over the same corpus; Activity =
+  Saved / Interested / Applying / Applied; Campaign Pilot =
+  privacy-safe aggregate commercial proof; Talent → Providers →
+  Institutions is the long-term three-sided business; private talent data
+  is never sold; deterministic matching remains the recommendation
+  foundation; AI is future work only (external/free APIs, $0-first).
+  ENVIRONMENT MAP: PRODUCTION Supabase ref `jltuufukcwztugvojwjd` = live
+  Tech Opportunity users/data; STAGING Supabase ref `pumzofcwfjqswkiwfqty`
+  = migration/RLS/E2E testing only (isolated, synthetic data).
+
 - **2026-09-17 ADOPTION SPRINT (validation only; no architecture changes).**
   Production smoke green, read-only, desktop + mobile: `/` 200 (Explore
   renders, no error banners), detail 200 with live Save + Activity
