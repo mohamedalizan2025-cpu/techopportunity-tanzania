@@ -4,6 +4,30 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-17 PRODUCTION CLOSURE: 0019 + 0020 LIVE ON PRODUCTION
+  (`jltuufukcwztugvojwjd`), zero drift, all safeguards green.** Production
+  credential valid after a propagation wait (5432 session pooler; 6543
+  rejects even valid passwords). Staging-proven frozen bytes promoted
+  unchanged (0019 `545134d1…927474`, 0020 `713557df…ac15b6`). Recovery:
+  ACL-hardened dirs with schema-only dumps + manifests —
+  `…/20260917T192008Z-0019-talent-activity-production` (dump 358,452 B,
+  `f260a840…`, manifest `52979050…`) and
+  `…/20260917T192257Z-0020-campaign-pilot-production` (dump 365,268 B,
+  `a87c013b…`, manifest `2f82cc35…`). 0019 post: table `rls=true`, 4 exact
+  owner policies, anon grants 0, auth D/I/S/U, corpus identical
+  (298 = 204/8/86, 537 refs, 75 enrich, 3 users, 3 profiles,
+  activity-rows 0). 0020 post: table `rls=true`, 4 staff policies, 2 RPCs
+  `security definer` + `search_path=public`, anon table/RPC grants 0, auth
+  RPC execute 2, OUT params exactly 4×bigint, corpus identical, campaigns 0.
+  Probes (rolled-back fake UUIDs, no real rows/users): anon read/insert/RPC
+  denied; non-owner read 0 + delete-all denied; talent RPCs rejected inside
+  the functions; talent campaign insert denied. Positive paths guaranteed
+  transitively by byte-identical staging proofs (data minimization: no
+  synthetic production users). Production alias steady (home 200 same
+  bytes; /activity 307 → login). Production honestly holds 0 campaigns, 0
+  activity, 0 audience until real usage. Exact next: adoption — drive the
+  first real talent activity + staff demo campaign (see below).
+
 - **2026-09-17 ROLLOUT: 0019 + 0020 LIVE ON STAGING, production BLOCKED on
   its credential (no production mutation performed).** Session pooler
   `aws-0-eu-central-1.pooler.supabase.com:5432` (transaction pooler 6543
