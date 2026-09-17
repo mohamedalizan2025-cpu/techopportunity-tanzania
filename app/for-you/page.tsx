@@ -95,6 +95,20 @@ export default async function ForYouPage({
               {forYou.hasProfile ? "Edit profile" : "Build your profile"}
             </Link>
           </div>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <Link
+              href="/activity"
+              className="font-medium text-[var(--accent-strong)] underline-offset-2 hover:underline"
+            >
+              Track progress in your activity →
+            </Link>
+            <Link
+              href="/saved"
+              className="font-medium text-[var(--muted)] underline-offset-2 hover:underline"
+            >
+              Your saved list →
+            </Link>
+          </div>
 
           {!forYou.available ? (
             <div

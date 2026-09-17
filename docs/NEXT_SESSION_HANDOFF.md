@@ -4,6 +4,25 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-17 commercial demo integration COMPLETE (UI links only; no
+  schema, no production mutation, no owner gate).** Talent journey
+  Explore → For You → Activity is now walkable both directions:
+  authenticated-only journey strip on Explore (`app/(home)/page.tsx`,
+  nav-only, anonymous Explore byte-identical, corpus query unchanged so
+  Explore stays ungated), For You → Activity/Saved links, Saved →
+  Activity/For You links (Activity already linked all three). Staff demo
+  chain Verified Opportunity → Relevant Audience → Engagement Funnel:
+  moderation queue links `/campaigns`, campaign index shows the aggregate
+  funnel, campaign detail walks the numbered 1·Verified opportunity →
+  2·Relevant audience sections. Tests: new `test:demo` (11 assertions)
+  wired into `npm test`; full `npm test` (incl. review,
+  published-management, deadline-alerts suites), `tsc`, `lint`, 35
+  boundaries, `npm run build` green. `verify:plan` selects build (passed) +
+  path-conservative moderation-auth/deadline-alerts gates (suites green, no
+  auth/RLS logic touched) with zero owner actions. Exact next: reminder
+  verdict — deadline-alert foundation already exists (owner-gated rollout);
+  saved-search/digest stays deferred (see below).
+
 - **2026-09-17 Provider Campaign Pilot CODE-COMPLETE (migration 0020
   DESIGNED-NOT-APPLIED, owner-gated staging-first; no production mutation).**
   Internal staff-only pilot rehearsing Verified Opportunity → Relevant

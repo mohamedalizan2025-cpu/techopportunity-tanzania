@@ -184,6 +184,14 @@ export default async function ModerationPage({
                 Published records →
               </Link>
             </p>
+            <p className="mt-1 text-sm">
+              <Link
+                href="/campaigns"
+                className="font-medium text-[var(--muted)] underline underline-offset-2 hover:text-[var(--foreground)]"
+              >
+                Campaign pilot →
+              </Link>
+            </p>
           </div>
           <form action={logOutAction}>
             <button type="submit" className={signOutButtonClasses}>

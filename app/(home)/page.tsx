@@ -160,6 +160,37 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </section>
 
+      {user ? (
+        <nav
+          aria-label="Your journey"
+          className="border-b border-[var(--line)] bg-[var(--surface)]"
+        >
+          <div className="page-shell flex flex-wrap items-center gap-x-5 gap-y-2 py-3 text-sm">
+            <span className="font-semibold text-[var(--foreground)]">
+              Explore
+            </span>
+            <span aria-hidden="true" className="text-[var(--subtle)]">
+              →
+            </span>
+            <Link
+              href="/for-you"
+              className="font-medium text-[var(--accent-strong)] underline-offset-2 hover:underline"
+            >
+              For You
+            </Link>
+            <span aria-hidden="true" className="text-[var(--subtle)]">
+              →
+            </span>
+            <Link
+              href="/activity"
+              className="font-medium text-[var(--accent-strong)] underline-offset-2 hover:underline"
+            >
+              Your activity
+            </Link>
+          </div>
+        </nav>
+      ) : null}
+
       <section
         id="opportunities"
         aria-labelledby="opportunities-heading"
