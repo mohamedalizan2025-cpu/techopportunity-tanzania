@@ -1,6 +1,8 @@
 import { UiIcon } from "./ui-icon";
 import { categoryLabel } from "@/lib/category-labels";
 import { SaveOpportunityControl } from "@/components/save-opportunity-control";
+import { ActivityControl } from "@/components/activity-control";
+import type { ActivityStatus } from "@/lib/talent-activity-state";
 import {
   formatAddedDate,
   formatDeadlinePresentation,
@@ -17,11 +19,13 @@ export function OpportunityDetail({
   opportunity,
   isSaved = false,
   isAuthenticated = false,
+  activityStatus = null,
   returnTo,
 }: {
   opportunity: Opportunity;
   isSaved?: boolean;
   isAuthenticated?: boolean;
+  activityStatus?: ActivityStatus | null;
   returnTo: string;
 }) {
   const deadline = formatDeadlinePresentation(opportunity.deadline);
@@ -90,6 +94,15 @@ export function OpportunityDetail({
               opportunityId={opportunity.id}
               opportunityTitle={opportunity.title}
               isSaved={isSaved}
+              isAuthenticated={isAuthenticated}
+              returnTo={returnTo}
+            />
+          </div>
+          <div className="mt-4">
+            <ActivityControl
+              opportunityId={opportunity.id}
+              opportunityTitle={opportunity.title}
+              currentStatus={activityStatus}
               isAuthenticated={isAuthenticated}
               returnTo={returnTo}
             />

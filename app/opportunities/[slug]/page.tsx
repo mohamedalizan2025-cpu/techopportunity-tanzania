@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { OpportunityDetail } from "@/components/opportunity-detail";
 import { getOpportunityBySlug } from "@/lib/data/opportunities";
 import { listSavedOpportunityIds } from "@/lib/data/saved-opportunities";
+import { listTalentActivityStatuses } from "@/lib/data/talent-activities";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 import {
   opportunityHref,
@@ -46,6 +47,9 @@ export default async function OpportunityDetailPage({
   const savedIds = user
     ? await listSavedOpportunityIds(user)
     : new Set<string>();
+  const activityStatuses = user
+    ? await listTalentActivityStatuses(user)
+    : new Map<string, import("@/lib/talent-activity-state").ActivityStatus>();
   const detailHref = opportunityHref(
     opportunity.slug,
     rawReturn ? returnHref : undefined,
@@ -79,6 +83,7 @@ export default async function OpportunityDetailPage({
             opportunity={opportunity}
             isSaved={savedIds.has(opportunity.id)}
             isAuthenticated={user !== null}
+            activityStatus={activityStatuses.get(opportunity.id) ?? null}
             returnTo={detailHref}
           />
         </div>

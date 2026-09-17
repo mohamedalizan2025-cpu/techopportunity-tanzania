@@ -32,6 +32,9 @@ export async function SiteHeader() {
               <Link href="/saved" className={linkClasses}>
                 Saved
               </Link>
+              <Link href="/activity" className={linkClasses}>
+                Activity
+              </Link>
               <Link href="/profile" className={linkClasses}>
                 Profile
               </Link>
@@ -66,6 +69,9 @@ export async function SiteHeader() {
           </Link>
           {user ? (
             <>
+              <Link href="/activity" className={linkClasses}>
+                Your activity
+              </Link>
               <Link href="/for-you" className={linkClasses}>
                 For You
               </Link>

@@ -20,8 +20,12 @@ next opportunity.
 
 - **Explore** — the complete trusted opportunity universe, open to everyone.
 - **For You** — a personalized layer over the same trusted corpus.
-- **Activity** — saved / tracked / application activity (saved is live today;
-  interested / applying / applied are designed-for states, not yet built).
+- **Activity** — saved / tracked / application activity. `saved` is live;
+  `interested / applying / applied` funnel tracking is code-complete
+  (2026-09-17) behind owner-gated migration 0019
+  (`public.talent_opportunity_activity`, owner-only RLS, published-only
+  guards) with a private unified `/activity` surface; tracking degrades
+  honestly until the owner applies 0019 to staging, then production.
 
 ### 2. Opportunity providers (future)
 
@@ -120,8 +124,10 @@ This keeps recommendations explainable today and provides the stable input
 contract a future recommender (including a grounded AI layer, only after the AI
 readiness contract passes) can build on without reshaping the data model.
 
-The design also leaves room for future `saved / interested / applying / applied`
-activity states without building them now; saved is the only one implemented.
+The design also leaves room for future saved-search/digest value without
+building it now; saved is live and `interested / applying / applied`
+tracking is code-complete behind owner-gated migration 0019 (rollout
+awaiting owner staging proof).
 
 ## How this supports future provider / institution revenue
 

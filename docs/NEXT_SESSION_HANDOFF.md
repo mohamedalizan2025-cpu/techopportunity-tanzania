@@ -4,6 +4,28 @@ Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-17 unified talent activity CODE-COMPLETE (migration 0019
+  DESIGNED-NOT-APPLIED, owner-gated staging-first; no production mutation).**
+  `saved` (existing bookmark) is untouched; new funnel states
+  `interested / applying / applied` live in owner-only
+  `public.talent_opportunity_activity` (one row per user+opportunity,
+  `supabase/migrations/0019_talent_activity.sql`) with published-only
+  insert/update guards, four owner-bound RLS policies, and least-privilege
+  grants. New pure domain `lib/talent-activity-state.ts`, reads
+  `lib/data/talent-activities.ts` (graceful `available:false` when 0019 is
+  absent), server action `lib/data/talent-activity-actions.ts`
+  (claims-derived identity, upsert on `user_id,opportunity_id`), client
+  `components/activity-control.tsx`, unified private route `/activity`
+  (auth-gated, `noindex`, cross-linked to Explore/For You/Saved), detail-page
+  tracking, and header Activity links. Tests: new `test:activity` (27
+  assertions) wired into `npm test`; full `npm test`, `tsc`, `lint`, 35
+  boundaries (unchanged by design — activity invariants live in the dedicated
+  suite), `npm run build` (`/activity` present) green. `verify:plan` selects
+  build (passed) + migration-review with one owner action (review/approve
+  0019 before any staging/production apply). Rollout gate: owner applies 0019
+  to isolated staging first with recovery + RLS proof + zero-drift checks,
+  then production. Exact next: staff-gated Provider Campaign Pilot.
+
 - **2026-09-17 geography/source-data quality hardening — bare-Tanzania evidence
   defect CLOSED in code (uncommitted prior-agent work preserved and verified;
   no migration, no production mutation).** `deriveGeography`

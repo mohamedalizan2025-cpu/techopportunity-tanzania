@@ -156,8 +156,11 @@ phases gated by their own bounded authorization.
   corpus, with user control and evaluation against non-AI baselines.
 - Add application readiness, an Opportunity Passport, application tracking, and
   carefully bounded application assistance only after the underlying profile and
-  opportunity facts are trustworthy. The data model already leaves room for
-  future `saved / interested / applying / applied` states (only `saved` is live).
+  opportunity facts are trustworthy. Unified talent activity is now code-complete
+  (2026-09-17): `saved` (live bookmark, untouched) plus `interested / applying /
+  applied` funnel tracking in owner-only `talent_opportunity_activity`
+  (migration 0019, DESIGNED-NOT-APPLIED, owner-gated staging-first) with a
+  private unified `/activity` surface; rollout awaits owner staging proof.
 
 ### Intelligence and platform growth
 
