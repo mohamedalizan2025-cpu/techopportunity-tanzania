@@ -1,8 +1,25 @@
 # Current engineering handoff
 
-Updated: 2026-09-17. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-22. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
 ## Current verified state
+
+- **2026-09-22 Discovery scheduling incident: code mitigation implemented;
+  future scheduled proof pending.** Production history showed repeated 2.9–6.7
+  hour gaps under `0 */2 * * *`, while delivered jobs finished in about two
+  minutes and the last 100 records contained zero cancelled/skipped scheduled
+  runs. Both workflows are active on default branch `main`; Discovery uses the
+  non-cancelling bounded `discovery-production` lane. Root cause is GitHub's
+  documented start-of-hour schedule delay/drop risk, not a worker, concurrency,
+  default-branch, workflow-state, or monitor defect. Discovery is moved to
+  `17 */2 * * *`; the observer is `47 */2 * * *`; both explicitly configure
+  schedule minute 17. Interval/tolerance remain 2h/2h, manual dispatch remains
+  the safe recovery path, and admission/data/product behavior is unchanged.
+  Code closure does not prove provider reliability: observe at least six real
+  new `:17` cycles (preferably 24 hours). If misses persist, evaluate an external
+  Azure/student-resource scheduler that reuses the same worker and controls;
+  no migration is authorized now. Full evidence:
+  [DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md).
 
 - **END-OF-DAY CLOSURE 2026-09-17: work clean, next milestone is NOT an
   engineering build.** HEAD `beb8e9d`, tree clean, `origin/main` current.

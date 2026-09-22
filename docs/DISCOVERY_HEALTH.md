@@ -21,9 +21,9 @@ does not change discovery behavior: the next report honestly returns to
 outcomes, but no source URLs, raw errors, environment variables, tokens, or
 credentials. No health code imports Supabase or a network client.
 
-The separate `Discovery schedule health` workflow runs without credentials 30
-minutes after every discovery window and on relevant pushes. It only reads the
-retained history and does not invoke the discovery worker.
+The separate `Discovery schedule health` workflow runs without credentials at
+minute 47, 30 minutes after every minute-17 discovery window, and on relevant
+pushes. It only reads retained history and does not invoke the discovery worker.
 It exits non-zero on a deterministic missed-run result and uploads its own
 schedule report.
 
@@ -44,22 +44,26 @@ report never substitutes zero for unavailable evidence.
 
 ## Schedule states
 
-Production discovery uses one GitHub Actions UTC cron, `0 3/6 * * *`: 03:00,
-09:00, 15:00, and 21:00 UTC (06:00, 12:00, 18:00, and 00:00 Tanzania time).
-Its expected interval is six hours. The existing formula `max(2 hours, 25% of
-the interval)` therefore gives a two-hour tolerance without pretending GitHub
-cron delivery is exact.
+Production discovery uses one GitHub Actions UTC cron, `17 */2 * * *`: 00:17,
+02:17, …, and 22:17 UTC. It moved from `0 */2 * * *` after the 2026-09-22
+schedule-delivery incident to reduce GitHub's documented start-of-hour delay/drop
+risk. Its expected and target interval remain two hours. The existing formula
+`max(2 hours, 25% of the interval)` gives a two-hour tolerance; the incident did
+not justify weakening that threshold.
 
-- `on_time`: the latest scheduled observation is no older than 8 hours.
+- `on_time`: the latest scheduled observation is no older than 4 hours.
 - `delayed`: a scheduled execution occurred after tolerance but before a
-  second interval plus tolerance elapsed (more than 8 and no more than 14 hours).
+  second interval plus tolerance elapsed (more than 4 and no more than 6 hours).
 - `missed`: an observer finds no scheduled execution inside interval plus
-  tolerance, or a scheduled execution arrives more than 14 hours after the
+  tolerance, or a scheduled execution arrives more than 6 hours after the
   preceding retained scheduled observation.
 - `unknown`: timestamps are invalid or no scheduled observation is retained.
 
-All timestamps are parsed as absolute instants; display/local timezone does not
-participate in the calculation.
+Nominal slot and dispatch latency use the configured minute 17, never the old
+minute 0 assumption. All timestamps are parsed as absolute instants;
+display/local timezone does not participate in the calculation. GitHub schedule
+delivery is best-effort, not a two-hour SLA; see
+[the incident record](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md).
 
 ## Baselines
 
@@ -123,7 +127,7 @@ Freshness is a pure read-only classification:
 It does not alter current publication semantics or historical rows. A future
 public treatment must be separately designed and moderator-safe.
 
-## Six-hour readiness
+## Two-hour readiness
 
 `PARTIALLY_PROVEN` means the target schedule is configured and at least one real
 scheduled success is retained, but the minimum repeatability contract is not

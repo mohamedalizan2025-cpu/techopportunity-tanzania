@@ -2,6 +2,7 @@ import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import {
   DEFAULT_EXPECTED_INTERVAL_HOURS,
+  DEFAULT_SCHEDULE_MINUTE,
   MIN_BASELINE_OBSERVATIONS,
   TWO_HOUR_TARGET_INTERVAL,
   assessSchedule,
@@ -15,6 +16,13 @@ function positiveNumber(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function scheduleMinute(value: string | undefined): number {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 && parsed <= 59
+    ? parsed
+    : DEFAULT_SCHEDULE_MINUTE;
+}
+
 const evaluatedAt = process.env.DISCOVERY_HEALTH_EVALUATED_AT ?? new Date().toISOString();
 const expectedIntervalHours = positiveNumber(
   process.env.DISCOVERY_EXPECTED_INTERVAL_HOURS,
@@ -24,8 +32,15 @@ const targetIntervalHours = positiveNumber(
   process.env.DISCOVERY_TARGET_INTERVAL_HOURS,
   TWO_HOUR_TARGET_INTERVAL
 );
+const configuredScheduleMinute = scheduleMinute(process.env.DISCOVERY_SCHEDULE_MINUTE);
 const history = loadHealthHistory(process.env.DISCOVERY_HEALTH_HISTORY_PATH);
-const schedule = assessSchedule(history.observations, evaluatedAt, expectedIntervalHours);
+const schedule = assessSchedule(
+  history.observations,
+  evaluatedAt,
+  expectedIntervalHours,
+  undefined,
+  configuredScheduleMinute
+);
 const anomaly: HealthAnomaly | null = schedule.state === "missed"
   ? { severity: "critical", code: "scheduled_run_missed", scope: "schedule", message: schedule.reason, observed: schedule.observedGapHours ?? undefined }
   : schedule.state === "unknown"

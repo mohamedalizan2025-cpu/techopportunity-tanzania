@@ -56,7 +56,7 @@ implementation or production mutation.
    - view-only furniture flag (legacy ambiguous flag retired: new admission never creates ambiguous queue items)
 3. **Authoritative Discovery + Active Lifecycle Hardening** *(implemented 2026-09-16, unpromoted: public active browse and moderator active queue exclude expired lifecycle via query/view filter with no status writes; discovery admits only unexpired, qualified candidates from authoritative origins or with resolved external application evidence; legacy corpus untouched; Discovery paused; one controlled real run then 2-hour cadence remain owner-gated)*
 4. **Source credibility/source registry**
-5. **Discovery quality review and 2-hour cadence verification** *(repo targets `0 */2 * * *`; GitHub schedule stays paused until one controlled real run proves clean)*
+5. **Discovery quality review and 2-hour cadence verification** *(live target `17 */2 * * *`; future real scheduled cycles must verify the 2026-09-22 reliability mitigation)*
 6. **National vs International classification** *(completed 2026-09-16)*
 7. **Opportunity taxonomy improvement** *(completed 2026-09-16)*
 8. **Showcase readiness for Sahara Sparks and Tech & AI Expo** *(completed 2026-09-16)*

@@ -34,8 +34,10 @@ The owner-gated controlled Discovery run was executed and PASSED (run
 `35088590079` at `27ab009`): two pending inserts (Kectil Program 2027,
 AfricaLics PhD VFP 2027), both future-deadline, relevant, non-excluded, and
 unduplicated, admitted — from the secondary origin OpportunityDesk — only with
-external application evidence. The repo-targeted 2-hour cadence is now live
-(Discovery sync `active`, `cron: '0 */2 * * *'`). The Authoritative Source
+external application evidence. The repo-targeted 2-hour cadence is live. After
+the 2026-09-22 GitHub schedule-delivery incident, Discovery sync remains
+`active` but now uses `cron: '17 */2 * * *'`; see
+[the incident record](docs/DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md). The Authoritative Source
 Registry Expansion milestone is **CLOSED (2026-09-16)**: the owner applied
 `supabase/seeds/0003_first_party_listing_adapters.sql` to production, activating
 exactly the two reviewed first-party listing adapters (UDSM announcements view,

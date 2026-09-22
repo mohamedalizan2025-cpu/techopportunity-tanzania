@@ -1,5 +1,10 @@
 import { runDiscovery } from "./runner";
-import { buildHealthReport, triggerKindForEvent, type RunIdentity } from "./health";
+import {
+  DEFAULT_SCHEDULE_MINUTE,
+  buildHealthReport,
+  triggerKindForEvent,
+  type RunIdentity,
+} from "./health";
 import { loadHealthHistory, retainHealthReport } from "./health-artifact";
 
 function identity(startedAt: string, finishedAt: string): RunIdentity {
@@ -20,6 +25,13 @@ function identity(startedAt: string, finishedAt: string): RunIdentity {
 function positiveNumber(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function scheduleMinute(value: string | undefined): number {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 && parsed <= 59
+    ? parsed
+    : DEFAULT_SCHEDULE_MINUTE;
 }
 
 function reportPaths() {
@@ -43,6 +55,7 @@ async function main() {
       identity: identity(summary.startedAt, finishedAt),
       expectedIntervalHours: positiveNumber(process.env.DISCOVERY_EXPECTED_INTERVAL_HOURS, 24),
       targetIntervalHours: positiveNumber(process.env.DISCOVERY_TARGET_INTERVAL_HOURS, 2),
+      scheduleMinute: scheduleMinute(process.env.DISCOVERY_SCHEDULE_MINUTE),
       verificationPassed: process.env.DISCOVERY_VERIFICATION_PASSED === "true",
     });
     retainHealthReport(health, history, reportPaths());
@@ -68,6 +81,7 @@ async function main() {
       identity: identity(processStartedAt, new Date().toISOString()),
       expectedIntervalHours: positiveNumber(process.env.DISCOVERY_EXPECTED_INTERVAL_HOURS, 24),
       targetIntervalHours: positiveNumber(process.env.DISCOVERY_TARGET_INTERVAL_HOURS, 2),
+      scheduleMinute: scheduleMinute(process.env.DISCOVERY_SCHEDULE_MINUTE),
       verificationPassed: process.env.DISCOVERY_VERIFICATION_PASSED === "true",
     });
     retainHealthReport(health, history, reportPaths());

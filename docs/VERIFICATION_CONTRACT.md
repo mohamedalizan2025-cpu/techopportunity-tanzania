@@ -66,8 +66,8 @@ for health. It is not required for documentation-only or isolated test-only
 changes.
 
 Discovery-sensitive pushes to `main` start the existing `Discovery sync`
-workflow automatically. The authoritative UTC schedule `0 3/6 * * *` runs at
-03:00, 09:00, 15:00, and 21:00 UTC. Scheduled and manual runs share the fixed
+workflow automatically. The authoritative UTC schedule `17 */2 * * *` runs at
+minute 17 of every even UTC hour. Scheduled and manual runs share the fixed
 `discovery-production` concurrency group with active-run cancellation disabled;
 the 30-minute job timeout bounds queue occupation. GitHub may replace an older
 pending member when a newer run queues, but that cancellation is observable and
@@ -93,7 +93,7 @@ volume, rejection, unknown, duplicate, or insertion counts are health signals;
 they are never permission to loosen qualification.
 
 A single successful run proves one execution only. It does not prove stable
-six-hour operation or long-term source health. Repeated scheduled, exact-SHA
+two-hour operation or long-term source health. Repeated scheduled, exact-SHA
 evidence is required before claiming repeatability. Once a subsystem has an
 exact-SHA production baseline, unchanged future milestones may rely on CI plus
 periodic scheduled health evidence.

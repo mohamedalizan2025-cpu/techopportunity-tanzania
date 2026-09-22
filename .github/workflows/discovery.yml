@@ -2,8 +2,9 @@ name: Discovery sync
 
 on:
   schedule:
-    # Every two hours at minute 0 UTC. GitHub schedule delivery may be delayed.
-    - cron: '0 */2 * * *'
+    # Every two hours away from the congested start of the hour. GitHub
+    # schedule delivery remains best-effort and may still be delayed/dropped.
+    - cron: '17 */2 * * *'
   workflow_dispatch:
   # Discovery-sensitive main changes require exact-HEAD production proof.
   # The worker remains pending-only and all credentials stay on its last step.
@@ -76,6 +77,7 @@ jobs:
           DISCOVERY_HEALTH_HISTORY_PATH: discovery-health/history.json
           DISCOVERY_EXPECTED_INTERVAL_HOURS: '2'
           DISCOVERY_TARGET_INTERVAL_HOURS: '2'
+          DISCOVERY_SCHEDULE_MINUTE: '17'
           DISCOVERY_VERIFICATION_PASSED: 'true'
         run: node --import tsx scripts/discovery/index.ts
 

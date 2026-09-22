@@ -227,11 +227,13 @@ invariant("email confirmation uses a canonical callback and safe internal destin
 });
 
 invariant("discovery uses one authoritative two-hour UTC schedule and the pending-only worker", () => {
-  assert.match(discoveryWorkflow, /cron: ['"]0 \*\/2 \* \* \*['"]/);
+  assert.match(discoveryWorkflow, /cron: ['"]17 \*\/2 \* \* \*['"]/);
+  assert.doesNotMatch(discoveryWorkflow, /cron: ['"]0 \*\/2 \* \* \*['"]/);
   assert.doesNotMatch(discoveryWorkflow, /cron: ['"]0 3\/6 \* \* \*['"]/);
   assert.equal((discoveryWorkflow.match(/\bcron:/g) ?? []).length, 1);
   assert.match(discoveryWorkflow, /DISCOVERY_EXPECTED_INTERVAL_HOURS: ['"]2['"]/);
   assert.match(discoveryWorkflow, /DISCOVERY_TARGET_INTERVAL_HOURS: ['"]2['"]/);
+  assert.match(discoveryWorkflow, /DISCOVERY_SCHEDULE_MINUTE: ['"]17['"]/);
   assert.match(discoveryWorkflow, /run: npm run verify/);
   assert.match(discoveryWorkflow, /run: node --import tsx scripts\/discovery\/index\.ts/);
 });
@@ -271,9 +273,10 @@ invariant("discovery workflow retains bounded machine-readable health evidence",
 });
 
 invariant("schedule monitor is credential-free and cannot execute discovery", () => {
-  assert.match(healthWorkflow, /cron: ['"]30 \*\/2 \* \* \*['"]/);
+  assert.match(healthWorkflow, /cron: ['"]47 \*\/2 \* \* \*['"]/);
   assert.match(healthWorkflow, /DISCOVERY_EXPECTED_INTERVAL_HOURS: ['"]2['"]/);
   assert.match(healthWorkflow, /DISCOVERY_TARGET_INTERVAL_HOURS: ['"]2['"]/);
+  assert.match(healthWorkflow, /DISCOVERY_SCHEDULE_MINUTE: ['"]17['"]/);
   assert.match(healthWorkflow, /run: npm run health:monitor/);
   assert.doesNotMatch(healthWorkflow, /secrets\.|SUPABASE_SERVICE_ROLE_KEY|scripts\/discovery\/index\.ts/);
 });

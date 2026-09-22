@@ -127,10 +127,17 @@ test("schedule is unknown without a retained scheduled run", () => {
   assert.equal(assessSchedule([], "2026-09-02T00:00:00Z").state, "unknown");
 });
 
-test("dispatch latency is measured against the nominal UTC slot", () => {
+test("dispatch latency uses the configured :17 two-hour UTC slot", () => {
   assert.deepEqual(nominalDispatchLatency("2026-09-03T18:19:45Z"), {
-    nominalSlot: "2026-09-03T18:00:00.000Z",
-    dispatchLatencyMinutes: 20,
+    nominalSlot: "2026-09-03T18:17:00.000Z",
+    dispatchLatencyMinutes: 3,
+  });
+});
+
+test("nominal slot rolls back to the prior :17 window before midnight's slot", () => {
+  assert.deepEqual(nominalDispatchLatency("2026-09-03T00:10:00Z"), {
+    nominalSlot: "2026-09-02T22:17:00.000Z",
+    dispatchLatencyMinutes: 113,
   });
 });
 
@@ -144,8 +151,28 @@ test("late completed execution is delayed before a second interval", () => {
   assert.equal(assessSchedule([observation(0)], "2026-09-01T05:00:00Z", 2, "schedule").state, "delayed");
 });
 
+test("a delayed :17 execution remains delayed-but-valid before the second interval", () => {
+  const result = assessSchedule([observation(0)], "2026-09-01T04:30:00Z", 2, "schedule", 17);
+  assert.equal(result.state, "delayed");
+  assert.equal(result.nominalSlot, "2026-09-01T04:17:00.000Z");
+  assert.equal(result.dispatchLatencyMinutes, 13);
+});
+
 test("absent execution beyond tolerance is missed", () => {
   assert.equal(assessSchedule([observation(0)], "2026-09-01T05:00:00Z", 2).state, "missed");
+});
+
+test("a genuinely absent :17 execution remains missed", () => {
+  const result = assessSchedule([observation(0)], "2026-09-01T04:30:00Z", 2, undefined, 17);
+  assert.equal(result.state, "missed");
+  assert.equal(result.scheduleMinute, 17);
+});
+
+test("old :00 nominal assumptions cannot inflate :17 dispatch latency", () => {
+  const result = assessSchedule([observation(0)], "2026-09-01T02:31:00Z", 2, "schedule", 17);
+  assert.equal(result.state, "on_time");
+  assert.equal(result.nominalSlot, "2026-09-01T02:17:00.000Z");
+  assert.equal(result.dispatchLatencyMinutes, 14);
 });
 
 test("invalid schedule time remains unknown", () => {
