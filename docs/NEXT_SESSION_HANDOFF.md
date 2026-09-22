@@ -4,6 +4,19 @@ Updated: 2026-09-22. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **AI Opportunity Intelligence controlled evaluation implemented; real Groq
+  run pending.** The reproducible 16-case synthetic corpus covers strong/weak
+  fit, National/International, eligibility unknown/excluded, all requested
+  categories and deadline states, incomplete/conflicting evidence, injection,
+  override, direct-identifier sanitization, and malformed output. Local contract
+  simulation: 16 requests, 14 valid structured responses, 2 intentional
+  deterministic fallbacks, 0 hard failures, 80/80 soft checks. The Groq adapter
+  now requests strict JSON Schema for `openai/gpt-oss-20b` while retaining the
+  application validator. No `GROQ_API_KEY`, ZDR confirmation, or no-billing
+  confirmation was available, so the real run made 0 external requests and the
+  production pilot remains gated. Exact runbook and rubric:
+  [AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
+
 - **AI Opportunity Intelligence V1 implemented in code; external provider NOT
   activated.** The bounded layer reuses trusted opportunity evidence,
   deterministic `MatchingInput`/`explainMatch`, and owner-only profiles. Its

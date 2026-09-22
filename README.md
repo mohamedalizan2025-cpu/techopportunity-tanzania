@@ -119,6 +119,10 @@ future adapters. Invalid/unavailable/quota-exhausted provider output fails close
 to deterministic guidance. No provider credential was found or configured, no
 billing was enabled, and no schema or Discovery behavior changed. See
 [AI_OPPORTUNITY_INTELLIGENCE.md](docs/AI_OPPORTUNITY_INTELLIGENCE.md).
+The fixed 16-case controlled evaluation harness passes its local contract
+simulation, while the real Groq corpus run remains owner-gated and pending with
+zero external requests. See
+[AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](docs/AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
 
 > _"A web platform for discovering opportunities all across Tanzania."_
 

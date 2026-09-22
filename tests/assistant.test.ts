@@ -7,6 +7,7 @@ import { fallbackPlan, parseAssistantPlan, appliedFilters, isNonOpportunityQuery
 import { checkRateLimit } from "../lib/assistant/rate-limit";
 import { buildGroundedAnswerFromResults } from "../lib/data/assistant-queries";
 import "./opportunity-intelligence.test";
+import "./opportunity-intelligence-evaluation.test";
 
 let passed = 0;
 let failed = 0;

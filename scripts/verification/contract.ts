@@ -77,8 +77,9 @@ const MODERATION_AUTH = [
 const ASSISTANT = [
   /^app\/api\/(?:assistant|opportunity-insight)\//,
   /^lib\/(?:assistant|opportunity-intelligence)\//,
+  /^scripts\/opportunity-intelligence\//,
   /^components\/opportunity-insight\.tsx$/,
-  /^tests\/(?:assistant|opportunity-intelligence)\.test\.ts$/,
+  /^tests\/(?:assistant|opportunity-intelligence(?:-evaluation)?)\.test\.ts$/,
 ];
 const ALERTS = [
   /^app\/saved\//,

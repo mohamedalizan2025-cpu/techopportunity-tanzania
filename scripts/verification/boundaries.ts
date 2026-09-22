@@ -26,6 +26,8 @@ const assistantRoute = read("app/api/assistant/ask/route.ts");
 const insightRoute = read("app/api/opportunity-insight/route.ts");
 const insightContract = read("lib/opportunity-intelligence/contract.ts");
 const insightProvider = read("lib/opportunity-intelligence/provider.ts");
+const insightEvaluation = read("scripts/opportunity-intelligence/evaluate.ts");
+const insightEvaluationCorpus = read("scripts/opportunity-intelligence/evaluation-corpus.ts");
 const insightUi = read("components/opportunity-insight.tsx");
 const discoveryWorkflow = read(".github/workflows/discovery.yml");
 const healthWorkflow = read(".github/workflows/discovery-health.yml");
@@ -108,6 +110,17 @@ invariant("opportunity intelligence defaults to zero spend with exact provider s
   assert.ok(keyRead > zeroSpend);
   assert.ok(providerFetch >= 0);
   assert.doesNotMatch(insightProvider, /NEXT_PUBLIC_.*(?:AI|GROQ|GEMINI|AZURE|KEY)/);
+});
+
+invariant("opportunity intelligence evaluation is synthetic and owner-gated", () => {
+  assert.match(insightProvider, /strict: true/);
+  assert.match(insightProvider, /include_reasoning: false/);
+  assert.match(insightEvaluation, /AI-EVAL-FREE-QUOTA/);
+  assert.match(insightEvaluation, /AI_EVALUATION_ZDR_CONFIRMED/);
+  assert.match(insightEvaluation, /AI_EVALUATION_NO_BILLING_CONFIRMED/);
+  assert.match(insightEvaluation, /openai\/gpt-oss-20b/);
+  assert.match(insightEvaluationCorpus, /fixtures\.invalid/);
+  assert.doesNotMatch(insightEvaluationCorpus, /@supabase|createClient|SUPABASE|\.from\(/);
 });
 
 invariant("opportunity intelligence sanitizer and output contract fail closed", () => {

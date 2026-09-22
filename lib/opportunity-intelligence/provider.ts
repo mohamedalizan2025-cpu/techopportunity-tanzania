@@ -36,16 +36,16 @@ const MODEL_OUTPUT_SCHEMA = {
   additionalProperties: false,
   required: ["readiness", "missingOrUnclear", "nextActions", "confidence"],
   properties: {
-    readiness: { type: "array", maxItems: 5, items: { $ref: "#/$defs/item" } },
-    missingOrUnclear: { type: "array", maxItems: 5, items: { $ref: "#/$defs/item" } },
-    nextActions: { type: "array", maxItems: 5, items: { $ref: "#/$defs/item" } },
+    readiness: { type: "array", items: { $ref: "#/$defs/item" } },
+    missingOrUnclear: { type: "array", items: { $ref: "#/$defs/item" } },
+    nextActions: { type: "array", items: { $ref: "#/$defs/item" } },
     confidence: {
       type: "object",
       additionalProperties: false,
       required: ["level", "limitations"],
       properties: {
         level: { type: "string", enum: ["low", "medium", "high"] },
-        limitations: { type: "array", maxItems: 4, items: { type: "string", maxLength: 320 } },
+        limitations: { type: "array", items: { type: "string" } },
       },
     },
   },
@@ -55,9 +55,9 @@ const MODEL_OUTPUT_SCHEMA = {
       additionalProperties: false,
       required: ["text", "basis", "evidenceRefs"],
       properties: {
-        text: { type: "string", minLength: 2, maxLength: 320 },
+        text: { type: "string" },
         basis: { type: "string", enum: ["verified_fact", "profile_observation", "unknown"] },
-        evidenceRefs: { type: "array", maxItems: 4, items: { type: "string" } },
+        evidenceRefs: { type: "array", items: { type: "string" } },
       },
     },
   },
@@ -103,12 +103,13 @@ function createGroqProvider(
           model,
           temperature: 0.1,
           max_completion_tokens: 700,
+          include_reasoning: false,
           messages: buildOpportunityIntelligenceMessages(input),
           response_format: {
             type: "json_schema",
             json_schema: {
               name: "opportunity_readiness",
-              strict: false,
+              strict: true,
               schema: MODEL_OUTPUT_SCHEMA,
             },
           },

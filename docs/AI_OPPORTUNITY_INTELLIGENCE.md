@@ -113,9 +113,11 @@ interface without changing privacy, grounding, route, cache, or UI contracts.
 The mock adapter is injectable only by code/tests and never selected from
 production environment configuration.
 
-The Groq adapter uses one server-side HTTPS request, a JSON Schema response
-format, an 8-second timeout, a 64 KiB response ceiling, and no SDK dependency.
-The response is still locally validated because provider-side structured output
+The Groq adapter uses one server-side HTTPS request, strict JSON Schema
+structured output for `openai/gpt-oss-20b`, reasoning excluded from the response,
+an 8-second timeout, a 64 KiB response ceiling, and no SDK dependency. Every
+object in the provider schema rejects additional properties. The response is
+still locally validated and bounded because provider-side structured output
 does not replace the application contract. Reference:
 [Groq structured outputs](https://console.groq.com/docs/structured-outputs) and
 [Groq API reference](https://console.groq.com/docs/api-reference).
@@ -179,6 +181,13 @@ is not production-live, no provider account or billing was changed, and the
 repository ships in hard zero-spend mode. Deterministic guidance is the active
 fallback in code. Production activation is an owner-gated external-provider
 change under `ENGINEERING_RULES.md`.
+
+The controlled evaluation milestone adds a fixed 16-case synthetic corpus and
+reproducible scorecard. Contract simulation is green, but the real Groq run is
+pending because no server-side key or owner ZDR/no-billing attestations were
+available. It made zero external requests and does not authorize a production
+pilot. See
+[AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
 
 ## Future provider options
 
