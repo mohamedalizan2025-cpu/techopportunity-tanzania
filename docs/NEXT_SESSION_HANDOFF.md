@@ -4,6 +4,21 @@ Updated: 2026-09-22. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **AI Opportunity Intelligence V1 implemented in code; external provider NOT
+  activated.** The bounded layer reuses trusted opportunity evidence,
+  deterministic `MatchingInput`/`explainMatch`, and owner-only profiles. Its
+  sanitizer sends only selected profile fields plus bounded opportunity
+  type/sector/geography/description/eligibility/deadline evidence; identity,
+  contact, auth IDs, activity, goals, CVs, URLs, and private metadata are
+  excluded. Provider output can add only validated readiness, unknowns, actions,
+  and evidence limitations; deterministic fit, eligibility, geography, trust,
+  moderation, publication, and deadline urgency cannot be overridden. Detail +
+  For You expose the minimal action, with deterministic guidance on every
+  disabled/unavailable/quota/timeout/invalid path. Provider selection is exact,
+  hard zero-spend blocks all external calls, and no credential/provider/billing
+  was configured. No schema or Discovery change. Architecture and activation
+  contract: [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md).
+
 - **2026-09-22 Discovery scheduling incident: code mitigation implemented;
   future scheduled proof pending.** Production history showed repeated 2.9–6.7
   hour gaps under `0 */2 * * *`, while delivered jobs finished in about two

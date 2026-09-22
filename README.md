@@ -108,6 +108,18 @@ corpus drift; rollout evidence is in
 [M31_STAGING_RUNBOOK.md](docs/M31_STAGING_RUNBOOK.md). All gates green (tsc,
 tests incl. the new `test:personalization`, 35 boundaries, build, lint).
 
+**AI Opportunity Intelligence V1 is implemented in code with external AI
+disabled and hard zero-spend mode active.** Trusted opportunity detail pages can
+produce deterministic, evidence-grounded fit/readiness guidance from the existing
+`MatchingInput`; For You links to the same detail insight without changing its
+ranking. A strict privacy allowlist excludes identity, contact, activity, goals,
+CVs, and database metadata. The swappable provider boundary supports a test mock
+and a disabled-by-default Groq adapter; Gemini and Azure AI / Foundry remain clean
+future adapters. Invalid/unavailable/quota-exhausted provider output fails closed
+to deterministic guidance. No provider credential was found or configured, no
+billing was enabled, and no schema or Discovery behavior changed. See
+[AI_OPPORTUNITY_INTELLIGENCE.md](docs/AI_OPPORTUNITY_INTELLIGENCE.md).
+
 > _"A web platform for discovering opportunities all across Tanzania."_
 
 Discover hackathons, scholarships, competitions, conferences, workshops,

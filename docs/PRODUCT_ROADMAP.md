@@ -148,12 +148,19 @@ phases gated by their own bounded authorization.
   monetization, no provider/institution dashboards.
 - Add an optional CV with clear privacy and retention controls (deferred; not
   built).
+- **Implemented 2026-09-22 in code; provider disabled: AI Opportunity
+  Intelligence V1.** A privacy-sanitized, provider-swappable assistance layer
+  adds grounded readiness/unknowns/actions around deterministic fit and verified
+  eligibility. Hard zero-spend is the default; malformed, unavailable, timeout,
+  or quota-exhausted providers fail closed to deterministic guidance. No
+  provider is production-live and no schema/Discovery behavior changed. See
+  [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md).
 - Provide deterministic saved-search and digest value before generative features
   (the next personalization milestone; migration 0018 is now applied and For You
   is verified end-to-end on staging and production, so this awaits owner
   direction).
-- Activate explainable recommendations only over a trusted, sufficiently complete
-  corpus, with user control and evaluation against non-AI baselines.
+- Evaluate the implemented Opportunity Intelligence layer against its
+  deterministic baseline before any owner-gated provider activation.
 - Add application readiness, an Opportunity Passport, application tracking, and
   carefully bounded application assistance only after the underlying profile and
   opportunity facts are trustworthy. Unified talent activity is now code-complete
@@ -164,7 +171,9 @@ phases gated by their own bounded authorization.
 
 ### Intelligence and platform growth
 
-- Consider grounded conversational discovery after the AI readiness contract passes.
+- Consider activating grounded conversational discovery only after separate
+  evaluation; its search-planning contract remains distinct from Opportunity
+  Intelligence.
 - Internal Provider Campaign Pilot is code-complete (2026-09-17, staff-only;
   REAL Saved/Interested/Applying/Applied aggregates from stored activity
   plus a real matching-profile audience count, both via staff-only

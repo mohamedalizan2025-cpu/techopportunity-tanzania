@@ -75,6 +75,7 @@ test("alert workflow selects focused coverage and workflow review", () => {
 
 test("assistant changes select build and kill-switch coverage", () => {
   assert.deepEqual(selected(["app/api/assistant/ask/route.ts"]), ["build", "assistant-kill-switch"]);
+  assert.deepEqual(selected(["app/api/opportunity-insight/route.ts"]), ["build", "assistant-kill-switch"]);
 });
 
 test("workflow changes select workflow review", () => {

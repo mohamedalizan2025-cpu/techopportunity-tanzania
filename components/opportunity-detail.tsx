@@ -14,6 +14,7 @@ import {
   UNKNOWN_TANZANIA_ELIGIBILITY,
 } from "@/lib/opportunity-presentation";
 import type { Opportunity } from "@/lib/types";
+import { OpportunityInsightPanel } from "@/components/opportunity-insight";
 
 export function OpportunityDetail({
   opportunity,
@@ -21,12 +22,14 @@ export function OpportunityDetail({
   isAuthenticated = false,
   activityStatus = null,
   returnTo,
+  showOpportunityInsight = false,
 }: {
   opportunity: Opportunity;
   isSaved?: boolean;
   isAuthenticated?: boolean;
   activityStatus?: ActivityStatus | null;
   returnTo: string;
+  showOpportunityInsight?: boolean;
 }) {
   const deadline = formatDeadlinePresentation(opportunity.deadline);
   const locationLines = opportunity.location
@@ -177,6 +180,13 @@ export function OpportunityDetail({
               prove who may apply.
             </p>
           </section>
+          {showOpportunityInsight ? (
+            <OpportunityInsightPanel
+              slug={opportunity.slug}
+              isAuthenticated={isAuthenticated}
+              loginHref={`/login?next=${encodeURIComponent(returnTo)}%23ai-opportunity-insight`}
+            />
+          ) : null}
           <section
             className="mt-8 border-t border-[var(--line)] pt-6"
             aria-labelledby="source-history"

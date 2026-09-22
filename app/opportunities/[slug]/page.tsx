@@ -9,6 +9,7 @@ import {
   opportunityHref,
   sanitizeBrowseReturnHref,
 } from "@/lib/opportunity-presentation";
+import { isAiSearchableOpportunity } from "@/lib/opportunity-trust";
 
 export const revalidate = 60;
 
@@ -84,6 +85,7 @@ export default async function OpportunityDetailPage({
             isAuthenticated={user !== null}
             activityStatus={detailState?.funnel ?? null}
             returnTo={detailHref}
+            showOpportunityInsight={isAiSearchableOpportunity(opportunity)}
           />
         </div>
       </main>

@@ -7,6 +7,8 @@ import { UiIcon } from "@/components/ui-icon";
 import { getForYouData } from "@/lib/data/for-you";
 import { listSavedOpportunityIds } from "@/lib/data/saved-opportunities";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
+import { opportunityHref } from "@/lib/opportunity-presentation";
+import { isAiSearchableOpportunity } from "@/lib/opportunity-trust";
 
 export const metadata: Metadata = {
   title: "For You | Tech Opportunity",
@@ -164,6 +166,14 @@ export default async function ForYouPage({
                       isSaved={savedIds.has(opportunity.id)}
                       isAuthenticated
                     />
+                    {isAiSearchableOpportunity(opportunity) ? (
+                      <Link
+                        href={`${opportunityHref(opportunity.slug, "/for-you")}#ai-opportunity-insight`}
+                        className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline"
+                      >
+                        AI Opportunity Insight →
+                      </Link>
+                    ) : null}
                   </li>
                 ))}
               </ul>

@@ -23,6 +23,10 @@ function invariant(name: string, check: () => void) {
 const fetchSource = read("scripts/discovery/fetch.ts");
 const runnerSource = read("scripts/discovery/runner.ts");
 const assistantRoute = read("app/api/assistant/ask/route.ts");
+const insightRoute = read("app/api/opportunity-insight/route.ts");
+const insightContract = read("lib/opportunity-intelligence/contract.ts");
+const insightProvider = read("lib/opportunity-intelligence/provider.ts");
+const insightUi = read("components/opportunity-insight.tsx");
 const discoveryWorkflow = read(".github/workflows/discovery.yml");
 const healthWorkflow = read(".github/workflows/discovery-health.yml");
 const verificationWorkflow = read(".github/workflows/verification.yml");
@@ -79,6 +83,40 @@ invariant("assistant kill switch precedes request parsing and provider use", () 
   const requestParsing = assistantRoute.indexOf("request.json()");
   assert.ok(guard >= 0);
   assert.ok(requestParsing > guard);
+});
+
+invariant("opportunity intelligence is authenticated, trusted-only and private", () => {
+  const auth = insightRoute.indexOf("getAuthenticatedUser()");
+  const profile = insightRoute.indexOf("getTalentProfile(user)");
+  const trust = insightRoute.indexOf("isAiSearchableOpportunity(opportunity)");
+  const generation = insightRoute.indexOf("generateOpportunityInsight(");
+  assert.ok(auth >= 0);
+  assert.ok(profile > auth);
+  assert.ok(trust > auth);
+  assert.ok(generation > trust);
+  assert.match(insightRoute, /Cache-Control.*private, no-store/);
+  assert.doesNotMatch(insightRoute, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
+});
+
+invariant("opportunity intelligence defaults to zero spend with exact provider selection", () => {
+  const enabled = insightProvider.indexOf('AI_OPPORTUNITY_INTELLIGENCE_ENABLED !== "true"');
+  const zeroSpend = insightProvider.indexOf('spendMode === "zero"');
+  const keyRead = insightProvider.indexOf("env.GROQ_API_KEY");
+  const providerFetch = insightProvider.indexOf("fetchImpl(GROQ_ENDPOINT");
+  assert.ok(enabled >= 0);
+  assert.ok(zeroSpend > enabled);
+  assert.ok(keyRead > zeroSpend);
+  assert.ok(providerFetch >= 0);
+  assert.doesNotMatch(insightProvider, /NEXT_PUBLIC_.*(?:AI|GROQ|GEMINI|AZURE|KEY)/);
+});
+
+invariant("opportunity intelligence sanitizer and output contract fail closed", () => {
+  assert.match(insightContract, /buildSanitizedOpportunityIntelligenceInput/);
+  assert.match(insightContract, /goals, CVs and database metadata are never accepted/);
+  assert.match(insightContract, /validateModelOpportunityAssistance/);
+  assert.match(insightContract, /Extra keys are rejected/);
+  assert.doesNotMatch(insightUi, /dangerouslySetInnerHTML|process\.env|GROQ_API_KEY/);
+  assert.doesNotMatch(insightUi, /matchScore|percentage|\d+%/i);
 });
 
 invariant("service-role credentials are absent from public application paths", () => {

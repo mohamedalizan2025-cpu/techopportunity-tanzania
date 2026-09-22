@@ -1,5 +1,10 @@
 # AI Opportunity Assistant — Architecture Design
 
+> This document covers natural-language search-plan interpretation. The newer,
+> separate profile + trusted-opportunity readiness layer is documented in
+> [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md). Neither has an
+> externally active provider by default.
+
 Status: **SCAFFOLD IMPLEMENTED · PROVIDER DISABLED** · Prepared 2026-08-27,
 status corrected 2026-08-29 after the architecture audit. The route handler,
 strict plan contract, grounded execution, fallback, kill switch and rate

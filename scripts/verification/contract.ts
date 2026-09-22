@@ -74,7 +74,12 @@ const MODERATION_AUTH = [
   /^tests\/(moderation-review|published-management|lifecycle|accounts-saved)\.test\.ts$/,
   /^proxy\.ts$/,
 ];
-const ASSISTANT = [/^app\/api\/assistant\//, /^lib\/assistant\//, /^tests\/assistant\.test\.ts$/];
+const ASSISTANT = [
+  /^app\/api\/(?:assistant|opportunity-insight)\//,
+  /^lib\/(?:assistant|opportunity-intelligence)\//,
+  /^components\/opportunity-insight\.tsx$/,
+  /^tests\/(?:assistant|opportunity-intelligence)\.test\.ts$/,
+];
 const ALERTS = [
   /^app\/saved\//,
   /^components\/alert-preference-control\.tsx$/,
