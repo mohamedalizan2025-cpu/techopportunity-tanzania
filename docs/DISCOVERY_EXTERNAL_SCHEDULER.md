@@ -1,10 +1,10 @@
 # Discovery external scheduler activation runbook
 
-Status: **CREDENTIALLED WORKER DEPLOYED, STILL INERT AND NOT ACTIVATED**.
-Repository support, a repository-scoped GitHub credential, and its encrypted
-Cloudflare Worker secret exist. There is still no Cron Trigger, route, binding,
-activation variable, external dispatch, or paid resource. The production
-activation gate is closed.
+Status: **ACTIVATED — AWAITING REAL SCHEDULED EVIDENCE**.
+Repository support, the repository-scoped GitHub credential, its encrypted
+Cloudflare Worker secret, both GitHub activation variables, and the two-hour
+Cloudflare Cron Trigger now exist. No real external slot has yet occurred, so
+activation is not operational proof and the incident remains `NOT_YET_PROVEN`.
 
 ## Decision
 
@@ -48,17 +48,18 @@ Cron Events retains the 100 most recent scheduled invocations, Workers Logs give
 provider-side evidence, and Tech Opportunity's independent health report remains
 the authority for product readiness.
 
-## Current Cloudflare evidence (2026-09-23)
+## Current Cloudflare evidence (2026-09-24)
 
 - Wrangler 4.137.0 is authenticated through owner-approved OAuth; its credential
   is stored in an encrypted file with the key in Windows Credential Manager.
 - Account `7f88dee382a3a25649535105b5ef55f1` shows Workers Free usage of
   0/100,000 requests for the day. No upgrade or paid binding was selected.
-- Worker `tech-opportunity-discovery-scheduler` retains original inert version
-  `b9f8bc54-8f69-455f-b2fb-3da9db1426d2` and now has active deployment version
-  prefix `e4d0296b`, created only to add the encrypted secret.
-- The dashboard reports no active routes, workers.dev disabled, zero bindings,
-  zero traffic/invocations, and **No cron triggers configured**.
+- Worker `tech-opportunity-discovery-scheduler` retains the inert and
+  credential-only versions in history. Owner-authorized Wrangler deployment at
+  `2026-09-23T21:05:00Z` made version
+  `9bb741c3-845f-4c2b-bb1b-2cc13217576e` current at 100%.
+- The live configuration has `workers_dev=false`, `preview_urls=false`, no
+  routes or billable bindings, and exactly one Cron Trigger: `17 */2 * * *`.
 - Only the non-secret variables `GITHUB_OWNER`, `GITHUB_REPOSITORY`,
   `GITHUB_WORKFLOW`, and `GITHUB_REF` exist. Encrypted Worker secret
   `GITHUB_TOKEN` is configured; its value is not displayed or recorded.
@@ -67,6 +68,10 @@ the authority for product readiness.
   `techopportunity-tanzania`, has no user permissions, and grants only required
   Metadata read plus Actions read/write. GitHub reported it as never used at
   the post-creation audit.
+- Repository variables now read
+  `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR=mohamedalizan2025-cpu` and
+  `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=true`. The first eligible post-activation
+  slot is `2026-09-23T22:17:00.000Z`; it must arrive naturally from Cloudflare.
 
 The Wrangler OAuth grant is account-administration tooling, not the runtime
 dispatch identity and is never exposed to the Worker. Runtime dispatch still
@@ -144,8 +149,10 @@ Do not execute these steps without explicit owner authorization:
    `GITHUB_TOKEN` is stored as an encrypted Worker secret. Do
    not deploy the committed `wrangler.toml` yet: it contains the live cron by
    design.
-4. Set `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR=mohamedalizan2025-cpu`.
-5. In one controlled window just after a completed Discovery slot, set
+4. **Complete 2026-09-24:** set
+   `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR=mohamedalizan2025-cpu`.
+5. **Complete 2026-09-24:** in one controlled window after the last completed
+   native Discovery worker, set
    `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=true`, then deploy the reviewed source
    with the committed `wrangler.toml`; that deployment adds `17 */2 * * *`.
    Native worker execution then suppresses automatically. If deployment fails,
@@ -153,9 +160,9 @@ Do not execute these steps without explicit owner authorization:
 6. Observe three distinct external slots (minimum six hours), then continue for
    at least 12 hours and preferably 24 hours before operational closure.
 
-The repository currently has neither activation variable. The committed
-`wrangler.toml` is deployable configuration; the inert shell is not evidence of
-Cron activation or external delivery.
+Both activation variables and the Cron Trigger are live. This proves only
+configuration activation. It is not external-delivery evidence; only natural
+Cron events and their correlated GitHub artifacts can satisfy step 6.
 
 ## Rollback
 

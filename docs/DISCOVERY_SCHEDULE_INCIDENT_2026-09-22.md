@@ -3,8 +3,8 @@
 ## Status
 
 The incident remains **NOT_YET_PROVEN** and the `:17` GitHub schedule experiment
-is **confirmed unreliable**. A no-cost external scheduler path is prepared in
-Git but remains owner-disabled and unprovisioned. Discovery stays
+is **confirmed unreliable**. The no-cost external scheduler is now activated,
+but no real external slot has yet occurred. Discovery stays
 at a two-hour target cadence with a two-hour tolerance. All qualification,
 authority, dedupe, pending-only, and human-publication rules are unchanged.
 
@@ -89,16 +89,28 @@ triggers configured.” On 2026-09-23 the owner later created a 60-day
 fine-grained credential for `mohamedalizan2025-cpu`, restricted to repository
 `techopportunity-tanzania` with Actions read/write and required Metadata read,
 and stored it only as encrypted Worker secret `GITHUB_TOKEN`. Cloudflare active
-deployment prefix `e4d0296b` records that secret-only configuration change. No
-activation variable, Cron Trigger, external dispatch, route, binding, or paid
-resource was created. External dispatch will use the same `17 */2 * * *` slots
-and the existing workflow only after the remaining owner gate passes. It is
-accepted only when owner-enabled, actor-bound, fresh, on-cadence, and not
-replayed. Native, external, manual, and push identities remain distinct;
-historical records are not relabeled. Health stays critical until three distinct
-external slots succeed and 12–24 hours of observation completes. Activation and
-rollback are documented in
+deployment prefix `e4d0296b` records that secret-only configuration change. At
+that preparation point no activation variable, Cron Trigger, external dispatch,
+route, binding, or paid resource existed. The later activation is recorded
+below. Activation and rollback are documented in
 [DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md).
+
+### 2026-09-24 external scheduler activation
+
+The owner authorized production activation. GitHub repository variables now
+bind exact actor `mohamedalizan2025-cpu` and enable the external gate. Wrangler
+4.137.0 deployed Worker version
+`9bb741c3-845f-4c2b-bb1b-2cc13217576e` with exactly one Cron Trigger,
+`17 */2 * * *`, while preserving `GITHUB_TOKEN` as encrypted `secret_text`.
+`workers_dev` and preview URLs remain disabled, and no route, paid binding,
+Supabase change, manual dispatch, or AI activation occurred. The first eligible
+post-activation slot is `2026-09-23T22:17:00.000Z`; it has not yet occurred and
+is not claimed as evidence.
+
+The external identity remains owner-enabled, actor-bound, fresh, on-cadence,
+and replay-protected. Native, external, manual, and push identities remain
+distinct and historical records are not relabeled. Health stays critical until
+three distinct external slots succeed and 12–24 hours of observation completes.
 
 GitHub documents that scheduled workflows can be delayed during high load,
 especially at the start of the hour, and that queued jobs can be dropped. It

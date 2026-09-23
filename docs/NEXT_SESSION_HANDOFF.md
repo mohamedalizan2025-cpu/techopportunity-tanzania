@@ -1,6 +1,6 @@
 # Current engineering handoff
 
-Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
 ## Current verified state
 
@@ -71,7 +71,7 @@ Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   path is now prepared as described in the next item. Full evidence:
   [DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md).
 
-- **External scheduler inert shell deployed; activation is OWNER-GATED.**
+- **External scheduler ACTIVATED — AWAITING REAL SCHEDULED EVIDENCE.**
   Cloudflare Workers Free Cron is selected because the existing Vercel Hobby scheduler is limited
   to daily execution and Azure's grants do not make required storage permanently
   free. The prepared Worker sends one `17 */2` dispatch with an exact nominal
@@ -79,14 +79,18 @@ Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   canonical slot, and no replay. Native cron worker execution suppresses while
   enabled, preventing increased frequency. Health remains critical until three
   distinct external slots succeed and 12–24 hours pass. Wrangler OAuth is
-  authenticated. Original inert version `b9f8bc54-8f69-455f-b2fb-3da9db1426d2`
-  remains, and active deployment prefix `e4d0296b` adds only encrypted secret
-  `GITHUB_TOKEN`; there is still no route, binding, traffic, or Cron Trigger.
+  authenticated. Active Worker version
+  `9bb741c3-845f-4c2b-bb1b-2cc13217576e` preserves encrypted secret
+  `GITHUB_TOKEN`, disables workers.dev and preview URLs, has no route or paid
+  binding, and adds exactly one Cron Trigger: `17 */2 * * *`.
   The 60-day GitHub credential expires 2026-11-22, belongs to exact actor
   `mohamedalizan2025-cpu`, selects only this repository, has no user permissions,
-  and grants only Actions read/write plus unavoidable Metadata read. Both GitHub
-  activation variables remain absent. Exact next is the final owner activation
-  review described in
+  and grants only Actions read/write plus unavoidable Metadata read. GitHub now
+  has the exact actor variable and `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=true`.
+  No real external slot has yet occurred; the first eligible slot is
+  `2026-09-23T22:17:00.000Z`. Exact next is to observe that natural Cron and
+  correlate Cloudflare, GitHub, trigger, worker, history, and health evidence—
+  never a manual substitute—as described in
   [DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md).
 
 - **END-OF-DAY CLOSURE 2026-09-17: work clean, next milestone is NOT an
