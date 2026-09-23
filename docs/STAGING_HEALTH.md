@@ -1,6 +1,6 @@
 # Staging Supabase health
 
-Status: **HEALTHY NOW; AUTOMATION PREPARED, OWNER-DISABLED**.
+Status: **HEALTHY NOW; STAGING-ONLY AUTOMATION ACTIVATED**.
 
 ## Environment boundary
 
@@ -33,7 +33,15 @@ on `opportunities` and `talent_profiles`, no anonymous SELECT privilege on
 policies. The transaction ended with `ROLLBACK`; no user data, schema, policy,
 or configuration changed.
 
-## Prepared maintenance
+At `2026-09-23T20:04:14Z`, owner-approved GitHub Actions run
+[`35913439505`](https://github.com/mohamedalizan2025-cpu/techopportunity-tanzania/actions/runs/35913439505)
+completed successfully on commit `f6e08ae`. Its non-secret `report.json`
+identified only staging ref `pumzofcwfjqswkiwfqty`, recorded HTTP 200,
+`readOnly: true`, 2 public opportunities, 0 non-published opportunities, and
+anonymous private-profile denial with HTTP 401. The report contains no key,
+database password, row contents, production ref, or user data.
+
+## Active maintenance
 
 `.github/workflows/staging-health.yml` is a small daily Free GitHub Actions job.
 It is disabled unless repository variable
@@ -52,14 +60,12 @@ exemption from pausing**. See [Supabase project pausing](https://supabase.com/do
 
 ## Activation and rollback
 
-Activation remains owner-controlled. GitHub repository settings are accessible
-and the encrypted-secret form is prepared, but the persistent submit, enable
-variable, and first external run require the owner's action-time approval:
-
-1. store the existing staging project's anonymous/publishable API key as the
-   repository secret `STAGING_SUPABASE_ANON_KEY` (never paste it into chat);
-2. set repository variable `STAGING_SUPABASE_HEALTH_ENABLED=true`;
-3. manually dispatch `Staging Supabase health` once and verify a healthy artifact.
+The owner approved activation on 2026-09-23. The existing staging project's
+publishable key is stored only as encrypted repository secret
+`STAGING_SUPABASE_ANON_KEY`; repository variable
+`STAGING_SUPABASE_HEALTH_ENABLED=true` enables the daily check. The first
+controlled manual run is the verified run above. This is connectivity and RLS
+evidence, not proof that Supabase will exempt the Free project from pausing.
 
 Rollback is to set the enable variable to `false` or delete it, then delete the
 staging-only secret if the workflow is retired. No production action is needed.

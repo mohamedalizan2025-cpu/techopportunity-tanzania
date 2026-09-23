@@ -4,8 +4,8 @@ Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- **2026-09-23 staging inactivity follow-up: healthy now; maintenance prepared
-  but owner-disabled.** Supabase Dashboard identified exact staging ref
+- **2026-09-23 staging inactivity follow-up: healthy now; staging-only maintenance
+  ACTIVATED and first run VERIFIED.** Supabase Dashboard identified exact staging ref
   `pumzofcwfjqswkiwfqty` as Healthy on the Free organization; no pause-warning
   banner was visible, although the owner's warning email remains valid. A guarded
   staging-only PostgreSQL 17.6 `READ ONLY` transaction confirmed the six-row
@@ -13,10 +13,13 @@ Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   exposed only the two published opportunities and no non-published row;
   anonymous profile access remains denied. No production credential, data,
   Discovery path, schema, or policy was touched. A gated daily read/RLS workflow
-  is prepared using only a staging anon key; it makes no claim that activity
-  guarantees exemption from Free Plan pausing. The encrypted-secret form is
-  prepared, but its persistent submit, activation variable, and manual run still
-  await the owner's action-time approval. Evidence and exact activation/rollback:
+  is active using only encrypted secret `STAGING_SUPABASE_ANON_KEY` and repository
+  variable `STAGING_SUPABASE_HEALTH_ENABLED=true`; it makes no claim that activity
+  guarantees exemption from Free Plan pausing. Owner-approved Actions run
+  `35913439505` succeeded at `2026-09-23T20:04:14Z`: its non-secret report bound
+  to staging ref `pumzofcwfjqswkiwfqty`, returned HTTP 200, stayed read-only,
+  exposed 2 published and 0 non-published opportunities, and denied anonymous
+  private-profile access with HTTP 401. Evidence and exact rollback:
   [STAGING_HEALTH.md](STAGING_HEALTH.md).
 
 - **AI Opportunity Intelligence controlled evaluation implemented; real Gemini
