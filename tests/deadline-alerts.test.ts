@@ -14,6 +14,7 @@ import {
   classifyDeadlineTransition,
   evaluateDeadline,
 } from "../lib/deadline-intelligence";
+import { buildDeadlineAlertStatusReport } from "../scripts/alerts/runner";
 
 let passed = 0;
 function test(name: string, run: () => void) {
@@ -53,6 +54,23 @@ test("valid date-only deadline closes after its calendar date", () => {
   assert.equal(result.status, "closing_soon");
   assert.equal(result.effectiveAt, "2026-09-04T00:00:00.000Z");
 });
+test("date-only deadline remains open through the final UTC millisecond", () => {
+  const result = evaluateDeadline(
+    { deadline: "2026-09-03", precision: "date", timezone: "Africa/Dar_es_Salaam" },
+    new Date("2026-09-03T23:59:59.999Z")
+  );
+  assert.equal(result.status, "closing_soon");
+  assert.equal(result.remainingDays, 1);
+  assert.equal(result.effectiveAt, "2026-09-04T00:00:00.000Z");
+});
+test("date-only deadline closes exactly at the next UTC day boundary", () => {
+  const result = evaluateDeadline(
+    { deadline: "2026-09-03", precision: "date", timezone: "Africa/Dar_es_Salaam" },
+    new Date("2026-09-04T00:00:00.000Z")
+  );
+  assert.equal(result.status, "closed");
+  assert.equal(result.remainingDays, 0);
+});
 test("impossible date-only deadline is invalid", () => {
   assert.equal(evaluateDeadline({ deadline: "2026-02-30", precision: "date" }, NOW).status, "invalid");
 });
@@ -63,6 +81,22 @@ test("timezone-aware deadline preserves its instant", () => {
     timezone: "Africa/Dar_es_Salaam",
   }, NOW);
   assert.equal(result.effectiveAt, "2026-09-10T09:00:00.000Z");
+});
+test("timezone-aware deadline stays open immediately before its exact instant", () => {
+  const result = evaluateDeadline({
+    deadline: "2026-09-10T12:00:00+03:00",
+    precision: "date_time",
+    timezone: "Africa/Dar_es_Salaam",
+  }, new Date("2026-09-10T08:59:59.999Z"));
+  assert.equal(result.status, "closing_soon");
+});
+test("timezone-aware deadline closes exactly at its normalized UTC instant", () => {
+  const result = evaluateDeadline({
+    deadline: "2026-09-10T12:00:00+03:00",
+    precision: "date_time",
+    timezone: "Africa/Dar_es_Salaam",
+  }, new Date("2026-09-10T09:00:00.000Z"));
+  assert.equal(result.status, "closed");
 });
 test("date-time without timezone is invalid", () => {
   assert.equal(evaluateDeadline({
@@ -267,9 +301,26 @@ test("worker execution is owner-gated and service-role server-only", () => {
   assert.doesNotMatch(read("app/saved/page.tsx"), /SUPABASE_SERVICE_ROLE_KEY/);
 });
 test("workflow retains machine-readable evidence", () => {
-  assert.match(workflow, /actions\/upload-artifact@v4/);
+  assert.match(workflow, /actions\/upload-artifact@v6/);
   assert.match(workflow, /alert-health\/report\.json/);
   assert.match(workflow, /retention-days: 30/);
+  assert.match(workflow, /id: verification/);
+  assert.match(workflow, /steps\.verification\.outcome != 'success'/);
+  assert.match(workflow, /DEADLINE_ALERT_BLOCKED_REASON: 'verification_failed'/);
+  assert.match(workflow, /if-no-files-found: error/);
+  assert.doesNotMatch(workflow, /continue-on-error:/);
+});
+test("blocked report records verification failure without claiming alert work", () => {
+  const report = buildDeadlineAlertStatusReport(
+    "blocked",
+    "2026-09-23T08:00:00.000Z",
+    "2026-09-23T08:00:01.000Z",
+    "verification_failed"
+  );
+  assert.equal(report.status, "blocked");
+  assert.equal(report.blockedReason, "verification_failed");
+  assert.equal(report.created, 0);
+  assert.equal(report.deliveryAttempted, false);
 });
 test("M30 never claims an alert was delivered", () => {
   assert.match(migration, /check \(state = 'generated'\)/);

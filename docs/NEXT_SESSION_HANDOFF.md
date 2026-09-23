@@ -1,6 +1,6 @@
 # Current engineering handoff
 
-Updated: 2026-09-22. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
 ## Current verified state
 
@@ -32,21 +32,22 @@ Updated: 2026-09-22. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   was configured. No schema or Discovery change. Architecture and activation
   contract: [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md).
 
-- **2026-09-22 Discovery scheduling incident: code mitigation implemented;
-  future scheduled proof pending.** Production history showed repeated 2.9–6.7
-  hour gaps under `0 */2 * * *`, while delivered jobs finished in about two
-  minutes and the last 100 records contained zero cancelled/skipped scheduled
-  runs. Both workflows are active on default branch `main`; Discovery uses the
-  non-cancelling bounded `discovery-production` lane. Root cause is GitHub's
-  documented start-of-hour schedule delay/drop risk, not a worker, concurrency,
-  default-branch, workflow-state, or monitor defect. Discovery is moved to
-  `17 */2 * * *`; the observer is `47 */2 * * *`; both explicitly configure
-  schedule minute 17. Interval/tolerance remain 2h/2h, manual dispatch remains
-  the safe recovery path, and admission/data/product behavior is unchanged.
-  Code closure does not prove provider reliability: observe at least six real
-  new `:17` cycles (preferably 24 hours). If misses persist, evaluate an external
-  Azure/student-resource scheduler that reuses the same worker and controls;
-  no migration is authorized now. Full evidence:
+- **2026-09-23 Discovery schedule follow-up: `:17` is confirmed unreliable;
+  incident remains `NOT_YET_PROVEN`.** Actual Actions evidence shows two
+  successful then two failed scheduled deliveries after the change, with gaps
+  of about 3.404, 3.252, and 7.170 hours. The two delivered failures were class
+  B: permanent verification failed on a mixed-clock AI test before the worker.
+  The independent monitor was correct (class C ruled out): run `35834538425`
+  reported a 10.6027575-hour gap, 66-minute dispatch latency, critical miss, and
+  uploaded artifact `10738273361`. Long delivery gaps independently preserve
+  class A evidence; no cancellation/concurrency defect was found. The test is
+  fixed with one injected clock and UTC boundary regressions. Interval/tolerance
+  remain 2h/2h; manual/push runs still cannot count as scheduled proof. A bounded
+  external-scheduler contingency is documented but not provisioned: reuse the
+  same worker only after adding an authenticated external trigger identity and
+  truthful health evidence. Exact next: push/confirm CI recovery, inspect the
+  next real `:17` run, and have the owner authorize an existing no-cost scheduler
+  plus least-privilege GitHub credential. Full evidence:
   [DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md).
 
 - **END-OF-DAY CLOSURE 2026-09-17: work clean, next milestone is NOT an

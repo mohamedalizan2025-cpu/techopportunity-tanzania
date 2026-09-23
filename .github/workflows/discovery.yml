@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -59,7 +59,7 @@ jobs:
       # observation and saves a new immutable key. No database or external
       # observability service is involved.
       - name: Restore discovery health history
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: discovery-health/history.json
           key: discovery-health-${{ github.run_id }}-${{ github.run_attempt }}
@@ -83,14 +83,14 @@ jobs:
 
       - name: Save discovery health history
         if: always() && hashFiles('discovery-health/history.json') != ''
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: discovery-health/history.json
           key: discovery-health-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload discovery health evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: discovery-health-${{ github.run_id }}-${{ github.run_attempt }}
           path: |

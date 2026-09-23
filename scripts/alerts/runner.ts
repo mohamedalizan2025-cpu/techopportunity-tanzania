@@ -45,7 +45,8 @@ interface ChangeRow {
 
 export interface DeadlineAlertRunReport {
   schemaVersion: 1;
-  status: "completed" | "disabled" | "failed";
+  status: "completed" | "disabled" | "failed" | "blocked";
+  blockedReason?: "verification_failed";
   startedAt: string;
   completedAt: string;
   enabledUsers: number;
@@ -56,6 +57,29 @@ export interface DeadlineAlertRunReport {
   duplicatesSuppressed: number;
   pruned: number;
   deliveryAttempted: false;
+}
+
+export function buildDeadlineAlertStatusReport(
+  status: "disabled" | "failed" | "blocked",
+  startedAt: string,
+  completedAt: string,
+  blockedReason?: "verification_failed"
+): DeadlineAlertRunReport {
+  return {
+    schemaVersion: 1,
+    status,
+    ...(blockedReason ? { blockedReason } : {}),
+    startedAt,
+    completedAt,
+    enabledUsers: 0,
+    evaluatedSaves: 0,
+    recentChanges: 0,
+    candidates: 0,
+    created: 0,
+    duplicatesSuppressed: 0,
+    pruned: 0,
+    deliveryAttempted: false,
+  };
 }
 
 function oneOpportunity(row: SavedRow): Exclude<SavedRow["opportunity"], Array<unknown> | null> | null {

@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -41,6 +41,7 @@ jobs:
         run: npm ci
 
       - name: Run permanent verification gates
+        id: verification
         env:
           VERIFY_BASE_SHA: ${{ github.event.before }}
         run: npm run verify
@@ -48,7 +49,7 @@ jobs:
       # The owner activates this only after migration 0012 is applied. Secrets
       # are scoped to this step and never reach verification or disabled runs.
       - name: Evaluate deadline alerts
-        if: vars.DEADLINE_ALERTS_ENABLED == 'true'
+        if: steps.verification.outcome == 'success' && vars.DEADLINE_ALERTS_ENABLED == 'true'
         env:
           DEADLINE_ALERTS_ENABLED: 'true'
           DEADLINE_ALERT_REPORT_PATH: alert-health/report.json
@@ -57,15 +58,24 @@ jobs:
         run: node --import tsx scripts/alerts/index.ts
 
       - name: Record owner-gated disabled state
-        if: vars.DEADLINE_ALERTS_ENABLED != 'true'
+        if: steps.verification.outcome == 'success' && vars.DEADLINE_ALERTS_ENABLED != 'true'
         env:
           DEADLINE_ALERT_REPORT_PATH: alert-health/report.json
           DEADLINE_ALERTS_ENABLED: 'false'
         run: node --import tsx scripts/alerts/index.ts
 
+      # Verification remains a hard failure. This credential-free step records
+      # why alert evaluation did not run so the always-upload has useful data.
+      - name: Record pre-evaluation failure state
+        if: always() && steps.verification.outcome != 'success'
+        env:
+          DEADLINE_ALERT_REPORT_PATH: alert-health/report.json
+          DEADLINE_ALERT_BLOCKED_REASON: 'verification_failed'
+        run: node --import tsx scripts/alerts/index.ts
+
       - name: Upload alert evaluation evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: deadline-alerts-${{ github.run_id }}-${{ github.run_attempt }}
           path: alert-health/report.json

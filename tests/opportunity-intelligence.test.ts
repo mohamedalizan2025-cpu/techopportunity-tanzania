@@ -23,6 +23,7 @@ import type { Opportunity } from "../lib/types";
 
 const root = process.cwd();
 const read = (path: string) => readFileSync(join(root, path), "utf8");
+const INSIGHT_NOW = new Date("2026-09-22T00:00:00.000Z");
 
 const matchingInput: MatchingInput = {
   schemaVersion: 1,
@@ -175,11 +176,11 @@ test("provider schema cannot override trust, eligibility, geography, or determin
 test("valid provider additions merge without replacing deterministic facts", async () => {
   clearOpportunityInsightCacheForTests();
   const item = opportunity();
-  const input = buildSanitizedOpportunityIntelligenceInput(item, matchingInput);
+  const input = buildSanitizedOpportunityIntelligenceInput(item, matchingInput, INSIGHT_NOW);
   const expected = buildDeterministicOpportunityInsight(input);
   const provider = createMockOpportunityIntelligenceProvider(async () => validAssistance(input));
   const result = await generateOpportunityInsight(item, matchingInput, {
-    now: new Date("2026-09-22T00:00:00.000Z"),
+    now: INSIGHT_NOW,
     selection: { provider, reason: null },
   });
   assert.equal(result.mode, "ai");

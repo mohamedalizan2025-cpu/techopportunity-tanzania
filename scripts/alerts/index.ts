@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import type { DeadlineAlertRunReport } from "./runner";
-import { runDeadlineAlertEvaluation } from "./runner";
+import { buildDeadlineAlertStatusReport, runDeadlineAlertEvaluation } from "./runner";
 
 const startedAt = new Date().toISOString();
 const reportPath = process.env.DEADLINE_ALERT_REPORT_PATH ?? "alert-health/report.json";
@@ -14,21 +14,18 @@ function writeReport(report: DeadlineAlertRunReport): void {
 }
 
 async function main(): Promise<void> {
-  if (process.env.DEADLINE_ALERTS_ENABLED !== "true") {
-    writeReport({
-      schemaVersion: 1,
-      status: "disabled",
+  if (process.env.DEADLINE_ALERT_BLOCKED_REASON === "verification_failed") {
+    writeReport(buildDeadlineAlertStatusReport(
+      "blocked",
       startedAt,
-      completedAt: new Date().toISOString(),
-      enabledUsers: 0,
-      evaluatedSaves: 0,
-      recentChanges: 0,
-      candidates: 0,
-      created: 0,
-      duplicatesSuppressed: 0,
-      pruned: 0,
-      deliveryAttempted: false,
-    });
+      new Date().toISOString(),
+      "verification_failed"
+    ));
+    return;
+  }
+
+  if (process.env.DEADLINE_ALERTS_ENABLED !== "true") {
+    writeReport(buildDeadlineAlertStatusReport("disabled", startedAt, new Date().toISOString()));
     return;
   }
 
@@ -45,21 +42,7 @@ async function main(): Promise<void> {
   try {
     writeReport(await runDeadlineAlertEvaluation(client));
   } catch (error) {
-    const report: DeadlineAlertRunReport = {
-      schemaVersion: 1,
-      status: "failed",
-      startedAt,
-      completedAt: new Date().toISOString(),
-      enabledUsers: 0,
-      evaluatedSaves: 0,
-      recentChanges: 0,
-      candidates: 0,
-      created: 0,
-      duplicatesSuppressed: 0,
-      pruned: 0,
-      deliveryAttempted: false,
-    };
-    writeReport(report);
+    writeReport(buildDeadlineAlertStatusReport("failed", startedAt, new Date().toISOString()));
     throw error;
   }
 }

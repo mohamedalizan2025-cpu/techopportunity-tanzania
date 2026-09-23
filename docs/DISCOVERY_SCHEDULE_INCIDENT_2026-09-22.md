@@ -2,15 +2,15 @@
 
 ## Status
 
-The bounded code mitigation is implemented; operational closure remains pending
-future real `schedule` events. Discovery stays at a two-hour target cadence and
-all qualification, authority, dedupe, pending-only, and human-publication rules
-are unchanged.
+The incident remains **NOT_YET_PROVEN** and the `:17` GitHub schedule experiment
+is now **confirmed unreliable and awaiting a scheduler change**. Discovery stays
+at a two-hour target cadence with a two-hour tolerance. All qualification,
+authority, dedupe, pending-only, and human-publication rules are unchanged.
 
 ## Evidenced root cause
 
-This incident is classified as **A: GitHub schedule delay/drop**, specifically
-the known risk of scheduling at the start of the hour.
+The original incident was classified as **A: GitHub schedule delay/drop**,
+specifically the known risk of scheduling at the start of the hour.
 
 Production inspection on 2026-09-22 established:
 
@@ -36,6 +36,35 @@ of missing run records, long schedule-event gaps, short successful job durations
 zero cancellations/skips, active workflows, and the correct default branch rules
 out workflow cancellation, disabled/default-branch state, and monitor
 misclassification as the cause of this incident.
+
+### 2026-09-23 follow-up
+
+Authenticated Actions evidence after the `:17` change shows four scheduled
+Discovery runs: `35764031590` succeeded at `17:57:39Z`, `35786175596`
+succeeded at `21:21:52Z`, `35802833205` failed at `00:37:00Z`, and
+`35833551425` failed at `07:47:12Z`. Their delivered-run gaps were about
+3.404, 3.252, and 7.170 hours. Both failures completed checkout, Node setup,
+and dependency installation, then failed the permanent verification gate on
+the same AI opportunity test before history restoration or worker execution.
+Neither was cancelled, stalled, skipped, nor retried.
+
+That test combined a live-clock expected value with a fixed-clock result,
+causing an `about 23 days` versus `about 24 days` mismatch. Production deadline
+semantics were not wrong. The current incident therefore includes **B:
+dispatched but failed before the worker**. Independent 3.4- and 7.2-hour gaps
+also show that **A: missing/delayed dispatch** persists at `:17`. The experiment
+is confirmed unreliable, not operationally proven.
+
+Health run `35834538425`, evaluated at `2026-09-23T07:58:55.465Z`, restored
+`discovery-health-35786175596-1`. It correctly identified the last successful
+scheduled worker observation at `2026-09-22T21:22:45Z`, calculated a
+10.6027575-hour gap and 66-minute dispatch latency from the nominal `20:17Z`
+slot, and reported critical `scheduled_run_missed` / `NOT_YET_PROVEN`. The
+evaluation intentionally failed only after writing its report; the always-upload
+then succeeded as artifact `discovery-schedule-health-35834538425-1` (artifact
+ID `10738273361`). **C: monitor evidence failure is ruled out.** No concurrency,
+cancellation, disabled-workflow, default-branch, or long-running-worker cause
+was found (**D ruled out**).
 
 GitHub documents that scheduled workflows can be delayed during high load,
 especially at the start of the hour, and that queued jobs can be dropped. It
@@ -77,16 +106,37 @@ group cannot cancel or suppress Discovery.
 
 ## Operational closure and contingency
 
-After deployment, observe at least six consecutive new `:17` nominal cycles
-(12 hours), and continue through a full 24-hour window if practical. Evidence
-must be real `schedule` events on the incident-fix SHA or a later unchanged SHA;
-a push or manual success is recovery evidence only. Confirm run event, SHA,
-conclusion, worker observation, `scheduleMinute: 17`, nominal slot, dispatch
-latency, and the absence of a new `scheduled_run_missed` critical anomaly.
+This repair fixes the mixed-clock test and adds explicit UTC/date-boundary
+coverage without changing deadline behavior. Deadline alert evaluation also
+writes a credential-free `blocked` report when verification fails before alert
+work; the verification failure still makes the workflow fail and the artifact
+upload remains strict. Action runtimes that emitted Node 20 / `DEP0040` warnings
+move to their official Node 24 releases. Application dependencies are unchanged
+because the observed warnings came from action runtimes.
 
-Until that window exists, the incident is code-closed but not operationally
-proven closed. If missed schedule events continue after the off-hour observation
-window, the next recommendation is an external scheduler using available
-Azure/student resources to invoke the existing bounded Discovery path. That is a
-contingency only: no Azure migration, new worker, changed cadence, or altered
-admission logic is authorized by this incident.
+No external service, paid resource, credential, migration, or alternate worker
+is provisioned here. The bounded contingency is:
+
+1. Use an owner-approved existing no-cost scheduler to call a narrowly scoped
+   GitHub trigger every two hours.
+2. Reuse the existing workflow, concurrency group, timeout, gates, secret
+   scoping, worker, and pending-only behavior.
+3. Before activation, add a dedicated authenticated `external_schedule` trigger
+   identity and validated nominal-slot input. Do not relabel ordinary
+   `workflow_dispatch` runs as scheduled evidence.
+4. Extend retained evidence to distinguish `github_schedule`,
+   `external_schedule`, `manual`, and `push`; deduplicate each nominal slot and
+   reject malformed, future, or replayed slot claims.
+5. Prove at least six consecutive external scheduled observations (12 hours),
+   preferably 24 hours, under the same two-hour target and tolerance.
+6. Keep GitHub cron until that proof is complete, then remove the redundant
+   trigger in a separate reviewed change.
+
+Manual and push successes remain recovery evidence only and cannot satisfy
+scheduled readiness. Once this repair is deployed, the exact next operational
+action is to confirm ordinary CI restores worker eligibility and inspect the
+next real `:17` schedule plus health artifact. In parallel, the owner must
+select and authorize an existing no-cost external scheduler and least-privilege
+GitHub credential.
+The external trigger identity and health contract must be implemented before the
+first external run. Operational closure still requires real scheduled evidence.

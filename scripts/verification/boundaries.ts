@@ -315,9 +315,9 @@ invariant("health reporting is local-only and cannot mutate production", () => {
 });
 
 invariant("discovery workflow retains bounded machine-readable health evidence", () => {
-  assert.match(discoveryWorkflow, /actions\/cache\/restore@v4/);
-  assert.match(discoveryWorkflow, /actions\/cache\/save@v4/);
-  assert.match(discoveryWorkflow, /actions\/upload-artifact@v4/);
+  assert.match(discoveryWorkflow, /actions\/cache\/restore@v5/);
+  assert.match(discoveryWorkflow, /actions\/cache\/save@v5/);
+  assert.match(discoveryWorkflow, /actions\/upload-artifact@v6/);
   assert.match(discoveryWorkflow, /discovery-health\/report\.json/);
   assert.match(discoveryWorkflow, /github\.run_id \}\}-\$\{\{ github\.run_attempt/);
   assert.match(discoveryWorkflow, /retention-days: 90/);
@@ -329,6 +329,8 @@ invariant("schedule monitor is credential-free and cannot execute discovery", ()
   assert.match(healthWorkflow, /DISCOVERY_TARGET_INTERVAL_HOURS: ['"]2['"]/);
   assert.match(healthWorkflow, /DISCOVERY_SCHEDULE_MINUTE: ['"]17['"]/);
   assert.match(healthWorkflow, /run: npm run health:monitor/);
+  assert.match(healthWorkflow, /actions\/cache\/restore@v5/);
+  assert.match(healthWorkflow, /actions\/upload-artifact@v6/);
   assert.doesNotMatch(healthWorkflow, /secrets\.|SUPABASE_SERVICE_ROLE_KEY|scripts\/discovery\/index\.ts/);
 });
 
@@ -339,7 +341,12 @@ invariant("deadline alert scheduler is separate, bounded, owner-gated, and obser
   assert.match(alertWorkflow, /cancel-in-progress: false/);
   assert.match(alertWorkflow, /timeout-minutes: 20/);
   assert.match(alertWorkflow, /vars\.DEADLINE_ALERTS_ENABLED == 'true'/);
-  assert.match(alertWorkflow, /actions\/upload-artifact@v4/);
+  assert.match(alertWorkflow, /actions\/upload-artifact@v6/);
+  assert.match(alertWorkflow, /id: verification/);
+  assert.match(alertWorkflow, /steps\.verification\.outcome != 'success'/);
+  assert.match(alertWorkflow, /DEADLINE_ALERT_BLOCKED_REASON: 'verification_failed'/);
+  assert.match(alertWorkflow, /if-no-files-found: error/);
+  assert.doesNotMatch(alertWorkflow, /continue-on-error:/);
   assert.match(alertIndex, /DEADLINE_ALERTS_ENABLED !== "true"/);
   assert.doesNotMatch(alertWorkflow, /scripts\/discovery\/index\.ts/);
   assert.doesNotMatch(discoveryWorkflow, /scripts\/alerts\//);
