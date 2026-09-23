@@ -1,0 +1,52 @@
+name: Staging Supabase health
+
+on:
+  # A small daily read/RLS check. This is evidence, not a promise that Supabase
+  # Free will exempt the project from inactivity pausing.
+  schedule:
+    - cron: '43 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-supabase-health
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    if: vars.STAGING_SUPABASE_HEALTH_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The exact staging URL is non-secret and fixed here. The staging-only
+      # anon key reaches only this read-only step; no production credential is
+      # available to this workflow.
+      - name: Inspect staging connectivity and RLS
+        env:
+          STAGING_SUPABASE_URL: https://pumzofcwfjqswkiwfqty.supabase.co
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_HEALTH_REPORT_PATH: staging-health/report.json
+        run: node --import tsx scripts/staging/health.ts
+
+      - name: Upload staging health evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: staging-supabase-health-${{ github.run_id }}-${{ github.run_attempt }}
+          path: staging-health/report.json
+          if-no-files-found: error
+          retention-days: 30

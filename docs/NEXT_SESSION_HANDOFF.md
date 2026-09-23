@@ -4,6 +4,20 @@ Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-23 staging inactivity follow-up: healthy now; maintenance prepared
+  but owner-disabled.** Supabase Dashboard identified exact staging ref
+  `pumzofcwfjqswkiwfqty` as Healthy on the Free organization; no pause-warning
+  banner was visible, although the owner's warning email remains valid. A guarded
+  staging-only PostgreSQL 17.6 `READ ONLY` transaction confirmed the six-row
+  synthetic baseline and zero private activity/profile rows. Runtime `anon` RLS
+  exposed only the two published opportunities and no non-published row;
+  anonymous profile access remains denied. No production credential, data,
+  Discovery path, schema, or policy was touched. A gated daily read/RLS workflow
+  is prepared using only a staging anon key; it makes no claim that activity
+  guarantees exemption from Free Plan pausing. Activation waits for the existing
+  GitHub passkey gate. Evidence and exact activation/rollback:
+  [STAGING_HEALTH.md](STAGING_HEALTH.md).
+
 - **AI Opportunity Intelligence controlled evaluation implemented; real Groq
   run pending.** The reproducible 16-case synthetic corpus covers strong/weak
   fit, National/International, eligibility unknown/excluded, all requested

@@ -34,6 +34,8 @@ const healthWorkflow = read(".github/workflows/discovery-health.yml");
 const externalScheduler = read("ops/discovery-scheduler/cloudflare-worker.ts");
 const externalSchedulerConfig = read("ops/discovery-scheduler/wrangler.toml");
 const verificationWorkflow = read(".github/workflows/verification.yml");
+const stagingHealthWorkflow = read(".github/workflows/staging-health.yml");
+const stagingHealth = read("scripts/staging/health.ts");
 const savedMigration = read("supabase/migrations/0011_saved_opportunities.sql");
 const savedAction = read("lib/data/saved-opportunity-actions.ts");
 const savedData = read("lib/data/saved-opportunities.ts");
@@ -388,6 +390,18 @@ invariant("ordinary milestone CI is read-only and credential-free", () => {
   assert.match(verificationWorkflow, /run: npm run verify/);
   assert.match(verificationWorkflow, /run: npm run build/);
   assert.doesNotMatch(verificationWorkflow, /secrets\.|SUPABASE_SERVICE_ROLE_KEY|scripts\/discovery\/index\.ts/);
+});
+
+invariant("staging health is exact-target, read-only, and production-isolated", () => {
+  assert.match(stagingHealth, /STAGING_PROJECT_REF = "pumzofcwfjqswkiwfqty"/);
+  assert.match(stagingHealth, /PRODUCTION_PROJECT_REF = "jltuufukcwztugvojwjd"/);
+  assert.match(stagingHealth, /method: "GET"/);
+  assert.doesNotMatch(stagingHealth, /\.(?:insert|update|delete|upsert)\s*\(/);
+  assert.doesNotMatch(stagingHealthWorkflow, /NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|scripts\/discovery/);
+  assert.match(stagingHealthWorkflow, /vars\.STAGING_SUPABASE_HEALTH_ENABLED == 'true'/);
+  assert.match(stagingHealthWorkflow, /secrets\.STAGING_SUPABASE_ANON_KEY/);
+  assert.match(stagingHealthWorkflow, /https:\/\/pumzofcwfjqswkiwfqty\.supabase\.co/);
+  assert.doesNotMatch(stagingHealthWorkflow, /jltuufukcwztugvojwjd/);
 });
 
 invariant("M31 forward migration preserves rows and removes fabricated country defaults", () => {

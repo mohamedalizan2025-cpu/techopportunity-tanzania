@@ -83,6 +83,17 @@ test("workflow changes select workflow review", () => {
   assert.deepEqual(selected([".github/workflows/verification.yml"]), ["workflow-review"]);
 });
 
+test("staging health stays outside production Discovery", () => {
+  const plan = classifyChanges([
+    ".github/workflows/staging-health.yml",
+    "scripts/staging/health.ts",
+    "tests/staging-health.test.ts",
+  ]);
+  assert.deepEqual(selected(plan.changedFiles), ["workflow-review"]);
+  assert.equal(plan.classifications.discovery.length, 0);
+  assert.equal(plan.productionEvidence.required, false);
+});
+
 test("discovery workflow changes require exact-head production evidence", () => {
   const plan = classifyChanges([".github/workflows/discovery.yml"]);
   assert.equal(plan.productionEvidence.required, true);
