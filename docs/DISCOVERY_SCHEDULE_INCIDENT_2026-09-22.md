@@ -85,9 +85,14 @@ trigger. On 2026-09-23 the owner authenticated Wrangler by OAuth and deployed
 one inert Worker shell, version `b9f8bc54-8f69-455f-b2fb-3da9db1426d2`, with no
 URL, route, binding, secret, or Cron Trigger. The live dashboard showed Workers
 Free usage at 0/100,000 requests for the day and explicitly reported “No cron
-triggers configured.” No GitHub dispatch credential or activation variable was
-created. External dispatch will use the same `17 */2 * * *` slots and the
-existing workflow only after the remaining security and owner gates pass. It is
+triggers configured.” On 2026-09-23 the owner later created a 60-day
+fine-grained credential for `mohamedalizan2025-cpu`, restricted to repository
+`techopportunity-tanzania` with Actions read/write and required Metadata read,
+and stored it only as encrypted Worker secret `GITHUB_TOKEN`. Cloudflare active
+deployment prefix `e4d0296b` records that secret-only configuration change. No
+activation variable, Cron Trigger, external dispatch, route, binding, or paid
+resource was created. External dispatch will use the same `17 */2 * * *` slots
+and the existing workflow only after the remaining owner gate passes. It is
 accepted only when owner-enabled, actor-bound, fresh, on-cadence, and not
 replayed. Native, external, manual, and push identities remain distinct;
 historical records are not relabeled. Health stays critical until three distinct

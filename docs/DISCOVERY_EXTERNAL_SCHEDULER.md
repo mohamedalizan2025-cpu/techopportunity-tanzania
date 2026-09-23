@@ -1,9 +1,10 @@
 # Discovery external scheduler activation runbook
 
-Status: **INERT WORKER SHELL DEPLOYED, NOT ACTIVATED**. Repository support and
-one Cloudflare Worker version exist, but there is no Cron Trigger, route,
-binding, GitHub dispatch token, Worker secret, activation variable, external
-dispatch, or paid resource. The owner gate is closed.
+Status: **CREDENTIALLED WORKER DEPLOYED, STILL INERT AND NOT ACTIVATED**.
+Repository support, a repository-scoped GitHub credential, and its encrypted
+Cloudflare Worker secret exist. There is still no Cron Trigger, route, binding,
+activation variable, external dispatch, or paid resource. The production
+activation gate is closed.
 
 ## Decision
 
@@ -53,13 +54,19 @@ the authority for product readiness.
   is stored in an encrypted file with the key in Windows Credential Manager.
 - Account `7f88dee382a3a25649535105b5ef55f1` shows Workers Free usage of
   0/100,000 requests for the day. No upgrade or paid binding was selected.
-- Worker `tech-opportunity-discovery-scheduler` has one uploaded inert version,
-  `b9f8bc54-8f69-455f-b2fb-3da9db1426d2`, created at
-  `2026-09-23T18:40:20.504Z`.
+- Worker `tech-opportunity-discovery-scheduler` retains original inert version
+  `b9f8bc54-8f69-455f-b2fb-3da9db1426d2` and now has active deployment version
+  prefix `e4d0296b`, created only to add the encrypted secret.
 - The dashboard reports no active routes, workers.dev disabled, zero bindings,
-  zero invocations, and **No cron triggers configured**.
+  zero traffic/invocations, and **No cron triggers configured**.
 - Only the non-secret variables `GITHUB_OWNER`, `GITHUB_REPOSITORY`,
-  `GITHUB_WORKFLOW`, and `GITHUB_REF` exist. `GITHUB_TOKEN` does not exist.
+  `GITHUB_WORKFLOW`, and `GITHUB_REF` exist. Encrypted Worker secret
+  `GITHUB_TOKEN` is configured; its value is not displayed or recorded.
+- GitHub credential `Tech Opportunity scheduler` belongs to
+  `mohamedalizan2025-cpu`, expires on 2026-11-22, selects only
+  `techopportunity-tanzania`, has no user permissions, and grants only required
+  Metadata read plus Actions read/write. GitHub reported it as never used at
+  the post-creation audit.
 
 The Wrangler OAuth grant is account-administration tooling, not the runtime
 dispatch identity and is never exposed to the Worker. Runtime dispatch still
@@ -130,11 +137,11 @@ Do not execute these steps without explicit owner authorization:
 
 1. Confirm the target Cloudflare account is on **Workers Free**, has capacity for
    one of its five cron triggers, and has no paid-plan upgrade or billable binding.
-2. Create/approve the 30–90-day fine-grained token for owner
+2. **Complete 2026-09-23:** create/approve the 30–90-day fine-grained token for owner
    `mohamedalizan2025-cpu`, selected repository `techopportunity-tanzania`, with
    Actions read/write and unavoidable Metadata read only.
-3. The Worker shell already exists without a Cron Trigger. After the token
-   settings pass review, add `GITHUB_TOKEN` as an encrypted Worker secret. Do
+3. **Complete 2026-09-23:** the Worker shell exists without a Cron Trigger and
+   `GITHUB_TOKEN` is stored as an encrypted Worker secret. Do
    not deploy the committed `wrangler.toml` yet: it contains the live cron by
    design.
 4. Set `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR=mohamedalizan2025-cpu`.
