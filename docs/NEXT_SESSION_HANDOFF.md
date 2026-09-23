@@ -14,25 +14,27 @@ Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   anonymous profile access remains denied. No production credential, data,
   Discovery path, schema, or policy was touched. A gated daily read/RLS workflow
   is prepared using only a staging anon key; it makes no claim that activity
-  guarantees exemption from Free Plan pausing. Activation waits for the existing
-  GitHub passkey gate. Evidence and exact activation/rollback:
+  guarantees exemption from Free Plan pausing. The encrypted-secret form is
+  prepared, but its persistent submit, activation variable, and manual run still
+  await the owner's action-time approval. Evidence and exact activation/rollback:
   [STAGING_HEALTH.md](STAGING_HEALTH.md).
 
-- **AI Opportunity Intelligence controlled evaluation implemented; real Groq
-  run pending.** The reproducible 16-case synthetic corpus covers strong/weak
+- **AI Opportunity Intelligence controlled evaluation implemented; real Gemini
+  and Groq runs pending independently.** The reproducible 16-case synthetic corpus covers strong/weak
   fit, National/International, eligibility unknown/excluded, all requested
   categories and deadline states, incomplete/conflicting evidence, injection,
   override, direct-identifier sanitization, and malformed output. Local contract
   simulation: 16 requests, 14 valid structured responses, 2 intentional
-  deterministic fallbacks, 0 hard failures, 80/80 soft checks. The Groq adapter
-  now requests strict JSON Schema for `openai/gpt-oss-20b` while retaining the
-  application validator. No `GROQ_API_KEY`, ZDR confirmation, or no-billing
-  confirmation was available, so the real run made 0 external requests and the
-  production pilot remains gated. Exact runbook and rubric:
+  deterministic fallbacks, 0 hard failures, 80/80 soft checks. The real-provider
+  harness now supports separately gated `gemini-3.5-flash-lite` and
+  `openai/gpt-oss-20b` runs while retaining the application validator. No
+  provider credential or owner privacy/no-billing confirmation was configured,
+  so real evaluation made 0 external requests and the production pilot remains
+  gated. Exact runbook and rubric:
   [AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
 
-- **AI Opportunity Intelligence V1 implemented in code; external provider NOT
-  activated.** The bounded layer reuses trusted opportunity evidence,
+- **AI Opportunity Intelligence provider chain implemented in code; external
+  providers NOT activated.** The bounded layer reuses trusted opportunity evidence,
   deterministic `MatchingInput`/`explainMatch`, and owner-only profiles. Its
   sanitizer sends only selected profile fields plus bounded opportunity
   type/sector/geography/description/eligibility/deadline evidence; identity,
@@ -41,12 +43,15 @@ Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   and evidence limitations; deterministic fit, eligibility, geography, trust,
   moderation, publication, and deadline urgency cannot be overridden. Detail +
   For You expose the minimal action, with deterministic guidance on every
-  disabled/unavailable/quota/timeout/invalid path. Provider selection is exact,
-  hard zero-spend blocks all external calls, and no credential/provider/billing
-  was configured. No schema or Discovery change. Architecture and activation
-  contract: [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md).
+  disabled/unavailable/quota/timeout/invalid path. The only selectable chain is
+  Gemini primary then one Groq backup attempt; both credentials plus four
+  independent privacy/billing attestations are required, the chain shares one
+  eight-second budget, and no retries occur. Hard zero-spend blocks all external
+  calls, and no credential/provider/billing setting was configured. No schema or
+  Discovery change. Architecture and activation contract:
+  [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md).
 
-- **2026-09-23 Discovery schedule follow-up: `:17` is confirmed unreliable;
+- **2026-09-23 Discovery schedule follow-up: `:17` remains confirmed unreliable;
   incident remains `NOT_YET_PROVEN`.** Actual Actions evidence shows two
   successful then two failed scheduled deliveries after the change, with gaps
   of about 3.404, 3.252, and 7.170 hours. The two delivered failures were class
@@ -57,22 +62,25 @@ Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   class A evidence; no cancellation/concurrency defect was found. The test is
   fixed with one injected clock and UTC boundary regressions. Interval/tolerance
   remain 2h/2h; manual/push runs still cannot count as scheduled proof. Commit
-  `c4dc66e` restored push execution but did not produce scheduled proof. The
-  external path is now prepared as described in the next item. Full evidence:
+  `c4dc66e` restored push execution but did not produce scheduled proof. Two
+  later native scheduled runs succeeded at 16:40 and 21:24 EAT, but their 5h53
+  and 4h44 delivered-run gaps still exceed interval plus tolerance. The external
+  path is now prepared as described in the next item. Full evidence:
   [DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md).
 
-- **External scheduler repository support prepared; activation is OWNER-GATED.**
-  No native Discovery schedule occurred after failed run `35833551425`; recovery
-  run `35839051623` was push-only and cannot prove cadence. Cloudflare Workers
-  Free Cron is selected because the existing Vercel Hobby scheduler is limited
+- **External scheduler inert shell deployed; activation is OWNER-GATED.**
+  Cloudflare Workers Free Cron is selected because the existing Vercel Hobby scheduler is limited
   to daily execution and Azure's grants do not make required storage permanently
   free. The prepared Worker sends one `17 */2` dispatch with an exact nominal
   slot. GitHub requires owner enablement, a dedicated allowed actor, a fresh
   canonical slot, and no replay. Native cron worker execution suppresses while
   enabled, preventing increased frequency. Health remains critical until three
-  distinct external slots succeed. Nothing external is provisioned; both GitHub
-  activation variables are absent. Exact next: owner authorizes the Workers Free
-  deployment and dedicated repository-only Actions-write token, then follows
+  distinct external slots succeed and 12–24 hours pass. Wrangler OAuth is
+  authenticated and inert version `b9f8bc54-8f69-455f-b2fb-3da9db1426d2`
+  exists with no route, binding, secret, or Cron Trigger; the dashboard reports
+  0/100,000 requests and no configured cron. Both GitHub activation variables
+  remain absent. Exact next: owner completes the dedicated repository-only
+  Actions-write identity/token gate, then follows
   [DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md).
 
 - **END-OF-DAY CLOSURE 2026-09-17: work clean, next milestone is NOT an

@@ -1,8 +1,9 @@
 # Discovery external scheduler activation runbook
 
-Status: **PREPARED, NOT ACTIVATED**. Repository support exists, but no external
-account, Worker, cron trigger, GitHub token, repository variable, or paid resource
-was created. The owner gate is closed.
+Status: **INERT WORKER SHELL DEPLOYED, NOT ACTIVATED**. Repository support and
+one Cloudflare Worker version exist, but there is no Cron Trigger, route,
+binding, GitHub dispatch token, Worker secret, activation variable, external
+dispatch, or paid resource. The owner gate is closed.
 
 ## Decision
 
@@ -45,6 +46,24 @@ is for Enterprise subscriptions. Selection therefore does not declare recovery.
 Cron Events retains the 100 most recent scheduled invocations, Workers Logs gives
 provider-side evidence, and Tech Opportunity's independent health report remains
 the authority for product readiness.
+
+## Current Cloudflare evidence (2026-09-23)
+
+- Wrangler 4.137.0 is authenticated through owner-approved OAuth; its credential
+  is stored in an encrypted file with the key in Windows Credential Manager.
+- Account `7f88dee382a3a25649535105b5ef55f1` shows Workers Free usage of
+  0/100,000 requests for the day. No upgrade or paid binding was selected.
+- Worker `tech-opportunity-discovery-scheduler` has one uploaded inert version,
+  `b9f8bc54-8f69-455f-b2fb-3da9db1426d2`, created at
+  `2026-09-23T18:40:20.504Z`.
+- The dashboard reports no active routes, workers.dev disabled, zero bindings,
+  zero invocations, and **No cron triggers configured**.
+- Only the non-secret variables `GITHUB_OWNER`, `GITHUB_REPOSITORY`,
+  `GITHUB_WORKFLOW`, and `GITHUB_REF` exist. `GITHUB_TOKEN` does not exist.
+
+The Wrangler OAuth grant is account-administration tooling, not the runtime
+dispatch identity and is never exposed to the Worker. Runtime dispatch still
+requires the separately scoped GitHub credential described below.
 
 ## Trigger and authentication contract
 
@@ -103,9 +122,10 @@ Do not execute these steps without explicit owner authorization:
    one of its five cron triggers, and has no paid-plan upgrade or billable binding.
 2. Create/approve the dedicated GitHub machine identity and short-lived,
    repository-only fine-grained token with Actions-write permission.
-3. Create a Worker shell without a Cron Trigger and add `GITHUB_TOKEN` as an
-   encrypted Worker secret. Do not deploy the committed `wrangler.toml` yet: it
-   contains the live cron by design.
+3. The Worker shell already exists without a Cron Trigger. After the dedicated
+   identity passes review, add `GITHUB_TOKEN` as an encrypted Worker secret. Do
+   not deploy the committed `wrangler.toml` yet: it contains the live cron by
+   design.
 4. Set `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR` to the dedicated GitHub login.
 5. In one controlled window just after a completed Discovery slot, set
    `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=true`, then deploy the reviewed source
@@ -116,7 +136,8 @@ Do not execute these steps without explicit owner authorization:
    at least 12 hours and preferably 24 hours before operational closure.
 
 The repository currently has neither activation variable. The committed
-`wrangler.toml` is deployable configuration, not evidence that deployment exists.
+`wrangler.toml` is deployable configuration; the inert shell is not evidence of
+Cron activation or external delivery.
 
 ## Rollback
 

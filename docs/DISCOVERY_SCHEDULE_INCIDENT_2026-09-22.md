@@ -71,18 +71,28 @@ was found (**D ruled out**).
 
 Commit `c4dc66e` repaired the pre-worker test failure. Its push-triggered
 Discovery run `35839051623` passed verification and worker execution, but remains
-push recovery evidence only. An authenticated Actions audit found **no new real
-Discovery `schedule` event after run `35833551425` at 07:47:12Z**. The latest
-native scheduled evidence therefore remains failed and the delivery problem is
-still outstanding.
+push recovery evidence only. A later authenticated Actions audit found two new
+real native `schedule` events: run `35868675410` succeeded at 16:40 EAT and run
+`35902298363` succeeded at 21:24 EAT. They are correctly distinct from push runs
+`35839051623` and `35844569114`. The gaps from the preceding scheduled run at
+10:47 EAT were about 5 hours 53 minutes and 4 hours 44 minutes. Both exceed the
+four-hour interval-plus-tolerance boundary. Two successes prove the repaired
+worker can run when GitHub delivers it; they do not prove reliable two-hour
+delivery. The incident remains outstanding.
 
-The repository now prepares Cloudflare Workers Free Cron as the selected external
-trigger without creating or modifying an external account, token, Worker, cron,
-variable, or billable resource. External dispatch uses the same `17 */2 * * *` slots and the existing
-workflow. It is accepted only when owner-enabled, actor-bound, fresh, on-cadence,
-and not replayed. Native, external, manual, and push identities remain distinct;
+The repository prepares Cloudflare Workers Free Cron as the selected external
+trigger. On 2026-09-23 the owner authenticated Wrangler by OAuth and deployed
+one inert Worker shell, version `b9f8bc54-8f69-455f-b2fb-3da9db1426d2`, with no
+URL, route, binding, secret, or Cron Trigger. The live dashboard showed Workers
+Free usage at 0/100,000 requests for the day and explicitly reported “No cron
+triggers configured.” No GitHub dispatch credential or activation variable was
+created. External dispatch will use the same `17 */2 * * *` slots and the
+existing workflow only after the remaining security and owner gates pass. It is
+accepted only when owner-enabled, actor-bound, fresh, on-cadence, and not
+replayed. Native, external, manual, and push identities remain distinct;
 historical records are not relabeled. Health stays critical until three distinct
-external slots succeed. Activation and rollback are documented in
+external slots succeed and 12–24 hours of observation completes. Activation and
+rollback are documented in
 [DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md).
 
 GitHub documents that scheduled workflows can be delayed during high load,
@@ -133,8 +143,10 @@ upload remains strict. Action runtimes that emitted Node 20 / `DEP0040` warnings
 move to their official Node 24 releases. Application dependencies are unchanged
 because the observed warnings came from action runtimes.
 
-No external service, paid resource, credential, migration, or alternate worker
-is provisioned here. The bounded contingency is now implemented repository-side:
+No paid resource, dispatch credential, Cron Trigger, migration, or alternate
+Discovery worker is provisioned. One inert Cloudflare Worker shell exists only
+to hold the reviewed source boundary before activation. The bounded contingency
+is implemented repository-side:
 
 1. Use an owner-approved Cloudflare Workers Free Cron Trigger to call the
    narrowly scoped GitHub trigger every two hours.

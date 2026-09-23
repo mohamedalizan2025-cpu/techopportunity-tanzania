@@ -52,14 +52,14 @@ exemption from pausing**. See [Supabase project pausing](https://supabase.com/do
 
 ## Activation and rollback
 
-Activation remains owner-controlled because GitHub's passkey verification is
-still pending:
+Activation remains owner-controlled. GitHub repository settings are accessible
+and the encrypted-secret form is prepared, but the persistent submit, enable
+variable, and first external run require the owner's action-time approval:
 
-1. complete GitHub passkey verification;
-2. store the existing staging project's anonymous/publishable API key as the
+1. store the existing staging project's anonymous/publishable API key as the
    repository secret `STAGING_SUPABASE_ANON_KEY` (never paste it into chat);
-3. set repository variable `STAGING_SUPABASE_HEALTH_ENABLED=true`;
-4. manually dispatch `Staging Supabase health` once and verify a healthy artifact.
+2. set repository variable `STAGING_SUPABASE_HEALTH_ENABLED=true`;
+3. manually dispatch `Staging Supabase health` once and verify a healthy artifact.
 
 Rollback is to set the enable variable to `false` or delete it, then delete the
 staging-only secret if the workflow is retired. No production action is needed.
