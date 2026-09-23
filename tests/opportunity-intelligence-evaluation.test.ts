@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSanitizedOpportunityIntelligenceInput } from "../lib/opportunity-intelligence/contract";
-import { selectConfiguredOpportunityIntelligenceProvider } from "../lib/opportunity-intelligence/provider";
 import {
+  createGeminiProvider,
+  createGroqProvider,
+} from "../lib/opportunity-intelligence/provider";
+import {
+  REAL_GEMINI_EVALUATION_CONFIRMATION,
   REAL_EVALUATION_CONFIRMATION,
   resolveRealEvaluationGate,
   runOpportunityIntelligenceEvaluation,
@@ -83,6 +87,36 @@ test("real Groq evaluation stays pending and makes zero calls without all owner 
   assert.equal(calls, 0);
 });
 
+test("real Gemini evaluation stays pending without unpaid-data-use and billing gates", async () => {
+  let calls = 0;
+  const fakeFetch = (async () => {
+    calls += 1;
+    throw new Error("network must remain blocked");
+  }) as typeof fetch;
+  const env = {
+    AI_OPPORTUNITY_INTELLIGENCE_GEMINI_MODEL: "gemini-3.5-flash-lite",
+    GEMINI_API_KEY: "synthetic-test-key",
+  };
+  const gate = resolveRealEvaluationGate(
+    env,
+    REAL_GEMINI_EVALUATION_CONFIRMATION,
+    fakeFetch,
+    "gemini"
+  );
+  assert.equal(gate.ready, false);
+  assert.equal(gate.reasons.some((reason) => /data-use/.test(reason)), true);
+  assert.equal(gate.reasons.some((reason) => /billing/.test(reason)), true);
+  const report = await runOpportunityIntelligenceEvaluation({
+    realProvider: "gemini",
+    confirmation: REAL_GEMINI_EVALUATION_CONFIRMATION,
+    env,
+    fetchImpl: fakeFetch,
+  });
+  assert.equal(report.execution, "real-gemini-pending");
+  assert.equal(report.summary.requestCount, 0);
+  assert.equal(calls, 0);
+});
+
 test("Groq adapter locks the evaluation model and requests strict structured output", async () => {
   const captured: { requestBody?: Record<string, unknown> } = {};
   const fakeFetch = (async (_url: string | URL | Request, init?: RequestInit) => {
@@ -96,17 +130,14 @@ test("Groq adapter locks the evaluation model and requests strict structured out
       }) } }],
     }), { status: 200, headers: { "content-type": "application/json" } });
   }) as typeof fetch;
-  const selection = selectConfiguredOpportunityIntelligenceProvider({
-    AI_OPPORTUNITY_INTELLIGENCE_ENABLED: "true",
-    AI_OPPORTUNITY_INTELLIGENCE_SPEND_MODE: "free-quota",
-    AI_OPPORTUNITY_INTELLIGENCE_PROVIDER: "groq",
-    AI_OPPORTUNITY_INTELLIGENCE_MODEL: "openai/gpt-oss-20b",
-    GROQ_API_KEY: "synthetic-test-key",
-  }, fakeFetch);
-  assert.ok(selection.provider);
+  const provider = createGroqProvider(
+    "synthetic-test-key",
+    "openai/gpt-oss-20b",
+    fakeFetch
+  );
   const fixture = OPPORTUNITY_INTELLIGENCE_EVALUATION_CORPUS[0];
   const input = buildSanitizedOpportunityIntelligenceInput(fixture.opportunity, fixture.profile, EVALUATION_NOW);
-  await selection.provider.generate(input, new AbortController().signal);
+  await provider.generate(input, new AbortController().signal);
   const requestBody = captured.requestBody;
   assert.ok(requestBody);
   assert.equal(requestBody.model, "openai/gpt-oss-20b");
@@ -118,4 +149,40 @@ test("Groq adapter locks the evaluation model and requests strict structured out
   assert.equal(responseFormat.type, "json_schema");
   assert.equal(responseFormat.json_schema.strict, true);
   assert.equal(responseFormat.json_schema.schema.additionalProperties, false);
+});
+
+test("Gemini adapter locks the stable free-tier model and requests structured JSON", async () => {
+  const captured: { url?: string; requestBody?: Record<string, unknown>; apiKey?: string } = {};
+  const fakeFetch = (async (url: string | URL | Request, init?: RequestInit) => {
+    captured.url = String(url);
+    captured.requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    captured.apiKey = new Headers(init?.headers).get("x-goog-api-key") ?? undefined;
+    return new Response(JSON.stringify({
+      candidates: [{ content: { parts: [{ text: JSON.stringify({
+        readiness: [],
+        missingOrUnclear: [],
+        nextActions: [],
+        confidence: { level: "low", limitations: [] },
+      }) }] } }],
+    }), { status: 200, headers: { "content-type": "application/json" } });
+  }) as typeof fetch;
+  const provider = createGeminiProvider(
+    "synthetic-test-key",
+    "gemini-3.5-flash-lite",
+    fakeFetch
+  );
+  const fixture = OPPORTUNITY_INTELLIGENCE_EVALUATION_CORPUS[0];
+  const input = buildSanitizedOpportunityIntelligenceInput(fixture.opportunity, fixture.profile, EVALUATION_NOW);
+  await provider.generate(input, new AbortController().signal);
+  assert.match(captured.url ?? "", /gemini-3\.5-flash-lite:generateContent$/);
+  assert.equal(captured.apiKey, "synthetic-test-key");
+  const requestBody = captured.requestBody;
+  assert.ok(requestBody);
+  const generationConfig = requestBody.generationConfig as {
+    maxOutputTokens: number;
+    responseFormat: { text: { mimeType: string; schema: Record<string, unknown> } };
+  };
+  assert.equal(generationConfig.maxOutputTokens, 700);
+  assert.equal(generationConfig.responseFormat.text.mimeType, "application/json");
+  assert.equal(generationConfig.responseFormat.text.schema.additionalProperties, false);
 });

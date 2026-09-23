@@ -104,15 +104,22 @@ invariant("opportunity intelligence is authenticated, trusted-only and private",
   assert.doesNotMatch(insightRoute, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
 });
 
-invariant("opportunity intelligence defaults to zero spend with exact provider selection", () => {
+invariant("opportunity intelligence defaults to zero spend with an independently gated provider chain", () => {
   const enabled = insightProvider.indexOf('AI_OPPORTUNITY_INTELLIGENCE_ENABLED !== "true"');
   const zeroSpend = insightProvider.indexOf('spendMode === "zero"');
-  const keyRead = insightProvider.indexOf("env.GROQ_API_KEY");
-  const providerFetch = insightProvider.indexOf("fetchImpl(GROQ_ENDPOINT");
+  const geminiKeyRead = insightProvider.indexOf("env.GEMINI_API_KEY");
+  const groqKeyRead = insightProvider.indexOf("env.GROQ_API_KEY");
   assert.ok(enabled >= 0);
   assert.ok(zeroSpend > enabled);
-  assert.ok(keyRead > zeroSpend);
-  assert.ok(providerFetch >= 0);
+  assert.ok(geminiKeyRead > zeroSpend);
+  assert.ok(groqKeyRead > zeroSpend);
+  assert.match(insightProvider, /AI_OPPORTUNITY_INTELLIGENCE_PROVIDER_CHAIN !== "gemini,groq"/);
+  assert.match(insightProvider, /AI_OPPORTUNITY_INTELLIGENCE_GEMINI_UNPAID_DATA_USE_CONFIRMED/);
+  assert.match(insightProvider, /AI_OPPORTUNITY_INTELLIGENCE_GEMINI_NO_BILLING_CONFIRMED/);
+  assert.match(insightProvider, /AI_OPPORTUNITY_INTELLIGENCE_GROQ_ZDR_CONFIRMED/);
+  assert.match(insightProvider, /AI_OPPORTUNITY_INTELLIGENCE_GROQ_NO_BILLING_CONFIRMED/);
+  assert.match(insightProvider, /fetchImpl\(GROQ_ENDPOINT/);
+  assert.match(insightProvider, /generateContent/);
   assert.doesNotMatch(insightProvider, /NEXT_PUBLIC_.*(?:AI|GROQ|GEMINI|AZURE|KEY)/);
 });
 
@@ -120,8 +127,12 @@ invariant("opportunity intelligence evaluation is synthetic and owner-gated", ()
   assert.match(insightProvider, /strict: true/);
   assert.match(insightProvider, /include_reasoning: false/);
   assert.match(insightEvaluation, /AI-EVAL-FREE-QUOTA/);
+  assert.match(insightEvaluation, /AI-EVAL-GEMINI-FREE-QUOTA/);
   assert.match(insightEvaluation, /AI_EVALUATION_ZDR_CONFIRMED/);
+  assert.match(insightEvaluation, /AI_EVALUATION_GEMINI_UNPAID_DATA_USE_CONFIRMED/);
   assert.match(insightEvaluation, /AI_EVALUATION_NO_BILLING_CONFIRMED/);
+  assert.match(insightEvaluation, /AI_EVALUATION_GEMINI_NO_BILLING_CONFIRMED/);
+  assert.match(insightEvaluation, /gemini-3\.5-flash-lite/);
   assert.match(insightEvaluation, /openai\/gpt-oss-20b/);
   assert.match(insightEvaluationCorpus, /fixtures\.invalid/);
   assert.doesNotMatch(insightEvaluationCorpus, /@supabase|createClient|SUPABASE|\.from\(/);
@@ -132,7 +143,7 @@ invariant("opportunity intelligence sanitizer and output contract fail closed", 
   assert.match(insightContract, /goals, CVs and database metadata are never accepted/);
   assert.match(insightContract, /validateModelOpportunityAssistance/);
   assert.match(insightContract, /Extra keys are rejected/);
-  assert.doesNotMatch(insightUi, /dangerouslySetInnerHTML|process\.env|GROQ_API_KEY/);
+  assert.doesNotMatch(insightUi, /dangerouslySetInnerHTML|process\.env|GROQ_API_KEY|GEMINI_API_KEY/);
   assert.doesNotMatch(insightUi, /matchScore|percentage|\d+%/i);
 });
 

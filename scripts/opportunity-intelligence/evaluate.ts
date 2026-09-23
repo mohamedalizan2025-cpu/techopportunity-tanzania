@@ -9,8 +9,9 @@ import {
 } from "../../lib/opportunity-intelligence/contract";
 import {
   buildOpportunityIntelligenceMessages,
+  createGeminiProvider,
+  createGroqProvider,
   createMockOpportunityIntelligenceProvider,
-  selectConfiguredOpportunityIntelligenceProvider,
   type OpportunityIntelligenceProvider,
   type ProviderSelection,
 } from "../../lib/opportunity-intelligence/provider";
@@ -27,11 +28,16 @@ import {
 } from "./evaluation-corpus";
 
 export const REAL_EVALUATION_CONFIRMATION = "AI-EVAL-FREE-QUOTA";
+export const REAL_GEMINI_EVALUATION_CONFIRMATION = "AI-EVAL-GEMINI-FREE-QUOTA";
+export type RealEvaluationProvider = "gemini" | "groq";
 
 export interface RealEvaluationGate {
   ready: boolean;
   reasons: string[];
   selection: ProviderSelection;
+  providerId: RealEvaluationProvider;
+  model: string;
+  privacyConfirmed: boolean;
   zdrConfirmed: boolean;
   noBillingConfirmed: boolean;
 }
@@ -39,25 +45,56 @@ export interface RealEvaluationGate {
 export function resolveRealEvaluationGate(
   env: Readonly<Record<string, string | undefined>>,
   confirmation: string | undefined,
-  fetchImpl: typeof fetch = fetch
+  fetchImpl: typeof fetch = fetch,
+  providerId: RealEvaluationProvider = "groq"
 ): RealEvaluationGate {
   const reasons: string[] = [];
-  const zdrConfirmed = env.AI_EVALUATION_ZDR_CONFIRMED === "true";
-  const noBillingConfirmed = env.AI_EVALUATION_NO_BILLING_CONFIRMED === "true";
-  if (confirmation !== REAL_EVALUATION_CONFIRMATION) reasons.push("explicit evaluation confirmation missing");
-  if (!zdrConfirmed) reasons.push("Groq Zero Data Retention confirmation missing");
-  if (!noBillingConfirmed) reasons.push("free-quota/no-uncontrolled-billing confirmation missing");
-  if (env.AI_OPPORTUNITY_INTELLIGENCE_MODEL !== "openai/gpt-oss-20b") {
-    reasons.push("target model is not exactly openai/gpt-oss-20b");
+  const isGemini = providerId === "gemini";
+  const expectedConfirmation = isGemini
+    ? REAL_GEMINI_EVALUATION_CONFIRMATION
+    : REAL_EVALUATION_CONFIRMATION;
+  const zdrConfirmed = !isGemini && env.AI_EVALUATION_ZDR_CONFIRMED === "true";
+  const geminiDataUseConfirmed =
+    isGemini && env.AI_EVALUATION_GEMINI_UNPAID_DATA_USE_CONFIRMED === "true";
+  const privacyConfirmed = zdrConfirmed || geminiDataUseConfirmed;
+  const noBillingConfirmed = isGemini
+    ? env.AI_EVALUATION_GEMINI_NO_BILLING_CONFIRMED === "true"
+    : env.AI_EVALUATION_NO_BILLING_CONFIRMED === "true";
+  const model = isGemini
+    ? env.AI_OPPORTUNITY_INTELLIGENCE_GEMINI_MODEL ?? ""
+    : env.AI_OPPORTUNITY_INTELLIGENCE_GROQ_MODEL ?? env.AI_OPPORTUNITY_INTELLIGENCE_MODEL ?? "";
+  const expectedModel = isGemini ? "gemini-3.5-flash-lite" : "openai/gpt-oss-20b";
+  const apiKey = isGemini ? env.GEMINI_API_KEY?.trim() : env.GROQ_API_KEY?.trim();
+  if (confirmation !== expectedConfirmation) reasons.push("explicit evaluation confirmation missing");
+  if (!privacyConfirmed) {
+    reasons.push(isGemini
+      ? "Gemini unpaid-service data-use confirmation missing"
+      : "Groq Zero Data Retention confirmation missing");
   }
-  const selection = selectConfiguredOpportunityIntelligenceProvider(env, fetchImpl);
-  if (!selection.provider || selection.provider.id !== "groq") {
-    reasons.push(`Groq provider unavailable: ${selection.reason ?? "wrong provider"}`);
+  if (!noBillingConfirmed) reasons.push("free-quota/no-uncontrolled-billing confirmation missing");
+  if (model !== expectedModel) {
+    reasons.push(`target model is not exactly ${expectedModel}`);
+  }
+  if (!apiKey) reasons.push(`${isGemini ? "Gemini" : "Groq"} credential missing`);
+  const provider = apiKey && model === expectedModel
+    ? isGemini
+      ? createGeminiProvider(apiKey, model, fetchImpl)
+      : createGroqProvider(apiKey, model, fetchImpl)
+    : null;
+  const selection: ProviderSelection = {
+    provider,
+    reason: provider ? null : "not_configured",
+  };
+  if (!provider || provider.id !== providerId) {
+    reasons.push(`${isGemini ? "Gemini" : "Groq"} provider unavailable`);
   }
   return {
     ready: reasons.length === 0,
     reasons,
     selection,
+    providerId,
+    model: expectedModel,
+    privacyConfirmed,
     zdrConfirmed,
     noBillingConfirmed,
   };
@@ -163,9 +200,14 @@ export interface OpportunityIntelligenceEvaluationReport {
   schemaVersion: 1;
   generatedAt: string;
   corpusVersion: "2026-09-22-v1";
-  execution: "contract-simulation" | "real-groq" | "real-groq-pending";
+  execution:
+    | "contract-simulation"
+    | "real-gemini"
+    | "real-gemini-pending"
+    | "real-groq"
+    | "real-groq-pending";
   provider: string | null;
-  model: "openai/gpt-oss-20b";
+  model: "gemini-3.5-flash-lite" | "openai/gpt-oss-20b";
   cases: EvaluationCaseResult[];
   summary: {
     caseCount: number;
@@ -181,7 +223,11 @@ export interface OpportunityIntelligenceEvaluationReport {
   };
   privacy: {
     privateProductionDataUsed: false;
-    zdrStatus: "confirmed" | "pending-owner-confirmation" | "not-applicable-contract-simulation";
+    providerDataUseStatus:
+      | "confirmed-gemini-unpaid-data-use"
+      | "confirmed-groq-zdr"
+      | "pending-owner-confirmation"
+      | "not-applicable-contract-simulation";
     billingExposureStatus: "confirmed-free-quota" | "pending-owner-confirmation" | "not-applicable-contract-simulation";
   };
   pilotRecommendation:
@@ -201,7 +247,7 @@ function median(values: number[]): number | null {
 }
 
 async function evaluateCases(
-  providerMode: "contract" | "groq",
+  providerMode: "contract" | "real",
   provider: OpportunityIntelligenceProvider | null
 ): Promise<{ cases: EvaluationCaseResult[]; requestCount: number }> {
   const results: EvaluationCaseResult[] = [];
@@ -214,13 +260,13 @@ async function evaluateCases(
       EVALUATION_NOW
     );
     const baseline = buildDeterministicOpportunityInsight(input);
-    const selection: ProviderSelection = providerMode === "groq"
+    const selection: ProviderSelection = providerMode === "real"
       ? { provider, reason: provider ? null : "not_configured" }
       : {
           provider: mockProviderForCase(testCase, input, () => { requestCount += 1; }),
           reason: null,
         };
-    if (providerMode === "groq" && provider) requestCount += 1;
+    if (providerMode === "real" && provider) requestCount += 1;
     const started = performance.now();
     const insight = await generateOpportunityInsight(testCase.opportunity, testCase.profile, {
       now: EVALUATION_NOW,
@@ -301,17 +347,24 @@ async function evaluateCases(
 }
 
 export async function runOpportunityIntelligenceEvaluation(options: {
+  realProvider?: RealEvaluationProvider;
   realGroq?: boolean;
   confirmation?: string;
   env?: Readonly<Record<string, string | undefined>>;
   fetchImpl?: typeof fetch;
 } = {}): Promise<OpportunityIntelligenceEvaluationReport> {
   const env = options.env ?? process.env;
-  const realGate = options.realGroq
-    ? resolveRealEvaluationGate(env, options.confirmation, options.fetchImpl ?? fetch)
+  const requestedProvider = options.realProvider ?? (options.realGroq ? "groq" : null);
+  const realGate = requestedProvider
+    ? resolveRealEvaluationGate(
+        env,
+        options.confirmation,
+        options.fetchImpl ?? fetch,
+        requestedProvider
+      )
     : null;
   const realReady = realGate?.ready === true;
-  const evaluated = await evaluateCases(realReady ? "groq" : "contract", realReady ? realGate.selection.provider : null);
+  const evaluated = await evaluateCases(realReady ? "real" : "contract", realReady ? realGate.selection.provider : null);
   const cases = evaluated.cases;
   const latencies = cases.map((item) => item.latencyMs);
   const hardFailureCount = cases.reduce((sum, item) => sum + item.hardFailures.length, 0);
@@ -320,23 +373,24 @@ export async function runOpportunityIntelligenceEvaluation(options: {
   const quotaFailures = cases.filter((item) => item.availabilityReason === "quota_exhausted").length;
   const timeouts = cases.filter((item) => item.availabilityReason === "timeout").length;
   const successfulStructuredResponses = cases.filter((item) => item.mode === "ai").length;
-  const execution = options.realGroq
-    ? realReady ? "real-groq" : "real-groq-pending"
+  const execution = requestedProvider
+    ? realReady ? `real-${requestedProvider}` as const : `real-${requestedProvider}-pending` as const
     : "contract-simulation";
-  const requestCount = execution === "real-groq-pending" ? 0 : evaluated.requestCount;
+  const requestCount = execution.endsWith("-pending") ? 0 : evaluated.requestCount;
   const pendingReasons = realGate && !realGate.ready
     ? realGate.reasons
-    : options.realGroq ? [] : ["real Groq evaluation not requested or authorized"];
+    : requestedProvider ? [] : ["real provider evaluation not requested or authorized"];
 
   let pilotRecommendation: OpportunityIntelligenceEvaluationReport["pilotRecommendation"] =
     "do-not-activate-real-provider-not-evaluated";
   if (hardFailureCount > 0) pilotRecommendation = "do-not-activate-hard-failure";
   else if (
-    execution === "real-groq" &&
+    execution !== "contract-simulation" &&
+    !execution.endsWith("-pending") &&
     fallbacks === 0 &&
     quotaFailures === 0 &&
     timeouts === 0 &&
-    realGate?.zdrConfirmed &&
+    realGate?.privacyConfirmed &&
     realGate.noBillingConfirmed
   ) {
     pilotRecommendation = "eligible-for-owner-reviewed-small-pilot";
@@ -347,8 +401,10 @@ export async function runOpportunityIntelligenceEvaluation(options: {
     generatedAt: new Date().toISOString(),
     corpusVersion: "2026-09-22-v1",
     execution,
-    provider: realReady ? "groq" : "mock",
-    model: "openai/gpt-oss-20b",
+    provider: realReady ? realGate.providerId : "mock",
+    model: realGate?.model === "gemini-3.5-flash-lite"
+      ? "gemini-3.5-flash-lite"
+      : "openai/gpt-oss-20b",
     cases,
     summary: {
       caseCount: cases.length,
@@ -368,10 +424,12 @@ export async function runOpportunityIntelligenceEvaluation(options: {
     },
     privacy: {
       privateProductionDataUsed: false,
-      zdrStatus: realReady ? "confirmed" : options.realGroq
-        ? "pending-owner-confirmation"
-        : "not-applicable-contract-simulation",
-      billingExposureStatus: realReady ? "confirmed-free-quota" : options.realGroq
+      providerDataUseStatus: realReady
+        ? realGate.providerId === "gemini"
+          ? "confirmed-gemini-unpaid-data-use"
+          : "confirmed-groq-zdr"
+        : requestedProvider ? "pending-owner-confirmation" : "not-applicable-contract-simulation",
+      billingExposureStatus: realReady ? "confirmed-free-quota" : requestedProvider
         ? "pending-owner-confirmation"
         : "not-applicable-contract-simulation",
     },
@@ -381,11 +439,13 @@ export async function runOpportunityIntelligenceEvaluation(options: {
 }
 
 async function main() {
-  const realGroq = process.argv.includes("--provider=groq");
+  const realProvider = process.argv.includes("--provider=gemini")
+    ? "gemini"
+    : process.argv.includes("--provider=groq") ? "groq" : undefined;
   const confirmation = process.argv
     .find((argument) => argument.startsWith("--confirm="))
     ?.slice("--confirm=".length);
-  const report = await runOpportunityIntelligenceEvaluation({ realGroq, confirmation });
+  const report = await runOpportunityIntelligenceEvaluation({ realProvider, confirmation });
   console.log("# AI Opportunity Intelligence evaluation");
   console.log(`Execution: ${report.execution}`);
   console.log(`Cases: ${report.summary.caseCount}`);

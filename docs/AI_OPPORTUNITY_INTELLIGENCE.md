@@ -1,6 +1,6 @@
 # AI Opportunity Intelligence V1
 
-Status: **IMPLEMENTED · EXTERNAL PROVIDER DISABLED · DETERMINISTIC FALLBACK LIVE IN CODE**
+Status: **GEMINI PRIMARY + GROQ BACKUP IMPLEMENTED · EXTERNAL PROVIDERS DISABLED · DETERMINISTIC FALLBACK LIVE IN CODE**
 
 This milestone adds an optional, grounded assistance layer for one trusted
 opportunity and one authenticated user's existing `MatchingInput`. It does not
@@ -25,8 +25,8 @@ The implementation is split by responsibility:
   deterministic evidence preparation, structured result, strict provider-output
   validation, and merge rule.
 - `lib/opportunity-intelligence/provider.ts` owns the provider interface, exact
-  provider selection, fixed prompt-injection boundary, test provider, and the
-  disabled-by-default Groq adapter.
+  provider-chain selection, fixed prompt-injection boundary, test provider, and
+  the disabled-by-default Gemini and Groq adapters.
 - `lib/opportunity-intelligence/service.ts` owns timeout, bounded in-memory
   response caching, provider error handling, and fail-closed fallback.
 - `app/api/opportunity-insight/route.ts` is authenticated, rate-limited, resolves
@@ -107,11 +107,26 @@ the system instruction.
 ## Provider abstraction and activation
 
 `OpportunityIntelligenceProvider` exposes one bounded `generate(input, signal)`
-method. Provider IDs reserve `groq`, `gemini`, and `azure`; only Groq has a real
-adapter in V1. Gemini and Azure AI / Foundry can be added behind the same
-interface without changing privacy, grounding, route, cache, or UI contracts.
-The mock adapter is injectable only by code/tests and never selected from
-production environment configuration.
+method. The production selector accepts one exact chain only: Gemini primary,
+then Groq backup. It selects neither provider unless both credentials and all
+four independent privacy/billing attestations are present. A missing or partial
+configuration therefore cannot silently promote the backup to primary. Azure
+remains only a reserved provider ID. The mock adapter is injectable only by
+code/tests and is never selected from production environment configuration.
+
+The Gemini adapter uses the stable `gemini-3.5-flash-lite` model, the server-side
+`x-goog-api-key` header, one `generateContent` request, JSON Schema structured
+output, and the same local response ceiling and validation as Groq. Google lists
+the model as stable, supports structured outputs, and lists standard free-tier
+input/output as free of charge. Google also states that unpaid-service prompts
+and responses may be used to improve products and may be read by human
+reviewers. That tradeoff is never inferred from possession of a key; the owner
+must explicitly attest acceptance, and only the existing sanitized allowlist is
+eligible for transmission. References:
+[Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite),
+[pricing](https://ai.google.dev/gemini-api/docs/pricing),
+[structured outputs](https://ai.google.dev/gemini-api/docs/structured-output),
+and [Gemini API terms](https://ai.google.dev/gemini-api/terms).
 
 The Groq adapter uses one server-side HTTPS request, strict JSON Schema
 structured output for `openai/gpt-oss-20b`, reasoning excluded from the response,
@@ -122,14 +137,29 @@ does not replace the application contract. Reference:
 [Groq structured outputs](https://console.groq.com/docs/structured-outputs) and
 [Groq API reference](https://console.groq.com/docs/api-reference).
 
+Groq's current model page publishes per-token prices for
+`openai/gpt-oss-20b`; its rate-limit page says exact account limits must be
+checked in the Console. A developer key therefore does not prove permanent
+zero-cost operation. The selector requires separate ZDR and no-billing
+attestations, and the evaluation remains blocked until the account itself is
+checked. References: [model and pricing](https://console.groq.com/docs/model/openai/gpt-oss-20b),
+[rate limits](https://console.groq.com/docs/rate-limits), and
+[data controls](https://console.groq.com/docs/your-data).
+
 Exact server-only configuration for a future, separately approved activation:
 
 ```dotenv
 AI_OPPORTUNITY_INTELLIGENCE_ENABLED=true
 AI_OPPORTUNITY_INTELLIGENCE_SPEND_MODE=free-quota
-AI_OPPORTUNITY_INTELLIGENCE_PROVIDER=groq
-AI_OPPORTUNITY_INTELLIGENCE_MODEL=openai/gpt-oss-20b
+AI_OPPORTUNITY_INTELLIGENCE_PROVIDER_CHAIN=gemini,groq
+AI_OPPORTUNITY_INTELLIGENCE_GEMINI_MODEL=gemini-3.5-flash-lite
+AI_OPPORTUNITY_INTELLIGENCE_GROQ_MODEL=openai/gpt-oss-20b
+GEMINI_API_KEY=<server-only secret>
 GROQ_API_KEY=<server-only secret>
+AI_OPPORTUNITY_INTELLIGENCE_GEMINI_UNPAID_DATA_USE_CONFIRMED=true
+AI_OPPORTUNITY_INTELLIGENCE_GEMINI_NO_BILLING_CONFIRMED=true
+AI_OPPORTUNITY_INTELLIGENCE_GROQ_ZDR_CONFIRMED=true
+AI_OPPORTUNITY_INTELLIGENCE_GROQ_NO_BILLING_CONFIRMED=true
 ```
 
 No key may use a `NEXT_PUBLIC_` prefix. Activation also requires the owner to
@@ -143,20 +173,22 @@ Defaults are:
 ```dotenv
 AI_OPPORTUNITY_INTELLIGENCE_ENABLED=false
 AI_OPPORTUNITY_INTELLIGENCE_SPEND_MODE=zero
-AI_OPPORTUNITY_INTELLIGENCE_PROVIDER=none
+AI_OPPORTUNITY_INTELLIGENCE_PROVIDER_CHAIN=none
 ```
 
-`zero` blocks every external call even if a credential exists. Provider
-selection is exact: there is no automatic vendor fallback and therefore no
-silent fallthrough to a paid API. `free-quota` permits only the explicitly
-selected adapter. Missing configuration, unsupported adapter, timeout, HTTP
-failure, quota exhaustion, oversized response, malformed JSON, schema failure,
-or evidence-reference failure returns deterministic guidance.
+`zero` blocks every external call even if credentials exist. Provider selection
+is exact. In the one permitted chain, each uncached request attempts Gemini at
+most once; only a failure, timeout, quota response, or locally invalid output may
+advance to one Groq attempt. There is no retry loop and no provider outside the
+declared chain. The complete chain shares the existing eight-second request
+budget, divided across remaining attempts. If neither provider returns a valid
+response, deterministic guidance wins.
 
-Cost controls are one call per uncached insight, an 8-request/minute per-user
-route limit, bounded input/output, an 8-second timeout, a 200-entry/6-hour
-in-memory cache keyed only by sanitized context plus provider/model, and no
-retry loop. The cache is intentionally instance-local at current scale; it
+Cost controls are at most one call per provider per uncached insight, an
+8-request/minute per-user route limit, bounded input/output, one shared
+eight-second chain timeout, a 200-entry/6-hour in-memory cache keyed only by
+sanitized context plus provider/model, and no retry loop. The cache is
+intentionally instance-local at current scale; it
 cannot expose one user's result to another because responses are keyed by the
 complete sanitized profile context and never use shared HTTP caching.
 
@@ -176,23 +208,22 @@ match score is shown.
 
 ## Current activation state
 
-No supported provider credential was found during implementation. External AI
-is not production-live, no provider account or billing was changed, and the
-repository ships in hard zero-spend mode. Deterministic guidance is the active
-fallback in code. Production activation is an owner-gated external-provider
-change under `ENGINEERING_RULES.md`.
+No provider credential or owner privacy/billing attestation was configured
+during this implementation. External AI is not production-live, no provider
+account or billing was changed, and the repository ships in hard zero-spend
+mode. Deterministic guidance is the active fallback in code. Production
+activation is a separate owner-gated external-provider change under
+`ENGINEERING_RULES.md`.
 
 The controlled evaluation milestone adds a fixed 16-case synthetic corpus and
-reproducible scorecard. Contract simulation is green, but the real Groq run is
-pending because no server-side key or owner ZDR/no-billing attestations were
-available. It made zero external requests and does not authorize a production
-pilot. See
+reproducible scorecard. Contract simulation is green, but real Gemini and Groq
+runs remain independently gated by server-side credentials and owner
+privacy/no-billing attestations. No external evaluation request was made by this
+implementation and it does not authorize a production pilot. See
 [AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
 
 ## Future provider options
 
-- Add a Gemini adapter only after separately reviewing its current structured
-  output API, free-quota/billing controls, and data-use terms.
 - Add an Azure AI / Foundry adapter only after separately reviewing endpoint,
   deployment identity, student/free credits, hard budget controls, and data-use
   terms.

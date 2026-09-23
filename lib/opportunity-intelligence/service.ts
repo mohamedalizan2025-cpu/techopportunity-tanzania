@@ -47,6 +47,11 @@ function setCached(key: string, value: unknown, now: number): void {
   cache.set(key, { expiresAt: now + CACHE_TTL_MS, value });
 }
 
+function providersForSelection(selection: ProviderSelection): readonly OpportunityIntelligenceProvider[] {
+  if (selection.providers && selection.providers.length > 0) return selection.providers;
+  return selection.provider ? [selection.provider] : [];
+}
+
 function failureReason(error: unknown): InsightAvailabilityReason {
   if (error instanceof ProviderQuotaError) return "quota_exhausted";
   if (error instanceof ProviderUnavailableError) return "provider_unavailable";
@@ -73,42 +78,61 @@ export async function generateOpportunityInsight(
     input,
     selection.reason ?? "provider_unavailable"
   );
-  if (!selection.provider) return fallback;
+  const providers = providersForSelection(selection);
+  if (providers.length === 0) return fallback;
 
-  const key = cacheKey(selection.provider, input);
-  const cached = getCached(key, now.getTime());
-  if (cached !== undefined) {
-    const validated = validateModelOpportunityAssistance(cached, input);
-    return validated
-      ? mergeModelOpportunityAssistance(fallback, validated, selection.provider.id)
-      : buildDeterministicOpportunityInsight(input, "invalid_response");
-  }
-
-  const controller = new AbortController();
   const timeoutMs = Math.max(1, Math.min(options.timeoutMs ?? PROVIDER_TIMEOUT_MS, PROVIDER_TIMEOUT_MS));
-  let timeout: ReturnType<typeof setTimeout>;
-  const timeoutFailure = new Promise<never>((_, reject) => {
-    timeout = setTimeout(() => {
-      controller.abort();
-      const error = new Error("provider timed out");
-      error.name = "AbortError";
-      reject(error);
-    }, timeoutMs);
-  });
-  try {
-    const raw = await Promise.race([
-      selection.provider.generate(input, controller.signal),
-      timeoutFailure,
-    ]);
-    const validated = validateModelOpportunityAssistance(raw, input);
-    if (!validated) return buildDeterministicOpportunityInsight(input, "invalid_response");
-    setCached(key, raw, now.getTime());
-    return mergeModelOpportunityAssistance(fallback, validated, selection.provider.id);
-  } catch (error) {
-    return buildDeterministicOpportunityInsight(input, failureReason(error));
-  } finally {
-    clearTimeout(timeout!);
+  const deadline = Date.now() + timeoutMs;
+  let lastFailure: InsightAvailabilityReason = "provider_unavailable";
+
+  for (const [index, provider] of providers.entries()) {
+    const key = cacheKey(provider, input);
+    const cached = getCached(key, now.getTime());
+    if (cached !== undefined) {
+      const validated = validateModelOpportunityAssistance(cached, input);
+      if (validated) return mergeModelOpportunityAssistance(fallback, validated, provider.id);
+      cache.delete(key);
+      lastFailure = "invalid_response";
+      continue;
+    }
+
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) {
+      lastFailure = "timeout";
+      break;
+    }
+    const remainingProviders = providers.length - index;
+    const attemptTimeoutMs = Math.max(1, Math.floor(remainingMs / remainingProviders));
+    const controller = new AbortController();
+    let timeout: ReturnType<typeof setTimeout>;
+    const timeoutFailure = new Promise<never>((_, reject) => {
+      timeout = setTimeout(() => {
+        controller.abort();
+        const error = new Error("provider timed out");
+        error.name = "AbortError";
+        reject(error);
+      }, attemptTimeoutMs);
+    });
+    try {
+      const raw = await Promise.race([
+        provider.generate(input, controller.signal),
+        timeoutFailure,
+      ]);
+      const validated = validateModelOpportunityAssistance(raw, input);
+      if (!validated) {
+        lastFailure = "invalid_response";
+        continue;
+      }
+      setCached(key, raw, now.getTime());
+      return mergeModelOpportunityAssistance(fallback, validated, provider.id);
+    } catch (error) {
+      lastFailure = failureReason(error);
+    } finally {
+      clearTimeout(timeout!);
+    }
   }
+
+  return buildDeterministicOpportunityInsight(input, lastFailure);
 }
 
 export function clearOpportunityInsightCacheForTests(): void {

@@ -28,6 +28,7 @@ export class ProviderQuotaError extends Error {
 
 export interface ProviderSelection {
   provider: OpportunityIntelligenceProvider | null;
+  providers?: readonly OpportunityIntelligenceProvider[];
   reason: "disabled" | "zero_spend" | "not_configured" | null;
 }
 
@@ -81,9 +82,10 @@ export function buildOpportunityIntelligenceMessages(
 }
 
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
+const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
 const MAX_PROVIDER_RESPONSE_BYTES = 64 * 1024;
 
-function createGroqProvider(
+export function createGroqProvider(
   apiKey: string,
   model: string,
   fetchImpl: typeof fetch
@@ -139,10 +141,71 @@ function createGroqProvider(
   };
 }
 
+export function createGeminiProvider(
+  apiKey: string,
+  model: string,
+  fetchImpl: typeof fetch
+): OpportunityIntelligenceProvider {
+  return {
+    id: "gemini",
+    cacheKey: `gemini:${model}`,
+    async generate(input, signal) {
+      const messages = buildOpportunityIntelligenceMessages(input);
+      const response = await fetchImpl(
+        `${GEMINI_ENDPOINT}/${encodeURIComponent(model)}:generateContent`,
+        {
+          method: "POST",
+          signal,
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: messages[0].content }] },
+            contents: [{ role: "user", parts: [{ text: messages[1].content }] }],
+            generationConfig: {
+              temperature: 0.1,
+              maxOutputTokens: 700,
+              responseFormat: {
+                text: {
+                  mimeType: "application/json",
+                  schema: MODEL_OUTPUT_SCHEMA,
+                },
+              },
+            },
+          }),
+        }
+      );
+      if (response.status === 429) throw new ProviderQuotaError();
+      if (!response.ok) throw new ProviderUnavailableError();
+      const declaredLength = Number(response.headers.get("content-length") ?? "0");
+      if (declaredLength > MAX_PROVIDER_RESPONSE_BYTES) throw new ProviderUnavailableError("response too large");
+      const text = await response.text();
+      if (text.length > MAX_PROVIDER_RESPONSE_BYTES) throw new ProviderUnavailableError("response too large");
+      let envelope: unknown;
+      try {
+        envelope = JSON.parse(text);
+      } catch {
+        throw new ProviderUnavailableError("invalid provider envelope");
+      }
+      const content = (envelope as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: unknown }> } }>;
+      }).candidates?.[0]?.content?.parts?.[0]?.text;
+      if (typeof content !== "string") throw new ProviderUnavailableError("missing provider content");
+      try {
+        return JSON.parse(content);
+      } catch {
+        throw new ProviderUnavailableError("invalid provider content");
+      }
+    },
+  };
+}
+
 /**
- * Exact, no-fallthrough provider selection. Zero-spend is the default and
- * blocks every external request. Gemini/Azure are reserved provider IDs behind
- * the same interface but have no adapter until separately reviewed.
+ * Exact, fail-closed provider-chain selection. Zero-spend is the default and
+ * blocks every external request. The only supported production chain is
+ * Gemini primary, Groq backup, and both providers require independent owner
+ * attestations for privacy and billing state before either can be selected.
  */
 export function selectConfiguredOpportunityIntelligenceProvider(
   env: Readonly<Record<string, string | undefined>> = process.env,
@@ -156,16 +219,40 @@ export function selectConfiguredOpportunityIntelligenceProvider(
     : "zero";
   if (spendMode === "zero") return { provider: null, reason: "zero_spend" };
 
-  const provider = env.AI_OPPORTUNITY_INTELLIGENCE_PROVIDER;
-  if (provider !== "groq" && provider !== "gemini" && provider !== "azure") {
+  if (env.AI_OPPORTUNITY_INTELLIGENCE_PROVIDER_CHAIN !== "gemini,groq") {
     return { provider: null, reason: "not_configured" };
   }
-  if (provider !== "groq") return { provider: null, reason: "not_configured" };
 
-  const apiKey = env.GROQ_API_KEY?.trim();
-  if (!apiKey) return { provider: null, reason: "not_configured" };
-  const model = env.AI_OPPORTUNITY_INTELLIGENCE_MODEL?.trim() || "openai/gpt-oss-20b";
-  return { provider: createGroqProvider(apiKey, model, fetchImpl), reason: null };
+  const geminiKey = env.GEMINI_API_KEY?.trim();
+  const groqKey = env.GROQ_API_KEY?.trim();
+  const geminiPrivacyConfirmed =
+    env.AI_OPPORTUNITY_INTELLIGENCE_GEMINI_UNPAID_DATA_USE_CONFIRMED === "true";
+  const geminiNoBillingConfirmed =
+    env.AI_OPPORTUNITY_INTELLIGENCE_GEMINI_NO_BILLING_CONFIRMED === "true";
+  const groqZdrConfirmed =
+    env.AI_OPPORTUNITY_INTELLIGENCE_GROQ_ZDR_CONFIRMED === "true";
+  const groqNoBillingConfirmed =
+    env.AI_OPPORTUNITY_INTELLIGENCE_GROQ_NO_BILLING_CONFIRMED === "true";
+  if (
+    !geminiKey ||
+    !groqKey ||
+    !geminiPrivacyConfirmed ||
+    !geminiNoBillingConfirmed ||
+    !groqZdrConfirmed ||
+    !groqNoBillingConfirmed
+  ) {
+    return { provider: null, reason: "not_configured" };
+  }
+
+  const geminiModel = env.AI_OPPORTUNITY_INTELLIGENCE_GEMINI_MODEL?.trim()
+    || "gemini-3.5-flash-lite";
+  const groqModel = env.AI_OPPORTUNITY_INTELLIGENCE_GROQ_MODEL?.trim()
+    || "openai/gpt-oss-20b";
+  const providers = [
+    createGeminiProvider(geminiKey, geminiModel, fetchImpl),
+    createGroqProvider(groqKey, groqModel, fetchImpl),
+  ] as const;
+  return { provider: providers[0], providers, reason: null };
 }
 
 /** Test-only adapter factory; it never reads environment variables or the network. */

@@ -1,8 +1,9 @@
 # AI Opportunity Intelligence — controlled evaluation
 
-Status: **CONTRACT SIMULATION PASSED · REAL GROQ RUN PENDING · PRODUCTION OFF**
+Status: **CONTRACT SIMULATION PASSED · REAL GEMINI/GROQ RUNS PENDING · PRODUCTION OFF**
 
-Updated: 2026-09-22. Target: `openai/gpt-oss-20b`.
+Updated: 2026-09-23. Targets: `gemini-3.5-flash-lite` and
+`openai/gpt-oss-20b`.
 
 This milestone evaluates the existing bounded Opportunity Intelligence layer. It
 does not redesign the product, change deterministic authority, use private
@@ -21,8 +22,8 @@ merge rule, and fallback path.
 The default command uses an injected mock provider, so it evaluates the complete
 application contract without network access. Two adversarial responses are
 intentionally invalid: one attempts to add trust/geography/eligibility fields and
-one is malformed. Both must fall back. The optional Groq mode uses the same
-corpus only after all owner gates pass.
+one is malformed. Both must fall back. The optional Gemini and Groq modes use
+the same corpus independently, only after that provider's owner gates pass.
 
 ```powershell
 npx tsx scripts/opportunity-intelligence/evaluate.ts
@@ -75,6 +76,15 @@ score is exposed in the product UI.
 
 ## Provider audit
 
+The Gemini adapter targets stable `gemini-3.5-flash-lite`, uses a server-only
+API-key header, and requests JSON Schema structured output through one
+`generateContent` call. Google currently lists standard input/output as free of
+charge, but unpaid-service prompts and responses may be used to improve Google
+products and may receive human review. The Gemini evaluation therefore requires
+an explicit owner acceptance of those unpaid data-use terms, confirmation that
+the project has no billing exposure, the exact model, a server-side credential,
+and the provider-specific command token.
+
 The Groq adapter targets `openai/gpt-oss-20b` during evaluation and now requests
 `response_format.type=json_schema` with `strict=true`. All object properties are
 required and all objects set `additionalProperties=false`; unsupported semantic
@@ -102,28 +112,39 @@ Contract simulation completed all 16 cases:
 - private production data used: no;
 - external provider requests: 0.
 
-Local mock latency is only harness overhead and is not evidence of Groq latency.
+Local mock latency is only harness overhead and is not evidence of provider latency.
 Each run reports its own minimum/median/maximum values. Real-provider latency,
 structured-response reliability, fallback rate, and quota behavior remain
 unknown until the gated corpus run occurs.
 
 ## Real-provider gate and exact configuration
 
-No `GROQ_API_KEY` was safely configured when this milestone ran. The owner has
-also not attested that Groq Zero Data Retention is enabled or that the account
-cannot create uncontrolled billing exposure. Therefore the real run is
-**PENDING**, made zero Groq requests, and production remains in hard zero-spend
-mode.
+No Gemini or Groq credential or account attestation was configured when this
+milestone ran. Therefore both real runs are **PENDING**, made zero provider
+requests, and production remains in hard zero-spend mode.
 
 For a local, isolated corpus evaluation only, the owner must first configure the
-server-side secret and verify the Groq account controls. Never commit the key or
-give it a `NEXT_PUBLIC_` prefix.
+relevant server-side secret and verify that provider's account controls. Never
+commit either key or give it a `NEXT_PUBLIC_` prefix. These evaluation variables
+do not configure the production chain.
+
+Gemini evaluation:
 
 ```dotenv
-AI_OPPORTUNITY_INTELLIGENCE_ENABLED=true
-AI_OPPORTUNITY_INTELLIGENCE_SPEND_MODE=free-quota
-AI_OPPORTUNITY_INTELLIGENCE_PROVIDER=groq
-AI_OPPORTUNITY_INTELLIGENCE_MODEL=openai/gpt-oss-20b
+AI_OPPORTUNITY_INTELLIGENCE_GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_API_KEY=<server-only secret>
+AI_EVALUATION_GEMINI_UNPAID_DATA_USE_CONFIRMED=true
+AI_EVALUATION_GEMINI_NO_BILLING_CONFIRMED=true
+```
+
+```powershell
+npx tsx scripts/opportunity-intelligence/evaluate.ts --provider=gemini --confirm=AI-EVAL-GEMINI-FREE-QUOTA
+```
+
+Groq evaluation:
+
+```dotenv
+AI_OPPORTUNITY_INTELLIGENCE_GROQ_MODEL=openai/gpt-oss-20b
 GROQ_API_KEY=<server-only secret>
 AI_EVALUATION_ZDR_CONFIRMED=true
 AI_EVALUATION_NO_BILLING_CONFIRMED=true
@@ -136,8 +157,14 @@ npx tsx scripts/opportunity-intelligence/evaluate.ts --provider=groq --confirm=A
 ```
 
 The confirmation variables are explicit owner attestations; the repository
-cannot inspect Groq account billing or retention settings. Do not place these
-activation values in a production deployment during this evaluation.
+cannot inspect provider billing or data-control settings. Do not place these
+evaluation values in a production deployment merely because a corpus run passes.
+
+Gemini references:
+[model](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite),
+[pricing](https://ai.google.dev/gemini-api/docs/pricing),
+[structured outputs](https://ai.google.dev/gemini-api/docs/structured-output),
+and [unpaid data-use terms](https://ai.google.dev/gemini-api/terms).
 
 Groq documents strict structured outputs for supported models, including the
 target model. Groq also documents account-level Zero Data Retention controls and
@@ -154,10 +181,12 @@ HTTP 429. Consult the current official pages immediately before the real run:
 
 **Do not activate a production pilot yet.** The local contract has zero hard
 failures and fallbacks work, but no real structured responses, real latency,
-real quota behavior, ZDR state, or billing safety have been verified.
+real quota behavior, Gemini unpaid-data-use acceptance, Groq ZDR state, or
+billing safety has been verified.
 
-The exact next milestone is an **owner-gated real Groq fixed-corpus evaluation**.
-Only if it records zero hard failures, reliable structured output, safe fallbacks
-and quota behavior, confirmed ZDR, and no billing exposure may the owner consider
-a separately approved, small production pilot. Nothing in this milestone
-automatically enables production AI.
+The exact next milestone is **owner-gated real Gemini and Groq fixed-corpus
+evaluation, independently**. Only after both record zero hard failures, reliable
+structured output, acceptable latency/fallback behavior, the applicable privacy
+confirmation, and no billing exposure may the owner consider a separately
+approved small production pilot. Nothing in this milestone automatically
+enables production AI.

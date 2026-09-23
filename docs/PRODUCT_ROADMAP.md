@@ -148,11 +148,12 @@ phases gated by their own bounded authorization.
   monetization, no provider/institution dashboards.
 - Add an optional CV with clear privacy and retention controls (deferred; not
   built).
-- **Implemented 2026-09-22 in code; provider disabled: AI Opportunity
-  Intelligence V1.** A privacy-sanitized, provider-swappable assistance layer
+- **Implemented 2026-09-23 in code; providers disabled: AI Opportunity
+  Intelligence provider chain.** A privacy-sanitized, provider-swappable assistance layer
   adds grounded readiness/unknowns/actions around deterministic fit and verified
   eligibility. Hard zero-spend is the default; malformed, unavailable, timeout,
   or quota-exhausted providers fail closed to deterministic guidance. No
+  Gemini-primary/Groq-backup chain is independently privacy/billing gated; no
   provider is production-live and no schema/Discovery behavior changed. See
   [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md).
 - Provide deterministic saved-search and digest value before generative features
