@@ -93,6 +93,12 @@ test("health model changes select discovery and focused health regressions", () 
   assert.deepEqual(selected(["scripts/discovery/health.ts"]), ["discovery-regression", "discovery-health"]);
 });
 
+test("external scheduler changes select discovery health and production evidence", () => {
+  const plan = classifyChanges(["ops/discovery-scheduler/cloudflare-worker.ts"]);
+  assert.deepEqual(selected(plan.changedFiles), ["discovery-regression", "discovery-health"]);
+  assert.equal(plan.productionEvidence.required, true);
+});
+
 test("dependency changes require build and integrated production evidence", () => {
   const plan = classifyChanges(["package-lock.json"]);
   assert.deepEqual(selected(plan.changedFiles), ["build"]);

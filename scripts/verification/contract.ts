@@ -54,7 +54,11 @@ export interface VerificationPlan {
 const normalize = (file: string) => file.replaceAll("\\", "/").replace(/^\.\//, "");
 const matches = (file: string, expressions: RegExp[]) => expressions.some((expression) => expression.test(file));
 
-const DISCOVERY = [/^scripts\/discovery\//, /^tests\/(qualification|detail-acquisition|dedupe|discovery-summary|acquisition)\.test\.ts$/];
+const DISCOVERY = [
+  /^scripts\/discovery\//,
+  /^ops\/discovery-scheduler\//,
+  /^tests\/(qualification|detail-acquisition|dedupe|discovery-summary|discovery-health|external-scheduler|acquisition)\.test\.ts$/,
+];
 const QUALIFICATION = [
   /^scripts\/discovery\/(qualification|normalize|validate|extract|adapters)\.ts$/,
   /^tests\/(qualification|detail-acquisition)\.test\.ts$/,
@@ -62,7 +66,9 @@ const QUALIFICATION = [
 const ACQUISITION = [/^scripts\/discovery\/(fetch|detail)\.ts$/, /^tests\/acquisition\.test\.ts$/];
 const DISCOVERY_HEALTH = [
   /^scripts\/discovery\/(health|health-artifact|index|runner|summary|types)\.ts$/,
-  /^tests\/(discovery-health|discovery-summary)\.test\.ts$/,
+  /^scripts\/discovery\/(trigger-guard|trigger-identity)\.ts$/,
+  /^ops\/discovery-scheduler\//,
+  /^tests\/(discovery-health|discovery-summary|external-scheduler)\.test\.ts$/,
   /^\.github\/workflows\/discovery(?:-health)?\.yml$/,
 ];
 const MODERATION_AUTH = [
@@ -107,7 +113,8 @@ const BUILD = [
 ];
 
 const DISCOVERY_PRODUCTION = [
-  /^scripts\/discovery\/(adapters|dedupe|detail|extract|fetch|health|health-artifact|index|normalize|qualification|runner|sources|summary|types|validate)\.ts$/,
+  /^scripts\/discovery\/(adapters|dedupe|detail|extract|fetch|health|health-artifact|index|normalize|qualification|runner|sources|summary|trigger-guard|trigger-identity|types|validate)\.ts$/,
+  /^ops\/discovery-scheduler\//,
   /^\.github\/workflows\/discovery\.yml$/,
   /^\.github\/workflows\/discovery-health\.yml$/,
   /^supabase\/seeds\/0002_pilot_sources\.sql$/,

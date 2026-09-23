@@ -107,6 +107,8 @@ function identity(index = 0, event = "push"): RunIdentity {
     runAttempt: 1,
     event,
     triggerKind: triggerKindForEvent(event),
+    actor: "github-actions",
+    nominalSlot: null,
     startedAt: `2026-09-01T${hour}:00:00Z`,
     finishedAt: `2026-09-01T${hour}:01:00Z`,
   };
@@ -158,6 +160,26 @@ test("a delayed :17 execution remains delayed-but-valid before the second interv
   assert.equal(result.dispatchLatencyMinutes, 13);
 });
 
+test("a delayed authenticated external execution uses the same tolerance", () => {
+  const prior = observation(0);
+  const external = identity(4, "workflow_dispatch");
+  external.triggerKind = "external_schedule";
+  external.nominalSlot = "2026-09-01T04:17:00.000Z";
+  external.startedAt = "2026-09-01T04:47:00.000Z";
+  assert.equal(
+    assessSchedule(
+      [prior],
+      external.startedAt,
+      2,
+      external.event,
+      17,
+      external.triggerKind,
+      external.nominalSlot
+    ).state,
+    "delayed"
+  );
+});
+
 test("absent execution beyond tolerance is missed", () => {
   assert.equal(assessSchedule([observation(0)], "2026-09-01T05:00:00Z", 2).state, "missed");
 });
@@ -181,6 +203,73 @@ test("invalid schedule time remains unknown", () => {
 
 test("manual and push runs never satisfy scheduled evidence", () => {
   assert.equal(assessSchedule([observation(0, {}, "workflow_dispatch"), observation(1, {}, "push")], "2026-09-01T02:00:00Z", 2).state, "unknown");
+});
+
+test("authenticated external schedule is distinct from native, manual, and push", () => {
+  const external = identity(2, "workflow_dispatch");
+  external.triggerKind = "external_schedule";
+  external.nominalSlot = "2026-09-01T02:17:00.000Z";
+  assert.equal(triggerKindForEvent("schedule"), "scheduled");
+  assert.equal(triggerKindForEvent("workflow_dispatch"), "manual");
+  assert.equal(external.triggerKind, "external_schedule");
+});
+
+test("external schedule stays unproven until three distinct nominal slots succeed", () => {
+  const externalObservation = (index: number): HealthObservation => {
+    const externalIdentity = identity(index, "workflow_dispatch");
+    externalIdentity.triggerKind = "external_schedule";
+    externalIdentity.nominalSlot = `2026-09-01T${String(index).padStart(2, "0")}:17:00.000Z`;
+    externalIdentity.startedAt = `2026-09-01T${String(index).padStart(2, "0")}:18:00.000Z`;
+    externalIdentity.finishedAt = `2026-09-01T${String(index).padStart(2, "0")}:19:00.000Z`;
+    return buildHealthReport({
+      summary: summary([source()], externalIdentity.startedAt, externalIdentity.finishedAt),
+      identity: externalIdentity,
+      verificationPassed: true,
+      externalSchedulerExpected: true,
+    }).observation;
+  };
+  const first = externalObservation(0);
+  const second = externalObservation(2);
+  const thirdIdentity = identity(4, "workflow_dispatch");
+  thirdIdentity.triggerKind = "external_schedule";
+  thirdIdentity.nominalSlot = "2026-09-01T04:17:00.000Z";
+  thirdIdentity.startedAt = "2026-09-01T04:18:00.000Z";
+  thirdIdentity.finishedAt = "2026-09-01T04:19:00.000Z";
+  const beforeProof = buildHealthReport({
+    summary: summary([source()], second.identity.startedAt, second.identity.finishedAt),
+    history: history([first]),
+    identity: second.identity,
+    verificationPassed: true,
+    externalSchedulerExpected: true,
+  });
+  assert.equal(beforeProof.readiness.state, "PARTIALLY_PROVEN");
+  assert.equal(anomaly(beforeProof, "external_schedule_not_proven")?.severity, "critical");
+
+  const proven = buildHealthReport({
+    summary: summary([source()], thirdIdentity.startedAt, thirdIdentity.finishedAt),
+    history: history([first, second]),
+    identity: thirdIdentity,
+    verificationPassed: true,
+    externalSchedulerExpected: true,
+  });
+  assert.equal(proven.readiness.criteria.find(
+    (criterion) => criterion.id === "external_scheduler_repeatability"
+  )?.passed, true);
+  assert.equal(anomaly(proven, "external_schedule_not_proven"), undefined);
+});
+
+test("same nominal slot cannot inflate retained scheduled evidence", () => {
+  const native = observation(2);
+  native.identity.startedAt = "2026-09-01T02:19:00Z";
+  native.identity.finishedAt = "2026-09-01T02:20:00Z";
+  const external = structuredClone(native);
+  external.identity.workflowRunId = "external-run";
+  external.identity.event = "workflow_dispatch";
+  external.identity.triggerKind = "external_schedule";
+  external.identity.nominalSlot = "2026-09-01T02:17:00.000Z";
+  const retained = appendObservation(history([native]), external);
+  assert.equal(retained.observations.length, 1);
+  assert.equal(retained.observations[0].identity.triggerKind, "external_schedule");
 });
 
 test("trigger identity distinguishes scheduled, manual, push, and other runs", () => {

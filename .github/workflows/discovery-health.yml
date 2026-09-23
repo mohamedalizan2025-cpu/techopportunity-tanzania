@@ -55,6 +55,7 @@ jobs:
           DISCOVERY_EXPECTED_INTERVAL_HOURS: '2'
           DISCOVERY_TARGET_INTERVAL_HOURS: '2'
           DISCOVERY_SCHEDULE_MINUTE: '17'
+          DISCOVERY_EXTERNAL_SCHEDULER_ENABLED: ${{ vars.DISCOVERY_EXTERNAL_SCHEDULER_ENABLED }}
         run: npm run health:monitor
 
       - name: Upload schedule health evidence

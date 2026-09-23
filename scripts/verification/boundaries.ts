@@ -31,6 +31,8 @@ const insightEvaluationCorpus = read("scripts/opportunity-intelligence/evaluatio
 const insightUi = read("components/opportunity-insight.tsx");
 const discoveryWorkflow = read(".github/workflows/discovery.yml");
 const healthWorkflow = read(".github/workflows/discovery-health.yml");
+const externalScheduler = read("ops/discovery-scheduler/cloudflare-worker.ts");
+const externalSchedulerConfig = read("ops/discovery-scheduler/wrangler.toml");
 const verificationWorkflow = read(".github/workflows/verification.yml");
 const savedMigration = read("supabase/migrations/0011_saved_opportunities.sql");
 const savedAction = read("lib/data/saved-opportunity-actions.ts");
@@ -294,6 +296,27 @@ invariant("scheduled and manual discovery share a non-cancelling bounded concurr
   assert.match(discoveryWorkflow, /concurrency:\s*\n\s*(?:#[^\n]*\n\s*)*group: discovery-production\s*\n\s*cancel-in-progress: false/);
   assert.match(discoveryWorkflow, /timeout-minutes: 30/);
   assert.doesNotMatch(discoveryWorkflow, /(?:retry|re-run|rerun)-?(?:action|workflow)/i);
+});
+
+invariant("external schedule identity is owner-gated, actor-bound, and replay-resistant", () => {
+  assert.match(discoveryWorkflow, /trigger_kind:/);
+  assert.match(discoveryWorkflow, /external_schedule/);
+  assert.match(discoveryWorkflow, /DISCOVERY_EXTERNAL_SCHEDULER_ENABLED/);
+  assert.match(discoveryWorkflow, /DISCOVERY_EXTERNAL_SCHEDULER_ACTOR/);
+  assert.match(discoveryWorkflow, /scripts\/discovery\/trigger-guard\.ts/);
+  assert.match(discoveryWorkflow, /steps\.trigger\.outputs\.trigger_kind/);
+  assert.match(discoveryWorkflow, /github\.event_name != 'schedule' \|\| vars\.DISCOVERY_EXTERNAL_SCHEDULER_ENABLED != 'true'/);
+  assert.doesNotMatch(discoveryWorkflow, /continue-on-error:/);
+});
+
+invariant("prepared Cloudflare scheduler is private, fixed-cadence, and secret-safe", () => {
+  assert.match(externalSchedulerConfig, /workers_dev = false/);
+  assert.match(externalSchedulerConfig, /crons = \["17 \*\/2 \* \* \*"\]/);
+  assert.match(externalSchedulerConfig, /required = \["GITHUB_TOKEN"\]/);
+  assert.match(externalScheduler, /actions\/workflows\/\$\{encodeURIComponent\(env\.GITHUB_WORKFLOW\)\}\/dispatches/);
+  assert.match(externalScheduler, /trigger_kind: "external_schedule"/);
+  assert.doesNotMatch(externalSchedulerConfig, /ghp_|github_pat_|Bearer\s+[A-Za-z0-9]/);
+  assert.doesNotMatch(externalScheduler, /console\.log\([^\n]*GITHUB_TOKEN/);
 });
 
 invariant("discovery credentials are scoped only to the worker step", () => {

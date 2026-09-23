@@ -1,0 +1,135 @@
+# Discovery external scheduler activation runbook
+
+Status: **PREPARED, NOT ACTIVATED**. Repository support exists, but no external
+account, Worker, cron trigger, GitHub token, repository variable, or paid resource
+was created. The owner gate is closed.
+
+## Decision
+
+Use a **Cloudflare Workers Free Cron Trigger** at `17 */2 * * *` UTC to call the
+GitHub Actions workflow-dispatch API. This preserves the existing Discovery
+workflow, permanent verification, 30-minute timeout, non-cancelling concurrency
+lane, credential scoping, worker, qualification, authority, dedupe, pending-only
+writes, human moderation, and health artifacts.
+
+This is the smallest safe no-cost option found:
+
+| Option | Finding | Decision |
+| --- | --- | --- |
+| Existing Vercel Hobby | Current limit is once per day with hourly precision; a two-hour expression fails deployment. | Reject. |
+| Azure Functions | Execution grants apply on paid consumption subscriptions and required storage is separately billed. Student credits are not permanent $0 infrastructure. | Reject. |
+| Supabase database cron | Could reuse an account but would couple scheduler/token custody to the production database and require database/Vault/network changes. | Reject as unnecessary risk. |
+| Cloudflare Workers Free | 5 cron triggers/account, 100,000 requests/day, 50 subrequests/invocation, 10 ms CPU; the design uses 1 trigger, 12 invocations/day, and 1 subrequest. Limits fail closed rather than creating paid overage on the Free plan. | Select. |
+
+The GitHub repository is currently public and the workflow uses the standard
+`ubuntu-latest` runner, for which GitHub documents Actions usage as free. The
+external trigger replaces native worker execution rather than adding runs, so it
+does not increase the existing artifact/cache cadence. The permanent-$0 claim is
+conditional on the repository remaining public, use of a standard runner, and
+the owner confirming the target Cloudflare account is still on Workers Free at
+activation; it does not rely on student credits.
+
+Official references: [Cloudflare limits](https://developers.cloudflare.com/workers/platform/limits/),
+[Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/),
+[Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/),
+[Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/),
+[Workers logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/),
+[Workers SLA](https://www.cloudflare.com/workers-service-level-agreement/),
+[GitHub workflow dispatch API](https://docs.github.com/en/rest/actions/workflows#create-a-workflow-dispatch-event),
+[GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions),
+[Vercel cron limits](https://vercel.com/docs/cron-jobs/usage-and-pricing), and
+[Azure Functions pricing](https://azure.microsoft.com/en-us/pricing/details/functions/).
+
+Cloudflare Free has no contractual availability SLA; the published Workers SLA
+is for Enterprise subscriptions. Selection therefore does not declare recovery.
+Cron Events retains the 100 most recent scheduled invocations, Workers Logs gives
+provider-side evidence, and Tech Opportunity's independent health report remains
+the authority for product readiness.
+
+## Trigger and authentication contract
+
+The Cloudflare source in `ops/discovery-scheduler/` sends:
+
+- workflow: `discovery.yml` on `main`;
+- `trigger_kind=external_schedule`; and
+- the exact UTC nominal slot, for example `2026-09-23T10:17:00.000Z`.
+
+GitHub accepts the identity only when all conditions hold:
+
+1. the event is `workflow_dispatch`;
+2. repository variable `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED` is exactly `true`;
+3. `github.actor` exactly matches `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR`;
+4. the nominal slot is canonical UTC, on the even-hour `:17` cadence, no more
+   than five minutes in the future, and no more than two hours old; and
+5. the nominal slot is not already present in retained native/external evidence.
+
+Ordinary `workflow_dispatch` remains `manual`. Native cron remains `scheduled`.
+Push remains `push`. Historical observations are not renamed. One nominal slot
+can contribute at most one scheduled observation.
+
+Use a dedicated machine identity with a fine-grained, repository-only GitHub
+token granting **Actions: write**, the permission GitHub requires for workflow
+dispatch. Give it a short expiry and rotate it. Store the value only as the
+Cloudflare Worker secret `GITHUB_TOKEN`; never put it in Git, Wrangler variables,
+GitHub variables, logs, or command output. Actions-write also permits other
+workflow management operations, so the dedicated identity and repository scope
+are mandatory compensating controls.
+
+## Monitoring and proof
+
+When the owner enables the external scheduler, native GitHub `schedule` jobs are
+skipped at the Discovery job boundary. This prevents two workers in one slot and
+keeps the native cron available for rollback. Push and manual recovery still run
+but never count as scheduled evidence.
+
+Health treats `scheduled` and `external_schedule` as distinct identities while
+using both as scheduled observations. With external scheduling enabled, it emits
+critical `external_schedule_not_proven` and remains `NOT_YET_PROVEN` until three
+successful external runs at three distinct nominal slots are retained. The
+two-hour interval and two-hour tolerance are unchanged. A missed run remains
+critical. Five successful scheduled observations remain necessary for baseline
+maturity.
+
+Provider-side proof for each slot is the Cloudflare Cron Event / Workers Log.
+Product-side proof is the GitHub run plus `trigger-report.json`, `report.json`,
+and `history.json`. Correlate nominal slot, actor, run ID, commit, worker result,
+artifact, and Cloudflare dispatch status. One success is never reliability proof.
+
+## Owner-controlled activation gate
+
+Do not execute these steps without explicit owner authorization:
+
+1. Confirm the target Cloudflare account is on **Workers Free**, has capacity for
+   one of its five cron triggers, and has no paid-plan upgrade or billable binding.
+2. Create/approve the dedicated GitHub machine identity and short-lived,
+   repository-only fine-grained token with Actions-write permission.
+3. Create a Worker shell without a Cron Trigger and add `GITHUB_TOKEN` as an
+   encrypted Worker secret. Do not deploy the committed `wrangler.toml` yet: it
+   contains the live cron by design.
+4. Set `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR` to the dedicated GitHub login.
+5. In one controlled window just after a completed Discovery slot, set
+   `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=true`, then deploy the reviewed source
+   with the committed `wrangler.toml`; that deployment adds `17 */2 * * *`.
+   Native worker execution then suppresses automatically. If deployment fails,
+   immediately delete/false the enabled variable so native execution resumes.
+6. Observe three distinct external slots (minimum six hours), then continue for
+   at least 12 hours and preferably 24 hours before operational closure.
+
+The repository currently has neither activation variable. The committed
+`wrangler.toml` is deployable configuration, not evidence that deployment exists.
+
+## Rollback
+
+Rollback changes triggers only; it never changes database rows or publication:
+
+1. Immediately disable/remove the Cloudflare Cron Trigger.
+2. Set `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=false` (or delete the variable) so
+   native GitHub schedule jobs resume worker execution.
+3. Use one ordinary manual dispatch only if recovery is needed; it remains manual
+   evidence and cannot make health green.
+4. Revoke the fine-grained GitHub token and remove the Worker secret. Remove the
+   dedicated repository access if no longer needed.
+5. Retain existing GitHub and Cloudflare logs/artifacts for incident evidence.
+
+The code rollback is a normal revert of the activation-support commit. Do not
+delete historical health observations or relabel external runs as native runs.

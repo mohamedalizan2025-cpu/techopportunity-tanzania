@@ -10,10 +10,11 @@ GitHub Actions, writes:
 
 - `discovery-health/report.json`: the current stable-schema health report;
 - `discovery-health/history.json`: at most 24 observations; and
+- `discovery-health/trigger-report.json`: credential-free trigger admission evidence; and
 - a concise GitHub step summary.
 
 The workflow restores the newest bounded history from a key containing GitHub
-run ID and run attempt, and uploads both JSON files as a 90-day run artifact.
+run ID and run attempt, and uploads the JSON evidence as a 90-day run artifact.
 A re-run replaces the same logical workflow observation instead of inflating
 the baseline. Cache loss
 does not change discovery behavior: the next report honestly returns to
@@ -24,13 +25,15 @@ credentials. No health code imports Supabase or a network client.
 The separate `Discovery schedule health` workflow runs without credentials at
 minute 47, 30 minutes after every minute-17 discovery window, and on relevant
 pushes. It only reads retained history and does not invoke the discovery worker.
-It exits non-zero on a deterministic missed-run result and uploads its own
-schedule report.
+It exits non-zero on a deterministic missed-run result or, after owner
+activation, while external repeatability is unproven; it uploads its own schedule
+report.
 
 ## Execution and source semantics
 
-Run identity records commit SHA, workflow run ID/name/event, run attempt,
-scheduled/manual/push trigger kind, start, finish, duration, and success/failure.
+Run identity records commit SHA, workflow run ID/name/event, run attempt, actor,
+native-scheduled/external-schedule/manual/push trigger kind, exact external
+nominal slot when applicable, start, finish, duration, and success/failure.
 A thrown worker with no complete summary is a
 critical `worker_failed` observation. An all-source failure remains a failed
 worker outcome; partial source failures preserve existing failure isolation.
@@ -44,10 +47,13 @@ report never substitutes zero for unavailable evidence.
 
 ## Schedule states
 
-Production discovery uses one GitHub Actions UTC cron, `17 */2 * * *`: 00:17,
+The repository retains one native GitHub Actions UTC cron, `17 */2 * * *`: 00:17,
 02:17, …, and 22:17 UTC. It moved from `0 */2 * * *` after the 2026-09-22
 schedule-delivery incident to reduce GitHub's documented start-of-hour delay/drop
-risk. Its expected and target interval remain two hours. The existing formula
+risk. When the owner enables the prepared external trigger, the native schedule
+still records a run but its worker job is skipped; only the authenticated
+external dispatch may execute the worker for that slot. The expected and target
+interval remain two hours. The existing formula
 `max(2 hours, 25% of the interval)` gives a two-hour tolerance; the incident did
 not justify weakening that threshold.
 
@@ -68,7 +74,8 @@ delivery is best-effort, not a two-hour SLA; see
 ## Baselines
 
 Baselines are descriptive and source-aware. Only successful, complete,
-schema-compatible `schedule` observations participate. Pushes, manual
+schema-compatible native or authenticated external scheduled observations
+participate. Pushes, manual
 dispatches, failures, incomplete observations, and retry duplicates do not.
 At least five prior observations are required. Before that, the run and each
 source report `insufficient_history`. Established baselines expose observation
@@ -93,7 +100,9 @@ Critical findings are immediate hard failures:
 
 - worker failure or zero sources attempted;
 - all sources failed or at least two active sources failed; and
-- missed scheduled execution.
+- missed scheduled execution; and
+- owner-enabled external scheduling with fewer than three successful distinct
+  nominal slots.
 
 Warnings include one isolated source failure, source-health write failure,
 severe candidate-volume deviation, severe/consecutive rate degradation,
@@ -131,10 +140,15 @@ public treatment must be separately designed and moderator-safe.
 
 `PARTIALLY_PROVEN` means the target schedule is configured and at least one real
 scheduled success is retained, but the minimum repeatability contract is not
-yet complete. `PROVEN` requires all ten criteria in the report: target schedule configured,
+yet complete. When the owner enables external scheduling, health remains critical
+and `NOT_YET_PROVEN` until three successful external runs at distinct nominal
+slots are retained. `PROVEN` requires the standard criteria in the report: target schedule configured,
 workflow/run identity captured, worker success, at least 80% source reachability,
 observable failures, at least three successful scheduled observations, timing
 inside tolerance, reconciled metrics, anomaly evaluation, and preceding
-security verification. Five successful scheduled observations are separately
+security verification, plus external repeatability when enabled. Five successful scheduled observations are separately
 required for baseline maturity. Configuration or push execution alone remains
 `NOT_YET_PROVEN`.
+
+The prepared external design, cost limits, authentication, activation, and
+rollback are in [DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md).

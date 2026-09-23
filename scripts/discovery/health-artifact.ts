@@ -25,12 +25,20 @@ function validHistory(value: unknown): value is HealthHistory {
 
 function normalizeHistoryIdentity(observation: HealthHistory["observations"][number]) {
   const runAttempt = Number(observation.identity.runAttempt);
+  const retainedExternalIdentity = observation.identity.event === "workflow_dispatch"
+    && observation.identity.triggerKind === "external_schedule"
+    && typeof observation.identity.nominalSlot === "string"
+    && Number.isFinite(Date.parse(observation.identity.nominalSlot));
   return {
     ...observation,
     identity: {
       ...observation.identity,
       runAttempt: Number.isInteger(runAttempt) && runAttempt > 0 ? runAttempt : 1,
-      triggerKind: triggerKindForEvent(observation.identity.event),
+      triggerKind: retainedExternalIdentity
+        ? "external_schedule" as const
+        : triggerKindForEvent(observation.identity.event),
+      actor: typeof observation.identity.actor === "string" ? observation.identity.actor : null,
+      nominalSlot: retainedExternalIdentity ? observation.identity.nominalSlot : null,
     },
   };
 }

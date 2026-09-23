@@ -3,7 +3,8 @@
 ## Status
 
 The incident remains **NOT_YET_PROVEN** and the `:17` GitHub schedule experiment
-is now **confirmed unreliable and awaiting a scheduler change**. Discovery stays
+is **confirmed unreliable**. A no-cost external scheduler path is prepared in
+Git but remains owner-disabled and unprovisioned. Discovery stays
 at a two-hour target cadence with a two-hour tolerance. All qualification,
 authority, dedupe, pending-only, and human-publication rules are unchanged.
 
@@ -66,6 +67,24 @@ ID `10738273361`). **C: monitor evidence failure is ruled out.** No concurrency,
 cancellation, disabled-workflow, default-branch, or long-running-worker cause
 was found (**D ruled out**).
 
+### 2026-09-23 recovery and scheduler preparation
+
+Commit `c4dc66e` repaired the pre-worker test failure. Its push-triggered
+Discovery run `35839051623` passed verification and worker execution, but remains
+push recovery evidence only. An authenticated Actions audit found **no new real
+Discovery `schedule` event after run `35833551425` at 07:47:12Z**. The latest
+native scheduled evidence therefore remains failed and the delivery problem is
+still outstanding.
+
+The repository now prepares Cloudflare Workers Free Cron as the selected external
+trigger without creating or modifying an external account, token, Worker, cron,
+variable, or billable resource. External dispatch uses the same `17 */2 * * *` slots and the existing
+workflow. It is accepted only when owner-enabled, actor-bound, fresh, on-cadence,
+and not replayed. Native, external, manual, and push identities remain distinct;
+historical records are not relabeled. Health stays critical until three distinct
+external slots succeed. Activation and rollback are documented in
+[DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md).
+
 GitHub documents that scheduled workflows can be delayed during high load,
 especially at the start of the hour, and that queued jobs can be dropped. It
 recommends choosing another minute: [Events that trigger workflows — schedule](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
@@ -115,28 +134,26 @@ move to their official Node 24 releases. Application dependencies are unchanged
 because the observed warnings came from action runtimes.
 
 No external service, paid resource, credential, migration, or alternate worker
-is provisioned here. The bounded contingency is:
+is provisioned here. The bounded contingency is now implemented repository-side:
 
-1. Use an owner-approved existing no-cost scheduler to call a narrowly scoped
-   GitHub trigger every two hours.
+1. Use an owner-approved Cloudflare Workers Free Cron Trigger to call the
+   narrowly scoped GitHub trigger every two hours.
 2. Reuse the existing workflow, concurrency group, timeout, gates, secret
    scoping, worker, and pending-only behavior.
-3. Before activation, add a dedicated authenticated `external_schedule` trigger
-   identity and validated nominal-slot input. Do not relabel ordinary
-   `workflow_dispatch` runs as scheduled evidence.
-4. Extend retained evidence to distinguish `github_schedule`,
-   `external_schedule`, `manual`, and `push`; deduplicate each nominal slot and
-   reject malformed, future, or replayed slot claims.
+3. The dedicated authenticated `external_schedule` identity and validated
+   nominal-slot input are implemented. Ordinary `workflow_dispatch` remains
+   manual evidence.
+4. Retained evidence distinguishes native `scheduled`, `external_schedule`,
+   `manual`, and `push`; external slots are deduplicated and malformed, stale,
+   future, unauthorized, disabled, or replayed claims fail closed.
 5. Prove at least six consecutive external scheduled observations (12 hours),
    preferably 24 hours, under the same two-hour target and tolerance.
-6. Keep GitHub cron until that proof is complete, then remove the redundant
-   trigger in a separate reviewed change.
+6. Keep GitHub cron configured for rollback, but automatically skip its worker
+   while external scheduling is owner-enabled. Review removal only after proof.
 
 Manual and push successes remain recovery evidence only and cannot satisfy
 scheduled readiness. Once this repair is deployed, the exact next operational
-action is to confirm ordinary CI restores worker eligibility and inspect the
-next real `:17` schedule plus health artifact. In parallel, the owner must
-select and authorize an existing no-cost external scheduler and least-privilege
-GitHub credential.
-The external trigger identity and health contract must be implemented before the
-first external run. Operational closure still requires real scheduled evidence.
+action is the owner gate: authorize a Cloudflare Workers Free deployment and a
+dedicated, repository-only GitHub identity/token with Actions-write permission,
+then follow the activation runbook. Operational closure still requires repeated
+real external scheduled evidence.

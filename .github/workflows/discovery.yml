@@ -6,6 +6,19 @@ on:
     # schedule delivery remains best-effort and may still be delayed/dropped.
     - cron: '17 */2 * * *'
   workflow_dispatch:
+    inputs:
+      trigger_kind:
+        description: 'Reserved scheduler identity; leave manual for human recovery'
+        required: false
+        default: 'manual'
+        type: choice
+        options:
+          - manual
+          - external_schedule
+      nominal_slot:
+        description: 'External scheduler only: exact UTC slot such as 2026-09-23T10:17:00.000Z'
+        required: false
+        type: string
   # Discovery-sensitive main changes require exact-HEAD production proof.
   # The worker remains pending-only and all credentials stay on its last step.
   push:
@@ -31,6 +44,9 @@ permissions:
 
 jobs:
   discover:
+    # Owner activation atomically suppresses the unreliable native cron worker;
+    # manual/push recovery and authenticated external dispatch remain available.
+    if: github.event_name != 'schedule' || vars.DISCOVERY_EXTERNAL_SCHEDULER_ENABLED != 'true'
     runs-on: ubuntu-latest
     # Bound the job: 18 sources x 20s hop timeouts + feeds/roundups + gates
     # finish well under this; a zombie run must not occupy the schedule slot.
@@ -48,16 +64,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Permanent contract: tests, typecheck, lint, boundary assertions,
-      # change classification and a machine-readable exact-SHA report.
-      - name: Run permanent verification gates
-        env:
-          VERIFY_BASE_SHA: ${{ github.event.before }}
-        run: npm run verify
-
-      # Bounded cross-run history: each run restores the newest default-branch
-      # observation and saves a new immutable key. No database or external
-      # observability service is involved.
+      # Restore before identity validation so a repeated external nominal slot
+      # fails closed before verification or any credentialed worker execution.
       - name: Restore discovery health history
         uses: actions/cache/restore@v5
         with:
@@ -65,6 +73,26 @@ jobs:
           key: discovery-health-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             discovery-health-
+
+      - name: Validate discovery trigger identity
+        id: trigger
+        env:
+          DISCOVERY_REQUESTED_TRIGGER_KIND: ${{ inputs.trigger_kind }}
+          DISCOVERY_EXTERNAL_NOMINAL_SLOT: ${{ inputs.nominal_slot }}
+          DISCOVERY_EXTERNAL_SCHEDULER_ENABLED: ${{ vars.DISCOVERY_EXTERNAL_SCHEDULER_ENABLED }}
+          DISCOVERY_EXTERNAL_SCHEDULER_ACTOR: ${{ vars.DISCOVERY_EXTERNAL_SCHEDULER_ACTOR }}
+          DISCOVERY_EXPECTED_INTERVAL_HOURS: '2'
+          DISCOVERY_SCHEDULE_MINUTE: '17'
+          DISCOVERY_HEALTH_HISTORY_PATH: discovery-health/history.json
+          DISCOVERY_TRIGGER_REPORT_PATH: discovery-health/trigger-report.json
+        run: node --import tsx scripts/discovery/trigger-guard.ts
+
+      # Permanent contract: tests, typecheck, lint, boundary assertions,
+      # change classification and a machine-readable exact-SHA report.
+      - name: Run permanent verification gates
+        env:
+          VERIFY_BASE_SHA: ${{ github.event.before }}
+        run: npm run verify
 
       # Secrets are attached ONLY to this step: the quality gates above run
       # with no credentials at all.
@@ -79,10 +107,13 @@ jobs:
           DISCOVERY_TARGET_INTERVAL_HOURS: '2'
           DISCOVERY_SCHEDULE_MINUTE: '17'
           DISCOVERY_VERIFICATION_PASSED: 'true'
+          DISCOVERY_TRIGGER_KIND: ${{ steps.trigger.outputs.trigger_kind }}
+          DISCOVERY_NOMINAL_SLOT: ${{ steps.trigger.outputs.nominal_slot }}
+          DISCOVERY_EXTERNAL_SCHEDULER_EXPECTED: ${{ vars.DISCOVERY_EXTERNAL_SCHEDULER_ENABLED }}
         run: node --import tsx scripts/discovery/index.ts
 
       - name: Save discovery health history
-        if: always() && hashFiles('discovery-health/history.json') != ''
+        if: always() && steps.trigger.outcome == 'success' && hashFiles('discovery-health/history.json') != ''
         uses: actions/cache/save@v5
         with:
           path: discovery-health/history.json
@@ -96,5 +127,6 @@ jobs:
           path: |
             discovery-health/report.json
             discovery-health/history.json
+            discovery-health/trigger-report.json
           if-no-files-found: warn
           retention-days: 90

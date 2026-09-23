@@ -10,13 +10,21 @@ import { loadHealthHistory, retainHealthReport } from "./health-artifact";
 function identity(startedAt: string, finishedAt: string): RunIdentity {
   const event = process.env.GITHUB_EVENT_NAME ?? "local";
   const runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT);
+  const triggerKind = event === "workflow_dispatch"
+    && process.env.DISCOVERY_TRIGGER_KIND === "external_schedule"
+    ? "external_schedule"
+    : triggerKindForEvent(event);
   return {
     commitSha: process.env.GITHUB_SHA ?? null,
     workflowRunId: process.env.GITHUB_RUN_ID ?? null,
     workflowName: process.env.GITHUB_WORKFLOW ?? null,
     runAttempt: Number.isInteger(runAttempt) && runAttempt > 0 ? runAttempt : 1,
     event,
-    triggerKind: triggerKindForEvent(event),
+    triggerKind,
+    actor: process.env.GITHUB_ACTOR ?? null,
+    nominalSlot: triggerKind === "external_schedule"
+      ? process.env.DISCOVERY_NOMINAL_SLOT ?? null
+      : null,
     startedAt,
     finishedAt,
   };
@@ -57,6 +65,7 @@ async function main() {
       targetIntervalHours: positiveNumber(process.env.DISCOVERY_TARGET_INTERVAL_HOURS, 2),
       scheduleMinute: scheduleMinute(process.env.DISCOVERY_SCHEDULE_MINUTE),
       verificationPassed: process.env.DISCOVERY_VERIFICATION_PASSED === "true",
+      externalSchedulerExpected: process.env.DISCOVERY_EXTERNAL_SCHEDULER_EXPECTED === "true",
     });
     retainHealthReport(health, history, reportPaths());
     console.log(`DISCOVERY_HEALTH_REPORT_JSON=${JSON.stringify(health)}`);
@@ -83,6 +92,7 @@ async function main() {
       targetIntervalHours: positiveNumber(process.env.DISCOVERY_TARGET_INTERVAL_HOURS, 2),
       scheduleMinute: scheduleMinute(process.env.DISCOVERY_SCHEDULE_MINUTE),
       verificationPassed: process.env.DISCOVERY_VERIFICATION_PASSED === "true",
+      externalSchedulerExpected: process.env.DISCOVERY_EXTERNAL_SCHEDULER_EXPECTED === "true",
     });
     retainHealthReport(health, history, reportPaths());
     console.log(`DISCOVERY_HEALTH_REPORT_JSON=${JSON.stringify(health)}`);

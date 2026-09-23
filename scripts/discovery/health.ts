@@ -10,7 +10,7 @@ export type ScheduleState = "on_time" | "delayed" | "missed" | "unknown";
 export type BaselineState = "established" | "insufficient_history";
 export type Severity = "critical" | "warning" | "informational";
 export type FreshnessState = "fresh" | "aging" | "stale" | "expired" | "unknown";
-export type TriggerKind = "scheduled" | "manual" | "push" | "other";
+export type TriggerKind = "scheduled" | "external_schedule" | "manual" | "push" | "other";
 export type ReadinessState = "PROVEN" | "PARTIALLY_PROVEN" | "NOT_YET_PROVEN";
 
 export interface RunIdentity {
@@ -20,6 +20,8 @@ export interface RunIdentity {
   runAttempt: number;
   event: string;
   triggerKind: TriggerKind;
+  actor: string | null;
+  nominalSlot: string | null;
   startedAt: string;
   finishedAt: string;
 }
@@ -185,6 +187,7 @@ export interface BuildHealthReportInput {
   targetIntervalHours?: number;
   scheduleMinute?: number;
   verificationPassed?: boolean;
+  externalSchedulerExpected?: boolean;
 }
 
 export const BASELINE_METRICS = [
@@ -215,6 +218,28 @@ export function triggerKindForEvent(event: string): TriggerKind {
   return "other";
 }
 
+export function isScheduledObservation(observation: HealthObservation): boolean {
+  return observation.identity.event === "schedule"
+    || observation.identity.triggerKind === "scheduled"
+    || observation.identity.triggerKind === "external_schedule";
+}
+
+export function scheduledSlotForObservation(
+  observation: HealthObservation,
+  scheduleMinute = DEFAULT_SCHEDULE_MINUTE,
+  intervalHours = DEFAULT_EXPECTED_INTERVAL_HOURS
+): string | null {
+  if (observation.identity.triggerKind === "external_schedule") {
+    const nominalSlot = observation.identity.nominalSlot;
+    return nominalSlot && Number.isFinite(Date.parse(nominalSlot)) ? nominalSlot : null;
+  }
+  return nominalDispatchLatency(
+    observation.identity.startedAt,
+    scheduleMinute,
+    intervalHours
+  ).nominalSlot;
+}
+
 function hasBaselineMetrics(value: unknown): value is HealthMetrics {
   if (!value || typeof value !== "object") return false;
   const metrics = value as Partial<HealthMetrics>;
@@ -231,6 +256,14 @@ export function isComparableHealthObservation(value: unknown): value is HealthOb
   if (observation.schemaVersion !== 1) return false;
   if (observation.executionState !== "success" && observation.executionState !== "failure") return false;
   if (!observation.identity || typeof observation.identity.event !== "string") return false;
+  if (
+    observation.identity.triggerKind === "external_schedule"
+    && (
+      observation.identity.event !== "workflow_dispatch"
+      || typeof observation.identity.nominalSlot !== "string"
+      || !Number.isFinite(Date.parse(observation.identity.nominalSlot))
+    )
+  ) return false;
   if (typeof observation.identity.commitSha !== "string" || observation.identity.commitSha.length === 0) return false;
   if (typeof observation.identity.workflowRunId !== "string" || observation.identity.workflowRunId.length === 0) return false;
   if (!Number.isFinite(Date.parse(observation.identity.startedAt))) return false;
@@ -253,11 +286,32 @@ export function isComparableHealthObservation(value: unknown): value is HealthOb
   );
 }
 
-function successfulScheduledHistory(history: HealthObservation[]): HealthObservation[] {
-  return history.filter(
+export function successfulScheduledHistory(history: HealthObservation[]): HealthObservation[] {
+  const successful = history.filter(
     (observation) => isComparableHealthObservation(observation)
       && observation.executionState === "success"
-      && observation.identity.event === "schedule"
+      && isScheduledObservation(observation)
+  );
+  const externalBySlot = new Map<string, HealthObservation>();
+  for (const observation of successful.filter(
+    (item) => item.identity.triggerKind === "external_schedule"
+  )) {
+    const slot = scheduledSlotForObservation(observation);
+    if (slot) externalBySlot.set(slot, observation);
+  }
+  const externalSlots = new Set(externalBySlot.keys());
+  const native = successful.filter(
+    (observation) => observation.identity.triggerKind !== "external_schedule"
+      && !externalSlots.has(scheduledSlotForObservation(observation) ?? "")
+  );
+  return [...native, ...externalBySlot.values()].sort(
+    (a, b) => Date.parse(a.identity.startedAt) - Date.parse(b.identity.startedAt)
+  );
+}
+
+export function successfulExternalScheduleHistory(history: HealthObservation[]): HealthObservation[] {
+  return successfulScheduledHistory(
+    history.filter((observation) => observation.identity.triggerKind === "external_schedule")
   );
 }
 
@@ -268,6 +322,17 @@ function sameLogicalObservation(candidate: HealthObservation, observation: Healt
   return candidate.identity.event === observation.identity.event
     && candidate.identity.commitSha === observation.identity.commitSha
     && candidate.identity.startedAt === observation.identity.startedAt;
+}
+
+function sameScheduledSlot(candidate: HealthObservation, observation: HealthObservation): boolean {
+  if (!isScheduledObservation(candidate) || !isScheduledObservation(observation)) return false;
+  if (
+    candidate.identity.triggerKind !== "external_schedule"
+    && observation.identity.triggerKind !== "external_schedule"
+  ) return false;
+  const candidateSlot = scheduledSlotForObservation(candidate);
+  const observationSlot = scheduledSlotForObservation(observation);
+  return candidateSlot !== null && candidateSlot === observationSlot;
 }
 
 const ratio = (numerator: number, denominator: number): number | null =>
@@ -489,7 +554,9 @@ export function assessSchedule(
   now: string,
   expectedIntervalHours = DEFAULT_EXPECTED_INTERVAL_HOURS,
   currentEvent?: string,
-  scheduleMinute = DEFAULT_SCHEDULE_MINUTE
+  scheduleMinute = DEFAULT_SCHEDULE_MINUTE,
+  currentTriggerKind?: TriggerKind,
+  currentNominalSlot?: string | null
 ): ScheduleAssessment {
   const toleranceHours = toleranceFor(expectedIntervalHours);
   const nowMs = Date.parse(now);
@@ -504,17 +571,27 @@ export function assessSchedule(
     return { state: "unknown", expectedIntervalHours, scheduleMinute, toleranceHours, observedGapHours: null, ...emptyTiming, reason: "Invalid schedule inputs." };
   }
   const scheduled = history
-    .filter((observation) => isComparableHealthObservation(observation) && observation.identity.event === "schedule")
+    .filter((observation) => isComparableHealthObservation(observation) && isScheduledObservation(observation))
     .sort((a, b) => Date.parse(a.identity.startedAt) - Date.parse(b.identity.startedAt));
   const last = scheduled.at(-1);
   if (!last) {
     return { state: "unknown", expectedIntervalHours, scheduleMinute, toleranceHours, observedGapHours: null, ...emptyTiming, reason: "No retained scheduled observation exists." };
   }
-  const timing = nominalDispatchLatency(
-    currentEvent === "schedule" ? now : last.identity.startedAt,
-    scheduleMinute,
-    expectedIntervalHours
-  );
+  const currentIsScheduled = currentEvent === "schedule" || currentTriggerKind === "external_schedule";
+  const timingSource = currentIsScheduled ? now : last.identity.startedAt;
+  const exactNominalSlot = currentTriggerKind === "external_schedule"
+    ? currentNominalSlot
+    : !currentIsScheduled && last.identity.triggerKind === "external_schedule"
+      ? last.identity.nominalSlot
+      : null;
+  const timing = exactNominalSlot && Number.isFinite(Date.parse(exactNominalSlot))
+    ? {
+        nominalSlot: exactNominalSlot,
+        dispatchLatencyMinutes: Math.round(
+          (Date.parse(timingSource) - Date.parse(exactNominalSlot)) / 60_000
+        ),
+      }
+    : nominalDispatchLatency(timingSource, scheduleMinute, expectedIntervalHours);
   const gapHours = (nowMs - Date.parse(last.identity.startedAt)) / 3_600_000;
   if (!Number.isFinite(gapHours) || gapHours < 0) {
     return { state: "unknown", expectedIntervalHours, scheduleMinute, toleranceHours, observedGapHours: null, ...timing, reason: "Scheduled timestamps are not comparable." };
@@ -522,7 +599,7 @@ export function assessSchedule(
   if (gapHours <= expectedIntervalHours + toleranceHours) {
     return { state: "on_time", expectedIntervalHours, scheduleMinute, toleranceHours, observedGapHours: gapHours, ...timing, reason: "Latest scheduled execution is inside the expected interval and tolerance." };
   }
-  if (currentEvent === "schedule" && gapHours <= expectedIntervalHours * 2 + toleranceHours) {
+  if (currentIsScheduled && gapHours <= expectedIntervalHours * 2 + toleranceHours) {
     return { state: "delayed", expectedIntervalHours, scheduleMinute, toleranceHours, observedGapHours: gapHours, ...timing, reason: "This scheduled execution arrived outside tolerance but before a second full interval elapsed." };
   }
   return { state: "missed", expectedIntervalHours, scheduleMinute, toleranceHours, observedGapHours: gapHours, ...timing, reason: "No scheduled execution was retained inside the expected interval and tolerance." };
@@ -672,12 +749,13 @@ function readinessCriteria(
   history: HealthObservation[],
   schedule: ScheduleAssessment,
   configuredForTarget: boolean,
-  verificationPassed: boolean
+  verificationPassed: boolean,
+  externalSchedulerExpected: boolean
 ): ReadinessCriterion[] {
-  const scheduledSuccesses = successfulScheduledHistory(
-    appendObservation({ schemaVersion: 1, observations: history }, observation).observations
-  );
-  return [
+  const retained = appendObservation({ schemaVersion: 1, observations: history }, observation).observations;
+  const scheduledSuccesses = successfulScheduledHistory(retained);
+  const externalSuccesses = successfulExternalScheduleHistory(retained);
+  const criteria: ReadinessCriterion[] = [
     { id: "scheduler_configured", passed: configuredForTarget, evidence: configuredForTarget ? "Configured interval meets the two-hour target." : "Configured discovery interval does not yet meet the two-hour target." },
     { id: "workflow_executes", passed: observation.identity.workflowRunId !== null, evidence: observation.identity.workflowRunId ? `Workflow run ${observation.identity.workflowRunId} captured.` : "No workflow run identifier captured." },
     { id: "worker_succeeds", passed: observation.executionState === "success", evidence: `Worker state: ${observation.executionState}.` },
@@ -689,6 +767,14 @@ function readinessCriteria(
     { id: "anomalies_surfaced", passed: true, evidence: "Deterministic anomaly evaluation completed." },
     { id: "security_boundaries", passed: verificationPassed, evidence: verificationPassed ? "Permanent verification gates passed before production execution." : "No preceding boundary verification evidence supplied." },
   ];
+  if (externalSchedulerExpected) {
+    criteria.push({
+      id: "external_scheduler_repeatability",
+      passed: externalSuccesses.length >= 3,
+      evidence: `${externalSuccesses.length} successful external scheduled observations retained; 3 required.`,
+    });
+  }
+  return criteria;
 }
 
 export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealthReport {
@@ -723,7 +809,9 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
   // A re-run replaces its earlier attempt before either maturity or anomaly
   // evaluation. Descriptive maturity includes the current successful scheduled
   // observation; anomaly comparisons remain prior-only to avoid self-dilution.
-  const comparisonHistory = history.filter((item) => !sameLogicalObservation(item, observation));
+  const comparisonHistory = history.filter(
+    (item) => !sameLogicalObservation(item, observation) && !sameScheduledSlot(item, observation)
+  );
   const retainedHistory = appendObservation({ schemaVersion: 1, observations: history }, observation).observations;
   const comparisonPipelineBaselines = buildPipelineBaselines(comparisonHistory);
   const comparisonSourceBaselines = buildSourceBaselines(comparisonHistory);
@@ -739,7 +827,9 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
     input.identity.startedAt,
     expectedInterval,
     input.identity.event,
-    input.scheduleMinute ?? DEFAULT_SCHEDULE_MINUTE
+    input.scheduleMinute ?? DEFAULT_SCHEDULE_MINUTE,
+    input.identity.triggerKind,
+    input.identity.nominalSlot
   );
   const configuredForTarget = expectedInterval <= targetInterval;
   const anomalies: HealthAnomaly[] = [];
@@ -769,13 +859,31 @@ export function buildHealthReport(input: BuildHealthReportInput): DiscoveryHealt
   } else if (schedule.state === "unknown") {
     anomalies.push({ severity: "informational", code: "schedule_history_insufficient", scope: "schedule", message: schedule.reason });
   }
+  const externalSuccesses = successfulExternalScheduleHistory(retainedHistory);
+  if ((input.externalSchedulerExpected ?? false) && externalSuccesses.length < 3) {
+    anomalies.push({
+      severity: "critical",
+      code: "external_schedule_not_proven",
+      scope: "schedule",
+      message: "External scheduling remains unproven until three distinct nominal slots succeed.",
+      observed: externalSuccesses.length,
+      expected: "3 successful external scheduled observations",
+    });
+  }
 
   const critical = anomalies.some((anomaly) => anomaly.severity === "critical");
   const warning = anomalies.some((anomaly) => anomaly.severity === "warning");
   const observedState = baselineState === "insufficient_history" ? "observed" : "healthy";
   const pipelineState = critical ? "failed" : warning ? "degraded" : observedState;
   const sourceState = !summary || summary.sourcesSucceeded === 0 ? "failed" : summary.sourcesFailed > 0 ? "degraded" : observedState;
-  const criteria = readinessCriteria(observation, history, schedule, configuredForTarget, input.verificationPassed ?? false);
+  const criteria = readinessCriteria(
+    observation,
+    history,
+    schedule,
+    configuredForTarget,
+    input.verificationPassed ?? false,
+    input.externalSchedulerExpected ?? false
+  );
 
   return {
     schemaVersion: 1,
@@ -825,7 +933,10 @@ export function appendObservation(history: HealthHistory | undefined, observatio
   return {
     schemaVersion: 1,
     observations: [
-      ...(history?.observations ?? []).filter((candidate) => !sameLogicalObservation(candidate, observation)),
+      ...(history?.observations ?? []).filter(
+        (candidate) => !sameLogicalObservation(candidate, observation)
+          && !sameScheduledSlot(candidate, observation)
+      ),
       observation,
     ].slice(-HEALTH_HISTORY_LIMIT),
   };

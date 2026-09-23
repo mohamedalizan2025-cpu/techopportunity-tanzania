@@ -42,13 +42,24 @@ Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   uploaded artifact `10738273361`. Long delivery gaps independently preserve
   class A evidence; no cancellation/concurrency defect was found. The test is
   fixed with one injected clock and UTC boundary regressions. Interval/tolerance
-  remain 2h/2h; manual/push runs still cannot count as scheduled proof. A bounded
-  external-scheduler contingency is documented but not provisioned: reuse the
-  same worker only after adding an authenticated external trigger identity and
-  truthful health evidence. Exact next: push/confirm CI recovery, inspect the
-  next real `:17` run, and have the owner authorize an existing no-cost scheduler
-  plus least-privilege GitHub credential. Full evidence:
+  remain 2h/2h; manual/push runs still cannot count as scheduled proof. Commit
+  `c4dc66e` restored push execution but did not produce scheduled proof. The
+  external path is now prepared as described in the next item. Full evidence:
   [DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md).
+
+- **External scheduler repository support prepared; activation is OWNER-GATED.**
+  No native Discovery schedule occurred after failed run `35833551425`; recovery
+  run `35839051623` was push-only and cannot prove cadence. Cloudflare Workers
+  Free Cron is selected because the existing Vercel Hobby scheduler is limited
+  to daily execution and Azure's grants do not make required storage permanently
+  free. The prepared Worker sends one `17 */2` dispatch with an exact nominal
+  slot. GitHub requires owner enablement, a dedicated allowed actor, a fresh
+  canonical slot, and no replay. Native cron worker execution suppresses while
+  enabled, preventing increased frequency. Health remains critical until three
+  distinct external slots succeed. Nothing external is provisioned; both GitHub
+  activation variables are absent. Exact next: owner authorizes the Workers Free
+  deployment and dedicated repository-only Actions-write token, then follows
+  [DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md).
 
 - **END-OF-DAY CLOSURE 2026-09-17: work clean, next milestone is NOT an
   engineering build.** HEAD `beb8e9d`, tree clean, `origin/main` current.

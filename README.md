@@ -39,7 +39,9 @@ but GitHub schedule delivery is not reliable enough to prove the target cadence.
 After the 2026-09-22 incident, Discovery moved to `cron: '17 */2 * * *'`;
 2026-09-23 Actions evidence confirmed this off-hour experiment also misses the
 target. The incident remains `NOT_YET_PROVEN`, with a bounded external-scheduler
-contingency documented; see
+path prepared but owner-disabled. Cloudflare Workers Free Cron is selected;
+activation, proof, and rollback are documented in
+[the external scheduler runbook](docs/DISCOVERY_EXTERNAL_SCHEDULER.md). See also
 [the incident record](docs/DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md). The Authoritative Source
 Registry Expansion milestone is **CLOSED (2026-09-16)**: the owner applied
 `supabase/seeds/0003_first_party_listing_adapters.sql` to production, activating
