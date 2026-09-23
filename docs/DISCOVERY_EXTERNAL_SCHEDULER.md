@@ -86,13 +86,23 @@ Ordinary `workflow_dispatch` remains `manual`. Native cron remains `scheduled`.
 Push remains `push`. Historical observations are not renamed. One nominal slot
 can contribute at most one scheduled observation.
 
-Use a dedicated machine identity with a fine-grained, repository-only GitHub
-token granting **Actions: write**, the permission GitHub requires for workflow
-dispatch. Give it a short expiry and rotate it. Store the value only as the
-Cloudflare Worker secret `GITHUB_TOKEN`; never put it in Git, Wrangler variables,
-GitHub variables, logs, or command output. Actions-write also permits other
-workflow management operations, so the dedicated identity and repository scope
-are mandatory compensating controls.
+The owner explicitly selected the existing GitHub account
+`mohamedalizan2025-cpu` as the dispatch identity. Use a fine-grained token whose
+resource owner is that account, whose repository access selects only
+`techopportunity-tanzania`, whose sole selectable repository permission is
+**Actions: read and write**, and whose expiry is 30–90 days. GitHub adds required
+**Metadata: read** automatically; grant no account or other repository
+permission. Store the value only as the encrypted Cloudflare Worker secret
+`GITHUB_TOKEN`; never put it in Git, Wrangler variables, GitHub variables, logs,
+or command output.
+
+Actions-write also permits other workflow-management operations in the selected
+repository. Using the owner's identity therefore has a larger attribution and
+account-compromise impact than a separate machine identity. The explicit owner
+decision, one-repository scope, short expiration, encrypted custody, exact actor
+allowlist, slot guards, and immediate revocation rollback are the compensating
+controls. The workflow must set `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR` to exactly
+`mohamedalizan2025-cpu`; dispatches by any other actor still fail closed.
 
 ## Monitoring and proof
 
@@ -120,13 +130,14 @@ Do not execute these steps without explicit owner authorization:
 
 1. Confirm the target Cloudflare account is on **Workers Free**, has capacity for
    one of its five cron triggers, and has no paid-plan upgrade or billable binding.
-2. Create/approve the dedicated GitHub machine identity and short-lived,
-   repository-only fine-grained token with Actions-write permission.
-3. The Worker shell already exists without a Cron Trigger. After the dedicated
-   identity passes review, add `GITHUB_TOKEN` as an encrypted Worker secret. Do
+2. Create/approve the 30–90-day fine-grained token for owner
+   `mohamedalizan2025-cpu`, selected repository `techopportunity-tanzania`, with
+   Actions read/write and unavoidable Metadata read only.
+3. The Worker shell already exists without a Cron Trigger. After the token
+   settings pass review, add `GITHUB_TOKEN` as an encrypted Worker secret. Do
    not deploy the committed `wrangler.toml` yet: it contains the live cron by
    design.
-4. Set `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR` to the dedicated GitHub login.
+4. Set `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR=mohamedalizan2025-cpu`.
 5. In one controlled window just after a completed Discovery slot, set
    `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=true`, then deploy the reviewed source
    with the committed `wrangler.toml`; that deployment adds `17 */2 * * *`.
@@ -148,8 +159,7 @@ Rollback changes triggers only; it never changes database rows or publication:
    native GitHub schedule jobs resume worker execution.
 3. Use one ordinary manual dispatch only if recovery is needed; it remains manual
    evidence and cannot make health green.
-4. Revoke the fine-grained GitHub token and remove the Worker secret. Remove the
-   dedicated repository access if no longer needed.
+4. Revoke the fine-grained GitHub token and remove the Worker secret.
 5. Retain existing GitHub and Cloudflare logs/artifacts for incident evidence.
 
 The code rollback is a normal revert of the activation-support commit. Do not

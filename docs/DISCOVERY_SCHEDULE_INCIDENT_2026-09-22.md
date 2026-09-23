@@ -152,7 +152,7 @@ is implemented repository-side:
    narrowly scoped GitHub trigger every two hours.
 2. Reuse the existing workflow, concurrency group, timeout, gates, secret
    scoping, worker, and pending-only behavior.
-3. The dedicated authenticated `external_schedule` identity and validated
+3. The authenticated, exact-actor `external_schedule` identity and validated
    nominal-slot input are implemented. Ordinary `workflow_dispatch` remains
    manual evidence.
 4. Retained evidence distinguishes native `scheduled`, `external_schedule`,
@@ -165,7 +165,7 @@ is implemented repository-side:
 
 Manual and push successes remain recovery evidence only and cannot satisfy
 scheduled readiness. Once this repair is deployed, the exact next operational
-action is the owner gate: authorize a Cloudflare Workers Free deployment and a
-dedicated, repository-only GitHub identity/token with Actions-write permission,
-then follow the activation runbook. Operational closure still requires repeated
-real external scheduled evidence.
+action is the owner gate: authorize a Cloudflare Workers Free deployment and the
+owner-account, repository-only fine-grained GitHub token with Actions-write
+permission, then follow the activation runbook. Operational closure still
+requires repeated real external scheduled evidence.

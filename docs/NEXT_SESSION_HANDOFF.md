@@ -75,15 +75,17 @@ Updated: 2026-09-23. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   Cloudflare Workers Free Cron is selected because the existing Vercel Hobby scheduler is limited
   to daily execution and Azure's grants do not make required storage permanently
   free. The prepared Worker sends one `17 */2` dispatch with an exact nominal
-  slot. GitHub requires owner enablement, a dedicated allowed actor, a fresh
+  slot. GitHub requires owner enablement, an exact allowed actor, a fresh
   canonical slot, and no replay. Native cron worker execution suppresses while
   enabled, preventing increased frequency. Health remains critical until three
   distinct external slots succeed and 12–24 hours pass. Wrangler OAuth is
   authenticated and inert version `b9f8bc54-8f69-455f-b2fb-3da9db1426d2`
   exists with no route, binding, secret, or Cron Trigger; the dashboard reports
   0/100,000 requests and no configured cron. Both GitHub activation variables
-  remain absent. Exact next: owner completes the dedicated repository-only
-  Actions-write identity/token gate, then follows
+  remain absent. The owner explicitly selected existing account
+  `mohamedalizan2025-cpu` as the actor; exact next is its 30–90-day,
+  repository-only fine-grained token with Actions read/write plus unavoidable
+  Metadata read, followed by
   [DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md).
 
 - **END-OF-DAY CLOSURE 2026-09-17: work clean, next milestone is NOT an
