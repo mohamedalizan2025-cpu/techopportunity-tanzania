@@ -2,6 +2,45 @@
 
 Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
+## End-of-session closure (2026-09-24, HEAD `5cab9de`)
+
+Clean, verified, ready to resume. No feature was started; no schema, grant,
+scheduler, Discovery, or AI code was changed in this closure pass.
+
+- CURRENT HEAD: `5cab9de`, tree clean, `origin/main` synchronized.
+- SUPABASE: production `jltuufukcwztugvojwjd`, staging `pumzofcwfjqswkiwfqty`.
+  0021 + 0022 active and verified in both; October-30 Data API grant work is
+  CLOSED (see [DATA_API_GRANTS.md](DATA_API_GRANTS.md)).
+- STAGING HEALTH: active and verified (daily workflow + controlled runs).
+  Free-plan pausing remains platform-controlled; health checks prove
+  connectivity/RLS only and do not guarantee exemption.
+- DISCOVERY: Cloudflare Workers Free scheduler active, cron `17 */2 * * *`,
+  `external_schedule` identity proven over 7 consecutive successful slots /
+  12 hours with zero duplicates. Preferred 24-hour observation still pending;
+  incident NOT closed. Do not trigger runs merely for evidence. Upstream
+  acquisition timeouts (HESLB, Agriculture, SUZA) are source issues, not
+  scheduler failures.
+- AI: Gemini primary → Groq backup → deterministic fallback implemented;
+  synthetic 16-case evaluation green (0 hard failures); real-provider requests
+  = 0; production AI disabled. Remaining owner gates: Gemini key +
+  unpaid-data-use acceptance + no-billing confirmation; Groq key + ZDR
+  confirmation + no-billing confirmation.
+- COMMERCIAL / PRODUCT: Explore, For You, Activity, and the provider-campaign
+  foundation remain live. No new feature for feature count; future development
+  stays evidence-triggered (adoption/provider-pilot/business validation).
+- NEXT RESUME ORDER:
+  1. Check whether Cloudflare completed the full 24-hour clean observation;
+     close the scheduler incident only if evidence supports it.
+  2. Inspect the first natural post-0021/0022 production Discovery run for
+     permission/service-role confirmation if not already documented.
+  3. Investigate persistent acquisition-source failures only if still recurring.
+  4. Configure/evaluate Gemini + Groq only when owner credentials and privacy
+     gates are available.
+  5. Run a controlled AI user pilot only after zero hard failures in
+     real-provider evaluation.
+  6. Return to adoption/provider-pilot/business validation rather than
+     uncontrolled feature expansion.
+
 ## Current verified state
 
 - **2026-09-24 post-grant operations: 12-HOUR SCHEDULER CHECKPOINT REACHED
