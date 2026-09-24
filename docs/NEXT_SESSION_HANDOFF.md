@@ -43,6 +43,32 @@ scheduler, Discovery, or AI code was changed in this closure pass.
 
 ## Current verified state
 
+- **2026-09-24 post-grant operations: POST-GRANT DISCOVERY PROVEN; 14-HOUR
+  SCHEDULER CHECKPOINT REACHED (INCIDENT STILL OPEN); REAL AI EVALUATION
+  BLOCKED AT OWNER CREDENTIAL GATE.** First genuine post-0021/0022 natural
+  external run `35998109570` (slot `2026-09-24T12:17:00Z`, head `8722246`)
+  succeeded: exact actor `mohamedalizan2025-cpu`, accepted
+  `triggerKind=external_schedule`, canonical slot, verification passed
+  (`DISCOVERY_VERIFICATION_PASSED=true`), worker 12:18:14Z → 12:19:56Z
+  (`success`, 268 candidates / 5 qualified / 5 duplicates / 0 inserts,
+  `categorySkipped=0`, detail 9/10), schedule `on_time` (gap 2.002h, latency
+  1 min), all 20 sources `sourceHealthUpdated=true` / `sourceHealthError=null`,
+  zero permission-denied / `insufficient_privilege` / `42501` / `PGRST` errors,
+  artifacts saved (artifact `10807201703`), no duplicate slot execution.
+  Retained history now holds eight distinct external slots spanning 14 hours
+  (22:17 → 12:17 UTC) with zero duplicates/misses/dispatch failures:
+  `INITIAL_READINESS_PROVEN — 24H_OBSERVATION_PENDING`; the preferred 24-hour
+  checkpoint (`22:17 UTC`) has not yet occurred so the incident is NOT closed.
+  Scheduler health is clean; pipeline `failed` is acquisition-only (HESLB +
+  Agriculture recurring timeouts over 3–4 consecutive runs, SUZA recovered in
+  12:17, OpportunityDesk detail 403 isolated with source `ok=true`). No schema,
+  grant, scheduler, Discovery, or AI code was changed. Evidence:
+  [DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md),
+  [DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md).
+  Next: inspect the natural 22:17 UTC slot for 24-hour closure; investigate
+  HESLB/Agriculture only if still recurring; await owner credentials before any
+  real AI request.
+
 - **2026-09-24 post-grant operations: 12-HOUR SCHEDULER CHECKPOINT REACHED
   (INCIDENT STILL OPEN); POST-GRANT DISCOVERY PENDING; REAL AI EVALUATION
   BLOCKED AT OWNER CREDENTIAL GATE.** Natural external run `35986342203`

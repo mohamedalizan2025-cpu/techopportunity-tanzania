@@ -1,12 +1,15 @@
 # Discovery external scheduler activation runbook
 
-Status: **INITIAL READINESS PROVEN — 12-HOUR CHECKPOINT REACHED, 24-HOUR OBSERVATION IN PROGRESS**.
+Status: **INITIAL READINESS PROVEN — POST-GRANT PROOF COMPLETE, 14-HOUR CHECKPOINT REACHED, 24-HOUR OBSERVATION IN PROGRESS**.
 Repository support, the repository-scoped GitHub credential, its encrypted
 Cloudflare Worker secret, both GitHub activation variables, and the two-hour
-Cloudflare Cron Trigger are live. Seven distinct natural external slots have now
-completed successfully (22:17 through 10:17 UTC, a twelve-hour span). This meets
-the six-observation / 12-hour minimum gate, but the preferred 24-hour checkpoint
-(`2026-09-24T22:17:00Z`) is still pending, so the incident remains open.
+Cloudflare Cron Trigger are live. Eight distinct natural external slots have now
+completed successfully (22:17 through 12:17 UTC, a fourteen-hour span). The
+first post-0021/0022 production run (`35998109570`, slot `2026-09-24T12:17:00Z`)
+proves the tightened grants did not break Discovery with zero
+permission-denied errors. This exceeds the six-observation / 12-hour minimum
+gate, but the preferred 24-hour checkpoint (`2026-09-24T22:17:00Z`) is still
+pending, so the incident remains open.
 
 ## Decision
 
@@ -69,7 +72,7 @@ the authority for product readiness.
   `mohamedalizan2025-cpu`, expires on 2026-11-22, selects only
   `techopportunity-tanzania`, has no user permissions, and grants only required
   Metadata read plus Actions read/write. Its authenticated dispatches are now
-  evidenced by six accepted external runs from the exact allowed actor.
+  evidenced by eight accepted external runs from the exact allowed actor.
 - Repository variables now read
   `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR=mohamedalizan2025-cpu` and
   `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=true`.
@@ -100,6 +103,7 @@ Discovery worker:
 | 2026-09-24 06:17 | `35963773490` | 19/20 | 242 / 5 / 5 / 0 | success; one source warning |
 | 2026-09-24 08:17 | `35974363625` | 18/20 | 268 / 5 / 5 / 0 | success; source health critical |
 | 2026-09-24 10:17 | `35986342203` | 17/20 | 258 / 5 / 5 / 0 | success; on_time (gap 1.998h); 3 upstream timeouts |
+| 2026-09-24 12:17 | `35998109570` | 18/20 | 268 / 5 / 5 / 0 | success; on_time (gap 2.002h); post-grant proof, 2 upstream timeouts |
 
 The seventh run's trigger artifact records `workflow_dispatch`, exact actor
 `mohamedalizan2025-cpu`, `triggerKind=external_schedule`, canonical slot
@@ -111,13 +115,13 @@ seven distinct external slots and seven distinct workflow run IDs with zero
 duplicate slot or run groups. First-to-latest nominal span is exactly twelve
 hours (22:17 → 10:17 UTC).
 
-All seven `trigger-report.json` files record `workflow_dispatch`, exact actor
+All eight `trigger-report.json` files record `workflow_dispatch`, exact actor
 `mohamedalizan2025-cpu`, `triggerKind=external_schedule`, a canonical accepted
 slot, and `accepted=true`. Permanent verification and the Discovery worker
-completed before `report.json` and `history.json` were saved. Across the seven
-runs, 1,780 candidates produced 38 qualified records; all 38 matched existing
+completed before `report.json` and `history.json` were saved. Across the eight
+runs, 2,048 candidates produced 43 qualified records; all 43 matched existing
 records, so the admission path correctly inserted zero duplicate pending rows.
-Retained history contains seven distinct external slots and seven distinct
+Retained history contains eight distinct external slots and eight distinct
 workflow run IDs, with zero duplicate slot or run groups.
 
 Native GitHub schedule runs `35931141667` and `35957717707` were skipped at the
@@ -148,6 +152,38 @@ twelve-hour slot span. The 12-hour checkpoint is therefore met by run
 `35986342203`; the preferred 24-hour checkpoint remains `2026-09-24T22:17:00Z`.
 Do not close the incident before continued natural delivery and health evidence
 are inspected at the 24-hour checkpoint.
+
+### 2026-09-24 post-grant proof + 14-hour checkpoint (12:17 UTC slot)
+
+Natural external run
+[`35998109570`](https://github.com/mohamedalizan2025-cpu/techopportunity-tanzania/actions/runs/35998109570)
+is the FIRST genuine Discovery execution after the production 0021 + 0022
+rollout (recovery `20260924T102906Z`, ~10:29 UTC; prior 10:17 worker finished
+10:20:02Z). It completed successfully at head `8722246` (current HEAD):
+`workflow_dispatch` from exact actor `mohamedalizan2025-cpu`,
+accepted `triggerKind=external_schedule` for canonical slot
+`2026-09-24T12:17:00.000Z`, permanent verification passed (all
+every-milestone gates `passed`, `DISCOVERY_VERIFICATION_PASSED=true`), worker
+12:18:14Z → 12:19:56Z (`success`, 101,626 ms), schedule `on_time`
+(observed gap 2.002h, dispatch latency 1 minute). The worker processed 268
+candidates into 5 qualified records, all 5 duplicates (`duplicatesSkipped=5`),
+with 0 pending inserts, `categorySkipped=0`, `evidencePersistenceSkipped=0`,
+detail 9/10 succeeded (one OpportunityDesk HTTP 403 detail failure, source
+`ok=true`), 18/20 sources succeeded. The two failures are recurring upstream
+acquisition timeouts (Higher Education Students' Loans Board, Ministry of
+Agriculture); State University of Zanzibar recovered versus the 10:17 run.
+All 20 sources report `sourceHealthUpdated=true` with `sourceHealthError=null`,
+proving production service-role source-health writes still succeed under the
+tightened grants. The cleaned worker log contains zero `permission-denied` /
+`insufficient_privilege` / `42501` / `PGRST` errors (only test-name
+`denied` strings). Report, history, and trigger-report artifacts were saved
+(artifact `10807201703`); retained history now holds eight distinct external
+slots with eight distinct workflow run IDs and zero duplicate slot or run
+groups — a fourteen-hour first-to-latest span (22:17 → 12:17 UTC). Native
+schedule run `35995351786` (11:50 UTC) was skipped at the job boundary while
+external scheduling was enabled; push runs `35972215362` / `35976920309`
+remain excluded. This is the real operational confirmation that the
+tightened production grants did not break Discovery.
 
 ## Trigger and authentication contract
 

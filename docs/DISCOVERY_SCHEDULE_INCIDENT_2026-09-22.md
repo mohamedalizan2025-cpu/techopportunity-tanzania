@@ -4,10 +4,12 @@
 
 The native `:17` GitHub schedule experiment is **confirmed unreliable**. The
 no-cost external scheduler is activated and has established **INITIAL READINESS
-PROVEN** with six distinct successful natural slots. The incident remains open:
-only about ten hours separate the first and latest completed slots, short of the
-required 12–24-hour observation window, and latest pipeline health is critical
-for upstream source failures. Discovery stays at a two-hour target cadence with
+PROVEN** with eight distinct successful natural slots over fourteen hours, including
+the first post-0021/0022 production proof (`35998109570`, 12:17 UTC, zero
+permission-denied errors). The incident remains open:
+only fourteen hours separate the first and latest completed slots, short of the
+preferred 24-hour observation window, and latest pipeline health is failed
+for two recurring upstream source timeouts. Discovery stays at a two-hour target cadence with
 a two-hour tolerance. All qualification, authority, dedupe, pending-only, and
 human-publication rules are unchanged.
 
@@ -177,6 +179,35 @@ met, but the preferred 24-hour observation through `2026-09-24T22:17:00Z` is
 still pending. No scheduler modification was made; the defect under
 observation was native-delivery reliability, and external delivery is now 7/7
 with no scheduler, authentication, replay, or concurrency failure.
+
+### 2026-09-24 post-grant proof + 14-hour checkpoint (12:17 UTC slot)
+
+Natural external run
+[`35998109570`](https://github.com/mohamedalizan2025-cpu/techopportunity-tanzania/actions/runs/35998109570)
+is the FIRST genuine post-0021/0022 production execution (production rollout
+recovery `20260924T102906Z` ~10:29 UTC; 10:17 worker finished 10:20:02Z). It
+completed successfully at head `8722246`: exact actor
+`mohamedalizan2025-cpu`, accepted `triggerKind=external_schedule` for
+canonical slot `2026-09-24T12:17:00.000Z`, permanent verification passed,
+worker 12:18:14Z → 12:19:56Z (`success`), schedule `on_time` (gap 2.002h,
+latency 1 minute). Counts: 268 source candidates / 5 qualified / 5 duplicates
+/ 0 inserts (`categorySkipped=0`, `evidencePersistenceSkipped=0`, detail 9/10).
+All 20 sources report `sourceHealthUpdated=true` / `sourceHealthError=null`;
+the cleaned log has zero permission-denied / `insufficient_privilege` /
+`42501` / `PGRST` errors. Artifacts saved (artifact `10807201703`); retained
+history holds eight distinct external slots with zero duplicates — a
+fourteen-hour span (22:17 → 12:17 UTC). Native schedule `35995351786` was
+skipped at the boundary; push runs remain excluded. The two failures are the
+recurring HESLB + Agriculture upstream timeouts (SUZA recovered; OpportunityDesk
+detail 403 isolated with source `ok=true`). This is the operational proof that
+the tightened production grants did not break Discovery.
+
+The incident remains **NOT CLOSED**: the 12-hour minimum is now exceeded
+(8/8, 14 hours, zero duplicates/misses/dispatch failures), but the preferred
+24-hour observation through `2026-09-24T22:17:00Z` has not yet occurred.
+Verdict at this checkpoint: `INITIAL_READINESS_PROVEN — 24H_OBSERVATION_PENDING`.
+Do not wait in the terminal for future slots; inspect the natural 22:17 UTC
+slot when it occurs before closure.
 
 GitHub documents that scheduled workflows can be delayed during high load,
 especially at the start of the hour, and that queued jobs can be dropped. It
