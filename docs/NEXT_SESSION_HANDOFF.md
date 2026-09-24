@@ -43,17 +43,6 @@ scheduler, Discovery, or AI code was changed in this closure pass.
 
 ## Current verified state
 
-- **2026-09-24 ExpoNav knowledge recovery (docs-only; no build/deploy).**
-  `AGENTS.md` and `DOCS_INDEX.md` were absent; ExpoNav has zero implementation
-  in this repo (no code, migration, test, page, map, booth, exhibitor, QR, PWA,
-  voice, or Azure resource — verified by glob + full-text grep + branch/log
-  search). Recovery recorded in
-  [EXPO_NAV_PROJECT_INTELLIGENCE_REPORT.md](../EXPO_NAV_PROJECT_INTELLIGENCE_REPORT.md)
-  with minimal [DOCS_INDEX.md](../DOCS_INDEX.md); Tech Opportunity systems
-  inventoried as reusable method only, never as ExpoNav features. No product
-  code, cloud resource, or roadmap milestone touched. Implementation stays
-  stopped pending Ali + ChatGPT review.
-
 - **2026-09-24 post-grant operations: POST-GRANT DISCOVERY PROVEN; 14-HOUR
   SCHEDULER CHECKPOINT REACHED (INCIDENT STILL OPEN); REAL AI EVALUATION
   BLOCKED AT OWNER CREDENTIAL GATE.** First genuine post-0021/0022 natural
