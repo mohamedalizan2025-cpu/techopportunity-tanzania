@@ -1,12 +1,12 @@
 # Discovery external scheduler activation runbook
 
-Status: **INITIAL READINESS PROVEN — 12–24 HOUR OBSERVATION IN PROGRESS**.
+Status: **INITIAL READINESS PROVEN — 12-HOUR CHECKPOINT REACHED, 24-HOUR OBSERVATION IN PROGRESS**.
 Repository support, the repository-scoped GitHub credential, its encrypted
 Cloudflare Worker secret, both GitHub activation variables, and the two-hour
-Cloudflare Cron Trigger are live. Six distinct natural external slots have now
-completed successfully. This exceeds the three-slot initial-readiness gate, but
-the first-to-latest observation span is only about ten hours, so the incident
-remains open until the required 12–24-hour observation window completes.
+Cloudflare Cron Trigger are live. Seven distinct natural external slots have now
+completed successfully (22:17 through 10:17 UTC, a twelve-hour span). This meets
+the six-observation / 12-hour minimum gate, but the preferred 24-hour checkpoint
+(`2026-09-24T22:17:00Z`) is still pending, so the incident remains open.
 
 ## Decision
 
@@ -99,15 +99,26 @@ Discovery worker:
 | 2026-09-24 04:17 | `35955014166` | 20/20 | 242 / 5 / 5 / 0 | success |
 | 2026-09-24 06:17 | `35963773490` | 19/20 | 242 / 5 / 5 / 0 | success; one source warning |
 | 2026-09-24 08:17 | `35974363625` | 18/20 | 268 / 5 / 5 / 0 | success; source health critical |
+| 2026-09-24 10:17 | `35986342203` | 17/20 | 258 / 5 / 5 / 0 | success; on_time (gap 1.998h); 3 upstream timeouts |
 
-All six `trigger-report.json` files record `workflow_dispatch`, exact actor
+The seventh run's trigger artifact records `workflow_dispatch`, exact actor
+`mohamedalizan2025-cpu`, `triggerKind=external_schedule`, canonical slot
+`2026-09-24T10:17:00.000Z`, and `accepted=true`. Permanent verification passed
+at exact head `838dbdc`; the worker finished at 10:20:02Z with 258 candidates,
+5 qualified, all 5 duplicates, and 0 inserts. Its log contains no
+permission-denied / `insufficient_privilege` error. Retained history now holds
+seven distinct external slots and seven distinct workflow run IDs with zero
+duplicate slot or run groups. First-to-latest nominal span is exactly twelve
+hours (22:17 → 10:17 UTC).
+
+All seven `trigger-report.json` files record `workflow_dispatch`, exact actor
 `mohamedalizan2025-cpu`, `triggerKind=external_schedule`, a canonical accepted
 slot, and `accepted=true`. Permanent verification and the Discovery worker
-completed before `report.json` and `history.json` were saved. Across the six
-runs, 1,522 candidates produced 33 qualified records; all 33 matched existing
+completed before `report.json` and `history.json` were saved. Across the seven
+runs, 1,780 candidates produced 38 qualified records; all 38 matched existing
 records, so the admission path correctly inserted zero duplicate pending rows.
-Retained history contains six distinct external slots and six distinct workflow
-run IDs, with zero duplicate slot or run groups.
+Retained history contains seven distinct external slots and seven distinct
+workflow run IDs, with zero duplicate slot or run groups.
 
 Native GitHub schedule runs `35931141667` and `35957717707` were skipped at the
 job boundary while external scheduling was enabled, so they did not execute a
@@ -124,17 +135,19 @@ Pipeline health is nevertheless critical at the audit point. The 06:17 run
 isolated one upstream Ministry of Agriculture timeout. The 08:17 run isolated
 timeouts from the Higher Education Students' Loans Board and Ministry of
 Agriculture; OpportunityDesk also returned an isolated HTTP 403 during detail
-fetching. The health logic truthfully escalated from `source_failed` to
-`multiple_sources_failed`. These are acquisition-source failures, not scheduler,
-authentication, replay, concurrency, admission, or history failures, and the
-health checks are unchanged.
+fetching.
+The 10:17 run isolated timeouts from the Higher Education Students' Loans
+Board, the Ministry of Agriculture, and the State University of Zanzibar; the
+health logic again reported critical `multiple_sources_failed`. These are
+acquisition-source failures, not scheduler, authentication, replay,
+concurrency, admission, permission, or history failures, and the health checks
+are unchanged. Its worker log contains no permission-denied error.
 
-The first external nominal slot was 22:17 UTC and the sixth was 08:17 UTC, a
-ten-hour slot span (about 10.7 hours elapsed at the audit checkpoint). The
-12-hour checkpoint is the natural `2026-09-24T10:17:00Z` slot; the preferred
-24-hour checkpoint is `2026-09-24T22:17:00Z`. Do not close the incident before
-continued natural delivery and health evidence are inspected at the applicable
-checkpoint.
+The first external nominal slot was 22:17 UTC and the seventh was 10:17 UTC, a
+twelve-hour slot span. The 12-hour checkpoint is therefore met by run
+`35986342203`; the preferred 24-hour checkpoint remains `2026-09-24T22:17:00Z`.
+Do not close the incident before continued natural delivery and health evidence
+are inspected at the 24-hour checkpoint.
 
 ## Trigger and authentication contract
 
@@ -216,14 +229,15 @@ Do not execute these steps without explicit owner authorization:
    with the committed `wrangler.toml`; that deployment adds `17 */2 * * *`.
    Native worker execution then suppresses automatically. If deployment fails,
    immediately delete/false the enabled variable so native execution resumes.
-6. **Initial readiness complete 2026-09-24:** six distinct external slots have
-   succeeded. Continue observation through at least the natural 10:17 UTC slot
-   (12 hours from first nominal delivery), preferably through 22:17 UTC (24
-   hours), before operational closure.
+6. **12-hour checkpoint complete 2026-09-24:** seven distinct external slots
+   (22:17 → 10:17 UTC) have succeeded with zero duplicates. Continue
+   observation through the natural 22:17 UTC slot (24 hours from first nominal
+   delivery) before operational closure.
 
 Both activation variables and the Cron Trigger are live. Natural Cron events and
-their correlated GitHub artifacts now satisfy the initial-readiness portion of
-step 6; the continued-observation portion remains open.
+their correlated GitHub artifacts now satisfy the initial-readiness and
+12-hour portions of step 6; the 24-hour continued-observation portion remains
+open.
 
 ## Rollback
 

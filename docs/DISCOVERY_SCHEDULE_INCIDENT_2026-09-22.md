@@ -150,6 +150,34 @@ initial readiness is established, but the incident is **not closed**. Inspect
 the natural 10:17 UTC delivery for the 12-hour checkpoint and continue through
 22:17 UTC when feasible for the preferred 24-hour observation.
 
+### 2026-09-24 12-hour checkpoint (10:17 UTC slot)
+
+Natural external run
+[`35986342203`](https://github.com/mohamedalizan2025-cpu/techopportunity-tanzania/actions/runs/35986342203)
+completed successfully at head `838dbdc`: `workflow_dispatch` from exact actor
+`mohamedalizan2025-cpu`, accepted `triggerKind=external_schedule` for canonical
+slot `2026-09-24T10:17:00.000Z`, permanent verification passed, worker finished
+10:20:02Z, schedule `on_time` (observed gap 1.998h, dispatch latency 1 minute).
+The worker processed 258 candidates into 5 qualified records, all duplicates,
+with 0 pending inserts; 17/20 sources succeeded. The three failures are
+upstream acquisition timeouts (Higher Education Students' Loans Board,
+Ministry of Agriculture, State University of Zanzibar); the worker log
+contains no permission-denied error. Report, history, and trigger-report
+artifacts were saved, and retained history now holds seven distinct external
+slots with zero duplicates — a twelve-hour first-to-latest span (22:17 →
+10:17 UTC).
+
+This run's worker finished at 10:20:02Z, before the production 0021 + 0022
+grant rollout later the same morning, so it is scheduler-observation evidence,
+not post-grant worker proof. The next natural slot (12:17 UTC) had not
+occurred at the time of this checkpoint.
+
+The incident remains **NOT CLOSED**: the six-observation / 12-hour minimum is
+met, but the preferred 24-hour observation through `2026-09-24T22:17:00Z` is
+still pending. No scheduler modification was made; the defect under
+observation was native-delivery reliability, and external delivery is now 7/7
+with no scheduler, authentication, replay, or concurrency failure.
+
 GitHub documents that scheduled workflows can be delayed during high load,
 especially at the start of the hour, and that queued jobs can be dropped. It
 recommends choosing another minute: [Events that trigger workflows — schedule](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
@@ -218,8 +246,7 @@ on Workers Free. The bounded contingency is implemented repository-side:
    while external scheduling is owner-enabled. Review removal only after proof.
 
 Manual and push successes remain recovery evidence only and cannot satisfy
-scheduled readiness. Activation and the initial repeated-delivery gate are
-complete. The exact next operational action is to inspect the natural 10:17 UTC
-external slot and its artifacts at the 12-hour checkpoint, while retaining the
-critical source-health findings; preferably continue observation through 22:17
-UTC before closing the incident.
+scheduled readiness. Activation, the initial repeated-delivery gate, and the
+12-hour checkpoint (natural 10:17 UTC external slot plus its artifacts) are
+complete, while retaining the critical source-health findings; continue
+observation through 22:17 UTC before closing the incident.

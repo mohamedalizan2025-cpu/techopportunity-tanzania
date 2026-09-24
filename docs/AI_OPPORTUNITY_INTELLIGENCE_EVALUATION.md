@@ -1,8 +1,8 @@
 # AI Opportunity Intelligence — controlled evaluation
 
-Status: **CONTRACT SIMULATION PASSED · REAL GEMINI/GROQ RUNS PENDING · PRODUCTION OFF**
+Status: **CONTRACT SIMULATION PASSED · REAL GEMINI/GROQ RUNS BLOCKED AT OWNER CREDENTIAL GATE · PRODUCTION OFF**
 
-Updated: 2026-09-23. Targets: `gemini-3.5-flash-lite` and
+Updated: 2026-09-24. Targets: `gemini-3.5-flash-lite` and
 `openai/gpt-oss-20b`.
 
 This milestone evaluates the existing bounded Opportunity Intelligence layer. It
@@ -117,10 +117,37 @@ Each run reports its own minimum/median/maximum values. Real-provider latency,
 structured-response reliability, fallback rate, and quota behavior remain
 unknown until the gated corpus run occurs.
 
+## 2026-09-24 readiness re-check (no code change)
+
+- Contract simulation re-ran green on corpus `2026-09-22-v1`: 16 requests, 14
+  valid structured responses, 2 intentional deterministic fallbacks, 0 hard
+  failures, 80/80 soft checks, 0 external requests, no private data. The
+  harness and corpus are intact and ready for real runs.
+- The real-provider gate was inspected by key name only (values never read):
+  `GEMINI_API_KEY`, `GROQ_API_KEY`, and all four evaluation attestations
+  (`AI_EVALUATION_GEMINI_UNPAID_DATA_USE_CONFIRMED`,
+  `AI_EVALUATION_GEMINI_NO_BILLING_CONFIRMED`, `AI_EVALUATION_ZDR_CONFIRMED`,
+  `AI_EVALUATION_NO_BILLING_CONFIRMED`) are absent from both the process
+  environment and `.env.local`. The harness fails closed without them (zero
+  requests by construction), so both real runs remain **BLOCKED**, not merely
+  pending.
+- Provider documentation re-verified 2026-09-24 before any real request:
+  `gemini-3.5-flash-lite` is GA/current with structured-output support and a
+  free tier; unpaid-service prompts may be used to improve Google products
+  (owner acceptance still required). `openai/gpt-oss-20b` is available on Groq
+  with JSON Schema structured outputs; Free Plan limits are 30 RPM / 1K RPD /
+  8K TPM / 200K TPD with HTTP 429 on breach (the 16-case corpus fits easily);
+  Zero Data Retention is an account-level Data Controls setting, and inference
+  data is otherwise retained only for reliability/abuse monitoring. Owner ZDR
+  and no-billing confirmations are still required.
+- No key was created, stored, or printed; production AI remains off with hard
+  zero-spend mode active.
+
 ## Real-provider gate and exact configuration
 
 No Gemini or Groq credential or account attestation was configured when this
-milestone ran. Therefore both real runs are **PENDING**, made zero provider
+milestone ran, and a 2026-09-24 re-check confirmed all keys and attestations
+are still absent. Therefore both real runs are **BLOCKED**, made zero provider
 requests, and production remains in hard zero-spend mode.
 
 For a local, isolated corpus evaluation only, the owner must first configure the

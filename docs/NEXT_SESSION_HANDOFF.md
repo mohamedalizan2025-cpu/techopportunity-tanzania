@@ -4,6 +4,33 @@ Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-24 post-grant operations: 12-HOUR SCHEDULER CHECKPOINT REACHED
+  (INCIDENT STILL OPEN); POST-GRANT DISCOVERY PENDING; REAL AI EVALUATION
+  BLOCKED AT OWNER CREDENTIAL GATE.** Natural external run `35986342203`
+  (slot `2026-09-24T10:17:00Z`, head `838dbdc`) succeeded: exact-actor
+  `external_schedule` accepted, verification passed, worker finished 10:20:02Z
+  (258 candidates / 5 qualified / all duplicates / 0 inserts), schedule
+  `on_time` (gap 1.998h), artifacts saved, no permission-denied error — but its
+  worker ran before the production 0021 + 0022 rollout, so it is
+  scheduler-observation evidence only. Retained history now holds seven
+  distinct external slots spanning exactly 12 hours (22:17 → 10:17 UTC) with
+  zero duplicates: the 12-hour minimum is met, the 24-hour checkpoint
+  (`22:17 UTC`) is pending, and the scheduling incident is NOT closed. The
+  post-grant natural run (next slot 12:17 UTC) had not occurred; no run was
+  triggered. The 16-case AI contract simulation re-ran green (14 structured, 2
+  fallbacks, 0 hard, 80/80 soft, corpus `2026-09-22-v1`, 0 external requests);
+  provider docs re-verified current (Gemini 3.5-flash-lite GA + free tier;
+  Groq gpt-oss-20b + 30/1K/8K/200K free limits + account ZDR control). No
+  Gemini/Groq key or attestation exists in env or `.env.local` (names only
+  inspected), so both real runs are BLOCKED and production AI stays off. No
+  schema, grant, scheduler, Discovery, or AI code was changed. Evidence:
+  [DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md),
+  [DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md),
+  [AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
+  Next: inspect the natural 12:17 UTC run for post-grant worker proof, continue
+  observation to 22:17 UTC for incident closure, and await owner credentials +
+  attestations before any real AI request.
+
 - **2026-09-24 Data API grant hardening: `0021` + `0022` APPLIED TO STAGING
   AND PRODUCTION (COMMITTED); OCTOBER-30 OPERATIONALLY READY.** Staging proof
   (exact ref `pumzofcwfjqswkiwfqty`, recovery
