@@ -70,8 +70,9 @@ Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   Discovery change. Architecture and activation contract:
   [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md).
 
-- **2026-09-23 Discovery schedule follow-up: `:17` remains confirmed unreliable;
-  incident remains `NOT_YET_PROVEN`.** Actual Actions evidence shows two
+- **2026-09-23 Discovery schedule follow-up (historical checkpoint): `:17`
+  remained confirmed unreliable and the incident was `NOT_YET_PROVEN`.** Actual
+  Actions evidence shows two
   successful then two failed scheduled deliveries after the change, with gaps
   of about 3.404, 3.252, and 7.170 hours. The two delivered failures were class
   B: permanent verification failed on a mixed-clock AI test before the worker.
@@ -84,17 +85,16 @@ Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   `c4dc66e` restored push execution but did not produce scheduled proof. Two
   later native scheduled runs succeeded at 16:40 and 21:24 EAT, but their 5h53
   and 4h44 delivered-run gaps still exceed interval plus tolerance. The external
-  path is now prepared as described in the next item. Full evidence:
+  path was then prepared as described in the next item. Full evidence:
   [DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md).
 
-- **External scheduler ACTIVATED — AWAITING REAL SCHEDULED EVIDENCE.**
+- **External scheduler INITIAL READINESS PROVEN — OBSERVATION IN PROGRESS.**
   Cloudflare Workers Free Cron is selected because the existing Vercel Hobby scheduler is limited
   to daily execution and Azure's grants do not make required storage permanently
   free. The prepared Worker sends one `17 */2` dispatch with an exact nominal
   slot. GitHub requires owner enablement, an exact allowed actor, a fresh
   canonical slot, and no replay. Native cron worker execution suppresses while
-  enabled, preventing increased frequency. Health remains critical until three
-  distinct external slots succeed and 12–24 hours pass. Wrangler OAuth is
+  enabled, preventing increased frequency. Wrangler OAuth is
   authenticated. Active Worker version
   `9bb741c3-845f-4c2b-bb1b-2cc13217576e` preserves encrypted secret
   `GITHUB_TOKEN`, disables workers.dev and preview URLs, has no route or paid
@@ -103,10 +103,20 @@ Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
   `mohamedalizan2025-cpu`, selects only this repository, has no user permissions,
   and grants only Actions read/write plus unavoidable Metadata read. GitHub now
   has the exact actor variable and `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=true`.
-  No real external slot has yet occurred; the first eligible slot is
-  `2026-09-23T22:17:00.000Z`. Exact next is to observe that natural Cron and
-  correlate Cloudflare, GitHub, trigger, worker, history, and health evidence—
-  never a manual substitute—as described in
+  Six natural Cloudflare Cron events from `2026-09-23T22:17:20Z` through
+  `2026-09-24T08:17:20Z` correlate one-to-one with accepted GitHub runs
+  `35927491375`, `35937732661`, `35946610482`, `35955014166`, `35963773490`,
+  and `35974363625`. Each has a distinct authenticated `external_schedule`
+  slot, completed verification/worker execution, and saved report/history;
+  retained history has zero duplicate slots or workflow-run groups. Two native
+  schedule runs were skipped at the worker boundary and ordinary push runs
+  remained excluded. Natural health run `35971711987` reported
+  `twoHourReadiness=PROVEN`. The latest worker still reports critical pipeline
+  health because two upstream sources timed out; this is not a scheduler or
+  admission failure and checks remain strict. Initial readiness is proven, but
+  only about 10.7 hours had elapsed at the 08:57 UTC audit. Exact next is to
+  inspect the natural 10:17 UTC slot for the 12-hour checkpoint and preferably
+  continue through 22:17 UTC for 24 hours before incident closure, as described in
   [DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md).
 
 - **END-OF-DAY CLOSURE 2026-09-17: work clean, next milestone is NOT an

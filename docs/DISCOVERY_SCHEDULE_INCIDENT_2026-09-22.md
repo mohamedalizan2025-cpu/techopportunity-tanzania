@@ -2,11 +2,14 @@
 
 ## Status
 
-The incident remains **NOT_YET_PROVEN** and the `:17` GitHub schedule experiment
-is **confirmed unreliable**. The no-cost external scheduler is now activated,
-but no real external slot has yet occurred. Discovery stays
-at a two-hour target cadence with a two-hour tolerance. All qualification,
-authority, dedupe, pending-only, and human-publication rules are unchanged.
+The native `:17` GitHub schedule experiment is **confirmed unreliable**. The
+no-cost external scheduler is activated and has established **INITIAL READINESS
+PROVEN** with six distinct successful natural slots. The incident remains open:
+only about ten hours separate the first and latest completed slots, short of the
+required 12–24-hour observation window, and latest pipeline health is critical
+for upstream source failures. Discovery stays at a two-hour target cadence with
+a two-hour tolerance. All qualification, authority, dedupe, pending-only, and
+human-publication rules are unchanged.
 
 ## Evidenced root cause
 
@@ -103,14 +106,49 @@ bind exact actor `mohamedalizan2025-cpu` and enable the external gate. Wrangler
 `9bb741c3-845f-4c2b-bb1b-2cc13217576e` with exactly one Cron Trigger,
 `17 */2 * * *`, while preserving `GITHUB_TOKEN` as encrypted `secret_text`.
 `workers_dev` and preview URLs remain disabled, and no route, paid binding,
-Supabase change, manual dispatch, or AI activation occurred. The first eligible
-post-activation slot is `2026-09-23T22:17:00.000Z`; it has not yet occurred and
-is not claimed as evidence.
+Supabase change, manual dispatch, or AI activation occurred.
 
 The external identity remains owner-enabled, actor-bound, fresh, on-cadence,
 and replay-protected. Native, external, manual, and push identities remain
-distinct and historical records are not relabeled. Health stays critical until
-three distinct external slots succeed and 12–24 hours of observation completes.
+distinct and historical records are not relabeled.
+
+### 2026-09-24 external delivery proof
+
+Cloudflare Cron Events records six successful natural invocations at
+22:17:20Z, 00:17:20Z, 02:17:20Z, 04:17:20Z, 06:17:20Z, and 08:17:20Z. Workers
+Logs reports 6 successes and 0 errors; the latest event reports HTTP 200, slot
+`2026-09-24T08:17:00.000Z`, the configured cron, and deployed version
+`9bb741c3-845f-4c2b-bb1b-2cc13217576e`. These provider events correlate to
+GitHub runs `35927491375`, `35937732661`, `35946610482`, `35955014166`,
+`35963773490`, and `35974363625` respectively.
+
+Every run's trigger artifact records the exact allowed actor,
+`triggerKind=external_schedule`, its unique canonical nominal slot, and accepted
+authentication/admission. Verification and worker execution completed, and the
+report/history artifacts were saved. The six workers processed 1,522 candidates
+and qualified 33; all qualified items matched existing records and zero new
+pending rows were inserted. Retained history has six distinct external slots
+and workflow run IDs with no duplicate group.
+
+Native schedule runs `35931141667` and `35957717707` were skipped at the job
+boundary and did not execute duplicate workers. Push runs remained `push` with
+no nominal external slot; no push, manual, or skipped native run counts toward
+external proof. Independent natural health run `35971711987` reported no
+schedule anomaly and `twoHourReadiness=PROVEN` from the first five external
+observations; the next Discovery history retained the sixth.
+
+The 06:17 worker isolated one upstream source timeout. The 08:17 worker isolated
+two source timeouts and reported critical `multiple_sources_failed`; an
+OpportunityDesk detail request also returned HTTP 403 without aborting the
+worker. These failures do not weaken the proven scheduler correlation, but they
+correctly keep latest pipeline health critical and must not be hidden by
+weakening health checks.
+
+At the 08:57 UTC audit checkpoint, about 10.7 hours had elapsed since the first
+nominal external slot and the first-to-sixth slot span was ten hours. Three-slot
+initial readiness is established, but the incident is **not closed**. Inspect
+the natural 10:17 UTC delivery for the 12-hour checkpoint and continue through
+22:17 UTC when feasible for the preferred 24-hour observation.
 
 GitHub documents that scheduled workflows can be delayed during high load,
 especially at the start of the hour, and that queued jobs can be dropped. It
@@ -160,10 +198,9 @@ upload remains strict. Action runtimes that emitted Node 20 / `DEP0040` warnings
 move to their official Node 24 releases. Application dependencies are unchanged
 because the observed warnings came from action runtimes.
 
-No paid resource, dispatch credential, Cron Trigger, migration, or alternate
-Discovery worker is provisioned. One inert Cloudflare Worker shell exists only
-to hold the reviewed source boundary before activation. The bounded contingency
-is implemented repository-side:
+No paid resource, migration, or alternate Discovery worker is provisioned. The
+Cloudflare Worker, scoped dispatch credential, and one Cron Trigger are active
+on Workers Free. The bounded contingency is implemented repository-side:
 
 1. Use an owner-approved Cloudflare Workers Free Cron Trigger to call the
    narrowly scoped GitHub trigger every two hours.
@@ -181,8 +218,8 @@ is implemented repository-side:
    while external scheduling is owner-enabled. Review removal only after proof.
 
 Manual and push successes remain recovery evidence only and cannot satisfy
-scheduled readiness. Once this repair is deployed, the exact next operational
-action is the owner gate: authorize a Cloudflare Workers Free deployment and the
-owner-account, repository-only fine-grained GitHub token with Actions-write
-permission, then follow the activation runbook. Operational closure still
-requires repeated real external scheduled evidence.
+scheduled readiness. Activation and the initial repeated-delivery gate are
+complete. The exact next operational action is to inspect the natural 10:17 UTC
+external slot and its artifacts at the 12-hour checkpoint, while retaining the
+critical source-health findings; preferably continue observation through 22:17
+UTC before closing the incident.

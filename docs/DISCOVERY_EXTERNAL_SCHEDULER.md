@@ -1,10 +1,12 @@
 # Discovery external scheduler activation runbook
 
-Status: **ACTIVATED — AWAITING REAL SCHEDULED EVIDENCE**.
+Status: **INITIAL READINESS PROVEN — 12–24 HOUR OBSERVATION IN PROGRESS**.
 Repository support, the repository-scoped GitHub credential, its encrypted
 Cloudflare Worker secret, both GitHub activation variables, and the two-hour
-Cloudflare Cron Trigger now exist. No real external slot has yet occurred, so
-activation is not operational proof and the incident remains `NOT_YET_PROVEN`.
+Cloudflare Cron Trigger are live. Six distinct natural external slots have now
+completed successfully. This exceeds the three-slot initial-readiness gate, but
+the first-to-latest observation span is only about ten hours, so the incident
+remains open until the required 12–24-hour observation window completes.
 
 ## Decision
 
@@ -66,16 +68,73 @@ the authority for product readiness.
 - GitHub credential `Tech Opportunity scheduler` belongs to
   `mohamedalizan2025-cpu`, expires on 2026-11-22, selects only
   `techopportunity-tanzania`, has no user permissions, and grants only required
-  Metadata read plus Actions read/write. GitHub reported it as never used at
-  the post-creation audit.
+  Metadata read plus Actions read/write. Its authenticated dispatches are now
+  evidenced by six accepted external runs from the exact allowed actor.
 - Repository variables now read
   `DISCOVERY_EXTERNAL_SCHEDULER_ACTOR=mohamedalizan2025-cpu` and
-  `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=true`. The first eligible post-activation
-  slot is `2026-09-23T22:17:00.000Z`; it must arrive naturally from Cloudflare.
+  `DISCOVERY_EXTERNAL_SCHEDULER_ENABLED=true`.
 
 The Wrangler OAuth grant is account-administration tooling, not the runtime
 dispatch identity and is never exposed to the Worker. Runtime dispatch still
 requires the separately scoped GitHub credential described below.
+
+## Real delivery evidence (audited 2026-09-24 at 08:57 UTC)
+
+Cloudflare Cron Events shows six natural successful invocations at
+`2026-09-23T22:17:20Z` and `2026-09-24T00:17:20Z`, `02:17:20Z`, `04:17:20Z`,
+`06:17:20Z`, and `08:17:20Z`. CPU time was 0.691–0.907 ms. The matching Workers
+Logs view reports 6 successes and 0 errors. Its latest
+`external_schedule_dispatched` event identifies nominal slot
+`2026-09-24T08:17:00.000Z`, HTTP 200, cron `17 */2 * * *`, scheduled origin,
+and deployed version `9bb741c3-845f-4c2b-bb1b-2cc13217576e`.
+
+Each provider event correlates to one accepted GitHub run and a completed
+Discovery worker:
+
+| Nominal external slot (UTC) | GitHub run | Sources | Candidates / qualified / existing duplicates / inserted | Result |
+| --- | ---: | ---: | --- | --- |
+| 2026-09-23 22:17 | `35927491375` | 20/20 | 264 / 6 / 6 / 0 | success |
+| 2026-09-24 00:17 | `35937732661` | 20/20 | 264 / 6 / 6 / 0 | success |
+| 2026-09-24 02:17 | `35946610482` | 20/20 | 242 / 6 / 6 / 0 | success |
+| 2026-09-24 04:17 | `35955014166` | 20/20 | 242 / 5 / 5 / 0 | success |
+| 2026-09-24 06:17 | `35963773490` | 19/20 | 242 / 5 / 5 / 0 | success; one source warning |
+| 2026-09-24 08:17 | `35974363625` | 18/20 | 268 / 5 / 5 / 0 | success; source health critical |
+
+All six `trigger-report.json` files record `workflow_dispatch`, exact actor
+`mohamedalizan2025-cpu`, `triggerKind=external_schedule`, a canonical accepted
+slot, and `accepted=true`. Permanent verification and the Discovery worker
+completed before `report.json` and `history.json` were saved. Across the six
+runs, 1,522 candidates produced 33 qualified records; all 33 matched existing
+records, so the admission path correctly inserted zero duplicate pending rows.
+Retained history contains six distinct external slots and six distinct workflow
+run IDs, with zero duplicate slot or run groups.
+
+Native GitHub schedule runs `35931141667` and `35957717707` were skipped at the
+job boundary while external scheduling was enabled, so they did not execute a
+second worker. Push runs remain classified as `push`, have no nominal external
+slot, and are excluded from scheduled proof. No manual run is counted.
+
+The latest natural schedule-health evaluation, run `35971711987` at
+`2026-09-24T07:49Z`, restored five successful external observations, found no
+schedule anomaly, and reported `twoHourReadiness=PROVEN`; the 08:17 Discovery
+artifact then retained the sixth successful external observation. Initial
+readiness is therefore proven by repeated real delivery rather than by one run.
+
+Pipeline health is nevertheless critical at the audit point. The 06:17 run
+isolated one upstream Ministry of Agriculture timeout. The 08:17 run isolated
+timeouts from the Higher Education Students' Loans Board and Ministry of
+Agriculture; OpportunityDesk also returned an isolated HTTP 403 during detail
+fetching. The health logic truthfully escalated from `source_failed` to
+`multiple_sources_failed`. These are acquisition-source failures, not scheduler,
+authentication, replay, concurrency, admission, or history failures, and the
+health checks are unchanged.
+
+The first external nominal slot was 22:17 UTC and the sixth was 08:17 UTC, a
+ten-hour slot span (about 10.7 hours elapsed at the audit checkpoint). The
+12-hour checkpoint is the natural `2026-09-24T10:17:00Z` slot; the preferred
+24-hour checkpoint is `2026-09-24T22:17:00Z`. Do not close the incident before
+continued natural delivery and health evidence are inspected at the applicable
+checkpoint.
 
 ## Trigger and authentication contract
 
@@ -157,12 +216,14 @@ Do not execute these steps without explicit owner authorization:
    with the committed `wrangler.toml`; that deployment adds `17 */2 * * *`.
    Native worker execution then suppresses automatically. If deployment fails,
    immediately delete/false the enabled variable so native execution resumes.
-6. Observe three distinct external slots (minimum six hours), then continue for
-   at least 12 hours and preferably 24 hours before operational closure.
+6. **Initial readiness complete 2026-09-24:** six distinct external slots have
+   succeeded. Continue observation through at least the natural 10:17 UTC slot
+   (12 hours from first nominal delivery), preferably through 22:17 UTC (24
+   hours), before operational closure.
 
-Both activation variables and the Cron Trigger are live. This proves only
-configuration activation. It is not external-delivery evidence; only natural
-Cron events and their correlated GitHub artifacts can satisfy step 6.
+Both activation variables and the Cron Trigger are live. Natural Cron events and
+their correlated GitHub artifacts now satisfy the initial-readiness portion of
+step 6; the continued-observation portion remains open.
 
 ## Rollback
 
