@@ -50,6 +50,15 @@ opportunities, denied anonymous `talent_profiles` with HTTP 401, and remained
 read-only. This is application/API connectivity and RLS smoke evidence; it does
 not guarantee Free Plan pause exemption.
 
+On 2026-09-24 after staging-only Data API grant migration `0022`, controlled
+workflow run
+[`35986286349`](https://github.com/mohamedalizan2025-cpu/techopportunity-tanzania/actions/runs/35986286349)
+succeeded on commit `838dbdc` via `workflow_dispatch`. Its report again bound only
+to `pumzofcwfjqswkiwfqty`, returned HTTP 200, exposed 2 published and 0
+non-published opportunities, denied anonymous `talent_profiles` with HTTP 401,
+and remained read-only. This confirms the committed future-sequence default
+closure changed no application-visible behavior.
+
 ## Active maintenance
 
 `.github/workflows/staging-health.yml` is a small daily Free GitHub Actions job.

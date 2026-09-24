@@ -4,21 +4,27 @@ Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- **2026-09-24 Data API grant hardening: `0021` APPLIED TO STAGING; `0022`
-  CORRECTION PREPARED/ROLLBACK-PROVEN; PRODUCTION UNTOUCHED.** Exact staging ref
-  `pumzofcwfjqswkiwfqty` received only hash-locked `0021` after a fresh protected
-  recovery export. Current grants and real-role behavior pass across all 14 RLS
-  tables and 11 functions; row counts and category sequence are unchanged, all
-  fixtures rolled back, and no-ACL archive comparison found zero structural drift.
-  Staging-health run `35975661578` passed HTTP/RLS smoke. The strengthened probe
-  found one omitted legacy default: future sequences retained independent
-  `UPDATE` for all three Data API roles. Applied `0021` remains immutable; additive
-  `0022` revokes `USAGE`/`SELECT`/`UPDATE` and passed the full live-schema test only
-  inside a rollback transaction, so it is not active. Production ref
-  `jltuufukcwztugvojwjd` was not used. Exact evidence, hashes, recovery and gates:
-  [DATA_API_GRANTS.md](DATA_API_GRANTS.md). Next gate: separately authorize
-  staging-only `0022`; only after committed staging proof may an independent
-  production rollout of `0021` then `0022` be considered.
+- **2026-09-24 Data API grant hardening: `0021` + `0022` APPLIED TO STAGING
+  (COMMITTED); PRODUCTION UNTOUCHED.** Exact staging ref
+  `pumzofcwfjqswkiwfqty` received hash-locked `0022`
+  (`5EC4F35B...17BAB7`) after a fresh protected recovery export
+  (`20260924T101201Z-0022-data-api-grants-staging`, manifest
+  `7D099C4C...`). Pre-apply proof confirmed `0021` active with future sequences
+  still granting independent `UPDATE` to all three Data API roles; post-apply
+  the `postgres` public-sequence default is exactly `{postgres=rwU}`, so
+  future sequences deny `USAGE`/`SELECT`/`UPDATE` with table/function defaults
+  unchanged. The full live actual-role test (`D00A2D5A...`) passed on the
+  committed schema with no outer correction; row counts and category sequence
+  are unchanged, all fixtures rolled back, and the no-ACL archive comparison
+  found zero structural drift (raw diff shows only the three intended
+  `GRANT UPDATE ON SEQUENCES` removals). Local smoke healthy; staging-health
+  run `35986286349` (commit `838dbdc`, `workflow_dispatch`) passed HTTP/RLS
+  smoke with identical application behavior. Production ref
+  `jltuufukcwztugvojwjd` was not used. Exact evidence, hashes, recovery and
+  gates: [DATA_API_GRANTS.md](DATA_API_GRANTS.md). Next gate: separately
+  authorize the production rollout of `0021` then `0022` (fresh production
+  recovery, identical hashes applied individually in order, actual-role/RLS
+  probes, smoke, isolation confirmation; no broad `db push`).
 
 - **2026-09-23 staging inactivity follow-up: healthy now; staging-only maintenance
   ACTIVATED and first run VERIFIED.** Supabase Dashboard identified exact staging ref

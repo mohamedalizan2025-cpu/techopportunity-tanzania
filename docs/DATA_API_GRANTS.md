@@ -2,7 +2,7 @@
 
 Updated: 2026-09-24
 
-Status: **0021 APPLIED TO STAGING; 0022 CORRECTION PREPARED AND ROLLBACK-PROVEN; PRODUCTION UNTOUCHED**
+Status: **0021 + 0022 APPLIED TO STAGING (COMMITTED); PRODUCTION UNTOUCHED**
 
 Supabase will stop automatically exposing newly created `public` tables to the
 Data API on 2026-10-30. Grants and RLS are separate controls: a grant decides
@@ -18,7 +18,8 @@ table, sequence, and routine first, then grants only the operations below. Live
 staging verification found that its future-sequence default revoke omitted the
 independent PostgreSQL `UPDATE` sequence privilege. Applied `0021` is immutable;
 additive migration `0022_close_future_sequence_update_grants.sql` closes that
-remaining future-object default without reopening any current object.
+remaining future-object default without reopening any current object. `0022` is
+now committed on staging (evidence below); production remains untouched.
 
 PostgreSQL's built-in future `PUBLIC EXECUTE` for functions is a global creator-
 role default, so that one revoke cannot be schema-local; exposed public routines
@@ -196,24 +197,85 @@ inside one outer transaction and rolled back. A post-test catalog check confirms
 and useful, but the complete future-default contract is not operationally proven
 until `0022` receives separate staging authorization and is committed there.
 
+### Live staging committed `0022` apply (2026-09-24)
+
+On 2026-09-24, owner-authorized migration `0022` was applied only to exact staging
+ref `pumzofcwfjqswkiwfqty` through the TLS session pooler. The input SHA-256 was
+recomputed as `5EC4F35B...17BAB7`, exact target and production-exclusion guards
+passed, and `psql -v ON_ERROR_STOP=1` executed only the migration's own
+`BEGIN`/`COMMIT`. No broad `db push`, reset, replay, or unrelated migration ran.
+Production ref `jltuufukcwztugvojwjd` was not used.
+
+Pre-apply read-only proof confirmed `0021` active and `0022` absent: the
+`postgres`-owned public sequence default ACL was
+`{postgres=rwU,anon=w,authenticated=w,service_role=w}` (UPDATE still granted),
+with 14 RLS tables, 11 functions, 12 triggers, 36 policies, row counts
+`2,1,0,6,1,0,9,0,0,0,0,0,0,0`, Auth `0`, and category sequence `6`/called.
+
+Before the apply, a fresh schema-only, no-data recovery set was written outside
+Git at
+`C:\Users\hp\.tech-opportunity-backups\20260924T101201Z-0022-data-api-grants-staging`.
+It contains custom and plain PostgreSQL 17 schema exports, a parsed archive list,
+the exact migration and test inputs, and a checksum manifest. Inheritance is
+disabled; only the owner, `SYSTEM`, and Administrators have access. The manifest
+SHA-256 is `7D099C4CDDD85D2DA8F1C9F4F61DFEAE8B2AAF442D3782A8C6A3135924B4CB55`.
+
+Post-apply proof established:
+
+- the `postgres`-owned public sequence default ACL is now exactly
+  `{postgres=rwU/postgres}`: `USAGE`, `SELECT`, and `UPDATE` are denied by
+  default to `anon`, `authenticated`, and `service_role` for all future
+  sequences; table and function defaults are unchanged;
+- the full live actual-role test `supabase/tests/data_api_grants.sql`
+  (SHA-256 `D00A2D5A...35F8DA3AE7`) PASSED on the committed schema with no
+  outer rollback correction: exact catalog matrix, published-only anonymous
+  reads, zero-row anonymous source access, pending-only anonymous insert,
+  owner-only profile/save/preference/activity paths, staff-only campaign
+  administration/RPCs, service worker operations, denied private service reads,
+  trigger behavior after routine revokes, no sequence access, and a newly
+  created table/function/sequence receiving no automatic Data API privilege
+  (fixtures rolled back);
+- all 14 public tables still have RLS, with 11 public functions, 12 application
+  triggers, and 36 policies;
+- the no-ACL pre/post schema archive comparison has zero lines of structural
+  drift; the raw diff shows only the intended removal of the three
+  `GRANT UPDATE ON SEQUENCES` default-privilege lines;
+- all 14 table counts, Auth user count, and category sequence state remained at
+  the exact baseline (`2,1,0,6,1,0,9,0,0,0,0,0,0,0`; Auth `0`; sequence `6`);
+- live-safe fixtures left zero rows, zero probe objects, and did not advance
+  the sequence;
+- local staging smoke is healthy (HTTP 200, 2 published / 0 non-published,
+  talent profiles 401, read-only); and
+- staging-health run
+  [`35986286349`](https://github.com/mohamedalizan2025-cpu/techopportunity-tanzania/actions/runs/35986286349)
+  succeeded on commit `838dbdc` via `workflow_dispatch`, reporting exact staging
+  ref, HTTP 200, two published and zero non-published anonymous rows, HTTP 401
+  for private talent profiles, and `readOnly: true`.
+
+Post-apply schema archives (`staging_public_schema_post_0022.dump` 98,071 B
+`3F4FF63E…`, `.sql` 71,307 B `E6E55861…`, `.list` 15,645 B `51745153…`) and the
+machine-readable `application-evidence.json` are retained in the same protected
+directory. The complete future-default contract is now operationally proven on
+staging; production rollout still requires separate explicit authorization.
+
 ## Activation and rollback gates
 
 1. **Completed:** staging-only `0021` apply, protected recovery, current-object
    role/RLS proof, zero unrelated structural/data drift, and staging-health smoke.
-2. Owner separately authorizes staging-only `0022` hash
-   `5EC4F35B...17BAB7`. Revalidate staging, apply only that file in its transaction,
-   then require the strengthened actual-role/future-object test to pass without
-   the temporary outer correction.
+2. **Completed:** staging-only `0022` apply (hash `5EC4F35B...17BAB7`),
+   protected recovery, committed future-default proof with the strengthened
+   actual-role/future-object test passing without any temporary outer
+   correction, zero unrelated structural/data drift, and staging-health smoke.
 3. If a committed migration needs reversal, use a separately reviewed forward
    migration based on the protected recovery evidence; never restore broad
    automatic defaults or improvise destructive rollback.
-4. Production remains untouched until a separate explicit authorization after
-   both migrations pass committed staging proof. Production promotion requires a
-   fresh production recovery export, the identical `0021` and `0022` hashes,
-   actual-role/RLS probes, application smoke checks, and production-isolation
-   confirmation. Apply the migrations individually in order; no broad `db push`.
+4. Production remains untouched until a separate explicit authorization.
+   Production promotion requires a fresh production recovery export, the
+   identical `0021` and `0022` hashes applied individually in order, actual-
+   role/RLS probes, application smoke checks, and production-isolation
+   confirmation; no broad `db push`.
 
-Until both live environments complete those gates, status is **October 30 code
-ready, staging correction and production rollout pending**. Existing tables keep
+Until production completes those gates, status is **October 30 code ready,
+staging complete, production rollout pending**. Existing tables keep
 their current grants under Supabase's change, but no future migration may depend
 on legacy defaults.
