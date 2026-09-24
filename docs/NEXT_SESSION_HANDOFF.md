@@ -4,6 +4,20 @@ Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
+- **2026-09-24 Data API grant hardening: IMPLEMENTED AND PROVEN ON DISPOSABLE
+  COPIES; LIVE ROLLOUT OWNER-GATED.** Forward-only migration `0021` closes and
+  explicitly reopens the minimum audited operations for all 14 public tables,
+  11 functions, and the category sequence; future `postgres` objects default
+  closed. Real `anon`/`authenticated`/`service_role` tests passed on both a fresh
+  protected production-schema restore and an exact read-only staging-schema copy,
+  including RLS, RPC, trigger, sequence, staging-health, and future-object probes.
+  A live staging read-only audit confirmed 14/14 RLS tables and correct row
+  isolation but also legacy broad object/default grants, so staging has not yet
+  been changed. Production was not contacted or changed. Exact matrix, immutable-
+  history caveat, proof, activation and rollback:
+  [DATA_API_GRANTS.md](DATA_API_GRANTS.md). Next gate: owner authorizes staging-
+  only `0021` apply; production requires a later separate approval.
+
 - **2026-09-23 staging inactivity follow-up: healthy now; staging-only maintenance
   ACTIVATED and first run VERIFIED.** Supabase Dashboard identified exact staging ref
   `pumzofcwfjqswkiwfqty` as Healthy on the Free organization; no pause-warning
