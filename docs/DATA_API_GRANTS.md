@@ -2,7 +2,7 @@
 
 Updated: 2026-09-24
 
-Status: **IMPLEMENTED AND PROVEN ON DISPOSABLE COPIES; NOT APPLIED TO LIVE STAGING OR PRODUCTION**
+Status: **0021 APPLIED TO STAGING; 0022 CORRECTION PREPARED AND ROLLBACK-PROVEN; PRODUCTION UNTOUCHED**
 
 Supabase will stop automatically exposing newly created `public` tables to the
 Data API on 2026-10-30. Grants and RLS are separate controls: a grant decides
@@ -12,18 +12,23 @@ reach. The upstream notice and current security guidance are:
 - <https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically>
 - <https://supabase.com/docs/guides/api/securing-your-api#default-privileges>
 
-Migration `0021_explicit_data_api_grants.sql` is the one forward-only contract.
-It does not edit or replay an applied migration. It closes every current table,
-sequence, and routine first, then grants only the operations below. It also
-removes automatic table/sequence/function privileges for future objects created
-by `postgres`. PostgreSQL's built-in future `PUBLIC EXECUTE` for functions is a
-global creator-role default, so that one revoke cannot be schema-local; exposed
-public routines are still granted individually.
+Migration `0021_explicit_data_api_grants.sql` is the forward-only current-object
+contract. It does not edit or replay an applied migration. It closes every current
+table, sequence, and routine first, then grants only the operations below. Live
+staging verification found that its future-sequence default revoke omitted the
+independent PostgreSQL `UPDATE` sequence privilege. Applied `0021` is immutable;
+additive migration `0022_close_future_sequence_update_grants.sql` closes that
+remaining future-object default without reopening any current object.
+
+PostgreSQL's built-in future `PUBLIC EXECUTE` for functions is a global creator-
+role default, so that one revoke cannot be schema-local; exposed public routines
+are still granted individually.
 
 Prepared SHA-256 values (recompute and match immediately before any apply):
 
 - migration `0021`: `EC83AD93A912BB0D77319BB76C549D62CFA52BFD80FB994897CA64733424CFA4`
-- rollback-only role test: `6682B0FCF6CADAC99A612E8538602D6D5EE29E307B6B5504A3D845DB15B341EA`
+- additive migration `0022`: `5EC4F35B157B2EB0A7536DA5E49EA2419EA63286C9CC366FD4514B159617BAB7`
+- rollback-only role test: `D00A2D5A4678EC5AB7CA236931DC29E4D9735E674D482A6C57BB1A35F8DA3AE7`
 
 ## Table permission matrix
 
@@ -65,7 +70,10 @@ No Data API role receives direct EXECUTE on trigger-only routines
 (`handle_new_user`, `set_updated_at`, deadline/reference synchronization, or
 moderation audit triggers). Trigger execution was exercised after those revokes.
 `categories_id_seq` has no Data API grant because category rows are migration
-seeds, not runtime writes.
+seeds, not runtime writes. Migration `0022` additionally revokes `USAGE`,
+`SELECT`, and `UPDATE` from the `postgres` public-schema default for all future
+sequences. All three privileges matter: `UPDATE` independently permits sequence
+mutation even when `USAGE` and `SELECT` are absent.
 
 ## Caller audit
 
@@ -144,20 +152,68 @@ The guarded 2026-09-24 audit used only the protected staging credential, exact r
 Those results prove current RLS still protects rows, but also prove why explicit
 object-level tightening is necessary. The live staging database was not changed.
 
+### Live staging application and verification
+
+On 2026-09-24, owner-authorized migration `0021` was applied only to exact staging
+ref `pumzofcwfjqswkiwfqty` through the TLS session pooler. The input SHA-256 was
+recomputed as `EC83AD93...CFA4`, exact target and production-exclusion guards
+passed, and `psql -v ON_ERROR_STOP=1 -f` executed only the migration's own
+`BEGIN`/`COMMIT`. Production ref `jltuufukcwztugvojwjd` was not used.
+
+Before the apply, a fresh schema-only, no-data recovery set was written outside
+Git at
+`C:\Users\hp\.tech-opportunity-backups\20260924T081503Z-0021-data-api-grants-staging`.
+It contains custom and plain PostgreSQL 17 schema exports, a parsed archive list,
+the exact migration and test inputs, and a checksum manifest. Inheritance is
+disabled; only the owner, `SYSTEM`, and Administrators have access. The manifest
+SHA-256 is `B340B40EF5FB976F5015F616E9C6DD03ECCA986AAF9136D4E52EA3877488843C`.
+
+Post-apply proof established:
+
+- all 14 public tables still have RLS, with 11 public functions, 12 application
+  triggers, and 36 policies;
+- the no-ACL pre/post schema archive comparison has zero lines of structural
+  drift; only the intended ACL/default-ACL change occurred;
+- all 14 table counts, Auth user count, and category sequence state remained at
+  the exact baseline (`2,1,0,6,1,0,9,0,0,0,0,0,0,0`; Auth `0`; sequence `6`);
+- live-safe rollback fixtures left zero rows and did not advance the sequence;
+- current-object role/RLS behavior passed for anonymous published-only access,
+  authenticated ownership, staff campaign/moderation paths, service operations,
+  RPCs, and triggers; and
+- staging-health run
+  [`35975661578`](https://github.com/mohamedalizan2025-cpu/techopportunity-tanzania/actions/runs/35975661578)
+  succeeded on commit `08a6e92`, reporting exact staging ref, HTTP 200, two
+  published and zero non-published anonymous rows, HTTP 401 for private talent
+  profiles, and `readOnly: true`.
+
+The strengthened future-object probe then correctly failed on a newly created
+sequence: legacy default ACLs still granted `UPDATE` to `anon`, `authenticated`,
+and `service_role`. Current `categories_id_seq` has none of `USAGE`, `SELECT`, or
+`UPDATE`; the gap affects only future `postgres`-owned public sequences. The exact
+`0022` correction plus the full actual-role test passed on the live staging schema
+inside one outer transaction and rolled back. A post-test catalog check confirms
+`0022` did not persist and all fixtures remain absent. Therefore `0021` is applied
+and useful, but the complete future-default contract is not operationally proven
+until `0022` receives separate staging authorization and is committed there.
+
 ## Activation and rollback gates
 
-1. Owner explicitly authorizes **staging-only** migration `0021`.
-2. Revalidate exact staging identity, take a fresh protected schema-only recovery
-   export, hash-lock the migration, apply it in one failure-stopping transaction,
-   and run the actual-role test plus the staging health workflow/app smoke checks.
-3. Inspect zero unrelated schema/data drift. A failed test rolls back the migration
-   transaction; after commit, rollback means a separately reviewed forward grant
-   migration, never broad automatic defaults.
-4. Production remains untouched until a separate explicit authorization after the
-   staging proof. Production promotion requires its own recovery export, identical
-   migration hash, role/RLS probes, application smoke checks, and staging-health
-   isolation confirmation.
+1. **Completed:** staging-only `0021` apply, protected recovery, current-object
+   role/RLS proof, zero unrelated structural/data drift, and staging-health smoke.
+2. Owner separately authorizes staging-only `0022` hash
+   `5EC4F35B...17BAB7`. Revalidate staging, apply only that file in its transaction,
+   then require the strengthened actual-role/future-object test to pass without
+   the temporary outer correction.
+3. If a committed migration needs reversal, use a separately reviewed forward
+   migration based on the protected recovery evidence; never restore broad
+   automatic defaults or improvise destructive rollback.
+4. Production remains untouched until a separate explicit authorization after
+   both migrations pass committed staging proof. Production promotion requires a
+   fresh production recovery export, the identical `0021` and `0022` hashes,
+   actual-role/RLS probes, application smoke checks, and production-isolation
+   confirmation. Apply the migrations individually in order; no broad `db push`.
 
 Until both live environments complete those gates, status is **October 30 code
-ready, operational rollout pending**. Existing tables keep their current grants
-under Supabase's change, but no future migration may depend on that legacy state.
+ready, staging correction and production rollout pending**. Existing tables keep
+their current grants under Supabase's change, but no future migration may depend
+on legacy defaults.

@@ -41,6 +41,15 @@ identified only staging ref `pumzofcwfjqswkiwfqty`, recorded HTTP 200,
 anonymous private-profile denial with HTTP 401. The report contains no key,
 database password, row contents, production ref, or user data.
 
+On 2026-09-24 after staging-only Data API grant migration `0021`, controlled
+workflow run
+[`35975661578`](https://github.com/mohamedalizan2025-cpu/techopportunity-tanzania/actions/runs/35975661578)
+succeeded on commit `08a6e92`. Its report again bound only to
+`pumzofcwfjqswkiwfqty`, returned HTTP 200, exposed 2 published and 0 non-published
+opportunities, denied anonymous `talent_profiles` with HTTP 401, and remained
+read-only. This is application/API connectivity and RLS smoke evidence; it does
+not guarantee Free Plan pause exemption.
+
 ## Active maintenance
 
 `.github/workflows/staging-health.yml` is a small daily Free GitHub Actions job.

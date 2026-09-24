@@ -123,12 +123,18 @@ $$;
 
 select pg_temp.assert_true(
   not has_sequence_privilege('anon', 'public.categories_id_seq', 'USAGE')
+  and not has_sequence_privilege('anon', 'public.categories_id_seq', 'SELECT')
+  and not has_sequence_privilege('anon', 'public.categories_id_seq', 'UPDATE')
   and not has_sequence_privilege('authenticated', 'public.categories_id_seq', 'USAGE')
-  and not has_sequence_privilege('service_role', 'public.categories_id_seq', 'USAGE'),
+  and not has_sequence_privilege('authenticated', 'public.categories_id_seq', 'SELECT')
+  and not has_sequence_privilege('authenticated', 'public.categories_id_seq', 'UPDATE')
+  and not has_sequence_privilege('service_role', 'public.categories_id_seq', 'USAGE')
+  and not has_sequence_privilege('service_role', 'public.categories_id_seq', 'SELECT')
+  and not has_sequence_privilege('service_role', 'public.categories_id_seq', 'UPDATE'),
   'categories sequence must stay outside the Data API'
 );
 
--- Prove future objects inherit no Data API exposure after 0021.
+-- Prove future objects inherit no Data API exposure after 0021 + 0022.
 create table public.data_api_future_table_probe (id bigint);
 create sequence public.data_api_future_sequence_probe;
 create function public.data_api_future_function_probe()
@@ -142,6 +148,8 @@ begin
     if has_table_privilege(role_name, 'public.data_api_future_table_probe', 'SELECT')
        or has_table_privilege(role_name, 'public.data_api_future_table_probe', 'INSERT')
        or has_sequence_privilege(role_name, 'public.data_api_future_sequence_probe', 'USAGE')
+       or has_sequence_privilege(role_name, 'public.data_api_future_sequence_probe', 'SELECT')
+       or has_sequence_privilege(role_name, 'public.data_api_future_sequence_probe', 'UPDATE')
        or has_function_privilege(role_name, 'public.data_api_future_function_probe()', 'EXECUTE') then
       raise exception 'future object leaked to %', role_name;
     end if;
@@ -155,8 +163,11 @@ drop table public.data_api_future_table_probe;
 
 -- Synthetic fixtures for actual SET ROLE + RLS behavior. No production data is
 -- used, and the outer transaction removes every row.
-insert into public.categories (slug, label)
-values ('scholarship', 'Scholarship');
+-- Use an explicit synthetic key so this rollback-only live check neither depends
+-- on a pre-existing category nor advances the non-transactional identity sequence.
+insert into public.categories (id, slug, label)
+overriding system value
+values (32767, 'grant-proof-scholarship', 'Grant proof scholarship');
 
 insert into auth.users (id, raw_user_meta_data) values
   ('10000000-0000-0000-0000-000000000001', '{}'),
@@ -190,7 +201,7 @@ insert into public.opportunities (
   'grant-proof-published',
   'Grant proof published opportunity',
   'Synthetic published row for the local grant test.',
-  (select id from public.categories where slug = 'scholarship'),
+  (select id from public.categories where slug = 'grant-proof-scholarship'),
   '20000000-0000-0000-0000-000000000001',
   'https://opportunity.example.invalid/published',
   'published',
@@ -201,13 +212,16 @@ insert into public.opportunities (
 set local role anon;
 do $$
 begin
-  if (select count(*) from public.opportunities) <> 1 then
+  if (select count(*) from public.opportunities
+      where id = '40000000-0000-0000-0000-000000000001') <> 1
+     or exists (select 1 from public.opportunities where status <> 'published') then
     raise exception 'anon must read only the published opportunity';
   end if;
   if (select count(*) from public.opportunity_sources) <> 0 then
     raise exception 'anon source registry must remain zero-row under RLS';
   end if;
-  if (select count(*) from public.opportunity_references) <> 1 then
+  if (select count(*) from public.opportunity_references
+      where opportunity_id = '40000000-0000-0000-0000-000000000001') <> 1 then
     raise exception 'anon must read only the published canonical reference';
   end if;
 
@@ -215,7 +229,7 @@ begin
     slug, title, description, category_id, url, status, country
   ) values (
     'anon-pending-proof', 'Anonymous pending proof', 'Synthetic anonymous submission.',
-    (select id from public.categories where slug = 'scholarship'),
+    (select id from public.categories where slug = 'grant-proof-scholarship'),
     'https://opportunity.example.invalid/anon', 'pending', null
   );
 
@@ -224,7 +238,7 @@ begin
       slug, title, description, category_id, url, status
     ) values (
       'anon-published-denied', 'Anonymous published denied', 'Must fail.',
-      (select id from public.categories where slug = 'scholarship'),
+      (select id from public.categories where slug = 'grant-proof-scholarship'),
       'https://opportunity.example.invalid/anon-published', 'published'
     );
     raise exception 'anon published insert unexpectedly succeeded';
@@ -247,7 +261,11 @@ begin
   if public.is_staff() then
     raise exception 'ordinary authenticated user reported as staff';
   end if;
-  if (select count(*) from public.profiles) <> 1 then
+  if (select count(*) from public.profiles where id in (
+        '10000000-0000-0000-0000-000000000001',
+        '10000000-0000-0000-0000-000000000002',
+        '10000000-0000-0000-0000-000000000003'
+      )) <> 1 then
     raise exception 'authenticated profile read crossed owner boundary';
   end if;
 
@@ -342,7 +360,7 @@ begin
     id, slug, title, description, category_id, url, status
   ) values (
     service_opportunity, 'service-probe', 'Service role probe', 'Synthetic reversible probe.',
-    (select id from public.categories where slug = 'scholarship'),
+    (select id from public.categories where slug = 'grant-proof-scholarship'),
     'https://opportunity.example.invalid/service', 'pending'
   );
   update public.opportunities set title = 'Service role probe updated'

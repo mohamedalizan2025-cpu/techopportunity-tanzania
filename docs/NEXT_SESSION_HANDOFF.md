@@ -4,19 +4,21 @@ Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 
 ## Current verified state
 
-- **2026-09-24 Data API grant hardening: IMPLEMENTED AND PROVEN ON DISPOSABLE
-  COPIES; LIVE ROLLOUT OWNER-GATED.** Forward-only migration `0021` closes and
-  explicitly reopens the minimum audited operations for all 14 public tables,
-  11 functions, and the category sequence; future `postgres` objects default
-  closed. Real `anon`/`authenticated`/`service_role` tests passed on both a fresh
-  protected production-schema restore and an exact read-only staging-schema copy,
-  including RLS, RPC, trigger, sequence, staging-health, and future-object probes.
-  A live staging read-only audit confirmed 14/14 RLS tables and correct row
-  isolation but also legacy broad object/default grants, so staging has not yet
-  been changed. Production was not contacted or changed. Exact matrix, immutable-
-  history caveat, proof, activation and rollback:
-  [DATA_API_GRANTS.md](DATA_API_GRANTS.md). Next gate: owner authorizes staging-
-  only `0021` apply; production requires a later separate approval.
+- **2026-09-24 Data API grant hardening: `0021` APPLIED TO STAGING; `0022`
+  CORRECTION PREPARED/ROLLBACK-PROVEN; PRODUCTION UNTOUCHED.** Exact staging ref
+  `pumzofcwfjqswkiwfqty` received only hash-locked `0021` after a fresh protected
+  recovery export. Current grants and real-role behavior pass across all 14 RLS
+  tables and 11 functions; row counts and category sequence are unchanged, all
+  fixtures rolled back, and no-ACL archive comparison found zero structural drift.
+  Staging-health run `35975661578` passed HTTP/RLS smoke. The strengthened probe
+  found one omitted legacy default: future sequences retained independent
+  `UPDATE` for all three Data API roles. Applied `0021` remains immutable; additive
+  `0022` revokes `USAGE`/`SELECT`/`UPDATE` and passed the full live-schema test only
+  inside a rollback transaction, so it is not active. Production ref
+  `jltuufukcwztugvojwjd` was not used. Exact evidence, hashes, recovery and gates:
+  [DATA_API_GRANTS.md](DATA_API_GRANTS.md). Next gate: separately authorize
+  staging-only `0022`; only after committed staging proof may an independent
+  production rollout of `0021` then `0022` be considered.
 
 - **2026-09-23 staging inactivity follow-up: healthy now; staging-only maintenance
   ACTIVATED and first run VERIFIED.** Supabase Dashboard identified exact staging ref

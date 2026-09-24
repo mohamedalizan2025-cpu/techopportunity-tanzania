@@ -5,6 +5,7 @@ import path from "node:path";
 const root = process.cwd();
 const migrationsDirectory = path.join(root, "supabase", "migrations");
 const baselineName = "0021_explicit_data_api_grants.sql";
+const futureSequenceCorrectionName = "0022_close_future_sequence_update_grants.sql";
 const migrationNames = readdirSync(migrationsDirectory)
   .filter((name) => /^\d{4}_.+\.sql$/.test(name))
   .sort();
@@ -14,6 +15,7 @@ const readMigration = (name: string) =>
 
 const allMigrations = migrationNames.map(readMigration).join("\n");
 const contract = readMigration(baselineName);
+const futureSequenceCorrection = readMigration(futureSequenceCorrectionName);
 
 function uniqueMatches(source: string, expression: RegExp): string[] {
   return [...new Set([...source.matchAll(expression)].map((match) => match[1]))].sort();
@@ -29,6 +31,10 @@ const functions = uniqueMatches(
 );
 
 assert.ok(migrationNames.includes(baselineName), `${baselineName} is required`);
+assert.ok(
+  migrationNames.includes(futureSequenceCorrectionName),
+  `${futureSequenceCorrectionName} is required`
+);
 assert.doesNotMatch(contract, /grant\s+all\b/);
 assert.doesNotMatch(contract, /grant[\s\S]{0,80}\bon\s+all\s+(?:tables|sequences|functions)/);
 assert.doesNotMatch(
@@ -37,11 +43,7 @@ assert.doesNotMatch(
   "future public objects must remain deny-by-default"
 );
 
-for (const objectDefault of [
-  "select, insert, update, delete on tables",
-  "usage, select on sequences",
-  "execute on functions",
-]) {
+for (const objectDefault of ["select, insert, update, delete on tables", "execute on functions"]) {
   const escaped = objectDefault.replaceAll(", ", ",\\s+").replaceAll(" ", "\\s+");
   assert.match(
     contract,
@@ -51,6 +53,12 @@ for (const objectDefault of [
     `missing restrictive future default for ${objectDefault}`
   );
 }
+assert.match(
+  futureSequenceCorrection,
+  /alter\s+default\s+privileges\s+for\s+role\s+postgres\s+in\s+schema\s+public\s+revoke\s+usage,\s+select,\s+update\s+on\s+sequences\s+from\s+anon,\s+authenticated,\s+service_role/,
+  "future public sequences must revoke USAGE, SELECT, and UPDATE"
+);
+assert.doesNotMatch(futureSequenceCorrection, /\bgrant\b/);
 assert.match(
   contract,
   /alter\s+default\s+privileges\s+for\s+role\s+postgres\s+revoke\s+execute\s+on\s+functions\s+from\s+public/
