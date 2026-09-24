@@ -2,7 +2,8 @@
 
 **Continuing development? Read [the authoritative engineering handoff](docs/NEXT_SESSION_HANDOFF.md) first.**
 Supabase Data API access is now defined by an explicit least-privilege migration
-and future-migration verifier; live staging/production rollout remains owner-gated.
+and future-migration verifier, applied to staging and production and verified
+against the 2026-10-30 permission change.
 See [the Data API grant contract](docs/DATA_API_GRANTS.md).
 M31 is closed and isolated staging is established. Published Unpublish Attribution
 Hardening is promoted to production; no production moderation action was used for

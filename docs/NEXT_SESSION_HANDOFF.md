@@ -5,26 +5,30 @@ Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before ac
 ## Current verified state
 
 - **2026-09-24 Data API grant hardening: `0021` + `0022` APPLIED TO STAGING
-  (COMMITTED); PRODUCTION UNTOUCHED.** Exact staging ref
-  `pumzofcwfjqswkiwfqty` received hash-locked `0022`
-  (`5EC4F35B...17BAB7`) after a fresh protected recovery export
-  (`20260924T101201Z-0022-data-api-grants-staging`, manifest
-  `7D099C4C...`). Pre-apply proof confirmed `0021` active with future sequences
-  still granting independent `UPDATE` to all three Data API roles; post-apply
-  the `postgres` public-sequence default is exactly `{postgres=rwU}`, so
-  future sequences deny `USAGE`/`SELECT`/`UPDATE` with table/function defaults
-  unchanged. The full live actual-role test (`D00A2D5A...`) passed on the
-  committed schema with no outer correction; row counts and category sequence
-  are unchanged, all fixtures rolled back, and the no-ACL archive comparison
-  found zero structural drift (raw diff shows only the three intended
-  `GRANT UPDATE ON SEQUENCES` removals). Local smoke healthy; staging-health
-  run `35986286349` (commit `838dbdc`, `workflow_dispatch`) passed HTTP/RLS
-  smoke with identical application behavior. Production ref
-  `jltuufukcwztugvojwjd` was not used. Exact evidence, hashes, recovery and
-  gates: [DATA_API_GRANTS.md](DATA_API_GRANTS.md). Next gate: separately
-  authorize the production rollout of `0021` then `0022` (fresh production
-  recovery, identical hashes applied individually in order, actual-role/RLS
-  probes, smoke, isolation confirmation; no broad `db push`).
+  AND PRODUCTION (COMMITTED); OCTOBER-30 OPERATIONALLY READY.** Staging proof
+  (exact ref `pumzofcwfjqswkiwfqty`, recovery
+  `20260924T101201Z-0022-data-api-grants-staging`, manifest `7D099C4C...`,
+  health run `35986286349`) stands as recorded in
+  [DATA_API_GRANTS.md](DATA_API_GRANTS.md). Owner-authorized production rollout
+  then applied hash-locked `0021` (`EC83AD93...CFA4`) and `0022`
+  (`5EC4F35B...17BAB7`) in order, each in its own `ON_ERROR_STOP` transaction,
+  only to exact production ref `jltuufukcwztugvojwjd` after a fresh protected
+  recovery export (`20260924T102906Z-0021-0022-data-api-grants-production`,
+  manifest `042F6D9E...`). Pre-apply baseline: 14 RLS tables, 11 functions, 12
+  triggers, 36 policies, 309 opportunities (215 pending / 8 published / 86
+  rejected), 548 references, 3 Auth users, category sequence 16/called, legacy
+  future defaults intact (no ambiguity), zero residue. `0021` effects verified
+  before `0022`; post-`0022` the `postgres` sequence default is exactly
+  `{postgres=rwU}`. The full live actual-role test (`D00A2D5A...`) PASSED on
+  production (rolled back, zero residue, sequence unchanged); no-ACL archive
+  comparison found zero structural drift (86 ACL lines only: legacy `GRANT ALL`
+  replaced by the reviewed matrix); production smoke green (home 200 rendering
+  opportunities, `/login` 200, `/activity` + `/moderation` 307 to login).
+  Staging was not contacted during the write phase; Cloudflare, Discovery,
+  Gemini, and Groq untouched. IMPLEMENTED, APPLIED, VERIFIED: production is
+  OPERATIONALLY READY for the 2026-10-30 Supabase permission change. Exact
+  evidence, hashes, recovery and gates: [DATA_API_GRANTS.md](DATA_API_GRANTS.md).
+  Next: owner-directed growth phase — no further grant work planned.
 
 - **2026-09-23 staging inactivity follow-up: healthy now; staging-only maintenance
   ACTIVATED and first run VERIFIED.** Supabase Dashboard identified exact staging ref
