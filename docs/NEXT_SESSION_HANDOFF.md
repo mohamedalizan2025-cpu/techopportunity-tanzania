@@ -18,6 +18,13 @@ Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
   (2) approve the 11-record shortlist in deadline order starting with AfDB
   (closes 12 Oct) and MWF (closes 13 Oct); (3) run the 5–10-user observed
   task pilot. Next supply milestone after pilot: fresh National sourcing.
+- PILOT PACKAGE READY (docs-only, no code/production change):
+  [USER_VALIDATION_PILOT_2026-10-02.md](USER_VALIDATION_PILOT_2026-10-02.md)
+  (tester profile, 15-min observed mobile tasks, questions, metrics, 7-day +
+  2-week checks, pass/fail criteria, recording template, evidence bar) and
+  [PROVIDER_PILOT_BRIEF_2026-10-02.md](PROVIDER_PILOT_BRIEF_2026-10-02.md)
+  (post-validation managed-campaign brief: verified opportunity → targeted
+  distribution → aggregate funnel report; no fake pricing/traction).
 
 ## End-of-session closure (2026-09-24, HEAD `5cab9de`)
 
