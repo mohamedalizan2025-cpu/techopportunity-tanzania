@@ -134,13 +134,41 @@ export function formatDiscoveredDate(discoveredAt: string | null | undefined): s
   return `First found ${formatDate(discoveredAt)}`;
 }
 
-/**
- * Current production has no eligibility column (migration 0005 is owner-gated),
- * so the only truthful public state is unknown. Keep this explicit and separate
- * from location until evidence-backed eligibility is stored.
- */
+/** Fallback when the existing trust projection is disabled or lacks evidence. */
 export const UNKNOWN_TANZANIA_ELIGIBILITY =
   "Tanzania eligibility not confirmed";
+
+/** Presentation only: never infer eligibility from location, profile or prose. */
+export function eligibilityPresentation(opportunity: Opportunity): {
+  label: string;
+  evidence: string | null;
+} {
+  const trust = opportunity.trust;
+  const evidence = trust?.eligibilityEvidence?.trim();
+  if (opportunity.status === "published" && evidence && trust?.decidedBy &&
+      trust.decidedAt && Number.isFinite(Date.parse(trust.decidedAt))) {
+    if (trust.eligibilityDecision === "tanzanians_eligible") {
+      return { label: "Tanzanian access evidenced", evidence };
+    }
+    if (trust.eligibilityDecision === "tanzanians_not_eligible") {
+      return { label: "Tanzanians excluded by recorded requirements", evidence };
+    }
+  }
+  return { label: UNKNOWN_TANZANIA_ELIGIBILITY, evidence: null };
+}
+
+/** A clickable evidence reference is not itself a certification of authority. */
+export function publicEvidenceUrl(opportunity: Opportunity): string | null {
+  const value = opportunity.trust?.canonicalEvidenceUrl;
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password
+      ? url.href : null;
+  } catch {
+    return null;
+  }
+}
 
 const BROWSE_RETURN_FALLBACK = "/#opportunities";
 const BROWSE_QUERY_KEYS = new Set([

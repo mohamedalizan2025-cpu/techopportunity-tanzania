@@ -10,7 +10,7 @@ export function MobileNavigation({ children }: { children: ReactNode }) {
   return (
     <details
       ref={detailsRef}
-      className="mobile-menu sm:hidden"
+      className="mobile-menu xl:hidden"
       onToggle={(event) => setOpen(event.currentTarget.open)}
       onClick={(event) => {
         if ((event.target as HTMLElement).closest("a"))

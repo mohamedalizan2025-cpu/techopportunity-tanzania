@@ -77,7 +77,7 @@ export default async function SavedOpportunitiesPage() {
             </div>
             <Link
               href="/#opportunities"
-              className="inline-flex min-h-11 w-fit items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              className="inline-flex min-h-11 w-fit items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             >
               Browse opportunities
             </Link>
@@ -100,7 +100,7 @@ export default async function SavedOpportunitiesPage() {
           {!result.available ? (
             <div
               role="alert"
-              className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+              className="mt-8 rounded-lg border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
             >
               Saved opportunities are temporarily unavailable. Your public
               browsing experience is unaffected.
@@ -132,7 +132,7 @@ export default async function SavedOpportunitiesPage() {
                       />
                     </div>
                   ) : (
-                    <article className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6">
+                    <article className="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
                         Unavailable
                       </p>
@@ -222,7 +222,7 @@ export default async function SavedOpportunitiesPage() {
                   return (
                     <li
                       key={event.id}
-                      className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4"
+                      className="rounded-md border border-[var(--line)] bg-[var(--surface)] p-4"
                     >
                       <Link
                         href={`/opportunities/${encodeURIComponent(event.opportunity.slug)}?from=%2Fsaved`}

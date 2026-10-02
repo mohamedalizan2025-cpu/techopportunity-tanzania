@@ -64,7 +64,7 @@ export function ProfileForm({ profile }: { profile: TalentProfile }) {
         <p
           role={state.status === "error" ? "alert" : "status"}
           tabIndex={-1}
-          className={`rounded-xl border p-3 text-sm ${
+          className={`rounded-md border p-3 text-sm ${
             state.status === "error"
               ? "border-red-300 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
               : "border-[var(--line-strong)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"

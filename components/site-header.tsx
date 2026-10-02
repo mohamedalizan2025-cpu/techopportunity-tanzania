@@ -2,6 +2,7 @@ import Link from "next/link";
 import { logOutAction } from "@/lib/data/auth-actions";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 import { UiIcon } from "./ui-icon";
+import { NavigationLink } from "./navigation-link";
 import { MobileNavigation } from "./mobile-navigation";
 
 const linkClasses = "nav-link";
@@ -20,32 +21,26 @@ export async function SiteHeader() {
             Tech <span className="block sm:inline">Opportunity</span>
           </span>
         </Link>
-        <nav aria-label="Main" className="hidden items-center gap-1 sm:flex">
-          <Link href="/" className={linkClasses}>
-            Explore
-          </Link>
+        <nav aria-label="Main" className="hidden items-center gap-1 xl:flex">
+          <NavigationLink href="/">Explore</NavigationLink>
+          <NavigationLink href="/for-you">For You</NavigationLink>
+          <NavigationLink href="/activity">Activity</NavigationLink>
           {user ? (
             <>
-              <Link href="/for-you" className={linkClasses}>
-                For You
-              </Link>
-              <Link href="/saved" className={linkClasses}>
+              <NavigationLink href="/saved">
                 Saved
-              </Link>
-              <Link href="/activity" className={linkClasses}>
-                Activity
-              </Link>
-              <Link href="/profile" className={linkClasses}>
+              </NavigationLink>
+              <NavigationLink href="/profile">
                 Profile
-              </Link>
+              </NavigationLink>
               {isStaff ? (
                 <>
-                  <Link href="/moderation" className={linkClasses}>
+                  <NavigationLink href="/moderation">
                     Staff
-                  </Link>
-                  <Link href="/campaigns" className={linkClasses}>
+                  </NavigationLink>
+                  <NavigationLink href="/campaigns">
                     Campaigns
-                  </Link>
+                  </NavigationLink>
                 </>
               ) : null}
               <form action={logOutAction}>
@@ -56,9 +51,9 @@ export async function SiteHeader() {
             </>
           ) : (
             <>
-              <Link href="/saved" className={linkClasses}>
+              <NavigationLink href="/saved">
                 Saved
-              </Link>
+              </NavigationLink>
               <Link href="/login?next=%2Fsaved" className="button-primary ml-3">
                 Sign in
               </Link>
@@ -66,34 +61,28 @@ export async function SiteHeader() {
           )}
         </nav>
         <MobileNavigation>
-          <Link href="/#opportunities" className={linkClasses}>
-            Explore opportunities
-          </Link>
-          <Link href="/saved" className={linkClasses}>
+          <NavigationLink href="/">Explore opportunities</NavigationLink>
+          <NavigationLink href="/for-you">For You</NavigationLink>
+          <NavigationLink href="/activity">Your activity</NavigationLink>
+          <NavigationLink href="/saved">
             Saved opportunities
-          </Link>
+          </NavigationLink>
           {user ? (
             <>
-              <Link href="/activity" className={linkClasses}>
-                Your activity
-              </Link>
-              <Link href="/for-you" className={linkClasses}>
-                For You
-              </Link>
-              <Link href="/profile" className={linkClasses}>
+              <NavigationLink href="/profile">
                 Your profile
-              </Link>
+              </NavigationLink>
               <p className="break-words px-3 py-2 text-xs text-[var(--muted)]">
                 Signed in as {user.displayName ?? user.email ?? "your account"}
               </p>
               {isStaff ? (
                 <>
-                  <Link href="/moderation" className={linkClasses}>
+                  <NavigationLink href="/moderation">
                     Staff moderation
-                  </Link>
-                  <Link href="/campaigns" className={linkClasses}>
+                  </NavigationLink>
+                  <NavigationLink href="/campaigns">
                     Campaign pilot
-                  </Link>
+                  </NavigationLink>
                 </>
               ) : null}
               <form action={logOutAction}>

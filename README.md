@@ -1,5 +1,12 @@
 # Tech Opportunity
 
+**Product positioning and pilot direction (2026-10-02):** see
+[Product strategy and professional-product audit](docs/PRODUCT_STRATEGY.md).
+The public proposition is opportunities worth acting on for Tanzania's emerging
+talent: source evidence, explainable relevance and private application progress.
+Business demand and pricing remain hypotheses. Dated corpus/usage counts below
+are historical evidence, not current traction or a guarantee of corpus quality.
+
 **Continuing development? Read [the authoritative engineering handoff](docs/NEXT_SESSION_HANDOFF.md) first.**
 Supabase Data API access is now defined by an explicit least-privilege migration
 and future-migration verifier, applied to staging and production and verified

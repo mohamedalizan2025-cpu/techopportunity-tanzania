@@ -13,7 +13,7 @@ import { isAiSearchableOpportunity } from "@/lib/opportunity-trust";
 export const metadata: Metadata = {
   title: "For You | Tech Opportunity",
   description:
-    "Personalized opportunities from the same trusted corpus as Explore, with clear reasons for every suggestion.",
+    "Personalized opportunities from the same published list as Explore, with clear reasons for every suggestion.",
   robots: { index: false, follow: false },
 };
 
@@ -58,7 +58,7 @@ export default async function ForYouPage({
             For You
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
-            Opportunities from the same trusted corpus as Explore, ordered by
+            Opportunities from the same published list as Explore, ordered by
             your profile with a clear reason for each. For You never hides
             anything —{" "}
             <Link
@@ -92,7 +92,7 @@ export default async function ForYouPage({
             </div>
             <Link
               href="/profile"
-              className="inline-flex min-h-11 w-fit items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)]"
+              className="inline-flex min-h-11 w-fit items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)]"
             >
               {forYou.hasProfile ? "Edit profile" : "Build your profile"}
             </Link>
@@ -115,10 +115,10 @@ export default async function ForYouPage({
           {!forYou.available ? (
             <div
               role="alert"
-              className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+              className="mt-8 rounded-lg border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
             >
               Personalized recommendations are temporarily unavailable. Explore
-              still shows the complete trusted list.
+              still shows the full published list.
             </div>
           ) : !forYou.hasProfile ? (
             <div className="mt-8">
@@ -134,7 +134,7 @@ export default async function ForYouPage({
             <div className="mt-8">
               <EmptyState
                 title="No matches yet"
-                message="Nothing in the current trusted corpus matches your profile. Broaden your interests, or explore the full list — new opportunities are added continuously."
+                message="Nothing in the current published list matches your profile. Broaden your interests, or explore the full list — check back as new opportunities are reviewed."
                 actionHref="/profile"
                 actionLabel="Edit your profile"
                 showBrowseAll
@@ -171,7 +171,7 @@ export default async function ForYouPage({
                         href={`${opportunityHref(opportunity.slug, "/for-you")}#ai-opportunity-insight`}
                         className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline"
                       >
-                        AI Opportunity Insight →
+                        Fit &amp; next steps →
                       </Link>
                     ) : null}
                   </li>

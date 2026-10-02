@@ -99,104 +99,39 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   return (
     <main id="main-content" tabIndex={-1} className="flex-1">
       <section className="border-b border-[var(--line)] bg-[var(--hero)]">
-        <div
-          className={`page-shell grid gap-8 ${isFiltered ? "py-8" : "py-9 sm:py-10 lg:grid-cols-[1.4fr_1fr] lg:items-center"}`}
-        >
-          <div>
-            <p className="eyebrow flex items-center gap-2">
-              <span
-                aria-hidden="true"
-                className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]"
-              />
-              For Tanzania’s tech community
-            </p>
-            <h1
-              className={
-                isFiltered
-                  ? "mt-3 text-3xl font-semibold tracking-tight"
-                  : "hero-title mt-4"
-              }
-            >
-              {isFiltered ? (
-                "Find your next opportunity"
-              ) : (
-                <>
-                  Find your next
-                  <br />
-                  <span className="text-[var(--accent)]">
-                    opportunity in tech.
-                  </span>
-                </>
-              )}
-            </h1>
-            {!isFiltered ? (
-              <p className="mt-5 max-w-xl text-base leading-7 text-[var(--muted)] sm:text-lg">
-                Explore scholarships, fellowships, internships and more. Find
-                the details that matter, then take your next step.
-              </p>
-            ) : null}
-          </div>
+        <div className={`page-shell ${isFiltered ? "py-5" : "py-7 sm:py-9"}`}>
+          <p className="eyebrow">For Tanzania’s emerging talent</p>
+          <h1 className={isFiltered ? "mt-2 text-3xl font-semibold tracking-tight" : "hero-title mt-3"}>
+            {isFiltered ? "Find your next opportunity" : "Opportunities worth acting on."}
+          </h1>
           {!isFiltered ? (
-            <aside className="border-t border-[var(--line-strong)] pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-              <p className="text-lg font-semibold tracking-tight">
-                Know more before you apply.
+            <div className="mt-4 grid gap-4 lg:grid-cols-[1.5fr_1fr] lg:gap-12">
+              <p className="max-w-2xl text-base leading-7 text-[var(--muted)]">
+                Find your next step in study, work or innovation. Check the source,
+                see what fits, and keep track from interest to application.
               </p>
-              <ul className="mt-5 flex flex-col gap-3 text-sm text-[var(--muted)] sm:flex-row sm:flex-wrap sm:gap-6">
-                <li className="flex items-center gap-3">
-                  <UiIcon name="source" />
-                  Source links you can check yourself
-                </li>
-                <li className="flex items-center gap-3">
-                  <UiIcon name="clock" />
-                  Deadlines and missing dates, clearly marked
-                </li>
-                <li className="flex items-center gap-3">
-                  <UiIcon name="info" />
-                  Eligibility is never assumed from location
-                </li>
-              </ul>
-            </aside>
+              <p className="border-l-2 border-[var(--accent)] pl-4 text-sm leading-6 text-[var(--muted)]">
+                Human-reviewed before publication. Evidence and missing details
+                are marked on each listing. <a href="#trust-heading" className="font-semibold text-[var(--accent-strong)] underline underline-offset-4">How to read the evidence</a>
+              </p>
+            </div>
+          ) : null}
+          {user ? (
+            <nav aria-label="Your journey" className="mt-4 flex flex-wrap gap-x-5 text-sm">
+              <span className="inline-flex min-h-11 items-center font-semibold">Explore</span>
+              <Link href="/for-you" className="inline-flex min-h-11 items-center font-semibold text-[var(--accent-strong)] underline underline-offset-4">For You</Link>
+              <Link href="/activity" className="inline-flex min-h-11 items-center font-semibold text-[var(--accent-strong)] underline underline-offset-4">Your activity</Link>
+            </nav>
           ) : null}
         </div>
       </section>
-
-      {user ? (
-        <nav
-          aria-label="Your journey"
-          className="border-b border-[var(--line)] bg-[var(--surface)]"
-        >
-          <div className="page-shell flex flex-wrap items-center gap-x-5 gap-y-2 py-3 text-sm">
-            <span className="font-semibold text-[var(--foreground)]">
-              Explore
-            </span>
-            <span aria-hidden="true" className="text-[var(--subtle)]">
-              →
-            </span>
-            <Link
-              href="/for-you"
-              className="font-medium text-[var(--accent-strong)] underline-offset-2 hover:underline"
-            >
-              For You
-            </Link>
-            <span aria-hidden="true" className="text-[var(--subtle)]">
-              →
-            </span>
-            <Link
-              href="/activity"
-              className="font-medium text-[var(--accent-strong)] underline-offset-2 hover:underline"
-            >
-              Your activity
-            </Link>
-          </div>
-        </nav>
-      ) : null}
 
       <section
         id="opportunities"
         aria-labelledby="opportunities-heading"
         className="scroll-mt-20"
       >
-        <div className="page-shell py-8 sm:py-10">
+        <div className="page-shell py-5 sm:py-7">
           <OpportunityFilters
             activeCategory={category}
             activeSort={sort}
@@ -236,12 +171,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           {!isFiltered &&
           (snapshot.closingSoon.length > 0 ||
             snapshot.recentlyAdded.length > 0) ? (
-            <section
-              aria-label="Opportunity highlights"
-              className="mt-8 grid gap-5 sm:grid-cols-2"
-            >
+            <details className="mt-5 border-y border-[var(--line)] py-1">
+              <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold">
+                <UiIcon name="chevron" /> Closing soon &amp; recently added
+              </summary>
+              <div aria-label="Opportunity highlights" className="grid gap-5 py-3 sm:grid-cols-2">
               {snapshot.closingSoon.length > 0 ? (
-                <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4">
+                <div className="border-l-2 border-[var(--line)] pl-2">
                   <h2 className="flex items-center gap-2 px-3 text-base font-semibold">
                     <UiIcon name="clock" width="16" height="16" />
                     Closing soon
@@ -260,7 +196,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 </div>
               ) : null}
               {snapshot.recentlyAdded.length > 0 ? (
-                <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4">
+                <div className="border-l-2 border-[var(--line)] pl-2">
                   <h2 className="flex items-center gap-2 px-3 text-base font-semibold">
                     <UiIcon name="arrow" width="16" height="16" />
                     Recently added
@@ -278,10 +214,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   </ul>
                 </div>
               ) : null}
-            </section>
+              </div>
+            </details>
           ) : null}
 
-          <div className="mt-9 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-5">
+          <div className="mt-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-5">
             <div>
               <h2
                 id="opportunities-heading"
@@ -311,7 +248,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 title={
                   isFiltered
                     ? "No matching opportunities"
-                    : "No published opportunities yet"
+                    : "No current opportunities to show"
                 }
                 message={
                   q !== null
@@ -364,24 +301,27 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               id="trust-heading"
               className="mt-3 text-xl font-semibold tracking-tight"
             >
-              Opportunity discovery,
+              From discovery
               <br />
-              with context.
+              to your next step.
             </h2>
           </div>
           <div>
-            <h3 className="font-semibold">Go back to the source</h3>
+            <h3 className="font-semibold">Check the evidence</h3>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              Every listing includes a source link. Check the latest
-              requirements and dates before applying.
+              Publication requires human review. “Evidence verified” marks records
+              that meet the fuller evidence checks. Other listings need careful
+              source checks; review is not a guarantee of eligibility.
             </p>
           </div>
           <div>
-            <h3 className="font-semibold">Unknown means unknown</h3>
+            <h3 className="font-semibold">Make it your own</h3>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              A location is not proof of eligibility. When details aren’t
-              confirmed, we say so.
+              Use For You to prioritize with an optional profile. Save a
+              bookmark, then track Interested, Applying or Applied in Activity.
+              These are your private notes; applications happen at the source.
             </p>
+            <Link href="/for-you" className="nav-link mt-2 -ml-3 underline underline-offset-4">Open For You →</Link>
           </div>
         </div>
       </section>

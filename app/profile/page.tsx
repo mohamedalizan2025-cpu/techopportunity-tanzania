@@ -37,7 +37,7 @@ export default async function ProfilePage() {
               For You
             </span>{" "}
             feed with clear reasons for every suggestion. This is optional —
-            Explore always shows the complete trusted list, with or without a
+            Explore always shows the full published list, with or without a
             profile.
           </p>
         </div>
@@ -53,7 +53,7 @@ export default async function ProfilePage() {
           ) : (
             <div
               role="alert"
-              className="rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+              className="rounded-lg border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
             >
               Personalized profiles are temporarily unavailable. Your public
               browsing experience in Explore is unaffected.

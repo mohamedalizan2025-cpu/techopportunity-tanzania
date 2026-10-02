@@ -83,12 +83,12 @@ export function OpportunityInsightPanel({
   return (
     <section
       id="ai-opportunity-insight"
-      className="mt-8 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6"
+      className="mt-8 rounded-md border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6"
       aria-labelledby="ai-opportunity-insight-heading"
     >
-      <p className="eyebrow text-[var(--accent-strong)]">AI-assisted</p>
+      <p className="eyebrow text-[var(--accent-strong)]">Opportunity insight</p>
       <h2 id="ai-opportunity-insight-heading" className="mt-2 text-lg font-semibold">
-        AI Opportunity Insight
+        Fit &amp; next steps
       </h2>
       <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
         Grounded in verified listing evidence and your selected profile fields. The official source remains authoritative.

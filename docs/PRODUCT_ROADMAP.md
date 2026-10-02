@@ -1,5 +1,15 @@
 # Product roadmap
 
+## Current product priority — 2026-10-02
+
+[PRODUCT_STRATEGY.md](PRODUCT_STRATEGY.md) records the current audit, bounded
+presentation milestone and validation sequence. The exact next product milestone
+is a read-only source review of the currently visible public corpus, preparing
+specific moderation proposals before the first adoption pilot. This supersedes
+older “next” product items below; operational incidents remain separately open.
+The September 17 handoff records 0019/0020 production rollout; the pending-rollout
+descriptions later in this historical roadmap are not current deployment state.
+
 ## Vision
 
 Tech Opportunity evolves from trusted opportunity discovery into an Opportunity
@@ -140,8 +150,8 @@ phases gated by their own bounded authorization.
   (`public.talent_profiles`, migration 0018 — APPLIED to staging then production
   2026-09-16, owner-authorized, zero corpus drift) collected by progressive,
   fully skippable profiling; a permanent
-  Explore (complete trusted universe, never gated by personalization) vs For You
-  (separate personalized layer over the SAME trusted corpus) boundary; and a
+  Explore (full published list, never gated by personalization) vs For You
+  (separate personalized layer over the SAME published corpus) boundary; and a
   clean, deterministic, versioned matching-input contract with explainable
   human-readable reasons (`lib/personalization.ts`) — no percentages, no numeric
   score, no fabrication from missing data. No CV, no LLM/AI recommendations, no

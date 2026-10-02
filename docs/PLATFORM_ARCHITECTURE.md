@@ -1,5 +1,10 @@
 # Platform architecture (permanent)
 
+Current product/business interpretation: [PRODUCT_STRATEGY.md](PRODUCT_STRATEGY.md)
+(2026-10-02). Migrations 0019/0020 were rolled out September 17 according to the
+handoff; references below to their pending rollout are historical. The internal
+campaign pilot is not provider self-service or campaign-attribution analytics.
+
 This document records the permanent commercial and product architecture of Tech
 Opportunity. It is authoritative for design direction and is meant to keep every
 present-day decision compatible with the future platform. It does **not**
@@ -133,9 +138,11 @@ contract a future recommender (including a grounded AI layer, only after the AI
 readiness contract passes) can build on without reshaping the data model.
 
 The design also leaves room for future saved-search/digest value without
-building it now; saved is live and `interested / applying / applied`
-tracking is code-complete behind owner-gated migration 0019 (rollout
-awaiting owner staging proof).
+building it now; saved and `interested / applying / applied` tracking are
+implemented, with 0019 production rollout recorded in the September 17 handoff.
+The current public list includes legacy reviewable records as well as fully
+evidenced records. “Trusted universe” above describes the intended contract;
+it must not be used as an unconditional claim about every current listing.
 
 ## How this supports future provider / institution revenue
 

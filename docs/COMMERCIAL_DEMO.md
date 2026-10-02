@@ -1,16 +1,20 @@
 # Commercial demo script (internal, events/conversations)
 
 Audience: event attendees, organizers, partners. Length: ~5 minutes.
+Current positioning, evidence limits and revenue hypotheses:
+[PRODUCT_STRATEGY.md](PRODUCT_STRATEGY.md), audited 2026-10-02.
+
 Rule: demo only what is live; name the future as future. Never claim
 customers, traction, partnerships, or sponsorship that does not exist.
-Today: 0 campaigns, 0 tracked activity, 0 audience — say so when asked;
-the zeros are honest, not a script failure.
+The zero counts recorded September 17 are historical. Read current counts only
+when authorized and available; do not repeat them as today's traction.
 
 ## The story (talent side, live)
 
-A. "Here are trusted opportunities available to talent."
-   Open Explore. Every listing is human-moderated, evidence-checked, with
-   visible deadlines and source links. No account needed.
+A. "Find an opportunity worth acting on, then check its evidence."
+   Open Explore. Publication is human-gated, but not every legacy listing meets
+   the fuller evidence checks. Use a source-checked, current demonstration record
+   and explain the Evidence verified label. No account is needed for browsing.
 
 B. "A user tells Tech Opportunity what matters to them."
    Open Profile. A few optional fields — level, field, sectors,
@@ -38,13 +42,17 @@ E. "An organizer can run a verified campaign and see privacy-safe
 
 | Today (live) | Future (not built, not promised with dates) |
 |---|---|
-| Trusted moderated corpus, Explore/For You/Saved/Activity, deadline alerts | AI explanations/eligibility help over the same trusted corpus |
+| Explore/For You/Saved/Activity; deterministic insights; alert implementation (delivery not re-proved here) | Activated AI assistance; dependable expanded reminders/application execution |
 | Internal staff campaign pilot with aggregate counts | Provider self-serve publishing, paid promotion, public analytics |
 | Owner-only profiles, consent model documented | Institution dashboards, API, native apps |
 
 ## If asked about traction
 
-Answer with the live numbers on screen (today: zeros in
-campaigns/activity/audience). Point to the corpus (298 opportunities
-moderated) and the verification (human moderation + evidence) as the
-traction that exists: trust inventory, not user metrics.
+Answer with dated, actually observed numbers and their definitions. Stored or
+moderated record totals are inventory, not user traction. Current-state Saved /
+Interested / Applying / Applied counts are self-reported activity, not a measured
+conversion funnel, provider-confirmed applications, hires or campaign impact.
+No paid customers, partnerships, retention or outcomes have been validated by
+this audit. The October 2 public browse inspection found six visible listings
+and material legacy freshness/eligibility issues that must be addressed before
+a strong trust demonstration.

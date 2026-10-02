@@ -65,8 +65,8 @@ export default async function ActivityPage() {
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
             Saved bookmarks and application progress in one private place.
-            Only you can see this list — Explore stays the complete trusted
-            universe for everyone.
+            Only you can see this list — Explore stays the full published
+            list for everyone.
           </p>
           <p className="mt-3 break-words text-xs text-[var(--subtle)]">
             Signed in as {signedInAs}
@@ -74,19 +74,19 @@ export default async function ActivityPage() {
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/#opportunities"
-              className="inline-flex min-h-11 w-fit items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              className="inline-flex min-h-11 w-fit items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             >
               Explore opportunities
             </Link>
             <Link
               href="/for-you"
-              className="inline-flex min-h-11 w-fit items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              className="inline-flex min-h-11 w-fit items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             >
               For You
             </Link>
             <Link
               href="/saved"
-              className="inline-flex min-h-11 w-fit items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              className="inline-flex min-h-11 w-fit items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             >
               Saved list
             </Link>
@@ -99,7 +99,7 @@ export default async function ActivityPage() {
           <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
             <div
               role="alert"
-              className="mt-2 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+              className="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
             >
               Application tracking is temporarily unavailable. Your saved list
               is unaffected —{" "}
@@ -193,7 +193,7 @@ export default async function ActivityPage() {
                             </div>
                           </div>
                         ) : (
-                          <article className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6">
+                          <article className="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6">
                             <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
                               Unavailable
                             </p>

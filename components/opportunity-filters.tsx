@@ -65,7 +65,7 @@ export function buildHref(
 }
 
 const selectClasses =
-  "min-h-11 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:w-auto";
+  "min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:w-auto";
 
 export function FilterLink({
   href,
@@ -217,7 +217,7 @@ export function OpportunityFilters({
   return (
     <nav
       aria-label="Search and filter opportunities"
-      className="flex w-full flex-col items-start gap-4 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] p-4 shadow-[0_4px_20px_#102a2105] sm:p-5"
+      className="flex w-full flex-col items-start gap-4 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] p-4 sm:p-5"
     >
       <form
         action="/#opportunities"
@@ -264,12 +264,12 @@ export function OpportunityFilters({
               defaultValue={activeQuery ?? ""}
               maxLength={120}
               placeholder="Keyword or organization"
-              className="min-h-12 w-full min-w-0 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] pl-12 pr-3 text-base text-[var(--foreground)] outline-none transition placeholder:text-[var(--subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+              className="min-h-12 w-full min-w-0 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] pl-12 pr-3 text-base text-[var(--foreground)] outline-none transition placeholder:text-[var(--subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
             />
           </div>
           <button
             type="submit"
-            className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)] px-4 text-sm font-semibold text-white transition hover:bg-[#07543f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+            className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white transition hover:bg-[#07543f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
           >
             Search
           </button>
@@ -290,7 +290,7 @@ export function OpportunityFilters({
                 key={chip.key}
                 href={`${chip.href}#opportunities`}
                 aria-label={`Remove ${chip.label}`}
-                className="inline-flex min-h-11 items-center rounded-full border border-[var(--line-strong)] bg-[var(--accent-soft)] px-3 text-xs font-semibold text-[var(--accent-strong)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                className="inline-flex min-h-11 items-center rounded-md border border-[var(--line-strong)] bg-[var(--accent-soft)] px-3 text-xs font-semibold text-[var(--accent-strong)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
               >
                 {chip.label}
                 <span aria-hidden="true" className="ml-2">
@@ -442,7 +442,7 @@ export function OpportunityFilters({
 
           <button
             type="submit"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--muted-surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            className="inline-flex min-h-11 items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--muted-surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
             Apply filters
           </button>

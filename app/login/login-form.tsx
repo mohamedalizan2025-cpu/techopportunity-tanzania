@@ -20,7 +20,7 @@ export function LoginForm({ nextPath }: { nextPath: string | null }) {
   return (
     <form action={formAction} className="flex flex-col gap-5" noValidate>
       <div
-        className="grid grid-cols-2 gap-1 rounded-xl bg-[var(--muted-surface)] p-1"
+        className="grid grid-cols-2 gap-1 rounded-md bg-[var(--muted-surface)] p-1"
         role="group"
         aria-label="Account action"
       >
@@ -52,7 +52,7 @@ export function LoginForm({ nextPath }: { nextPath: string | null }) {
           role="alert"
           ref={feedback}
           tabIndex={-1}
-          className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+          className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
         >
           {state.message}
         </p>
@@ -62,7 +62,7 @@ export function LoginForm({ nextPath }: { nextPath: string | null }) {
           role="status"
           ref={feedback}
           tabIndex={-1}
-          className="rounded-xl border border-[var(--line-strong)] bg-[var(--accent-soft)] p-3 text-sm text-[var(--accent-strong)]"
+          className="rounded-md border border-[var(--line-strong)] bg-[var(--accent-soft)] p-3 text-sm text-[var(--accent-strong)]"
         >
           {state.message}
         </p>

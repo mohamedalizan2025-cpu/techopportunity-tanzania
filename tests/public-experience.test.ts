@@ -9,6 +9,8 @@ import {
   opportunityHref,
   sourcePresentation,
   UNKNOWN_TANZANIA_ELIGIBILITY,
+  eligibilityPresentation,
+  publicEvidenceUrl,
 } from "../lib/opportunity-presentation";
 import type { Opportunity } from "../lib/types";
 
@@ -139,6 +141,23 @@ assert.equal(
   "Tanzania eligibility not confirmed"
 );
 assert.equal(sourcePresentation(tanzaniaLocated), "Source: Tanzania Example Source");
+
+// Eligibility is a recorded, reviewed fact; neither location nor a bare decision
+// is sufficient. Trust-disabled deployments continue to show unknown.
+const reviewed = opportunity("reviewed");
+assert.equal(eligibilityPresentation(reviewed).label, "Tanzanian access evidenced");
+assert.equal(eligibilityPresentation({ ...reviewed, trust: undefined }).label, UNKNOWN_TANZANIA_ELIGIBILITY);
+assert.equal(eligibilityPresentation({ ...reviewed, status: "pending" }).evidence, null);
+assert.equal(eligibilityPresentation({ ...tanzaniaLocated, trust: undefined }).evidence, null);
+for (const missing of [{ eligibilityEvidence: " " }, { decidedBy: null }, { decidedAt: "invalid" }]) {
+  assert.equal(eligibilityPresentation({ ...reviewed, trust: { ...reviewed.trust!, ...missing } }).evidence, null);
+}
+assert.equal(eligibilityPresentation({ ...reviewed, trust: { ...reviewed.trust!, eligibilityDecision: "unknown" } }).evidence, null);
+assert.equal(eligibilityPresentation({ ...reviewed, trust: { ...reviewed.trust!, eligibilityDecision: "tanzanians_not_eligible", eligibilityEvidence: "Only citizens of another country may apply" } }).label, "Tanzanians excluded by recorded requirements");
+assert.equal(publicEvidenceUrl(reviewed), "https://example.org/reviewed");
+for (const unsafe of ["javascript:alert(1)", "data:text/html,test", "https://user:password@example.org", "invalid"]) {
+  assert.equal(publicEvidenceUrl({ ...reviewed, trust: { ...reviewed.trust!, canonicalEvidenceUrl: unsafe } }), null);
+}
 
 // Stable public navigation contracts.
 assert.equal(opportunityHref("real-opportunity"), "/opportunities/real-opportunity");

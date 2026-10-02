@@ -13,7 +13,7 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "Tech Opportunity",
   description:
-    "Find technology opportunities relevant to Tanzanian students, developers, founders, researchers and professionals.",
+    "Opportunities worth acting on for Tanzania’s emerging talent. Check source evidence, find relevant opportunities and track your application progress.",
 };
 
 // Explicit prop type: LayoutProps<"/"> is a build-generated global from
@@ -46,7 +46,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 Tech Opportunity
               </span>
               <span className="mt-1 block">
-                A clearer starting point for Tanzania’s tech community.
+                Source evidence. Personal relevance. Your next step.
               </span>
             </p>
             <div className="flex flex-wrap gap-x-5 gap-y-2">

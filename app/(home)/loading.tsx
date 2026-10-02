@@ -15,7 +15,7 @@ export default function Loading() {
           />
           <div
             aria-hidden="true"
-            className="h-24 w-full max-w-lg animate-pulse rounded-xl bg-[var(--line)]"
+            className="h-24 w-full max-w-lg animate-pulse rounded-md bg-[var(--line)]"
           />
           <div
             aria-hidden="true"
@@ -24,12 +24,12 @@ export default function Loading() {
         </div>
       </div>
       <div className="page-shell py-8" aria-hidden="true">
-        <div className="h-40 animate-pulse rounded-xl border border-[var(--line)] bg-[var(--surface)]" />
+        <div className="h-40 animate-pulse rounded-md border border-[var(--line)] bg-[var(--surface)]" />
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-72 animate-pulse rounded-xl border border-[var(--line)] bg-[var(--surface)]"
+              className="h-72 animate-pulse rounded-md border border-[var(--line)] bg-[var(--surface)]"
             />
           ))}
         </div>

@@ -10,7 +10,8 @@ import {
   opportunityExcerpt,
   opportunityHref,
   sourcePresentation,
-  UNKNOWN_TANZANIA_ELIGIBILITY,
+  sourceHostname,
+  eligibilityPresentation,
 } from "@/lib/opportunity-presentation";
 import type { Opportunity } from "@/lib/types";
 
@@ -31,6 +32,7 @@ export function OpportunityCard({
   const place = formatCardLocation(opportunity.location);
   const added = formatAddedDate(opportunity.createdAt);
   const badge = formatTrustBadge(opportunity);
+  const eligibility = eligibilityPresentation(opportunity);
 
   return (
     <article className="opportunity-card group">
@@ -39,11 +41,6 @@ export function OpportunityCard({
           <span className="pt-1 text-xs font-semibold uppercase tracking-wider text-[var(--accent-strong)]">
             {categoryLabel(opportunity.category)}
           </span>
-          {badge && (
-            <span className="trust-badge trust-badge-verified">
-              <UiIcon name="shield" width="14" height="14" /> {badge.label}
-            </span>
-          )}
         </span>
         <span className={`status-label status-${deadline.state}`}>
           <UiIcon name="clock" width="14" height="14" />
@@ -55,16 +52,16 @@ export function OpportunityCard({
           <Link
             href={opportunityHref(opportunity.slug, returnHref)}
             prefetch={false}
-            className="after:absolute after:inset-0 after:rounded-[14px] hover:text-[var(--accent-strong)]"
+            className="after:absolute after:inset-0 after:rounded-md hover:text-[var(--accent-strong)]"
           >
             {opportunity.title}
           </Link>
         </h3>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          {opportunity.organization?.trim() || sourcePresentation(opportunity)}
+          {opportunity.organization?.trim() || sourceHostname(opportunity.url) || sourcePresentation(opportunity)}
         </p>
         <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-          {opportunityExcerpt(opportunity.description)}
+          {opportunityExcerpt(opportunity.description, 140)}
         </p>
       </div>
       <dl className="mt-5 grid gap-2 text-sm text-[var(--muted)]">
@@ -95,16 +92,22 @@ export function OpportunityCard({
           </div>
         ) : null}
       </dl>
-      <p className="mt-2 flex items-start gap-2 text-xs text-[var(--muted)]">
+      <div className="mt-4 border-t border-[var(--line)] pt-3">
+        <p className={badge ? "flex items-center gap-2 text-xs font-semibold text-[var(--accent-strong)]" : "text-xs font-medium text-[var(--muted)]"}>
+          {badge ? <UiIcon name="shield" width="14" height="14" /> : null}
+          {badge?.label ?? "Check source requirements"}
+        </p>
+      <p className="mt-2 flex items-start gap-2 text-xs leading-5 text-[var(--muted)]">
         <UiIcon
           name="info"
           width="14"
           height="14"
           className="mt-0.5 shrink-0"
         />
-        <span>{UNKNOWN_TANZANIA_ELIGIBILITY}</span>
+        <span>{eligibility.label}</span>
       </p>
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-4">
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <span
             aria-hidden="true"
@@ -143,7 +146,7 @@ export function SnapshotOpportunityLink({
     <Link
       href={opportunityHref(opportunity.slug, returnHref)}
       prefetch={false}
-      className="group flex min-h-20 items-center justify-between gap-4 rounded-xl border border-transparent px-3 py-3 transition hover:border-[var(--line)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+      className="group flex min-h-20 items-center justify-between gap-4 rounded-md border border-transparent px-3 py-3 transition hover:border-[var(--line)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
     >
       <span className="min-w-0">
         <span className="block text-xs font-semibold text-[var(--accent-strong)]">

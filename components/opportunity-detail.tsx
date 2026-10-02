@@ -11,7 +11,8 @@ import {
   formatTrustBadge,
   sourceHostname,
   sourcePresentation,
-  UNKNOWN_TANZANIA_ELIGIBILITY,
+  eligibilityPresentation,
+  publicEvidenceUrl,
 } from "@/lib/opportunity-presentation";
 import type { Opportunity } from "@/lib/types";
 import { OpportunityInsightPanel } from "@/components/opportunity-insight";
@@ -39,6 +40,9 @@ export function OpportunityDetail({
   const discovered = formatDiscoveredDate(opportunity.discoveredAt);
   const hostname = sourceHostname(opportunity.url);
   const badge = formatTrustBadge(opportunity);
+  const eligibility = eligibilityPresentation(opportunity);
+  const evidenceUrl = publicEvidenceUrl(opportunity);
+  const verifiedAt = formatDiscoveredDate(opportunity.trust?.lastVerifiedAt)?.replace("First found", "Evidence checked");
 
   return (
     <article>
@@ -147,7 +151,7 @@ export function OpportunityDetail({
                   height="16"
                   className="mt-0.5 shrink-0"
                 />
-                <span>{UNKNOWN_TANZANIA_ELIGIBILITY}</span>
+                <span>{eligibility.label}</span>
               </dd>
             </div>
           </dl>
@@ -165,7 +169,7 @@ export function OpportunityDetail({
             </p>
           </section>
           <section
-            className="mt-8 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6"
+            className="mt-8 rounded-md border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6"
             aria-labelledby="who-can-apply"
           >
             <div className="flex items-center gap-2">
@@ -175,9 +179,11 @@ export function OpportunityDetail({
               </h2>
             </div>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              Tanzania eligibility is not confirmed for this listing. Read the
-              source requirements carefully; an opportunity’s location does not
-              prove who may apply.
+              {eligibility.evidence ?? "Tanzania eligibility is not confirmed for this listing. An opportunity’s location does not prove who may apply."}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+              Check the full requirements at the source. Geographic access does
+              not confirm your personal eligibility or guarantee selection.
             </p>
           </section>
           {showOpportunityInsight ? (
@@ -192,7 +198,7 @@ export function OpportunityDetail({
             aria-labelledby="source-history"
           >
             <h2 id="source-history" className="text-lg font-semibold">
-              Source &amp; record history
+              Source evidence &amp; record history
             </h2>
             <dl className="mt-4 space-y-4 text-sm">
               <div>
@@ -206,6 +212,17 @@ export function OpportunityDetail({
                   </dd>
                 ) : null}
               </div>
+              {evidenceUrl ? (
+                <div>
+                  <dt className="text-[var(--muted)]">Recorded evidence reference</dt>
+                  <dd className="mt-1">
+                    <a href={evidenceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 break-all font-semibold text-[var(--accent-strong)] underline underline-offset-4">
+                      {sourceHostname(evidenceUrl)} <UiIcon name="external" className="shrink-0" />
+                      <span className="sr-only"> (opens in a new tab)</span>
+                    </a>
+                  </dd>
+                </div>
+              ) : null}
               <div>
                 <dt className="text-[var(--muted)]">Recorded</dt>
                 <dd className="mt-1">
@@ -213,8 +230,12 @@ export function OpportunityDetail({
                 </dd>
               </div>
             </dl>
+            <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
+              {badge ? "Evidence verified means the record meets our source, relevance, eligibility and review checks. It is not an endorsement or a promise of selection." : "This record does not carry the Evidence verified label. Check its source and requirements before acting."}
+              {verifiedAt ? <span className="mt-1 block">{verifiedAt}. This is a recorded check, not continuous confirmation.</span> : null}
+            </p>
             <p className="mt-5 text-sm leading-6 text-[var(--muted)]">
-              This listing stores one source/details link. A recorded date is
+              This listing stores one source/details link; any separate evidence reference appears above. A recorded date is
               not a guarantee that the source is still current. Requirements and
               deadlines can change.
             </p>

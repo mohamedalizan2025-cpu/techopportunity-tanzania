@@ -55,15 +55,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           Keep your next step in sight.
         </h1>
         <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-          Keep a private list of opportunities you want to revisit. Browsing,
-          searching and opening source pages always remain public.
+          Save opportunities, see suggestions based on your profile, and track
+          your application progress. Browsing, searching and opening source pages
+          always remain public.
         </p>
 
-        <div className="mt-8 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 shadow-[0_8px_30px_#102a2106] sm:p-7">
+        <div className="mt-8 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-7">
           {authError === "confirmation" ? (
             <p
               role="alert"
-              className="mb-4 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+              className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
             >
               That confirmation link is invalid or expired. Request a fresh
               email by creating the account again.
