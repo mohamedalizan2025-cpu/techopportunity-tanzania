@@ -1,6 +1,23 @@
 # Current engineering handoff
 
-Updated: 2026-09-24. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Updated: 2026-10-02 (pilot-replenishment review; structural handoff below is historical).
+Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+
+## Pilot replenishment shortlist (2026-10-02, HEAD `3e45e3b`, read-only, no mutations)
+
+- REVIEW DOCS: [PUBLIC_CORPUS_REVIEW_2026-10-02.md](PUBLIC_CORPUS_REVIEW_2026-10-02.md)
+  (6 visible, 4 unpublish proposals) and
+  [PILOT_REPLENISHMENT_SHORTLIST_2026-10-02.md](PILOT_REPLENISHMENT_SHORTLIST_2026-10-02.md)
+  (238 pending scanned, 11 PUBLISH proposals in deadline order, WITHHOLD/REJECT
+  patterns, supply gaps). No production data was changed by either review.
+- PAUSED OWNER-GATED WORK: the 4-record unpublish sequence (Ogilvy, AIJC, jobs
+  roundup, Twaweza) is authorized but NOT executed — owner performs each click
+  at `/published-management` with the documented verbatim reason, agent
+  verifies read-only after each. Do not simulate or batch it.
+- NEXT OWNER ACTIONS IN ORDER: (1) unpublish the 4 records one at a time;
+  (2) approve the 11-record shortlist in deadline order starting with AfDB
+  (closes 12 Oct) and MWF (closes 13 Oct); (3) run the 5–10-user observed
+  task pilot. Next supply milestone after pilot: fresh National sourcing.
 
 ## End-of-session closure (2026-09-24, HEAD `5cab9de`)
 
