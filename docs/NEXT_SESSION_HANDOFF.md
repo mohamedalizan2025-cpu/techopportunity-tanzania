@@ -25,6 +25,11 @@ Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
   [PROVIDER_PILOT_BRIEF_2026-10-02.md](PROVIDER_PILOT_BRIEF_2026-10-02.md)
   (post-validation managed-campaign brief: verified opportunity → targeted
   distribution → aggregate funnel report; no fake pricing/traction).
+- GATE CHECK 2026-10-02 (read-only public browse): shelf UNCHANGED — same 6
+  records visible, all 4 cleanup targets still published, zero shortlist
+  approvals visible. Owner actions still pending. Time pressure observed live:
+  YSP now shows "Closes in 13 days" (15 Oct); AfDB (12 Oct) and MWF (13 Oct)
+  flagship approvals cannot slip past this week without losing them.
 
 ## End-of-session closure (2026-09-24, HEAD `5cab9de`)
 
