@@ -547,8 +547,27 @@ export async function unpublishOpportunityAction(
   }
   const rawId = permission.id;
 
-  const { data, error } = await permission.staff.client
-    .rpc("unpublish_published_opportunity", unpublishRpcArguments(rawId, permission.reason));
+  // Transport-level failures (network/fetch throw) reject instead of
+  // returning { error }. Without this guard they escape to the global error
+  // boundary ("Something went wrong") and the moderator cannot tell whether
+  // the mutation committed. Failing closed to the same inline message keeps
+  // the retry safe: if the transaction did commit, the retry reads zero rows
+  // and returns the "not-published" denial instead of double-writing.
+  let data: unknown;
+  let error: { message: string } | null;
+  try {
+    const result = await permission.staff.client
+      .rpc("unpublish_published_opportunity", unpublishRpcArguments(rawId, permission.reason));
+    data = result.data;
+    error = result.error;
+  } catch {
+    console.error("[lib/data] Unpublish RPC transport failure; mutation state unknown, retry is safe.");
+    return {
+      ...initialUnpublish,
+      status: "error",
+      message: "The record could not be unpublished. Please try again.",
+    };
+  }
 
   if (error) {
     console.error("[lib/data] Failed to unpublish opportunity:", error.message);

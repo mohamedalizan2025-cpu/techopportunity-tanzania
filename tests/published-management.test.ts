@@ -300,6 +300,11 @@ assert(
   /permission\.staff\.client[\s\S]*\.rpc\("unpublish_published_opportunity"/.test(actionSource) &&
     !/SUPABASE_SERVICE_ROLE_KEY|service_role/.test(actionSource)
 );
+assert(
+  "unpublish transport failure degrades to the inline error state, never the global boundary",
+  /try\s*\{\s*const result = await permission\.staff\.client\s*\n?\s*\.rpc\("unpublish_published_opportunity"/.test(actionSource) &&
+    /\}\s*catch\s*\{[\s\S]*The record could not be unpublished\. Please try again\./.test(actionSource)
+);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;

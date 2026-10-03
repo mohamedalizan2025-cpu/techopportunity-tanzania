@@ -89,6 +89,18 @@ Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
   C. approve AfDB → MWF → ACC → UONGOZI → Anzisha → Kectil → Jim Leech →
   HKPFS → IMF FIP → MOPGA → FAO RAF. Final shelf check: 4 visible, both
   cleanup targets still live. Blocker: authenticated moderator session only.
+- UNPUBLISH FAILURE FIX 2026-10-03: owner reported "Something went wrong"
+  (global error boundary) on the jobs-roundup unpublish. Root cause, from
+  code inspection (no guessing): `unpublishOpportunityAction` awaited the
+  Supabase RPC with no try/catch, so any transport-level fetch throw escaped
+  to the boundary instead of the designed inline message. Deterministic
+  branches, reason bounds (10–1000), and session paths all return inline
+  states; the jobs record is STILL public, proving the throw hit pre-commit.
+  Fix: try/catch around the RPC await failing closed to the existing inline
+  message; retry stays safe via the existing zero-rows "not-published"
+  denial. No RLS/SQL/service-role change; new regression test green; full
+  verify + build green. Owner retries the jobs-roundup unpublish after this
+  deploys (Vercel auto-deploy on push).
 
 ## End-of-session closure (2026-09-24, HEAD `5cab9de`)
 
