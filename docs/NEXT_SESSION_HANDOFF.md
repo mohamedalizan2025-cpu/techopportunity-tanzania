@@ -53,6 +53,16 @@ Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
   passed." Shortlist flagship evidence (AfDB closes 12 Oct, MWF closes 13 Oct,
   verified against official pages 2026-10-02) stands; moderator reconfirms at
   decision time. Shelf = 4. NOT READY_FOR_USER_PILOT.
+- UI/UX + DEPLOYMENT TOPOLOGY (2026-10-03, HEAD `e8a98db`): responsive audit
+  across 360/390–430/tablet/1366/wide found the post-positioning UI coherent;
+  fixed two radius outliers to the 6px system (`FilterLink`, empty-state
+  icon). Topology finding: ONE Vercel project (production
+  `techopportunity-tanzania.vercel.app` on production Supabase; staging is the
+  protected branch Preview on staging Supabase — no consolidation needed).
+  Canonical policy now authoritative in docs/architecture.md §6 and enforced
+  by new `app/robots.ts` (disallow-all off-production) + hardcoded
+  `metadataBase`. No schema/RLS/data/Discovery/Cloudflare/AI/moderation
+  touched. Owner-gated moderation + shortlist approvals still pending.
 
 ## End-of-session closure (2026-09-24, HEAD `5cab9de`)
 

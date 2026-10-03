@@ -18,7 +18,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div role="status" className="state-panel w-full">
-      <span className="mb-2 grid h-12 w-12 place-items-center rounded-xl bg-[var(--muted-surface)] text-[var(--muted)]">
+      <span className="mb-2 grid h-12 w-12 place-items-center rounded-md bg-[var(--muted-surface)] text-[var(--muted)]">
         <UiIcon name="search" width="24" height="24" />
       </span>
       <p className="text-xl font-semibold tracking-tight text-[var(--foreground)]">

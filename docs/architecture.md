@@ -139,6 +139,25 @@ remains as an offline fixture file and is not part of the real data path.
 
 ## 6. Environments
 
+Canonical deployment policy (authoritative as of 2026-10-03; supersedes the
+historical table below):
+
+- Exactly ONE public product URL exists:
+  `https://techopportunity-tanzania.vercel.app`. Never document, link, or
+  promote any other deployment as the product.
+- Production Vercel (`VERCEL_ENV=production`) uses production Supabase
+  (`jltuufukcwztugvojwjd`) only. `NEXT_PUBLIC_SITE_URL` pins the canonical
+  origin for auth callbacks; `lib/auth-redirect.ts` fails closed rather than
+  falling through to another deployment.
+- Staging is the protected branch Preview of the SAME Vercel project
+  (`techopportunity-tanzania-git-staging-techopportunity.vercel.app`) with
+  branch-scoped staging Supabase vars (`pumzofcwfjqswkiwfqty`) — internal and
+  testing-only. It is Vercel-Authentication-gated, noindexed, and must never
+  be shared as a product link. `app/robots.ts` disallows indexing on every
+  non-production deployment as a repo-level backstop.
+- Production and staging Supabase projects are never merged; staging uses
+  synthetic data only. `.env.local` is production-only in this repository.
+
 The table below is the historical/intended separation model, not an inventory of
 verified current projects. As of the 2026-09-08 handoff, no trustworthy isolated
 staging environment is established. The owner intends a second Supabase Free
@@ -148,8 +167,8 @@ project for staging; do not repurpose the existing operational project.
 |---|---|---|---|
 | Code location | your machine | `main` branch via PR previews | `main` branch |
 | Frontend/server | `npm run dev` on localhost:3000 | Vercel preview URL | vercel.app domain (custom domain optional) |
-| Database | Supabase project **`tto-staging`** | Supabase project **`tto-staging`** | Supabase project **`tto-prod`** |
-| Secrets source | `.env.local` (pointing at staging) | Vercel env vars scoped to *Preview* | Vercel env vars scoped to *Production* |
+| Database | Supabase project **`tto-staging`** (historical name; locally, point at staging only with target-specific credentials, never `.env.local`) | Supabase project **`tto-staging`** (historical name; current staging ref `pumzofcwfjqswkiwfqty`) | Supabase project **`tto-prod`** (historical name; current production ref `jltuufukcwztugvojwjd`) |
+| Secrets source | target-specific credentials (`.env.local` is production-only and must never be loaded for staging) | Vercel env vars scoped to *Preview* | Vercel env vars scoped to *Production* |
 
 Notes:
 - The original design used a cloud development database instead of local Docker.
