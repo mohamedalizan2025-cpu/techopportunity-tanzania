@@ -72,6 +72,23 @@ Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
   AfDB closes 12 Oct, MWF closes 13 Oct, YSP shows "Closes in 12 days". Exact
   next owner actions unchanged: (1) the 2 remaining unpublishes with
   documented verbatim reasons; (2) shortlist approvals in deadline order.
+- QUEUE PREP 2026-10-03 (read-only, no mutation): all 11 PUBLISH candidates
+  re-verified against live first-party sources — 11/11 still open, no
+  material evidence change, zero HOLD/SKIP. Upgrades since 10-02: HKPFS now
+  fully official (RGC: initial application 1 Sept–1 Dec 2026 noon HKT,
+  worldwide irrespective of origin); Kectil official page now explicitly
+  lists Tanzania among applicant countries. Watch item (non-blocking): IMF
+  FIP closes Dec 5 per OD/UN Talent but one secondary states Dec 4 11:59pm
+  DC time — moderator confirms exact deadline at decision; open either way.
+  UONGOZI Oct 23 23:00 EAT deadline rests on consistent secondaries (official
+  page shows generic Aug–Sep window) — moderator confirms Apply portal at
+  decision. Exact owner click order (13 clicks): A. unpublish jobs roundup
+  ("Weekly roundup of 27 August 2026, not a single actionable opportunity;
+  all 30 sub-item deadlines (1–24 Sept 2026) have passed."); B. unpublish
+  Twaweza ("First-party source deadline 12 July 2026 has passed.");
+  C. approve AfDB → MWF → ACC → UONGOZI → Anzisha → Kectil → Jim Leech →
+  HKPFS → IMF FIP → MOPGA → FAO RAF. Final shelf check: 4 visible, both
+  cleanup targets still live. Blocker: authenticated moderator session only.
 
 ## End-of-session closure (2026-09-24, HEAD `5cab9de`)
 
