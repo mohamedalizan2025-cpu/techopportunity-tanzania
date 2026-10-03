@@ -63,6 +63,15 @@ Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
   by new `app/robots.ts` (disallow-all off-production) + hardcoded
   `metadataBase`. No schema/RLS/data/Discovery/Cloudflare/AI/moderation
   touched. Owner-gated moderation + shortlist approvals still pending.
+- PILOT READINESS CHECK 2026-10-03 (read-only, no mutation): Ogilvy + AIJC
+  re-confirmed 404/absent; jobs roundup + Twaweza detail pages both still
+  render publicly ("Deadline not listed") — owner has completed NO further
+  moderation since the last check. Shelf = 4 (IMLC, YSP + 2 stale records);
+  zero of 11 shortlist approvals visible. Assessment: NOT READY_FOR_USER_PILOT
+  — cleanup is half-done and the shelf has no replenishment. Deadline clock:
+  AfDB closes 12 Oct, MWF closes 13 Oct, YSP shows "Closes in 12 days". Exact
+  next owner actions unchanged: (1) the 2 remaining unpublishes with
+  documented verbatim reasons; (2) shortlist approvals in deadline order.
 
 ## End-of-session closure (2026-09-24, HEAD `5cab9de`)
 
