@@ -30,6 +30,16 @@ Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
   approvals visible. Owner actions still pending. Time pressure observed live:
   YSP now shows "Closes in 13 days" (15 Oct); AfDB (12 Oct) and MWF (13 Oct)
   flagship approvals cannot slip past this week without losing them.
+- MODERATION UPDATE 2026-10-02 (read-only verification, no agent mutation):
+  Ogilvy detail now 404s and is absent from browse — unpublish CONFIRMED
+  public-side. AIJC detail also 404s and is absent from browse — ALSO already
+  unpublished (found, not repeated). Remaining visible shelf = 4 (IMLC, YSP,
+  jobs roundup, Twaweza); no unrelated record changed. Audit-row
+  (reason/attribution) confirmation still requires a staff-session check.
+  STOPPED at the session gate for the remaining jobs-roundup + Twaweza
+  unpublishes and all shortlist approvals: owner clicks at
+  `/published-management` with the documented verbatim reasons, agent
+  verifies read-only after each.
 
 ## End-of-session closure (2026-09-24, HEAD `5cab9de`)
 
