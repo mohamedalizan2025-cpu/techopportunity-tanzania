@@ -40,6 +40,19 @@ Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
   unpublishes and all shortlist approvals: owner clicks at
   `/published-management` with the documented verbatim reasons, agent
   verifies read-only after each.
+- MODERATION ATTEMPT 2026-10-03 (no mutation, stopped at gate): anonymous
+  re-verification confirms Ogilvy + AIJC still 404/absent, while the August
+  jobs roundup and Twaweza detail pages both still render publicly as
+  "Deadline not listed" — 2 unpublishes outstanding. `/published-management`
+  anonymously redirects to `/login`: no authenticated moderator session is
+  available to this agent, so per ENGINEERING_RULES no SQL, service-role, or
+  direct-RPC workaround was attempted. Outstanding owner clicks (verbatim,
+  one at a time): (1) jobs roundup — "Weekly roundup of 27 August 2026, not
+  a single actionable opportunity; all 30 sub-item deadlines (1–24 Sept 2026)
+  have passed."; (2) Twaweza — "First-party source deadline 12 July 2026 has
+  passed." Shortlist flagship evidence (AfDB closes 12 Oct, MWF closes 13 Oct,
+  verified against official pages 2026-10-02) stands; moderator reconfirms at
+  decision time. Shelf = 4. NOT READY_FOR_USER_PILOT.
 
 ## End-of-session closure (2026-09-24, HEAD `5cab9de`)
 
