@@ -223,6 +223,20 @@ environment — owner to smoke-test sign-out from /, /profile, /saved,
 /activity, and a staff page in a real session. Next milestone: the
 already-approved real Groq/Gemini provider evaluation (not started).
 
+## Real AI provider evaluation attempt 2026-10-04 at `be637d8` (0 external requests)
+
+Ran the documented fixed-corpus harness for Groq then Gemini independently.
+Both gates probed by name/flag only (no secrets read, printed, or committed):
+all five Groq requirements and all five Gemini requirements still absent, so
+the harness correctly reported `real-groq-pending` / `real-gemini-pending`
+with 0 requests, 0 hard failures, 80/80 contract soft checks each. No
+provider failure to fix (nothing ran), no validator changes, production
+stays OFF, staging NOT eligible. Recorded in
+[AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
+`npm run verify` + `npm run build` green. Sequence holds: owner configures
+server-side keys + attestations locally and runs the two evals → staging
+decision → owner prod decision → user pilot → provider revenue pilot.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

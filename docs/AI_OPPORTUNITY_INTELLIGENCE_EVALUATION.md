@@ -268,3 +268,18 @@ enables production AI.
 - Staging activation NOT eligible; production activation BLOCKED. Only
   remaining path: owner configures server-side keys + attestations and runs
   the two fixed-corpus evaluations locally.
+
+## Real-provider gate re-check 2026-10-04 at `be637d8` (0 external requests)
+
+- Both gates re-probed by name/flag only (no secret values read or printed):
+  Groq still missing all five (explicit confirmation, ZDR, no-billing,
+  exact `openai/gpt-oss-20b` pin, credential); Gemini still missing all
+  five (explicit confirmation, unpaid-data-use, no-billing, exact
+  `gemini-3.5-flash-lite` pin, credential).
+- Documented harness runs executed for both providers: `real-groq-pending`
+  and `real-gemini-pending`, 0 requests each, contract simulation unchanged
+  (16 cases, 0 hard failures, 80/80 soft checks). Gate fails closed exactly
+  as designed; nothing left the machine.
+- No change to the standing conclusion: staging NOT eligible, production
+  OFF. Owner path unchanged — configure server-side keys + attestations
+  locally, then run the two fixed-corpus evaluations.
