@@ -1,7 +1,155 @@
-# Current engineering handoff
+# Current operational handoff
 
-Updated: 2026-10-02 (pilot-replenishment review; structural handoff below is historical).
-Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+Rewritten 2026-10-04 as a self-contained briefing; dated history preserved
+below. Read [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
+
+## 1. Product in one paragraph
+
+Tech Opportunity is an opportunity-intelligence and action platform for
+Tanzania's emerging talent — primarily university students and recent
+graduates, secondarily early-career developers and professionals. Core
+journey: DISCOVER → VERIFY/UNDERSTAND → PRIORITIZE → TRACK → APPLY. It is
+not "ChatGPT for opportunities": ChatGPT answers when asked, while Tech
+Opportunity continuously maintains a structured, provenance-kept,
+human-moderated corpus with deadline/lifecycle tracking, explainable
+matching, and private Saved/Interested/Applying/Applied workflow. The model
+is replaceable infrastructure; the moat must be earned through trusted local
+data, workflow, and distribution — none of which is an established moat yet.
+
+## 2. Current business model
+
+Talent side is free (core product); TZS 1,000/month Talent Plus is an
+unvalidated price hypothesis only — no payments built. First plausible
+revenue is a staff-managed provider campaign service (verified opportunity
+→ agreed community distribution → manual aggregate report; charge for work,
+never for passing verification). Institutions path (dashboards, annual
+service) comes only after demonstrated use and a budget owner. Permanent
+rules: private talent data is never sold; paid promotion never bypasses
+moderation; small-cell suppression reviewed before any external report.
+Validated: human publication gating, deterministic matching, owner-only
+privacy, aggregate-only campaign RPCs. Unvalidated: repeat use, provider
+willingness to pay, Talent Plus premium value, institutional demand. See
+[PRODUCT_STRATEGY.md](PRODUCT_STRATEGY.md) and
+[PROVIDER_PILOT_BRIEF_2026-10-02.md](PROVIDER_PILOT_BRIEF_2026-10-02.md).
+
+## 3. Current production architecture
+
+ONE Vercel project. Canonical public URL (only linkable product URL):
+`https://techopportunity-tanzania.vercel.app` (production Supabase
+`jltuufukcwztugvojwjd`). Staging is the protected branch Preview on
+isolated staging Supabase (`pumzofcwfjqswkiwfqty`) — internal/testing only,
+Vercel-Authentication-gated, noindexed, never a product link. Canonical
+policy is authoritative in [architecture.md §6](architecture.md) and
+enforced by `app/robots.ts` (disallow-all off-production) plus hardcoded
+`metadataBase`. Never merge the Supabase projects. Discovery runs on the
+Cloudflare Workers Free cron (`17 */2 * * *`); scheduler 24h-observation
+incident remains separately open. AI: Gemini-primary/Groq-backup chain
+implemented but DISABLED (hard zero-spend, 0 external requests); activation
+needs owner credentials + all four privacy/billing attestations. No schema,
+RLS, Discovery, Cloudflare, or AI changes are authorized in product
+milestones.
+
+## 4. Current live product state
+
+Explore / For You / Activity / Profile plus the staff-only provider-campaign
+foundation are live; professional positioning + public-UX milestone is
+complete and verified (typography, header/nav with active states, card scan
+order, trust/provenance presentation, filters, detail consistency, mobile
+menu, empty/loading/error states, 44–48px targets, focus rings, skip link).
+`app/robots.ts` + hardcoded `metadataBase` enforce the canonical URL.
+No new features are authorized — product work is now evidence-triggered
+(adoption/provider-pilot validation).
+
+## 5. Current corpus state (verified read-only 2026-10-04)
+
+Cleanup 4/4 complete: Ogilvy, AIJC, August jobs roundup, Twaweza all 404 and
+absent from browse. Approved and public (9): AfDB Internship 2027 (12 Oct,
+afdb.org), Mandela Washington Fellowship 2027 (13 Oct,
+mandelawashingtonfellowship.org), African Climate Collaborative PhD
+(15 Oct, acdi.uct.ac.za), Anzisha 2027 (10 Nov, anzisha.org), Kectil 2027
+(15 Nov, kectil.com), Jim Leech Mastercard Fellowship 2027 (1 Dec,
+queensu.ca), HKPFS 2027/28 (1 Dec noon HKT, ugc.edu.hk), MOPGA 2027
+(15 Dec, campusfrance.org), FAO RAF Internship (31 Dec, jobs.fao.org) — all
+rendering "Evidence verified" + "Tanzanian access evidenced" with
+first-party domains. Retained and intact: IMLC 2026 (13 Dec, verified) and
+YSP (15 Oct, honestly unknown eligibility). Held pending, correctly NOT
+public (both confirmed 0-result searches): UONGOZI (first-party page shows
+Aug–Sep window with no live Apply destination — does not support 23 Oct)
+and IMF FIP (official page shows no live 2027 application; FIP posts in
+December). Active anonymous shelf: 11 distinct records, no duplicates.
+Staff-session evidence (preserved owner report, not re-verifiable
+anonymously): 14 published-management rows (11 active + 3
+lifecycle-filtered), 211 pending. Do NOT publish the held records without
+new authoritative evidence.
+
+## 6. Current validation state
+
+`READY_FOR_USER_PILOT` = YES. The shelf holds 11 open, evidence-backed
+records spanning fellowships, internships, competition, and grants —
+diverse enough for 5–10 testers over two weeks (brief testers that supply
+is fellowship-heavy with one student-competition anchor). Run the protocol
+in [USER_VALIDATION_PILOT_2026-10-02.md](USER_VALIDATION_PILOT_2026-10-02.md):
+15-minute observed mobile tasks (Discover → Understand → Save/Track →
+Apply), 7 post-task questions, per-tester metrics, 7-day follow-up,
+2-week repeat-use check, one-row-per-tester sheet. PASS requires: median
+≥4/5 tasks unassisted, zero eligibility/deadline deceptions, ≥60% 7-day
+return OR ≥2 truthful application starts, no unfiled critical blocker.
+Provider pilot ([PROVIDER_PILOT_BRIEF_2026-10-02.md](PROVIDER_PILOT_BRIEF_2026-10-02.md))
+runs ONLY after the user pilot passes.
+
+## 7. Next milestone (one only)
+
+Run the 5–10-user observed mobile pilot per the protocol above. Complete
+requires: sheets for ≥5 testers, 7-day and 2-week return counts, ranked
+blocker list, most-requested missing supply. Then the following milestone is
+chosen from that evidence (top 1–2 blockers, or National-supply work if
+supply thinness caused failure).
+
+## 8. Owner-only gates
+
+Authenticated moderator browser session: unpublishes, approvals, rejections,
+campaign creation (one `[INTERNAL DEMO]` vessel max, never customer-named).
+Provider credentials + all four AI privacy/billing attestations. Vercel
+dashboard actions. Production DB passwords/keys. An agent must never handle
+these or work around them with SQL, service-role, or direct RPC.
+
+## 9. Do not work on
+
+Speculative features; AI provider activation or expansion; schema/RLS/
+migration work; Discovery/source/cadence changes; Cloudflare changes;
+bulk or automated moderation; deletions or corpus resets; UI redesign for
+decoration; chasing arbitrary opportunity counts (quality > quota);
+native apps, APIs, maps, paid infra, monetization without measured demand.
+
+## 10. Model/agent handoff rules
+
+Muse (repo/code/docs/audits) owns implementation and verification; Computer
+Use acts ONLY for authenticated browser moderation no API covers, one record
+at a time with documented verbatim reasons. One writer at a time — never
+edit the same doc from two sessions. Live evidence (production fetches),
+exact HEAD, test/build reports outrank any model's
+memory of prior turns. Never claim an outcome that was not directly
+verified; never simulate a moderation action.
+
+## 11. Current HEAD / verification
+
+HEAD `0182eea`, tree clean at handoff rewrite; last full `npm run verify`
+green (all suites, tsc, lint, 42/42 boundaries) plus `npm run build` green
+at the unpublish-hardening fix. Open operational items: scheduler
+24h-observation incident (separate track); audit-ledger rows confirmable
+only in a staff session (public-side 404 + browse-absence is the anonymous
+proof). No code risks outstanding.
+
+## 12. Stop conditions
+
+Stop — do not invent a workaround — when: moderator authentication is
+missing (say AUTHENTICATION_REQUIRED); a first-party source contradicts a
+record (HOLD/SKIP it); a requested change needs schema/RLS/AI/Discovery/
+Cloudflare work without explicit bounded authorization; verification gates
+fail (fix or report, never weaken tests); the task asks for customers,
+revenue, traction, or partnerships evidence that does not exist.
+
+## Superseded detailed log (kept for audit; live facts are in §§1–12 above)
 
 ## Pilot replenishment shortlist (2026-10-02, HEAD `3e45e3b`, read-only, no mutations)
 

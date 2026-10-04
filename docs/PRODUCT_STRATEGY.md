@@ -42,7 +42,7 @@ is the longer-term business direction, not today's delivered institutional syste
 
 | Capability | Evidence and limit |
 |---|---|
-| Public Explore, filters, pagination, source/detail links | Implemented in app and lib/data; deployed browse inspected 2026-10-02. Six listings visible. No account required by route code. |
+| Public Explore, filters, pagination, source/detail links | Implemented in app and lib/data; deployed browse inspected 2026-10-02 (six visible then) and 2026-10-04 (eleven visible after cleanup + 9 approvals). No account required by route code. |
 | Publication, qualification, dedupe and lifecycle | Human publication boundary and deterministic gates exist. Expired stored dates are filtered. A missing structured date can leave an old listing visible; pipeline controls do not certify all legacy records. |
 | Trust evidence | Optional trust fields behind existing M31 flag; complete evidence controls the existing verified badge. Current card/detail copy incorrectly always calls eligibility unknown. |
 | Profile and For You | Owner-only profile; deterministic reasons over published data, no match percentages. Explore remains independent. Profile/ranking code is implemented; migrations have historical rollout proof. |

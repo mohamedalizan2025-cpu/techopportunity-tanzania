@@ -32,6 +32,17 @@ Each approval records explicit eligibility evidence + canonical evidence URL
 per the published-review contract; type/sector corrections where noted
 (e.g. #5 filed as `other`, is a PhD fellowship).
 
+## Actual outcome 2026-10-04 (supersedes the 11/11 proposal above)
+
+APPROVED (9): AfDB, MWF, ACC (title normalized, category corrected to
+Fellowship), Anzisha, Kectil, Jim Leech, HKPFS, MOPGA, FAO RAF — all
+verified public with evidence badges on 2026-10-04. HELD PENDING (2):
+UONGOZI (first-party page shows Aug–Sep window with no live Apply
+destination — does not support 23 Oct) and IMF FIP (official page shows no
+live 2027 application; FIP posts in December). Do not publish either held
+record without new authoritative evidence. Shelf after outcome: 11 active
+(2 retained + 9 approved); quality > quota, no 13-record requirement.
+
 ## WITHHOLD patterns (not publish-ready)
 
 - QUWA Research Grants 2027 (15 Oct): genuine UAE forum call, but Tanzanian
