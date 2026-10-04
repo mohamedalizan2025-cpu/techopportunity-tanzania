@@ -44,10 +44,13 @@ enforced by `app/robots.ts` (disallow-all off-production) plus hardcoded
 `metadataBase`. Never merge the Supabase projects. Discovery runs on the
 Cloudflare Workers Free cron (`17 */2 * * *`); scheduler 24h-observation
 incident remains separately open. AI: Gemini-primary/Groq-backup chain
-implemented but DISABLED (hard zero-spend, 0 external requests); activation
-needs owner credentials + all four privacy/billing attestations. No schema,
-RLS, Discovery, Cloudflare, or AI changes are authorized in product
-milestones.
+measured (Gemini 14/16, Groq 9/16 paced, zero hard failures everywhere);
+owner approved staging AI and reports the Preview env configured, but live
+staging smoke was never performed here (Vercel-Authentication-blocked) and
+production AI stays OFF. A key-rotation prerequisite is open (see §11):
+do NOT resume staging work until the owner confirms both provider keys
+rotated. No schema, RLS, Discovery, or Cloudflare changes are authorized
+in product milestones.
 
 ## 4. Current live product state
 
@@ -107,10 +110,16 @@ runs ONLY after the user pilot passes.
 ## 7. Next milestone (owner sequence — user pilot explicitly deferred)
 
 BUSINESS/UI COMPLETE → PWA COMPLETE → DISCOVERY VERIFIED → REAL PROVIDER
-AI EVALUATION → STAGING AI → OWNER PROD-AI DECISION → 5–10 USER PILOT →
-PROVIDER REVENUE PILOT. Do NOT run the user pilot yet; do NOT activate AI.
-Next after this gate: owner-gated real Groq/Gemini fixed-corpus evaluation
-(keys + attestations + explicit confirm tokens, owner-side only).
+AI EVALUATION (done: Gemini 14/16, Groq 9/16, zero hard failures) →
+STAGING AI APPROVED (env reported configured; live smoke NOT yet performed
+here) → OWNER PROD-AI DECISION → 5–10 USER PILOT → PROVIDER REVENUE PILOT.
+Do NOT run the user pilot yet; do NOT activate AI. Exact next-session
+order: (1) confirm both exposed provider keys rotated/revoked; (2) update
+local `.env.local` + Vercel Preview with replacements; (3) redeploy
+Preview; (4) owner-authenticated staging smoke (For You, Intelligence,
+planner, primary/backup/fallback, National/International/unknown, mobile +
+desktop, latency/fallback counts); (5) staging-evidence review; (6) owner
+production-AI decision; (7) user pilot; (8) provider revenue pilot.
 
 ## 8. Owner-only gates
 
@@ -141,14 +150,19 @@ verified; never simulate a moderation action.
 
 ## 11. Current HEAD / verification
 
-HEAD `2676c61`, tree clean at V2 start. AI V2 implementation lands on top;
-final full `npm run verify` + `npm run build` results are recorded in the
-milestone entry below. Open operational items: scheduler 24h-observation
-incident (separate track); audit-ledger rows confirmable only in a staff
-session (public-side 404 + browse-absence is the anonymous proof); real
-Gemini/Groq runs BLOCKED at the owner credential/attestation gate (keys
-absent by name check — never request secrets in chat). No code risks
-outstanding.
+HEAD `c8b18f0`, working tree expected clean. Production AI OFF;
+staging AI owner-approved with env reported configured but live smoke
+never performed here (Vercel-Authentication-blocked agent environment).
+Full `npm run verify` + `npm run build` green at this HEAD. Open items:
+scheduler 24h-observation incident (separate track); audit-ledger rows
+confirmable only in a staff session (public-side 404 + browse-absence is
+the anonymous proof); staging UI smoke + failure simulation (owner-
+executed, pending). SECURITY PREREQUISITE, FIRST: real Gemini/Groq keys
+were placed in tracked `.env.example` locally and removed before any push
+(committed tree never contained them; GitHub history untainted) — the
+owner must confirm BOTH keys rotated/revoked before any staging work
+resumes, with replacements only in `.env.local` and the protected Vercel
+Preview env. No code risks outstanding.
 
 ## AI Opportunity Intelligence V2 (2026-10-04, HEAD `2676c61`)
 
