@@ -7,7 +7,7 @@ import { formatDeadlinePresentation } from "@/lib/opportunity-presentation";
 import { getModerationAccess } from "@/lib/data/moderation";
 import { listManagedPublishedOpportunities } from "@/lib/data/published-management";
 import { UnpublishControl } from "./unpublish-control";
-import { OpportunityCover } from "@/components/opportunity-cover";
+import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
   title: "Published records · TechOpportunity Tanzania",
@@ -61,8 +61,9 @@ export default async function PublishedManagementPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-[var(--background)]">
-      <div className="hero-dark border-b border-black/20">
-        <div className="mx-auto w-full max-w-2xl px-6 py-8 sm:py-10">
+      <StaffNav />
+      <div className="staff-hero border-b border-black/20">
+        <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:py-10">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="eyebrow-gold">Staff management</p>
@@ -102,7 +103,7 @@ export default async function PublishedManagementPage() {
           </div>
         </div>
       </div>
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-10">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-6 py-8 sm:py-10">
 
         {published.length === 0 ? (
             <p className="mt-10 rounded-md border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--muted)]">
@@ -111,65 +112,147 @@ export default async function PublishedManagementPage() {
         ) : (
           <>
             <p className="mt-8 text-sm text-[var(--muted)]">
-              Unpublishing hides one record from the public site. It never
-              deletes the row: discovery source, URL, timestamps and the title
-              stay intact. A required reason and the authenticated moderator,
+              Showing {published.length} live {published.length === 1 ? "record" : "records"}.
+              Unpublishing hides one record from the public site — it never
+              deletes the row, and an unpublished record does not re-enter the
+              pending queue. A required reason and the authenticated moderator,
               exact record, status transition and decision time are retained
-              in the moderation audit. An unpublished record is not publicly
-              readable and does not re-enter the pending review queue — this
-              interface offers no re-publish button by design. Re-review keeps
-              a record live only after the complete current trust contract
-              passes again.
+              in the moderation audit.
             </p>
-            <ul className="mt-4 flex flex-col gap-3">
-              {published.map((opportunity) => (
+            <p className="mt-4 text-xs text-[var(--muted)]" role="status">
+              Showing {published.length} of {published.length} published
+            </p>
+            {/* Desktop: compact operations table. */}
+            <div className="mt-4 hidden overflow-x-auto rounded-md border border-[var(--line)] bg-[var(--surface)] md:block">
+              <table className="w-full min-w-[880px] border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--line)] text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--subtle)]">
+                    <th scope="col" className="px-4 py-3">Opportunity</th>
+                    <th scope="col" className="px-4 py-3">Organization</th>
+                    <th scope="col" className="px-4 py-3">Category</th>
+                    <th scope="col" className="px-4 py-3">Deadline</th>
+                    <th scope="col" className="px-4 py-3">Published</th>
+                    <th scope="col" className="px-4 py-3">Status</th>
+                    <th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {published.map((opportunity) => {
+                    const deadline = formatDeadlinePresentation(opportunity.deadline);
+                    return (
+                    <tr key={opportunity.id} className="border-b border-[var(--line)] align-top transition-colors last:border-b-0 hover:bg-[var(--hero)]">
+                      <td className="max-w-[280px] px-4 py-3">
+                        <p className="break-words font-semibold leading-5 text-[var(--foreground)]">
+                          {opportunity.title}
+                        </p>
+                        <p className="mt-0.5 text-xs text-[var(--muted)]">
+                          {opportunity.sourceName
+                            ? `Source · ${opportunity.sourceName}`
+                            : "Source · none recorded"}
+                        </p>
+                        <Link
+                          href={`/opportunities/${opportunity.slug}`}
+                          className="mt-1 inline-block text-xs font-medium text-[var(--primary-text)] underline underline-offset-2 hover:underline"
+                        >
+                          View public page ↗
+                        </Link>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-[var(--muted)]">
+                        {opportunity.organization ?? "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-[var(--muted)]">
+                        {categoryLabel(opportunity.category)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        {deadline.state === "urgent" ? (
+                          <span className="font-medium text-amber-800 dark:text-amber-200">
+                            {deadline.dateLabel ?? deadline.label}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--muted)]">
+                            {deadline.dateLabel ?? deadline.label}
+                          </span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-[var(--muted)]">
+                        {formatPublished(opportunity.createdAt)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span className="trust-badge trust-badge-verified">
+                          Live
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/moderation/${opportunity.id}?mode=published`}
+                            aria-label={`Re-review evidence for ${opportunity.title}`}
+                            className="inline-flex h-9 items-center rounded-md bg-[var(--primary)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-deep)]"
+                          >
+                            Re-review
+                          </Link>
+                          <UnpublishControl id={opportunity.id} title={opportunity.title} />
+                        </div>
+                      </td>
+                    </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile: compact stacked cards (no forced table columns). */}
+            <ul className="mt-4 flex flex-col gap-2 md:hidden">
+              {published.map((opportunity) => {
+                const deadline = formatDeadlinePresentation(opportunity.deadline);
+                return (
                 <li
                   key={opportunity.id}
-                  className="rounded-md border border-[var(--line)] bg-[var(--surface)] p-4"
+                  className="rounded-md border border-[var(--line)] bg-[var(--surface)] p-3"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <span aria-hidden="true" className="hidden h-16 w-24 shrink-0 overflow-hidden rounded-md sm:block">
-                      <OpportunityCover opportunity={opportunity} className="h-full w-full" />
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="trust-badge trust-badge-verified">
+                      Live
                     </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words font-medium text-[var(--foreground)]">
-                        {opportunity.title}
-                      </p>
-                      <p className="mt-1 text-sm text-[var(--muted)]">
-                        {categoryLabel(opportunity.category)}
-                        {opportunity.organization ? ` · ${opportunity.organization}` : ""}
-                      </p>
-                      <p className="mt-1 text-xs text-[var(--subtle)]">
-                        {opportunity.sourceName
-                          ? `Source · ${opportunity.sourceName}`
-                          : "Source · none recorded (manually entered)"}
-                        {" · "}
-                        Deadline {formatDeadlinePresentation(opportunity.deadline).dateLabel ?? formatDeadlinePresentation(opportunity.deadline).label}
-                        {" · "}
-                        Published {formatPublished(opportunity.createdAt)}
-                      </p>
-                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[var(--subtle)]">
-                        Status · publicly visible
-                      </p>
-                      <Link
-                        href={`/opportunities/${opportunity.slug}`}
-                        className="mt-2 inline-block text-xs font-medium text-[var(--muted)] underline underline-offset-2 hover:text-[var(--foreground)]"
-                      >
-                        View public page ↗
-                      </Link>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Link
-                        href={`/moderation/${opportunity.id}?mode=published`}
-                        className="inline-flex h-9 items-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
-                      >
-                        Re-review evidence
-                      </Link>
-                      <UnpublishControl id={opportunity.id} title={opportunity.title} />
-                    </div>
-                  </div>
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--subtle)]">
+                      {categoryLabel(opportunity.category)}
+                    </span>
+                  </span>
+                  <span className="mt-1.5 block break-words text-[15px] font-semibold leading-6 text-[var(--foreground)]">
+                    {opportunity.title}
+                  </span>
+                  <span className="mt-1.5 grid gap-x-6 gap-y-1 text-xs leading-5 text-[var(--muted)]">
+                    <span>
+                      <span className="font-semibold text-[var(--subtle)]">Organization </span>
+                      {opportunity.organization ?? "—"}
+                    </span>
+                    <span>
+                      <span className="font-semibold text-[var(--subtle)]">Deadline </span>
+                      {deadline.dateLabel ?? deadline.label}
+                    </span>
+                    <span>
+                      <span className="font-semibold text-[var(--subtle)]">Published </span>
+                      {formatPublished(opportunity.createdAt)}
+                    </span>
+                  </span>
+                  <span className="mt-3 flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/moderation/${opportunity.id}?mode=published`}
+                      aria-label={`Re-review evidence for ${opportunity.title}`}
+                      className="inline-flex h-9 items-center rounded-md bg-[var(--primary)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-deep)]"
+                    >
+                      Re-review →
+                    </Link>
+                    <UnpublishControl id={opportunity.id} title={opportunity.title} />
+                  </span>
+                  <Link
+                    href={`/opportunities/${opportunity.slug}`}
+                    className="mt-2 inline-block text-xs font-medium text-[var(--primary-text)] underline underline-offset-2 hover:underline"
+                  >
+                    View public page ↗
+                  </Link>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </>
         )}

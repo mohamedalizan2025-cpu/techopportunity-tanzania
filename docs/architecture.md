@@ -380,21 +380,26 @@ One product, one visual language across Explore, For You, Activity, Saved,
 Profile, and detail pages. Staff surfaces reuse the primitives but are
 explicitly out of redesign scope.
 
-- Color tokens (`app/globals.css`): deep teal/forest/navy foundations
-  (`#0B3B36`, `#123F2A`, `#16283F`), warm cream surfaces (`#f7f7f2`,
-  `#ffffff`), restrained gold accent (`#C9A227` in covers), emerald/turquoise
-  status accents, soft neutral grays. Full dark-mode variable set. No
-  gradients-as-decoration, no glassmorphism, no blobs.
+- Color tokens (`app/globals.css`): PRIMARY BRAND is deep navy/indigo/
+  cobalt (`--primary-ink #0B1F33`, `--primary-deep #163A5F`,
+  `--primary #1D4ED8`, `--primary-soft #E3EBF7`, `--primary-text #1D4ED8`)
+  on warm cream/paper surfaces (`#f7f7f2`, `#ffffff`), restrained gold
+  accent (`#D7A93A` / `#C9A227` in covers), soft neutral grays. Full
+  dark-mode variable set. Green (`--accent` family) is SEMANTIC ONLY —
+  verified/success/approved/trusted-evidence/positive status — never brand
+  or navigation. Amber marks deadlines/needs-attention/warnings; red marks
+  reject/destructive/failed validation. No gradients-as-decoration, no
+  glassmorphism, no blobs.
 - Typography: Geist Sans for UI/body; system serif stack (Georgia) via
   `.font-display` for hero and major titles only — never dense staff
   tables/forms. Hero `clamp(2rem, 4vw, 3.25rem)` semibold; section
   headings 1.5rem semibold; eyebrow labels 0.75rem uppercase (gold
   `.eyebrow-gold` on dark brand regions).
-- Brand regions: deep-teal `.hero-dark` homepage hero, staff dashboard
-  heroes (campaigns, moderation, published-management), and login side
-  panel use flat `#082F2B`/`#0D2530` with cream text and gold rules —
-  never whole pages dark. Header keeps cream surfaces with a navy/gold
-  brand mark and gold active underlines.
+- Brand regions: `.hero-dark` public heroes and the staff `.staff-hero`
+  operations band use flat navy ink (`#0B1F33`) with cream text and gold
+  rules — never whole pages dark. Primary buttons, active navigation,
+  links, and headings read navy/cobalt. Header keeps cream surfaces with
+  a navy/gold brand mark and gold active underlines.
 - Card rules: compact controls keep the 6px (`rounded-md`) system; photographic
   opportunity cards and editorial frames use a restrained 10px radius and
   shallow teal shadow. Opportunity cards carry
@@ -436,12 +441,23 @@ explicitly out of redesign scope.
 - Trust-badge rules: "Evidence verified" and "Tanzanian access evidenced"
   render ONLY from complete stored evidence; otherwise the UI says unknown
   and points at the source. Badges never outrank evidence.
-- Staff surfaces use the same tokens (submit, published-management,
-  assistant panel converted from zinc/black hardcodes); moderation queue
-  and published list carry cover thumbnails and deadline lines; campaigns
-  dashboard uses a dark hero, status-accented metric cards, opportunity-
-  linked workspace rows, grouped creation workflow, and an aggregate-only
-  privacy callout. No workflow or guard logic changed for styling.
+- Staff operations workspace (2026-10-04): navy `StaffNav` band
+  ("Tech Opportunity · Staff" + Review queue / Published / Campaigns,
+  gold active rule, never green) on every staff route; public bottom nav
+  (Explore/For You/Saved/Profile) and its mobile spacer never render on
+  staff routes. Moderation queue is a dense review workspace: compact
+  Pending/High value/Actionable/Ambiguous/No-deadline summary strip (real
+  counts only), navy triage tabs, dense rows (badge + category, title,
+  Source/Submitted/Deadline/Format labels — raw `html` renders as
+  "Web page"), "Showing X of Y" + "Load 50 more (N remaining)",
+  selection-count bulk-reject toolbar (approvals stay per-record).
+  Published management is a compact table on desktop (Opportunity /
+  Organization / Category / Deadline / Published / Live-green status /
+  navy Re-review + red Unpublish) and stacked cards on mobile. Triage
+  badges: HIGH VALUE navy+gold, ACTIONABLE blue, AMBIGUOUS slate,
+  NEEDS CHECK amber. Approve stays green, reject stays red, queue order
+  stays oldest-submitted-first (deterministic; navigation depends on it).
+  No workflow or guard logic changed for styling.
 - Accessibility: skip link, landmarked mains, labelled navs, visible
   `:focus-visible` rings, `prefers-reduced-motion` disables animation,
   decorative covers hidden from assistive tech.

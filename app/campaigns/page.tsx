@@ -11,6 +11,7 @@ import {
   CAMPAIGN_STATUS_LABELS,
 } from "@/lib/provider-campaign-state";
 import { logOutAction } from "@/lib/data/auth-actions";
+import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
   title: "Provider Campaign Pilot · TechOpportunity Tanzania",
@@ -57,6 +58,7 @@ export default async function CampaignPilotPage() {
       tabIndex={-1}
       className="flex-1 bg-[var(--background)]"
     >
+      <StaffNav />
       <section className="hero-dark border-b border-black/20">
         <div className="relative mx-auto w-full max-w-6xl overflow-hidden px-5 py-8 sm:px-8 sm:py-12">
           <Image
@@ -67,7 +69,7 @@ export default async function CampaignPilotPage() {
             sizes="1200px"
             className="object-cover object-center opacity-25"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--brand-deep)_20%,rgba(8,47,43,0.94)_52%,rgba(8,47,43,0.48))]" aria-hidden="true" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--primary-ink)_20%,rgba(11,31,51,0.94)_52%,rgba(11,31,51,0.48))]" aria-hidden="true" />
           <div className="relative z-10">
           <p className="eyebrow-gold">
             Provider campaigns · internal pilot
@@ -121,9 +123,9 @@ export default async function CampaignPilotPage() {
                 {(
                   [
                     ["draft", funnel.draft, "var(--subtle)", "Ideas not yet running."],
-                    ["active", funnel.active, "var(--accent)", "Live and collecting engagement."],
+                    ["active", funnel.active, "var(--primary)", "Live and collecting engagement."],
                     ["paused", funnel.paused, "#b45309", "On hold; counts frozen."],
-                    ["completed", funnel.completed, "var(--accent-strong)", "Finished; read the report."],
+                    ["completed", funnel.completed, "var(--gold)", "Finished; read the report."],
                   ] as const
                 ).map(([status, count, accent, descriptor]) => (
                   <div
@@ -159,17 +161,17 @@ export default async function CampaignPilotPage() {
                       key={campaign.id}
                       className={`rounded-md border bg-[var(--surface)] p-5 transition hover:border-[var(--line-strong)] ${
                         campaign.status === "active"
-                          ? "border-l-4 border-l-[var(--accent)] border-[var(--line)]"
+                          ? "border-l-4 border-l-[var(--primary)] border-[var(--line)]"
                           : "border-[var(--line)]"
                       }`}
                     >
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent-strong)]">
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--primary-text)]">
                         {CAMPAIGN_STATUS_LABELS[campaign.status]}
                       </p>
                       <h3 className="mt-2 text-lg font-semibold text-[var(--foreground)]">
                         <Link
                           href={`/campaigns/${campaign.id}`}
-                          className="hover:text-[var(--accent-strong)]"
+                          className="hover:text-[var(--primary-text)]"
                         >
                           {campaign.name}
                         </Link>
@@ -189,7 +191,7 @@ export default async function CampaignPilotPage() {
                       <p className="mt-3">
                         <Link
                           href={`/campaigns/${campaign.id}`}
-                          className="inline-flex min-h-11 items-center text-sm font-semibold text-[var(--accent-strong)] underline-offset-4 hover:underline"
+                          className="inline-flex min-h-11 items-center text-sm font-semibold text-[var(--primary-text)] underline-offset-4 hover:underline"
                         >
                           View campaign →
                         </Link>
@@ -199,7 +201,7 @@ export default async function CampaignPilotPage() {
                   })}
                 </ul>
               )}
-              <div className="mt-8 rounded-md border border-[var(--line-strong)] bg-[var(--accent-soft)] p-5 text-sm leading-6 text-[var(--accent-strong)]">
+              <div className="mt-8 rounded-md border border-[var(--line-strong)] bg-[var(--primary-soft)] p-5 text-sm leading-6 text-[var(--primary-deep)]">
                 <p className="font-semibold">Aggregate only.</p>
                 <p className="mt-1">
                   No private talent profile or activity data is exposed —

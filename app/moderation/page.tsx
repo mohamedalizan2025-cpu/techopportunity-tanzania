@@ -12,7 +12,6 @@ import {
   queueFilterQuery,
 } from "@/lib/data/moderation";
 import {
-  TRIAGE_BUCKET_PRIORITY,
   TRIAGE_BUCKET_SHORT,
   TRIAGE_HEURISTIC_NOTE,
   firstSuggestedReview,
@@ -31,6 +30,7 @@ import {
 } from "@/lib/taxonomy";
 import { QueueBulkPanel } from "./queue-bulk-panel";
 import { OpportunityCover } from "@/components/opportunity-cover";
+import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
   title: "Moderation queue · TechOpportunity Tanzania",
@@ -38,6 +38,21 @@ export const metadata: Metadata = {
 };
 
 const PAGE_SIZE = 50;
+
+function formatDiscoveryMethod(method: string | null | undefined): string | null {
+  // Raw pipeline tokens (rss, json-ld, html, sitemap, manual) are provenance
+  // metadata, not moderator-facing copy — render them as human-readable
+  // format labels instead of leaking e.g. "· html" into the queue.
+  if (!method) return null;
+  const normalized = method.trim().toLowerCase();
+  if (normalized === "html") return "Web page";
+  if (normalized === "rss") return "Feed";
+  if (normalized === "json-ld" || normalized === "jsonld") return "Structured data";
+  if (normalized === "sitemap") return "Sitemap";
+  if (normalized === "manual") return "Manual entry";
+  if (normalized === "website") return "Web page";
+  return method;
+}
 
 function formatSubmitted(iso: string): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -66,8 +81,24 @@ function filterChipClasses(active: boolean): string {
   const base =
     "inline-flex h-8 items-center rounded-full border px-3 text-xs font-medium transition-colors ";
   return active
-    ? `${base} bg-[var(--accent)] text-white border-[var(--accent)]`
+    ? `${base} bg-[var(--primary)] text-white border-[var(--primary)]`
     : `${base} border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)]`;
+}
+
+function triageBadgeClasses(bucket: TriageBucket | undefined): string {
+  if (bucket === 2) return "triage-badge triage-high";
+  if (bucket === 1) return "triage-badge triage-action";
+  if (bucket === 7) return "triage-badge triage-ambiguous";
+  if (bucket === 8) return "triage-badge triage-warn";
+  return "triage-badge triage-ambiguous";
+}
+
+function triageBadgeLabel(bucket: TriageBucket | undefined): string {
+  if (bucket === 2) return "High value";
+  if (bucket === 1) return "Actionable";
+  if (bucket === 7) return "Ambiguous";
+  if (bucket === 8) return "Needs check";
+  return TRIAGE_BUCKET_SHORT[bucket ?? 7];
 }
 
 export default async function ModerationPage({
@@ -122,7 +153,7 @@ export default async function ModerationPage({
   // a filtered list already starts at the record type being batched.
   const suggested = filtered ? null : firstSuggestedReview(triageItems);
 
-  // Pagination: show up to `page * PAGE_SIZE` items with a "Show more" link.
+  // Pagination: show up to `page * PAGE_SIZE` items with a "Load more" link.
   const rawPage = Array.isArray(params.page) ? params.page[0] : params.page;
   const page = Math.max(1, parseInt(rawPage ?? "1", 10) || 1);
   const displayLimit = page * PAGE_SIZE;
@@ -133,6 +164,9 @@ export default async function ModerationPage({
   for (const item of triageItems) {
     bucketCounts.set(item.bucket, (bucketCounts.get(item.bucket) ?? 0) + 1);
   }
+  const missingDeadlineCount = pending.filter(
+    (opportunity) => !opportunity.deadline
+  ).length;
   // Frozen site-furniture REVIEW FLAG: exact reviewed titles only (hint, not
   // a verdict). Counted over the full pending list so the chip shows the
   // whole batch even inside another filtered view.
@@ -165,8 +199,9 @@ export default async function ModerationPage({
 
   return (
     <div className="flex flex-1 flex-col bg-[var(--background)] font-sans">
-      <div className="hero-dark border-b border-black/20">
-        <div className="mx-auto w-full max-w-2xl px-6 py-8 sm:py-10">
+      <StaffNav />
+      <div className="staff-hero border-b border-black/20">
+        <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:py-10">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="eyebrow-gold">Staff review</p>
@@ -203,7 +238,7 @@ export default async function ModerationPage({
         </div>
         </div>
       </div>
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-10">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-6 py-8 sm:py-10">
 
         {pending.length === 0 ? (
           <p className="mt-10 rounded-lg border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--muted)]">
@@ -211,6 +246,43 @@ export default async function ModerationPage({
           </p>
         ) : (
           <>
+            {/* Operational summary — counts only, from the same pending list. */}
+            <dl
+              aria-label="Queue summary"
+              className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-5"
+            >
+              {(
+                [
+                  ["Pending", pending.length, "Awaiting a decision."],
+                  ["High value", bucketCounts.get(2) ?? 0, "Scholarships, fellowships, grants, internships."],
+                  ["Actionable", (bucketCounts.get(1) ?? 0), "Title reads like an open call — verify."],
+                  ["Ambiguous", bucketCounts.get(7) ?? 0, "Needs closer reading."],
+                  ["No deadline", missingDeadlineCount, "No date found in evidence."],
+                ] as const
+              ).map(([label, count, hint]) => (
+                <div
+                  key={label}
+                  className="rounded-md border border-[var(--line)] bg-[var(--surface)] p-3"
+                >
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--subtle)]">
+                    {label}
+                  </dt>
+                  <dd className="mt-1 text-2xl font-semibold text-[var(--foreground)]">
+                    {count}
+                  </dd>
+                  <dd className="mt-0.5 text-[11px] leading-4 text-[var(--muted)]">
+                    {hint}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <QueueBulkPanel
+              items={paginatedVisible.map((opportunity) => ({
+                id: opportunity.id,
+                title: opportunity.title,
+                flagged: false,
+              }))}
+            />
             {/* View filters — narrow the list, never change what is pending. */}
             <div className="mt-8 flex flex-col gap-2">
               <form method="get" action="/moderation" role="search" className="flex gap-2">
@@ -236,7 +308,7 @@ export default async function ModerationPage({
                   maxLength={120}
                   placeholder="Search pending titles…"
                   aria-label="Search pending titles"
-                  className="h-9 min-w-0 flex-1 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition-colors focus:border-[var(--accent)]"
+                  className="h-9 min-w-0 flex-1 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition-colors focus:border-[var(--primary)]"
                 />
                 <button
                   type="submit"
@@ -245,17 +317,30 @@ export default async function ModerationPage({
                   Search
                 </button>
               </form>
-              <div className="flex flex-wrap items-center gap-2" aria-label="Filter queue by triage hint">
-                <Link href="/moderation" className={filterChipClasses(!filtered)}>
+              <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Triage review lanes">
+                <Link
+                  href="/moderation"
+                  role="tab"
+                  aria-selected={!filter.bucket}
+                  className={filterChipClasses(!filtered)}
+                >
                   All · {pending.length}
                 </Link>
-                {TRIAGE_BUCKET_PRIORITY.filter((bucket) => bucketCounts.has(bucket)).map((bucket) => (
+                {(
+                  [
+                    [2, "High value"],
+                    [1, "Actionable"],
+                    [7, "Ambiguous"],
+                  ] as const
+                ).map(([bucket, label]) => (
                   <Link
                     key={bucket}
+                    role="tab"
+                    aria-selected={filter.bucket === bucket}
                     href={`/moderation${queueFilterQuery({ ...filter, bucket })}`}
                     className={filterChipClasses(filter.bucket === bucket)}
                   >
-                    {TRIAGE_BUCKET_SHORT[bucket]} · {bucketCounts.get(bucket)}
+                    {label} · {bucketCounts.get(bucket) ?? 0}
                   </Link>
                 ))}
                 {furnitureCount > 0 ? (
@@ -366,59 +451,67 @@ export default async function ModerationPage({
             {suggested ? (
               <Link
                 href={`/moderation/${suggested.id}`}
-                className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--accent)] px-6 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-strong)]"
+                className="mt-6 inline-flex h-11 items-center justify-center rounded-md bg-[var(--primary)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-deep)]"
               >
                 Start with a suggested high-value record →
               </Link>
             ) : null}
-            <ul className="mt-6 flex flex-col gap-3">
+            <p className="mt-4 text-xs text-[var(--muted)]" role="status">
+              Showing {paginatedVisible.length} of {visible.length}{" "}
+              {pending.length !== visible.length ? `(${pending.length} pending total)` : "pending"}
+              {filtered ? " · filtered view" : ""} · queue order: oldest submitted first
+            </p>
+            <ul className="mt-4 flex flex-col gap-2">
               {paginatedVisible.map((opportunity) => {
                 const bucket = bucketById.get(opportunity.id);
                 return (
                   <li key={opportunity.id}>
                     <Link
                       href={`/moderation/${opportunity.id}${query}`}
-                      className="block rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 transition-colors hover:border-[var(--line-strong)]"
+                      className="grid gap-3 rounded-md border border-[var(--line)] bg-[var(--surface)] p-3 transition-colors hover:border-[var(--line-strong)] sm:grid-cols-[64px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:p-4"
                     >
-                      <div className="flex items-start gap-3">
-                        <span aria-hidden="true" className="hidden h-16 w-24 shrink-0 overflow-hidden rounded-md sm:block">
-                          <OpportunityCover opportunity={opportunity} className="h-full w-full" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="min-w-0 flex-1 break-words font-medium text-[var(--foreground)]">
-                          {opportunity.title}
-                        </p>
-                        {bucket ? (
-                          <span className="shrink-0 rounded-full border border-[var(--line)] bg-[var(--hero)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--muted)]">
-                            {TRIAGE_BUCKET_SHORT[bucket]}
+                      <span aria-hidden="true" className="hidden h-14 w-16 shrink-0 overflow-hidden rounded-md sm:block">
+                        <OpportunityCover opportunity={opportunity} className="h-full w-full" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className={triageBadgeClasses(bucket)}>
+                            {triageBadgeLabel(bucket)}
                           </span>
-                        ) : null}
-                      </div>
-                      {(() => {
-                        const segments = [
-                          opportunity.organization,
-                          categoryLabel(opportunity.category),
-                          opportunity.location?.city ?? null,
-                        ].filter((segment): segment is string => segment !== null && segment !== "");
-                        return segments.length > 0 ? (
-                          <p className="text-sm text-[var(--muted)]">
-                            {segments.join(" · ")}
-                          </p>
-                        ) : null;
-                      })()}
-                      {opportunity.sourceName ? (
-                        <p className="mt-1 text-xs text-[var(--muted)]">
-                          Auto-discovered · {opportunity.sourceName}
-                          {opportunity.discoveryMethod ? ` · ${opportunity.discoveryMethod}` : ""}
-                        </p>
-                      ) : null}
-                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-                        Submitted {formatSubmitted(opportunity.createdAt)} · Deadline{" "}
-                        {formatQueueDeadline(opportunity.deadline)}
-                      </p>
-                        </div>
-                      </div>
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--subtle)]">
+                            {categoryLabel(opportunity.category)}
+                          </span>
+                        </span>
+                        <span className="mt-1.5 block break-words text-[15px] font-semibold leading-6 text-[var(--foreground)]">
+                          {opportunity.title}
+                        </span>
+                        <span className="mt-1.5 grid gap-x-6 gap-y-1 text-xs leading-5 text-[var(--muted)] sm:grid-cols-3">
+                          <span>
+                            <span className="font-semibold text-[var(--subtle)]">Source </span>
+                            {opportunity.sourceName ?? "Unlinked submission"}
+                          </span>
+                          <span>
+                            <span className="font-semibold text-[var(--subtle)]">Submitted </span>
+                            {formatSubmitted(opportunity.createdAt)}
+                          </span>
+                          <span>
+                            <span className="font-semibold text-[var(--subtle)]">Deadline </span>
+                            {opportunity.deadline ? formatQueueDeadline(opportunity.deadline) : "Not found"}
+                          </span>
+                          {(() => {
+                            const format = formatDiscoveryMethod(opportunity.discoveryMethod);
+                            return format ? (
+                              <span>
+                                <span className="font-semibold text-[var(--subtle)]">Format </span>
+                                {format}
+                              </span>
+                            ) : null;
+                          })()}
+                        </span>
+                      </span>
+                      <span className="inline-flex min-h-11 items-center justify-center rounded-md bg-[var(--primary)] px-5 text-sm font-semibold text-white transition hover:bg-[var(--primary-deep)] sm:w-auto">
+                        Review →
+                      </span>
                     </Link>
                   </li>
                 );
@@ -429,16 +522,9 @@ export default async function ModerationPage({
                 href={`/moderation${query}${query ? "&" : "?"}page=${page + 1}`}
                 className="mt-4 inline-flex h-9 items-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
               >
-                Show more ({visible.length - displayLimit} remaining)
+                Load {Math.min(PAGE_SIZE, visible.length - displayLimit)} more ({visible.length - displayLimit} remaining)
               </Link>
             ) : null}
-            <QueueBulkPanel
-              items={paginatedVisible.map((opportunity) => ({
-                id: opportunity.id,
-                title: opportunity.title,
-                flagged: false,
-              }))}
-            />
               </>
             )}
             <p className="mt-4 text-xs text-[var(--muted)]">

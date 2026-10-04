@@ -19,6 +19,7 @@ import { getPublishedOpportunityById } from "@/lib/data/published-management";
 import { formatLocationDisplay } from "@/lib/opportunity-presentation";
 import { TRIAGE_BUCKET_LABEL, triageBucketOf } from "@/lib/triage-bucket";
 import { DecisionForm } from "../decision-form";
+import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
   title: "Review submission · TechOpportunity Tanzania",
@@ -139,7 +140,8 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
 
   return (
     <div className="flex flex-1 flex-col bg-[var(--background)] font-sans">
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 pb-32 pt-12 sm:pt-16">
+      <StaffNav />
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-6 pb-32 pt-12 sm:pt-16">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
@@ -165,59 +167,12 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
           </form>
         </div>
 
-        {/* Source evidence — the moderator's primary verification anchor. */}
-        <section
-          aria-label="Source evidence"
-          className="mt-6 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5"
-        >
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Source evidence
-          </h2>
-          <a
-            href={opportunity.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex h-11 items-center justify-center rounded-full bg-[var(--accent)] px-6 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-strong)]"
-          >
-            Open official page ↗
-          </a>
-          <dl className="mt-4 flex flex-col gap-1.5 text-sm text-[var(--muted)]">
-            {opportunity.sourceName ? (
-              <div>
-                <dt className="inline font-medium text-[var(--foreground)]">
-                  Discovered from:{" "}
-                </dt>
-                <dd className="inline">
-                  {opportunity.sourceName}
-                  {opportunity.discoveryMethod ? ` · ${opportunity.discoveryMethod}` : ""}
-                </dd>
-              </div>
-            ) : null}
-            <div>
-              <dt className="inline font-medium text-[var(--foreground)]">
-                Discovered:{" "}
-              </dt>
-              <dd className="inline">
-                {dateFormatter.format(new Date(opportunity.discoveredAt ?? opportunity.createdAt))}
-              </dd>
-            </div>
-            <div>
-              <dt className="inline font-medium text-[var(--foreground)]">
-                Submitted:{" "}
-              </dt>
-              <dd className="inline">{dateFormatter.format(new Date(opportunity.createdAt))}</dd>
-            </div>
-          </dl>
-          <p className="mt-3 text-xs text-[var(--muted)]">
-              {isPublishedReview
-                ? "Re-check every trust field against current official evidence before keeping this record published."
-                : "Facts below were discovered automatically and may be wrong — verify them against the official page before approving."}
-          </p>
-        </section>
-
-        {/* As discovered — compact record summary (the decision form below is
-            the only editable copy; no duplicated detail render). */}
-        <section aria-label="As discovered" className="mt-6">
+        {/* Evidence left, decision right on desktop; stacked on mobile. */}
+        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0">
+        {/* As discovered — the record under review (title first, evidence
+            after; the decision form aside is the only editable copy). */}
+        <section aria-label="As discovered" className="mt-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
               {categoryLabel(opportunity.category)}
@@ -248,7 +203,76 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
           </details>
         </section>
 
-        <section className="mt-10 border-t border-[var(--line)] pt-8">
+        {/* Source evidence — the moderator's verification anchor. */}
+        <section
+          aria-label="Source evidence"
+          className="mt-6 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5"
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Source evidence
+          </h2>
+          <a
+            href={opportunity.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex h-11 items-center justify-center rounded-md bg-[var(--primary)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-deep)]"
+          >
+            Open official page ↗
+          </a>
+          <dl className="mt-4 flex flex-col gap-1.5 text-sm text-[var(--muted)]">
+            <div>
+              <dt className="inline font-medium text-[var(--foreground)]">
+                Source:{" "}
+              </dt>
+              <dd className="inline">
+                {opportunity.sourceName ?? "Unlinked submission"}
+              </dd>
+            </div>
+            {opportunity.discoveryMethod ? (
+              <div>
+                <dt className="inline font-medium text-[var(--foreground)]">
+                  Format:{" "}
+                </dt>
+                <dd className="inline">
+                  {opportunity.discoveryMethod.trim().toLowerCase() === "html" ||
+                  opportunity.discoveryMethod.trim().toLowerCase() === "website"
+                    ? "Web page"
+                    : opportunity.discoveryMethod.trim().toLowerCase() === "rss"
+                      ? "Feed"
+                      : opportunity.discoveryMethod.trim().toLowerCase() === "json-ld"
+                        ? "Structured data"
+                        : opportunity.discoveryMethod.trim().toLowerCase() === "sitemap"
+                          ? "Sitemap"
+                          : opportunity.discoveryMethod.trim().toLowerCase() === "manual"
+                            ? "Manual entry"
+                            : opportunity.discoveryMethod}
+                </dd>
+              </div>
+            ) : null}
+            <div>
+              <dt className="inline font-medium text-[var(--foreground)]">
+                Discovered:{" "}
+              </dt>
+              <dd className="inline">
+                {dateFormatter.format(new Date(opportunity.discoveredAt ?? opportunity.createdAt))}
+              </dd>
+            </div>
+            <div>
+              <dt className="inline font-medium text-[var(--foreground)]">
+                Submitted:{" "}
+              </dt>
+              <dd className="inline">{dateFormatter.format(new Date(opportunity.createdAt))}</dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-xs text-[var(--muted)]">
+              {isPublishedReview
+                ? "Re-check every trust field against current official evidence before keeping this record published."
+                : "Facts below were discovered automatically and may be wrong — verify them against the official page before approving."}
+          </p>
+        </section>
+          </div>
+          <aside aria-label="Review decision" className="min-w-0 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] p-5 lg:sticky lg:top-24">
+        <section className="mt-0 border-t-0 pt-0">
           <h2 className="text-lg font-semibold text-[var(--foreground)]">
             {isPublishedReview ? "Published opportunity re-review" : "Decision"}
           </h2>
@@ -273,6 +297,8 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
             />
           </div>
         </section>
+          </aside>
+        </div>
       </main>
     </div>
   );

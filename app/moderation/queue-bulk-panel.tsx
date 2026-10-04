@@ -96,11 +96,14 @@ export function QueueBulkPanel({ items }: { items: BulkQueueItem[] }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-[var(--foreground)]">
-            Bulk reject
+            {selectedVisible.length === 0
+              ? "Bulk reject — nothing selected"
+              : `${selectedVisible.length} selected for bulk reject`}
           </h2>
           <p className="mt-0.5 text-xs text-[var(--muted)]">
-            One confirmed reason, applied record by record — each keeps its own
-            attribution and audit. Approvals stay per-record.
+            {selectedVisible.length === 0
+              ? "Tick records below to enable bulk rejection. Approvals stay per-record."
+              : "One confirmed reason, applied record by record — each keeps its own attribution and audit. Approvals stay per-record."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -166,11 +169,11 @@ export function QueueBulkPanel({ items }: { items: BulkQueueItem[] }) {
                 <li key={result.id} className="text-xs">
                   {result.ok ? (
                     <span>
-                      ✅ {result.title ?? result.id} — rejected with attribution.
+                      Rejected — {result.title ?? result.id} (attributed).
                     </span>
                   ) : (
                     <span>
-                      ⛔ {result.id} — {result.error ?? "not rejected."}
+                      Not rejected — {result.id} ({result.error ?? "not rejected."})
                     </span>
                   )}
                 </li>
@@ -189,8 +192,8 @@ export function QueueBulkPanel({ items }: { items: BulkQueueItem[] }) {
             className={ghostButtonClasses}
           >
             {selectedVisible.length === 0
-              ? "Select records above first"
-              : `Review bulk rejection (${selectedVisible.length})`}
+              ? "Select records below first"
+              : `Review bulk rejection (${selectedVisible.length} selected)`}
           </button>
           {overCap ? (
             <p role="alert" className="text-xs font-medium text-red-700 dark:text-red-300">

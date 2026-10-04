@@ -170,6 +170,35 @@ stays READY-but-pending. Next: owner configures keys + attestations and
 runs both fixed-corpus evals locally; staging decision only after green
 runs.
 
+## Staff operations + brand color refinement (2026-10-04, on top of `9079ee6`, uncommitted)
+
+UI/UX + information architecture only — zero business-logic changes (no
+RLS, moderation authority, Discovery, AI, campaign privacy, classification,
+or audit changes; queue order stays oldest-submitted-first because queue
+navigation depends on it). Starting HEAD `9079ee6` (with prior partial
+staff/color work already in the tree); this session completed it.
+Brand: navy/cobalt primary (`#0B1F33 #163A5F #1D4ED8`), cream secondary,
+restrained gold accent; green is now semantic-only (approve buttons,
+"Evidence verified"/"Live" badges, known-from-source hints).
+Staff: navy StaffNav band on all staff routes, public bottom nav + spacer
+suppressed on staff routes, moderation queue rebuilt as an operational
+workspace (summary strip, navy triage tabs, dense rows, human-readable
+Source/Submitted/Deadline/Format metadata, "Showing X of Y" + "Load N more
+(N remaining)", selection-count bulk toolbar), detail reordered
+(title → evidence → sticky decision; navy info buttons, green approve, red
+reject), published-management rebuilt as desktop table + mobile cards.
+Public: structure/photography untouched; navy titles, cobalt
+links/actions/filters, green only on verified badges. Verify: `npm test`
+(all green), `tsc --noEmit` clean, `eslint` clean,
+`verify:boundaries` 43/43, `verify:plan` gates passed, `next build` green
+(themeColor viewport warnings pre-existing). Screenshot QA at
+1366×768 / 1440×900 / 390px still requires an authenticated staff-session
+browser pass (no browser tooling in this environment) — owner to compare
+/moderation, /published-management, /campaigns, and / before/after.
+Next milestone: owner visual review of staff workspace in session, then
+the gated real Groq/Gemini fixed-corpus evaluation (keys + attestations,
+owner-side only); user pilot stays READY-but-pending.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

@@ -47,7 +47,7 @@ export function CreateCampaignForm({
             maxLength={120}
             disabled={isPending}
             placeholder="National AI fellowships push"
-            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
+            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:opacity-60"
           />
         </label>
         <label className="block text-sm">
@@ -58,7 +58,7 @@ export function CreateCampaignForm({
             name="opportunityId"
             required
             disabled={isPending || opportunities.length === 0}
-            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
+            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:opacity-60"
           >
             <option value="">
               {opportunities.length === 0
@@ -87,7 +87,7 @@ export function CreateCampaignForm({
             name="geography"
             disabled={isPending}
             defaultValue=""
-            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
+            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:opacity-60"
           >
             <option value="">No geography focus</option>
             <option value="national">National</option>
@@ -102,7 +102,7 @@ export function CreateCampaignForm({
             name="sector"
             disabled={isPending}
             defaultValue=""
-            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
+            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:opacity-60"
           >
             <option value="">No sector focus</option>
             {SECTORS.map((sector) => (
@@ -120,7 +120,7 @@ export function CreateCampaignForm({
             name="opportunityType"
             disabled={isPending}
             defaultValue=""
-            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
+            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:opacity-60"
           >
             <option value="">No type focus</option>
             {OPPORTUNITY_CATEGORIES.map((category) => (
@@ -145,14 +145,14 @@ export function CreateCampaignForm({
             maxLength={500}
             disabled={isPending}
             placeholder="What should this pilot learn?"
-            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
+            className="mt-1 min-h-11 w-full rounded-md border border-[var(--line-strong)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:opacity-60"
           />
         </label>
       </fieldset>
       <button
         type="submit"
         disabled={isPending}
-        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-md bg-[var(--accent)] px-5 text-sm font-semibold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-md bg-[var(--primary)] px-5 text-sm font-semibold text-white transition hover:bg-[var(--primary-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isPending ? "Creating…" : "Create campaign"}
       </button>

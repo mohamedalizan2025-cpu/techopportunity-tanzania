@@ -48,7 +48,7 @@ export function OpportunityCard({
       </div>
       <div className="mt-4 flex flex-wrap items-start justify-between gap-2">
         <span className="flex flex-wrap items-center gap-2">
-          <span className="pt-1 text-xs font-semibold uppercase tracking-wider text-[var(--accent-strong)]">
+          <span className="pt-1 text-xs font-semibold uppercase tracking-wider text-[var(--primary-text)]">
             {categoryLabel(opportunity.category)}
           </span>
           {geography ? (
@@ -64,11 +64,11 @@ export function OpportunityCard({
         ) : null}
       </div>
       <div className="mt-4 flex-1">
-        <h3 className="text-xl font-semibold leading-7 tracking-tight">
+        <h3 className="text-xl font-semibold leading-7 tracking-tight text-[var(--primary-ink)]">
           <Link
             href={opportunityHref(opportunity.slug, returnHref)}
             prefetch={false}
-            className="after:absolute after:inset-0 after:rounded-md hover:text-[var(--accent-strong)]"
+            className="after:absolute after:inset-0 after:rounded-md hover:text-[var(--primary-text)]"
           >
             {opportunity.title}
           </Link>
@@ -128,7 +128,7 @@ export function OpportunityCard({
         <div>
           <span
             aria-hidden="true"
-            className="flex items-center gap-2 text-sm font-semibold text-[var(--accent-strong)]"
+            className="flex items-center gap-2 text-sm font-semibold text-[var(--primary-text)]"
           >
             View details <UiIcon name="arrow" width="16" height="16" />
           </span>
@@ -163,13 +163,13 @@ export function SnapshotOpportunityLink({
     <Link
       href={opportunityHref(opportunity.slug, returnHref)}
       prefetch={false}
-      className="group flex min-h-20 items-center justify-between gap-4 rounded-md border border-transparent px-3 py-3 transition hover:border-[var(--line)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+      className="group flex min-h-20 items-center justify-between gap-4 rounded-md border border-transparent px-3 py-3 transition hover:border-[var(--line)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
     >
       <span className="min-w-0">
-        <span className="block text-xs font-semibold text-[var(--accent-strong)]">
+        <span className="block text-xs font-semibold text-[var(--primary-text)]">
           {categoryLabel(opportunity.category)}
         </span>
-        <span className="mt-1 block text-sm font-semibold leading-5 text-[var(--foreground)] group-hover:text-[var(--accent-strong)]">
+        <span className="mt-1 block text-sm font-semibold leading-5 text-[var(--foreground)] group-hover:text-[var(--primary-text)]">
           {opportunity.title}
         </span>
       </span>

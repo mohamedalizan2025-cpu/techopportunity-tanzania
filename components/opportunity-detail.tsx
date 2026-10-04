@@ -58,7 +58,7 @@ export function OpportunityDetail({
       </figure>
       <header className="border-b border-[var(--line)] pb-8">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="eyebrow text-[var(--accent-strong)]">
+          <span className="eyebrow text-[var(--primary-text)]">
             {categoryLabel(opportunity.category)}
           </span>
           <span className={`status-label status-${deadline.state}`}>
@@ -227,7 +227,7 @@ export function OpportunityDetail({
                 <div>
                   <dt className="text-[var(--muted)]">Recorded evidence reference</dt>
                   <dd className="mt-1">
-                    <a href={evidenceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 break-all font-semibold text-[var(--accent-strong)] underline underline-offset-4">
+                    <a href={evidenceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 break-all font-semibold text-[var(--primary-text)] underline underline-offset-4">
                       {sourceHostname(evidenceUrl)} <UiIcon name="external" className="shrink-0" />
                       <span className="sr-only"> (opens in a new tab)</span>
                     </a>
@@ -259,7 +259,7 @@ export function OpportunityDetail({
             </p>
             <Link
               href="/submit"
-              className="mt-3 inline-flex min-h-11 items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)]"
+              className="mt-3 inline-flex min-h-11 items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--primary)] hover:text-[var(--primary-text)]"
             >
               Submit an opportunity
             </Link>

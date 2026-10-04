@@ -15,6 +15,7 @@ import {
   CAMPAIGN_STATUS_DESCRIPTIONS,
 } from "@/lib/provider-campaign-state";
 import { logOutAction } from "@/lib/data/auth-actions";
+import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
   title: "Campaign detail · TechOpportunity Tanzania",
@@ -92,6 +93,7 @@ export default async function CampaignDetailPage({
       tabIndex={-1}
       className="flex-1 bg-[var(--background)]"
     >
+      <StaffNav />
       <section className="hero-dark border-b border-black/20">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
           <Link

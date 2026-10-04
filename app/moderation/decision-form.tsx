@@ -24,7 +24,7 @@ interface OrganizationOption {
 }
 
 const selectClasses =
-  "w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] outline-none transition-colors focus:border-[var(--accent)]";
+  "w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] outline-none transition-colors focus:border-[var(--primary)]";
 const inputClasses = selectClasses;
 const labelClasses = "block text-sm font-medium text-[var(--foreground)]";
 
@@ -99,7 +99,7 @@ export function DecisionForm({
     return (
       <div className="flex flex-col gap-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-6">
         <p className="text-sm font-medium text-[var(--foreground)]">
-          {state.decision === "approve" ? "✅ Approved" : "⛔ Rejected"} —{" "}
+          {state.decision === "approve" ? "Approved" : "Rejected"} —{" "}
           <span className="font-normal text-[var(--muted)]">
             {state.message}
           </span>
@@ -109,7 +109,7 @@ export function DecisionForm({
             <Link
               href={nextHref}
               autoFocus
-              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-strong)]"
+              className="inline-flex h-10 items-center rounded-full bg-[var(--primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-deep)]"
             >
               Review next in queue → (Enter)
             </Link>
@@ -119,7 +119,7 @@ export function DecisionForm({
             className={
               nextHref
                 ? "inline-flex h-10 items-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
-                : "inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-strong)]"
+                : "inline-flex h-10 items-center rounded-full bg-[var(--primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-deep)]"
             }
           >
             {mode === "published" ? "Back to published records" : "Back to queue"}
@@ -387,7 +387,7 @@ export function DecisionForm({
             name="decision"
             value="reject"
             disabled={isPending}
-            className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-6 text-sm font-medium text-[var(--muted)] transition-colors hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:border-red-900 dark:hover:text-red-300"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-red-300 bg-[var(--surface)] px-6 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
           >
             Reject (keeps record as discovered)
           </button>

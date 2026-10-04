@@ -42,7 +42,7 @@ export function CampaignStatusControl({
           defaultValue={currentStatus}
           disabled={isPending}
           aria-label="Change campaign pipeline stage"
-          className="min-h-11 rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {CAMPAIGN_STATUSES.map((status) => (
             <option key={status} value={status}>
@@ -53,7 +53,7 @@ export function CampaignStatusControl({
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--primary)] hover:text-[var(--primary-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? "Working…" : "Update stage"}
         </button>

@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: "Tech Opportunity",
   description:
     "Opportunities worth acting on for Tanzania’s emerging talent. Check source evidence, find relevant opportunities and track your application progress.",
-  themeColor: "#082f2b",
+  themeColor: "#0B1F33",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Tech Opportunity" },
   icons: {
     icon: [
@@ -66,9 +66,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 Product
               </p>
               <ul className="mt-3 space-y-1">
-                <li><Link href="/#opportunities" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">Explore</Link></li>
-                <li><Link href="/for-you" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">For You</Link></li>
-                <li><Link href="/activity" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">Activity</Link></li>
+                <li><Link href="/#opportunities" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Explore</Link></li>
+                <li><Link href="/for-you" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">For You</Link></li>
+                <li><Link href="/activity" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Activity</Link></li>
               </ul>
             </nav>
             <nav aria-label="For organizations">
@@ -76,8 +76,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 For organizations
               </p>
               <ul className="mt-3 space-y-1">
-                <li><Link href="/submit" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">Submit opportunity</Link></li>
-                <li><Link href="/organizations" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">Organizations</Link></li>
+                <li><Link href="/submit" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Submit opportunity</Link></li>
+                <li><Link href="/organizations" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Organizations</Link></li>
               </ul>
             </nav>
             <nav aria-label="Trust">
@@ -85,13 +85,12 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 Trust
               </p>
               <ul className="mt-3 space-y-1">
-                <li><Link href="/#trust-heading" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">How evidence works</Link></li>
+                <li><Link href="/#trust-heading" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">How evidence works</Link></li>
               </ul>
             </nav>
           </div>
         </footer>
         <BottomNavigation />
-        <div aria-hidden="true" className="h-[76px] md:hidden" />
         <PwaRegister />
       </body>
     </html>
