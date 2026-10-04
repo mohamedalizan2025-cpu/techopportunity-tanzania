@@ -412,8 +412,10 @@ test("navigation exposes saved and sign out when authenticated", () => {
   assert.match(header, />\s*Saved\s*</);
   assert.match(header, />\s*Sign out\s*</);
 });
-test("staff navigation still depends on the staff role", () => {
-  assert.match(header, /isStaff \?/);
+test("staff navigation is moderator-only (never admin-broadened)", () => {
+  assert.match(header, /isModerator \?/);
+  assert.match(header, /canSeeStaffNavigation\(user\?\.role\)/);
+  assert.doesNotMatch(header, /role === "moderator" \|\|/);
 });
 test("save control exposes pressed state", () => {
   assert.match(saveControl, /aria-pressed={saved}/);

@@ -26,7 +26,15 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getClaims();
+  // Session refresh must never break rendering: any unexpected auth-layer
+  // failure fails closed to an anonymous passthrough (the pages themselves
+  // re-verify identity server-side). Without this guard a single throwing
+  // getClaims() 500s every route, including the post-sign-out landing page.
+  try {
+    await supabase.auth.getClaims();
+  } catch (error) {
+    console.error("[proxy] session refresh failed; continuing anonymously.", error instanceof Error ? error.message : error);
+  }
 
   return response;
 }

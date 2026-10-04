@@ -199,6 +199,30 @@ Next milestone: owner visual review of staff workspace in session, then
 the gated real Groq/Gemini fixed-corpus evaluation (keys + attestations,
 owner-side only); user pilot stays READY-but-pending.
 
+## Auth correctness: sign-out + moderator-only staff navigation (2026-10-04, on top of `d207d3d`, uncommitted)
+
+Small auth milestone, no AI/Discovery/UI-redesign/schema changes. Root
+cause of the sign-out error page: layout-level client components called
+`usePathname().startsWith(...)` unguarded, but `usePathname()` is nullable
+outside a mounted router context (verified in Next 16.3.2 source) — a null
+pathname threw TypeError inside the root layout (BottomNavigation, added
+last milestone; NavigationLink, pre-existing) into `app/error.tsx`. Fixed
+with null-safe helpers (`lib/staff-navigation.ts`: `isStaffRoute`,
+`canSeeStaffNavigation`, `isModeratorRole`). Also hardened `proxy.ts` and
+`getAuthenticatedUser()` to fail closed to anonymous (auth reads can never
+500 a render again), and made `logOutAction` explicit (signOut error
+logged, session re-checked, unconditional safe redirect to `/` — verified
+by HTTP probe: 200 + `x-action-redirect: /` + auth-cookie deletion).
+Staff nav visibility is now exactly `role === "moderator"` (desktop +
+mobile); server authorization (`getModerationAccess`: moderator+admin) is
+deliberately unchanged. Tests: new `staff-navigation` (13) + `signout`
+(6) suites wired into `npm test`; two pinned assertions updated to the
+moderator-only contract. Verify: full suite green, tsc/eslint/boundaries
+clean, `next build` green. No live browser auth QA available in this
+environment — owner to smoke-test sign-out from /, /profile, /saved,
+/activity, and a staff page in a real session. Next milestone: the
+already-approved real Groq/Gemini provider evaluation (not started).
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

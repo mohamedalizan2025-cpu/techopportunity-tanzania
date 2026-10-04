@@ -7,6 +7,12 @@ import type { ReactNode } from "react";
 /** Shared active state for desktop and mobile without moving auth client-side. */
 export function NavigationLink({ href, children, className }: { href: string; children: ReactNode; className?: string }) {
   const pathname = usePathname();
-  const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  // usePathname() can be null outside a mounted router context (transitions,
+  // fallbacks): render inactive rather than throwing into the error boundary.
+  const active = pathname === null || pathname === undefined
+    ? false
+    : href === "/"
+      ? pathname === "/"
+      : pathname === href || pathname.startsWith(`${href}/`);
   return <Link href={href} className={className ?? "nav-link"} aria-current={active ? "page" : undefined}>{children}</Link>;
 }

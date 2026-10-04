@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { logOutAction } from "@/lib/data/auth-actions";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
+import { canSeeStaffNavigation } from "@/lib/staff-navigation";
 import { UiIcon } from "./ui-icon";
 import { NavigationLink } from "./navigation-link";
 import { MobileNavigation } from "./mobile-navigation";
@@ -9,7 +10,10 @@ const linkClasses = "nav-link";
 
 export async function SiteHeader() {
   const user = await getAuthenticatedUser();
-  const isStaff = user?.role === "moderator" || user?.role === "admin";
+  // PUBLIC NAV VISIBILITY is moderator-only by owner requirement.
+  // Server authorization (getModerationAccess: moderator+admin) is separate
+  // and unchanged — hiding a link is not security.
+  const isModerator = canSeeStaffNavigation(user?.role);
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[var(--line)] bg-[var(--surface)]">
       <div className="page-shell flex min-h-[72px] items-center justify-between gap-3">
@@ -34,7 +38,7 @@ export async function SiteHeader() {
               <NavigationLink href="/profile">
                 Profile
               </NavigationLink>
-              {isStaff ? (
+              {isModerator ? (
                 <>
                   <NavigationLink href="/moderation">
                     Staff
@@ -77,7 +81,7 @@ export async function SiteHeader() {
               <p className="break-words px-3 py-2 text-xs text-[var(--muted)]">
                 Signed in as {user.displayName ?? user.email ?? "your account"}
               </p>
-              {isStaff ? (
+              {isModerator ? (
                 <>
                   <NavigationLink href="/moderation">
                     Staff moderation

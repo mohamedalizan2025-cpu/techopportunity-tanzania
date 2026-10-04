@@ -100,10 +100,37 @@ export async function authenticateAction(
   redirect(postLoginDestination(nextPath, access.ok));
 }
 
+/**
+ * Sign-out contract (auth-correctness milestone):
+ * - Supabase session is invalidated (`signOut`, global scope) and the SSR
+ *   client clears auth cookies via setAll during removal.
+ * - A signOut error is logged server-side (never exposed) and does NOT
+ *   cancel the logout: we re-check for a surviving session and still
+ *   redirect to public `/`, so this action can never throw the user into
+ *   the global error boundary. A surviving session surfaces as
+ *   still-signed-in (retry), never as an error page.
+ */
 export async function logOutAction(): Promise<void> {
   try {
     const supabase = await createSupabaseAuthServerClient();
-    await supabase.auth.signOut();
-  } catch {}
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error(
+        "[auth] sign-out returned an error; verifying local session before redirect.",
+        error.message
+      );
+    }
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      console.error(
+        "[auth] session survived sign-out; redirecting to / anyway (retry surfaces as still-signed-in, never as an error page)."
+      );
+    }
+  } catch (error) {
+    console.error(
+      "[auth] sign-out failed before redirect; redirecting to / anonymously-failed-safe.",
+      error instanceof Error ? error.message : error
+    );
+  }
   redirect("/");
 }

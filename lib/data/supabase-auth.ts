@@ -51,29 +51,42 @@ export const getAuthenticatedUser = cache(
       return null;
     }
 
-    const { data: claimsData, error: claimsError } = await client.auth.getClaims();
-    const claims = claimsError ? null : (claimsData?.claims ?? null);
-    const userId = (claims?.sub as string | undefined) ?? null;
-    if (!userId) return null;
+    // Auth reads must never throw into layouts: any unexpected claims or
+    // profile failure fails closed to anonymous (route guards re-verify).
+    // An uncaught throw here would render the root error boundary instead
+    // of the page — including right after sign-out, when auth state is
+    // necessarily in flux.
+    try {
+      const { data: claimsData, error: claimsError } = await client.auth.getClaims();
+      const claims = claimsError ? null : (claimsData?.claims ?? null);
+      const userId = (claims?.sub as string | undefined) ?? null;
+      if (!userId) return null;
 
-    const { data: profile } = await client
-      .from("profiles")
-      .select("display_name,role")
-      .eq("id", userId)
-      .maybeSingle();
-    const row = profile as unknown as {
-      display_name: string | null;
-      role: string;
-    } | null;
-    const role =
-      row?.role === "moderator" || row?.role === "admin" ? row.role : "user";
+      const { data: profile } = await client
+        .from("profiles")
+        .select("display_name,role")
+        .eq("id", userId)
+        .maybeSingle();
+      const row = profile as unknown as {
+        display_name: string | null;
+        role: string;
+      } | null;
+      const role =
+        row?.role === "moderator" || row?.role === "admin" ? row.role : "user";
 
-    return {
-      client,
-      userId,
-      email: (claims?.email as string | undefined) ?? null,
-      displayName: row?.display_name?.trim() || null,
-      role,
-    };
+      return {
+        client,
+        userId,
+        email: (claims?.email as string | undefined) ?? null,
+        displayName: row?.display_name?.trim() || null,
+        role,
+      };
+    } catch (error) {
+      console.error(
+        "[lib/data] authenticated user lookup failed; continuing anonymously.",
+        error instanceof Error ? error.message : error
+      );
+      return null;
+    }
   }
 );

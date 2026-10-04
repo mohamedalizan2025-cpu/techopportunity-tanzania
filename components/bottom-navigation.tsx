@@ -1,10 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { isStaffRoute } from "@/lib/staff-navigation";
 import { NavigationLink } from "./navigation-link";
 import { UiIcon } from "./ui-icon";
-
-const STAFF_PREFIXES = ["/moderation", "/published-management", "/campaigns"];
 
 /**
  * Thumb-first primary navigation for phones. Desktop and tablet keep the
@@ -14,7 +13,7 @@ const STAFF_PREFIXES = ["/moderation", "/published-management", "/campaigns"];
  */
 export function BottomNavigation() {
   const pathname = usePathname();
-  if (STAFF_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+  if (isStaffRoute(pathname)) {
     return null;
   }
   return (

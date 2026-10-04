@@ -86,8 +86,9 @@ test("campaign detail walks Verified Opportunity to real aggregates", () => {
   assert.doesNotMatch(campaignDetail, /estimateAudience/);
 });
 
-test("staff navigation exposes the pilot behind the staff guard", () => {
-  assert.match(header, /\{isStaff \? \(/);
+test("staff navigation exposes the pilot behind the moderator-only guard", () => {
+  assert.match(header, /\{isModerator \? \(/);
+  assert.match(header, /canSeeStaffNavigation\(user\?\.role\)/);
   assert.match(header, /href="\/campaigns"/);
 });
 
