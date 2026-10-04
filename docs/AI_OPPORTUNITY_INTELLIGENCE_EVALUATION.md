@@ -1,9 +1,11 @@
 # AI Opportunity Intelligence — controlled evaluation
 
-Status: **CONTRACT SIMULATION PASSED · REAL GEMINI/GROQ RUNS BLOCKED AT OWNER CREDENTIAL GATE · PRODUCTION OFF**
+Status: **V2 CONTRACT + PUBLIC-CORPUS SIMULATIONS PASSED · REAL GEMINI/GROQ RUNS BLOCKED AT OWNER CREDENTIAL GATE · PRODUCTION OFF**
 
-Updated: 2026-09-24. Targets: `gemini-3.5-flash-lite` and
-`openai/gpt-oss-20b`.
+Updated: 2026-10-04. Targets: `gemini-3.5-flash-lite` (model ID must be
+re-confirmed against the live models list at activation — current docs
+emphasize newer series) and `openai/gpt-oss-20b` (confirmed current
+2026-10-04, strict structured outputs supported).
 
 This milestone evaluates the existing bounded Opportunity Intelligence layer. It
 does not redesign the product, change deterministic authority, use private
@@ -217,3 +219,38 @@ structured output, acceptable latency/fallback behavior, the applicable privacy
 confirmation, and no billing exposure may the owner consider a separately
 approved small production pilot. Nothing in this milestone automatically
 enables production AI.
+
+## V2 results recorded 2026-10-04 (no code-path bypasses, 0 external requests)
+
+- 16-case synthetic contract simulation re-ran green after the V2 changes
+  (inlined provider schema, telemetry wiring): 16 requests, 14 valid
+  structured responses, 2 intentional deterministic fallbacks, 0 hard
+  failures, 80/80 soft checks.
+- New static public-facts corpus (6 hand-verified live listings — AfDB, MWF,
+  Anzisha, IMLC, YSP-unknown, Kectil — plus synthetic profiles, mock
+  provider, `npx tsx scripts/opportunity-intelligence/evaluate-public-corpus.ts`):
+  6/6 passed, 0 hard failures. YSP correctly stays unknown and fails the
+  runtime trust gate exactly as the route's 409 path requires; Kectil
+  correctly derives National from its Tanzania-named evidence. Telemetry
+  counters observed working (attempts/AI/fallback/validation/quota/timeout
+  plus latency). No production data or private user data is read by either
+  harness.
+- Real-provider gate inspected by key name only: `GEMINI_API_KEY`,
+  `GROQ_API_KEY`, and all evaluation attestations remain absent, so both
+  real runs are **BLOCKED** with zero requests by construction.
+- Provider docs re-verified 2026-10-04: Groq `openai/gpt-oss-20b` current
+  with strict `json_schema` + valid `include_reasoning: false`; free plan
+  30 RPM / 1K RPD / 8K TPM / 200K TPD with HTTP 429 (our 8 req/min route
+  limit fits underneath); ZDR is an account-level Data Controls setting and
+  inference data is otherwise retained only for reliability/abuse monitoring
+  (up to 30 days). Gemini free tier is $0 with unpaid-service data use
+  (improvement + human review) still current; Gemini billing moved to
+  prepay/postpay plans in March 2026, so the no-billing attestation matters
+  more, not less. Gemini REST `generateContent` accepts
+  `generationConfig.responseFormat.text.{mimeType, schema}`; the adapter
+  schema was inlined (no reference constructs) for subset compatibility.
+  The `gemini-3.5-flash-lite` pin was NOT found in the current model support
+  table — the owner must re-confirm the exact model ID against the live
+  models list before any real run; do not assume it.
+- Staging activation remains ineligible (no green real-provider run);
+  production AI remains off in hard zero-spend mode.

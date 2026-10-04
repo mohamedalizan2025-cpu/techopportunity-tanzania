@@ -200,6 +200,7 @@ export function OpportunityDetail({
               slug={opportunity.slug}
               isAuthenticated={isAuthenticated}
               loginHref={`/login?next=${encodeURIComponent(returnTo)}%23ai-opportunity-insight`}
+              activityStatus={activityStatus}
             />
           ) : null}
           <section

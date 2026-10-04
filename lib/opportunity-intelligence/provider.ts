@@ -32,14 +32,28 @@ export interface ProviderSelection {
   reason: "disabled" | "zero_spend" | "not_configured" | null;
 }
 
+const INSIGHT_ITEM_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["text", "basis", "evidenceRefs"],
+  properties: {
+    text: { type: "string" },
+    basis: { type: "string", enum: ["verified_fact", "profile_observation", "unknown"] },
+    evidenceRefs: { type: "array", items: { type: "string" } },
+  },
+} as const;
+
+// Inlined item shape (no shared definition references): Gemini's structured-output subset does not
+// guarantee reference resolution, while Groq strict mode accepts inlined
+// required objects equally. Local re-validation stays authoritative either way.
 const MODEL_OUTPUT_SCHEMA = {
   type: "object",
   additionalProperties: false,
   required: ["readiness", "missingOrUnclear", "nextActions", "confidence"],
   properties: {
-    readiness: { type: "array", items: { $ref: "#/$defs/item" } },
-    missingOrUnclear: { type: "array", items: { $ref: "#/$defs/item" } },
-    nextActions: { type: "array", items: { $ref: "#/$defs/item" } },
+    readiness: { type: "array", items: INSIGHT_ITEM_SCHEMA },
+    missingOrUnclear: { type: "array", items: INSIGHT_ITEM_SCHEMA },
+    nextActions: { type: "array", items: INSIGHT_ITEM_SCHEMA },
     confidence: {
       type: "object",
       additionalProperties: false,
@@ -47,18 +61,6 @@ const MODEL_OUTPUT_SCHEMA = {
       properties: {
         level: { type: "string", enum: ["low", "medium", "high"] },
         limitations: { type: "array", items: { type: "string" } },
-      },
-    },
-  },
-  $defs: {
-    item: {
-      type: "object",
-      additionalProperties: false,
-      required: ["text", "basis", "evidenceRefs"],
-      properties: {
-        text: { type: "string" },
-        basis: { type: "string", enum: ["verified_fact", "profile_observation", "unknown"] },
-        evidenceRefs: { type: "array", items: { type: "string" } },
       },
     },
   },

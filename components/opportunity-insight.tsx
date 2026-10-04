@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { buildReadinessPlan } from "@/lib/opportunity-intelligence/contract";
 import type {
   EvidenceBasis,
   InsightItem,
   OpportunityInsight,
 } from "@/lib/opportunity-intelligence/contract";
+import type { ActivityStatus } from "@/lib/talent-activity-state";
 
 const BASIS_LABELS: Record<EvidenceBasis, string> = {
   verified_fact: "Verified fact",
@@ -46,10 +48,12 @@ export function OpportunityInsightPanel({
   slug,
   isAuthenticated,
   loginHref,
+  activityStatus = null,
 }: {
   slug: string;
   isAuthenticated: boolean;
   loginHref: string;
+  activityStatus?: ActivityStatus | null;
 }) {
   const [insight, setInsight] = useState<OpportunityInsight | null>(null);
   const [loading, setLoading] = useState(false);
@@ -91,7 +95,7 @@ export function OpportunityInsightPanel({
         Fit &amp; next steps
       </h2>
       <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-        Grounded in verified listing evidence and your selected profile fields. The official source remains authoritative.
+        AI-assisted explanation based on verified opportunity data. The official source remains authoritative.
       </p>
 
       {!isAuthenticated ? (
@@ -149,6 +153,25 @@ export function OpportunityInsightPanel({
             <h3 className="font-semibold">Suggested next actions</h3>
             <InsightList items={insight.nextActions} />
           </div>
+
+          {activityStatus === "interested" || activityStatus === "applying" || activityStatus === "applied" ? (
+            <div>
+              <h3 className="font-semibold">Application readiness plan</h3>
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                Planning assistance only — this platform never submits on your behalf.
+              </p>
+              <ol className="mt-3 list-decimal space-y-3 pl-5">
+                {buildReadinessPlan(insight).map((step, index) => (
+                  <li key={`${index}-${step.text.slice(0, 24)}`} className="text-sm leading-6 text-[var(--muted)]">
+                    <span className="mr-2 inline-flex rounded-full border border-[var(--line)] px-2 py-0.5 text-[0.7rem] font-semibold text-[var(--foreground)]">
+                      {step.basis === "verified_fact" ? "Verified fact" : "Unknown"}
+                    </span>
+                    {step.text}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
 
           <div className="rounded-lg bg-[var(--muted-surface)] p-4">
             <h3 className="font-semibold">Deadline urgency</h3>

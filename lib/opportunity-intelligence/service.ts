@@ -16,6 +16,11 @@ import {
 } from "./provider";
 import type { MatchingInput } from "../personalization";
 import type { Opportunity } from "../types";
+import {
+  recordInsightAttempt,
+  recordInsightLatency,
+  recordInsightOutcome,
+} from "./telemetry";
 
 const PROVIDER_TIMEOUT_MS = 8_000;
 const CACHE_TTL_MS = 6 * 60 * 60 * 1_000;
@@ -84,15 +89,21 @@ export async function generateOpportunityInsight(
   const timeoutMs = Math.max(1, Math.min(options.timeoutMs ?? PROVIDER_TIMEOUT_MS, PROVIDER_TIMEOUT_MS));
   const deadline = Date.now() + timeoutMs;
   let lastFailure: InsightAvailabilityReason = "provider_unavailable";
+  const startedAt = Date.now();
 
   for (const [index, provider] of providers.entries()) {
     const key = cacheKey(provider, input);
     const cached = getCached(key, now.getTime());
     if (cached !== undefined) {
       const validated = validateModelOpportunityAssistance(cached, input);
-      if (validated) return mergeModelOpportunityAssistance(fallback, validated, provider.id);
+      if (validated) {
+        recordInsightLatency(Date.now() - startedAt);
+        recordInsightOutcome("ai");
+        return mergeModelOpportunityAssistance(fallback, validated, provider.id);
+      }
       cache.delete(key);
       lastFailure = "invalid_response";
+      recordInsightOutcome("invalid_response");
       continue;
     }
 
@@ -118,20 +129,26 @@ export async function generateOpportunityInsight(
         provider.generate(input, controller.signal),
         timeoutFailure,
       ]);
+      recordInsightAttempt();
       const validated = validateModelOpportunityAssistance(raw, input);
       if (!validated) {
         lastFailure = "invalid_response";
+        recordInsightOutcome("invalid_response");
         continue;
       }
       setCached(key, raw, now.getTime());
+      recordInsightLatency(Date.now() - startedAt);
+      recordInsightOutcome("ai");
       return mergeModelOpportunityAssistance(fallback, validated, provider.id);
     } catch (error) {
       lastFailure = failureReason(error);
+      recordInsightOutcome(lastFailure === "quota_exhausted" ? "quota" : lastFailure === "timeout" ? "timeout" : "fallback");
     } finally {
       clearTimeout(timeout!);
     }
   }
 
+  recordInsightOutcome("fallback");
   return buildDeterministicOpportunityInsight(input, lastFailure);
 }
 

@@ -409,3 +409,67 @@ test("For You remains deterministic and provider-independent when AI is disabled
   assert.doesNotMatch(forYouData, /generateOpportunityInsight|selectConfiguredOpportunityIntelligenceProvider|\bfetch\s*\(/);
   assert.match(forYouPage, /OpportunityCard/);
 });
+
+test("readiness plan names documents as required only with verified evidence", async () => {
+  const { buildReadinessPlan } = await import("../lib/opportunity-intelligence/contract");
+  const input = buildSanitizedOpportunityIntelligenceInput(opportunity(), matchingInput, INSIGHT_NOW);
+  const insight = buildDeterministicOpportunityInsight(input);
+  const plan = buildReadinessPlan(insight);
+  assert.ok(plan.length >= 4 && plan.length <= 6);
+  assert.ok(plan.every((step) => step.basis === "verified_fact" || step.basis === "unknown"));
+  const documentStep = plan.find((step) => /CV|transcript|recommendation/i.test(step.text));
+  assert.ok(documentStep);
+  assert.equal(documentStep?.basis, "unknown");
+  assert.match(documentStep?.text ?? "", /Check whether/i);
+  assert.ok(!plan.some((step) => /submit (for|on your behalf)|we will submit|automatically submit/i.test(step.text)));
+  assert.ok(plan.some((step) => /never submits on your behalf/i.test(step.text)));
+});
+
+test("telemetry records aggregates without personal data", async () => {
+  const telemetry = await import("../lib/opportunity-intelligence/telemetry");
+  telemetry.resetInsightTelemetryForTests();
+  telemetry.recordInsightAttempt();
+  telemetry.recordInsightOutcome("ai");
+  telemetry.recordInsightOutcome("quota");
+  telemetry.recordInsightLatency(120);
+  const snapshot = telemetry.snapshotInsightTelemetry();
+  assert.equal(snapshot.providerAttempts, 1);
+  assert.equal(snapshot.aiSuccesses, 1);
+  assert.equal(snapshot.quotaExhausted, 1);
+  assert.equal(snapshot.deterministicFallbacks, 0);
+  assert.deepEqual(
+    Object.keys(snapshot).sort(),
+    ["aiSuccesses", "deterministicFallbacks", "latencyObservations", "providerAttempts", "quotaExhausted", "timeouts", "totalLatencyMs", "validationFailures"]
+  );
+  assert.doesNotMatch(JSON.stringify(snapshot), /slug|email|user|profile|prompt/i);
+  telemetry.resetInsightTelemetryForTests();
+  assert.equal(telemetry.snapshotInsightTelemetry().providerAttempts, 0);
+});
+
+test("provider schema is inlined for subset compatibility (no $defs/$ref)", () => {
+  const providerSource = read("lib/opportunity-intelligence/provider.ts");
+  assert.doesNotMatch(providerSource, /\$defs|\$ref/);
+  assert.match(providerSource, /additionalProperties: false/);
+});
+
+test("detail brief uses required AI-assisted labeling and planner gating", () => {
+  const panel = read("components/opportunity-insight.tsx");
+  assert.match(panel, /AI-assisted explanation based on verified opportunity data/);
+  assert.doesNotMatch(panel, /AI verified this opportunity/i);
+  assert.match(panel, /Application readiness plan/);
+  assert.match(panel, /never submits on your behalf/i);
+  assert.match(panel, /activityStatus/);
+  const detail = read("components/opportunity-detail.tsx");
+  assert.match(detail, /activityStatus=\{activityStatus\}/);
+});
+
+test("For You explanation is user-triggered and posts slug only", () => {
+  const explanation = read("components/for-you-explanation.tsx");
+  const forYouPage = read("app/for-you/page.tsx");
+  assert.match(explanation, /Why this fits you/);
+  assert.doesNotMatch(explanation, /useEffect/);
+  assert.doesNotMatch(explanation, /%|percent|matchScore|score/i);
+  assert.match(explanation, /JSON\.stringify\(\{ slug \}\)/);
+  assert.doesNotMatch(explanation, /email|userId|profile|activity/i);
+  assert.match(forYouPage, /ForYouExplanation/);
+});

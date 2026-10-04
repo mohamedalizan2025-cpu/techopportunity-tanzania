@@ -436,3 +436,46 @@ export function mergeModelOpportunityAssistance(
     },
   };
 }
+
+export interface ReadinessPlanStep {
+  text: string;
+  basis: EvidenceBasis;
+}
+
+/**
+ * Bounded application readiness planner, derived ONLY from an already-built
+ * insight. A document is named as REQUIRED only when the step cites verified
+ * evidence; everything else is worded as something to check at the source.
+ * Never submits, never invents requirements, never touches identity.
+ */
+export function buildReadinessPlan(insight: OpportunityInsight): ReadinessPlanStep[] {
+  const steps: ReadinessPlanStep[] = [
+    {
+      text: "Review the eligibility evidence quoted above and confirm each requirement applies to you.",
+      basis: "verified_fact",
+    },
+  ];
+  if (insight.deadlineUrgency.level === "urgent" || insight.deadlineUrgency.level === "upcoming") {
+    steps.push({
+      text: `Confirm the deadline timezone at the official source and plan to submit early: ${insight.deadlineUrgency.summary}`,
+      basis: "verified_fact",
+    });
+  } else {
+    steps.push({
+      text: "Confirm deadline and timing at the official source before planning further steps.",
+      basis: "unknown",
+    });
+  }
+  steps.push({
+    text: "Check whether the official application requires a CV, transcripts, recommendations, or other documents — none are confirmed by the verified evidence shown here.",
+    basis: "unknown",
+  });
+  for (const action of insight.nextActions.slice(0, 2)) {
+    steps.push({ text: action.text, basis: action.basis });
+  }
+  steps.push({
+    text: "Submit through the official source only; this platform never submits on your behalf.",
+    basis: "verified_fact",
+  });
+  return steps.slice(0, 6);
+}

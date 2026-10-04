@@ -57,8 +57,11 @@ complete and verified (typography, header/nav with active states, card scan
 order, trust/provenance presentation, filters, detail consistency, mobile
 menu, empty/loading/error states, 44–48px targets, focus rings, skip link).
 `app/robots.ts` + hardcoded `metadataBase` enforce the canonical URL.
-No new features are authorized — product work is now evidence-triggered
-(adoption/provider-pilot validation).
+Visual System V2 complete (deterministic covers, bottom nav, login panel,
+staff token unification, photo-first registry with zero hotlinked assets).
+No new features except the explicitly authorized AI V2 milestone below —
+everything else stays evidence-triggered (adoption/provider-pilot
+validation).
 
 ## 5. Current corpus state (verified read-only 2026-10-04)
 
@@ -99,11 +102,18 @@ runs ONLY after the user pilot passes.
 
 ## 7. Next milestone (one only)
 
-Run the 5–10-user observed mobile pilot per the protocol above. Complete
-requires: sheets for ≥5 testers, 7-day and 2-week return counts, ranked
-blocker list, most-requested missing supply. Then the following milestone is
-chosen from that evidence (top 1–2 blockers, or National-supply work if
-supply thinness caused failure).
+AI Opportunity Intelligence V2 — owner-authorized implementation milestone
+(see [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md)):
+For You on-demand explanations, detail intelligence brief with required
+labeling, Interested/Applying readiness planner over existing contract
+fields, telemetry counters, public-facts evaluation corpus, re-verified
+provider docs. Production AI stays OFF until real-provider evaluation is
+green with zero hard failures plus owner privacy/billing confirmations.
+Stop conditions: missing credentials/attestations (stop at OWNER_GATE, do
+not request secrets in chat); any design requiring new outbound personal
+data (defer to Application Copilot milestone); failing gates (fix or
+report, never weaken). The 5–10-user pilot stays READY-but-pending in §6;
+do not record it as done.
 
 ## 8. Owner-only gates
 
@@ -115,7 +125,8 @@ these or work around them with SQL, service-role, or direct RPC.
 
 ## 9. Do not work on
 
-Speculative features; AI provider activation or expansion; schema/RLS/
+Speculative features; AI production activation or new outbound personal data
+without the V2 gates; schema/RLS/
 migration work; Discovery/source/cadence changes; Cloudflare changes;
 bulk or automated moderation; deletions or corpus resets; UI redesign for
 decoration; chasing arbitrary opportunity counts (quality > quota);
@@ -133,12 +144,30 @@ verified; never simulate a moderation action.
 
 ## 11. Current HEAD / verification
 
-HEAD `0182eea`, tree clean at handoff rewrite; last full `npm run verify`
-green (all suites, tsc, lint, 42/42 boundaries) plus `npm run build` green
-at the unpublish-hardening fix. Open operational items: scheduler
-24h-observation incident (separate track); audit-ledger rows confirmable
-only in a staff session (public-side 404 + browse-absence is the anonymous
-proof). No code risks outstanding.
+HEAD `2676c61`, tree clean at V2 start. AI V2 implementation lands on top;
+final full `npm run verify` + `npm run build` results are recorded in the
+milestone entry below. Open operational items: scheduler 24h-observation
+incident (separate track); audit-ledger rows confirmable only in a staff
+session (public-side 404 + browse-absence is the anonymous proof); real
+Gemini/Groq runs BLOCKED at the owner credential/attestation gate (keys
+absent by name check — never request secrets in chat). No code risks
+outstanding.
+
+## AI Opportunity Intelligence V2 (2026-10-04, HEAD `2676c61`)
+
+Architecture reused, not rebuilt. Deltas: For You on-demand per-card
+explanations (same endpoint/contract, user-triggered, never auto-fetched,
+never scores); detail brief with required "AI-assisted explanation based
+on verified opportunity data" labeling; Interested/Applying/Applied
+readiness planner (`buildReadinessPlan`, documents named as required ONLY
+with verified evidence); privacy-safe telemetry counters (aggregates only,
+reported by eval harness); 6-case static public-facts corpus 6/6 green;
+provider schema inlined for subset compatibility; provider docs
+re-verified 2026-10-04 (Groq current; Gemini free-tier data-use current;
+`gemini-3.5-flash-lite` pin must be re-confirmed at activation). 16-case
+simulation still 0 hard / 80-soft green. Real Gemini/Groq runs BLOCKED
+(no keys, no attestations — OWNER_GATE). Production AI OFF. User pilot
+stays READY-but-pending. Next: owner-gated real-provider evaluation.
 
 ## 12. Stop conditions
 

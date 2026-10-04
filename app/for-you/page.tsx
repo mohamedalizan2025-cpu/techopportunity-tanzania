@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
+import { ForYouExplanation } from "@/components/for-you-explanation";
 import { OpportunityCard } from "@/components/opportunity-card";
 import { UiIcon } from "@/components/ui-icon";
 import { getForYouData } from "@/lib/data/for-you";
@@ -166,6 +167,9 @@ export default async function ForYouPage({
                       isSaved={savedIds.has(opportunity.id)}
                       isAuthenticated
                     />
+                    {isAiSearchableOpportunity(opportunity) ? (
+                      <ForYouExplanation slug={opportunity.slug} title={opportunity.title} />
+                    ) : null}
                     {isAiSearchableOpportunity(opportunity) ? (
                       <Link
                         href={`${opportunityHref(opportunity.slug, "/for-you")}#ai-opportunity-insight`}
