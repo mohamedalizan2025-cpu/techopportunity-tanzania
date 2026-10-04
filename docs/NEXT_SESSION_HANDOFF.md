@@ -57,8 +57,11 @@ complete and verified (typography, header/nav with active states, card scan
 order, trust/provenance presentation, filters, detail consistency, mobile
 menu, empty/loading/error states, 44–48px targets, focus rings, skip link).
 `app/robots.ts` + hardcoded `metadataBase` enforce the canonical URL.
-Visual System V2 complete (deterministic covers, bottom nav, login panel,
-staff token unification, photo-first registry with zero hotlinked assets).
+Visual imagery milestone complete: nine locally stored,
+custom editorial photographs now drive the homepage hero, every opportunity
+card/detail, Organizations, Login, and the Campaigns hero; all 17 presentation
+slots resolve to real WebP assets with documented generation provenance and
+zero hotlinks.
 No new features except the explicitly authorized AI V2 milestone below —
 everything else stays evidence-triggered (adoption/provider-pilot
 validation).
@@ -274,6 +277,39 @@ robots allow on prod, staging isolated per docs, no secrets in repo,
 production AI OFF. Business story exposed on homepage/organizations/
 footer. Full verify + build green (below). Next: owner-gated
 real-provider AI evaluation.
+
+## Editorial photography implementation (2026-10-04, base HEAD `13e2fa7`)
+
+The visible photography gap is closed in code. Nine original AI-generated
+editorial assets (Tanzanian/Dar es Salaam students, Zanzibar students, women
+in a makerspace, African founders, East African climate researchers, a
+multicultural scholar cohort, an African leadership roundtable, career
+mentorship, and organization partners) are committed under
+`public/images/editorial/`; total optimized payload is about 1.43 MB. The
+existing 17-slot geography/category registry is filled and uses stable slug
+variation, so fellowship-heavy shelves do not repeat one image on every card.
+The SVG ridge/orbit/letter rendering path is removed from the rendered cover
+component.
+
+Homepage and Organizations now use layered photographic hero compositions;
+Login has a photographic career panel; Campaigns uses a subdued photographic
+hero; cards and details use the local editorial set through `next/image`.
+Detail captions state that imagery is visual context and official-source
+evidence remains authoritative. Representation and generation provenance are
+recorded in [VISUAL_ASSET_PROVENANCE.md](VISUAL_ASSET_PROVENANCE.md). No
+database, schema/RLS, Discovery, Cloudflare, AI, moderation, or corpus behavior
+changed.
+
+Verification: full `npm run verify` green, including 43 permanent boundary
+checks; `npm run build` green; local real-data HTTP checks returned 200 for
+`/`, `/organizations`, `/login`, and a live opportunity detail, while
+`/for-you` and `/campaigns` retained their expected unauthenticated redirects.
+Rendered HTML referenced the hero plus distinct career/founder/leadership/
+Zanzibar card images, and detail rendered the editorial-evidence caption.
+Pre-change desktop/mobile screenshot evidence remains in the immediately
+preceding visual entries. Post-change Cloud Browser capture could not run in
+this session because the browser transport returned `Transport closed`; do not
+claim breakpoint screenshot evidence until that external surface is available.
 
 ## Superseded detailed log (kept for audit; live facts are in §§1–12 above)
 

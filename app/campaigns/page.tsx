@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CreateCampaignForm } from "@/components/create-campaign-form";
@@ -57,7 +58,17 @@ export default async function CampaignPilotPage() {
       className="flex-1 bg-[var(--background)]"
     >
       <section className="hero-dark border-b border-black/20">
-        <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
+        <div className="relative mx-auto w-full max-w-6xl overflow-hidden px-5 py-8 sm:px-8 sm:py-12">
+          <Image
+            src="/images/editorial/organizations-partnership.webp"
+            alt=""
+            aria-hidden="true"
+            fill
+            sizes="1200px"
+            className="object-cover object-center opacity-25"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--brand-deep)_20%,rgba(8,47,43,0.94)_52%,rgba(8,47,43,0.48))]" aria-hidden="true" />
+          <div className="relative z-10">
           <p className="eyebrow-gold">
             Provider campaigns · internal pilot
           </p>
@@ -79,6 +90,7 @@ export default async function CampaignPilotPage() {
               Public provider &amp; institution story →
             </Link>
           </p>
+          </div>
         </div>
       </section>
 

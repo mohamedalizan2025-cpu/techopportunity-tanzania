@@ -1,11 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { UiIcon } from "@/components/ui-icon";
 import { EmptyState } from "@/components/empty-state";
 import {
   OpportunityCard,
   SnapshotOpportunityLink,
 } from "@/components/opportunity-card";
-import { OpportunityCover } from "@/components/opportunity-cover";
 import { InstallPrompt } from "@/components/install-prompt";
 import {
   OpportunityFilters,
@@ -109,7 +109,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             {isFiltered ? "Find your next opportunity" : <>Discover Opportunities.<br /><span className="text-[var(--gold)]">Build Your Future.</span></>}
           </h1>
           {!isFiltered ? (
-            <div className="mt-5 grid gap-8 lg:grid-cols-[1.35fr_1fr] lg:items-center">
+            <div className="mt-5 grid gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(460px,1.08fr)] lg:items-center">
               <div className="min-w-0">
                 <p className="max-w-2xl text-base leading-7 hero-muted">
                   Scholarships, internships, fellowships, competitions and more —
@@ -162,33 +162,39 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <li className="inline-flex items-center gap-1.5"><UiIcon name="clock" width="14" height="14" /> Deadline-tracked</li>
                 </ul>
                 <InstallPrompt />
-                {opportunities.length > 0 ? (
-                  <div className="mt-5 overflow-hidden rounded-md border border-white/20 lg:hidden" aria-hidden="true">
-                    <OpportunityCover opportunity={opportunities[0]} className="aspect-[21/9] w-full" />
-                  </div>
-                ) : null}
-              </div>
-              {opportunities.length > 0 ? (
-                <div className="hidden gap-4 lg:grid" aria-hidden="true">
-                  <div className="grid grid-cols-5 gap-4">
-                    {opportunities.slice(0, 3).map((item, i) => (
-                      <div
-                        key={item.id}
-                        className={`overflow-hidden rounded-md border border-white/20 bg-white/5 shadow-[0_12px_32px_rgba(0,0,0,0.35)] ${i === 0 ? "col-span-3 row-span-2" : "col-span-2"} ${i === 2 ? "col-start-4" : ""}`}
-                      >
-                        <OpportunityCover opportunity={item} className="aspect-[16/10] w-full" />
-                      </div>
-                    ))}
-                  </div>
-                  <p className="border-l-2 border-[var(--gold)] pl-4 text-sm leading-6 hero-muted">
-                    Local talent, global opportunity. Evidence and missing
-                    details are marked on each listing.{" "}
-                    <a href="#trust-heading" className="font-semibold text-[var(--gold)] underline underline-offset-4">
-                      How to read the evidence
-                    </a>
-                  </p>
+                <div className="editorial-hero-mobile mt-6 lg:hidden">
+                  <Image
+                    src="/images/editorial/hero-students.webp"
+                    alt="Tanzanian university students collaborating in an innovation studio"
+                    fill
+                    preload
+                    sizes="100vw"
+                    className="object-cover"
+                  />
+                  <span className="editorial-photo-note">Tanzanian talent, pictured editorially</span>
                 </div>
-              ) : null}
+              </div>
+              <div className="editorial-hero-media hidden lg:block">
+                <Image
+                  src="/images/editorial/hero-students.webp"
+                  alt="Tanzanian university students collaborating in an innovation studio"
+                  fill
+                  preload
+                  sizes="(max-width: 1200px) 46vw, 620px"
+                  className="object-cover"
+                />
+                <div className="editorial-hero-wash" aria-hidden="true" />
+                <div className="editorial-hero-card">
+                  <p className="eyebrow-gold">Built around action</p>
+                  <p className="mt-2 text-sm leading-6 text-[#f7f2e8]">
+                    From a verified call to a confident application — with the
+                    source, deadline and access evidence kept in view.
+                  </p>
+                  <a href="#trust-heading" className="mt-3 inline-flex text-sm font-semibold text-[var(--gold)] underline underline-offset-4">
+                    How evidence works
+                  </a>
+                </div>
+              </div>
             </div>
           ) : null}
           {user ? (

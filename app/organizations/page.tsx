@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { UiIcon } from "@/components/ui-icon";
 
@@ -12,31 +13,46 @@ export default function OrganizationsPage() {
   return (
     <main id="main-content" tabIndex={-1} className="flex-1">
       <section className="hero-dark border-b border-black/20">
-        <div className="page-shell py-10 sm:py-14">
-          <p className="eyebrow-gold">For organizations</p>
-          <h1 className="hero-title font-display mt-4 max-w-3xl text-[#f7f2e8]">
-            Reach talent with opportunities that matter.
-          </h1>
-          <div className="hero-rule mt-5" aria-hidden="true" />
-          <p className="mt-5 max-w-2xl text-base leading-7 hero-muted">
-            Tech Opportunity connects verified opportunities with Tanzania’s
-            emerging talent — students, graduates, developers and young
-            professionals — through human review and evidence-first listings.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/submit"
-              className="inline-flex min-h-12 items-center justify-center rounded-md bg-[var(--gold)] px-6 text-sm font-bold text-[#082f2b] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#082f2b]"
-            >
-              Submit an opportunity
-            </Link>
-            <Link
-              href="/#opportunities"
-              className="inline-flex min-h-12 items-center justify-center rounded-md border border-white/25 px-6 text-sm font-semibold text-[#f7f2e8] hover:border-[var(--gold)] hover:text-[var(--gold)]"
-            >
-              See the public shelf
-            </Link>
+        <div className="page-shell grid gap-8 py-10 sm:py-14 lg:grid-cols-[0.86fr_1.14fr] lg:items-center">
+          <div>
+            <p className="eyebrow-gold">For organizations</p>
+            <h1 className="hero-title font-display mt-4 max-w-3xl text-[#f7f2e8]">
+              Reach talent with opportunities that matter.
+            </h1>
+            <div className="hero-rule mt-5" aria-hidden="true" />
+            <p className="mt-5 max-w-2xl text-base leading-7 hero-muted">
+              Tech Opportunity connects verified opportunities with Tanzania’s
+              emerging talent — students, graduates, developers and young
+              professionals — through human review and evidence-first listings.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/submit"
+                className="inline-flex min-h-12 items-center justify-center rounded-md bg-[var(--gold)] px-6 text-sm font-bold text-[#082f2b] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#082f2b]"
+              >
+                Submit an opportunity
+              </Link>
+              <Link
+                href="/#opportunities"
+                className="inline-flex min-h-12 items-center justify-center rounded-md border border-white/25 px-6 text-sm font-semibold text-[#f7f2e8] hover:border-[var(--gold)] hover:text-[var(--gold)]"
+              >
+                See the public shelf
+              </Link>
+            </div>
           </div>
+          <figure className="editorial-section-media">
+            <Image
+              src="/images/editorial/organizations-partnership.webp"
+              alt="African education and program leaders planning how to reach students"
+              fill
+              preload
+              sizes="(max-width: 1024px) 100vw, 58vw"
+              className="object-cover"
+            />
+            <figcaption className="editorial-photo-note">
+              Opportunity access is built with providers, universities and communities.
+            </figcaption>
+          </figure>
         </div>
       </section>
 

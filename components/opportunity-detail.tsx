@@ -53,7 +53,7 @@ export function OpportunityDetail({
           <OpportunityCover opportunity={opportunity} className="h-full w-full" />
         </div>
         <figcaption className="mt-2 text-xs text-[var(--muted)]">
-          Illustrative cover — always verify details at the official source.
+          Editorial image for visual context — verify every detail at the official source.
         </figcaption>
       </figure>
       <header className="border-b border-[var(--line)] pb-8">

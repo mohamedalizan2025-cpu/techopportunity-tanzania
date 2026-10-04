@@ -5,18 +5,14 @@ import type { Opportunity } from "./types";
  * Central visual/media registry (photo-first architecture).
  *
  * Resolution order for an opportunity cover:
- *  1. verified organization/program image — only when licensed/provenanced
- *     (no registry entry qualifies today; see the asset manifest in
- *     docs/architecture.md §10b);
- *  2. reviewed local asset under `public/covers/` keyed by
- *     geography × category below;
- *  3. deterministic generated SVG fallback (`components/opportunity-cover`).
+ *  1. verified organization/program image — only when licensed/provenanced;
+ *  2. reviewed local editorial asset under `public/images/editorial/`, keyed
+ *     by geography × category below;
  *
- * Rules: never scrape, hotlink, or invent provenance. A registry slot holds
- * a local path ONLY after a licensed file with recorded provenance lands in
- * `public/covers/`. Until then every slot resolves to `null` and the UI
- * renders the generated fallback. Slots use `null` (not empty strings) so
- * "no asset" is explicit and greppable.
+ * Rules: never scrape, hotlink, or invent provenance. The current set is
+ * locally stored, AI-generated editorial photography with its generation
+ * record in `docs/VISUAL_ASSET_PROVENANCE.md`. The images are visual context,
+ * never documentary evidence of the listed opportunity.
  */
 
 type CoverSlot =
@@ -38,24 +34,36 @@ type CoverSlot =
   | "moment-research"
   | "moment-public-sector";
 
-const SLOT_PATHS: Record<CoverSlot, string | null> = {
-  "tanzania-education": null,
-  "tanzania-technology": null,
-  "tanzania-leadership": null,
-  "africa-education": null,
-  "africa-entrepreneurship": null,
-  "africa-technology": null,
-  "international-education": null,
-  "international-research": null,
-  "international-career": null,
-  "international-leadership": null,
-  "moment-hackathon": null,
-  "moment-fellowship": null,
-  "moment-internship": null,
-  "moment-scholarship": null,
-  "moment-conference": null,
-  "moment-research": null,
-  "moment-public-sector": null,
+const EDITORIAL = {
+  students: "/images/editorial/hero-students.webp",
+  zanzibar: "/images/editorial/zanzibar-students.webp",
+  technology: "/images/editorial/technology-makers.webp",
+  founders: "/images/editorial/founders-pitch.webp",
+  climate: "/images/editorial/climate-research.webp",
+  global: "/images/editorial/global-scholars.webp",
+  leadership: "/images/editorial/leadership-roundtable.webp",
+  career: "/images/editorial/career-mentorship.webp",
+  organizations: "/images/editorial/organizations-partnership.webp",
+} as const;
+
+const SLOT_PATHS: Record<CoverSlot, readonly string[]> = {
+  "tanzania-education": [EDITORIAL.zanzibar, EDITORIAL.students],
+  "tanzania-technology": [EDITORIAL.technology, EDITORIAL.career],
+  "tanzania-leadership": [EDITORIAL.founders, EDITORIAL.leadership],
+  "africa-education": [EDITORIAL.global, EDITORIAL.zanzibar],
+  "africa-entrepreneurship": [EDITORIAL.founders, EDITORIAL.leadership],
+  "africa-technology": [EDITORIAL.technology, EDITORIAL.climate],
+  "international-education": [EDITORIAL.global, EDITORIAL.zanzibar],
+  "international-research": [EDITORIAL.climate, EDITORIAL.technology],
+  "international-career": [EDITORIAL.career, EDITORIAL.founders],
+  "international-leadership": [EDITORIAL.leadership, EDITORIAL.global],
+  "moment-hackathon": [EDITORIAL.technology, EDITORIAL.founders],
+  "moment-fellowship": [EDITORIAL.leadership, EDITORIAL.global, EDITORIAL.students],
+  "moment-internship": [EDITORIAL.career, EDITORIAL.technology],
+  "moment-scholarship": [EDITORIAL.zanzibar, EDITORIAL.global],
+  "moment-conference": [EDITORIAL.leadership, EDITORIAL.organizations],
+  "moment-research": [EDITORIAL.climate, EDITORIAL.technology],
+  "moment-public-sector": [EDITORIAL.organizations, EDITORIAL.leadership],
 };
 
 export function coverSlotFor(
@@ -92,14 +100,23 @@ export function coverSlotFor(
   return "africa-education";
 }
 
-/** Local asset path for the slot, or `null` while no licensed file exists. */
-export function coverAssetFor(
-  opportunity: Pick<Opportunity, "category"> & Partial<Opportunity>
-): string | null {
-  return SLOT_PATHS[coverSlotFor(opportunity)];
+function stableIndex(value: string, length: number): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return hash % length;
 }
 
-/** Registry slots still awaiting licensed files (the supply backlog). */
+/** Deterministically choose a local editorial asset for this opportunity. */
+export function coverAssetFor(
+  opportunity: Pick<Opportunity, "category" | "slug"> & Partial<Opportunity>
+): string {
+  const paths = SLOT_PATHS[coverSlotFor(opportunity)];
+  return paths[stableIndex(opportunity.slug, paths.length)];
+}
+
+/** Registry slots still awaiting a local visual asset. */
 export function pendingCoverSlots(): CoverSlot[] {
-  return (Object.keys(SLOT_PATHS) as CoverSlot[]).filter((slot) => SLOT_PATHS[slot] === null);
+  return (Object.keys(SLOT_PATHS) as CoverSlot[]).filter((slot) => SLOT_PATHS[slot].length === 0);
 }

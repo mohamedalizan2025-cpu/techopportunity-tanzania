@@ -395,39 +395,39 @@ explicitly out of redesign scope.
   panel use flat `#082F2B`/`#0D2530` with cream text and gold rules —
   never whole pages dark. Header keeps cream surfaces with a navy/gold
   brand mark and gold active underlines.
-- Card rules: 6px radius system-wide (`rounded-md`); opportunity cards carry
+- Card rules: compact controls keep the 6px (`rounded-md`) system; photographic
+  opportunity cards and editorial frames use a restrained 10px radius and
+  shallow teal shadow. Opportunity cards carry
   at most TWO trust indicators (deadline status + evidence/eligibility
   line); no badge piles, no percentage gimmicks.
-- Imagery policy: covers are DETERMINISTIC SVG compositions
-  (`components/opportunity-cover.tsx`, pure `coverSpecFor` of stored
-  category/slug + derived geography) — no database column, no network, no
-  hotlinked or scraped photography. National records get a warm ridge
-  motif, international an orbit motif, unknown a dot field. Covers are
-  ILLUSTRATIVE by contract (aria-hidden, captioned as such on detail
-  pages) and never documentary evidence; provenance lives only in source
-  links and the evidence section. Real photography remains a future asset
-  need: licensed Tanzanian/East-African student, campus, and convening
-  imagery with per-image consent/provenance — do not ship random stock,
-  and never show all-white Western-student imagery as the default mix.
-- Photo-first registry (`lib/cover-registry.ts`, 2026-10-04): central
+- Imagery policy: real visible editorial imagery is the production default.
+  Nine locally stored, custom AI-generated photographs cover Tanzanian and
+  Zanzibar students, East African technology and career settings, wider
+  African entrepreneurship/research/leadership, and a genuinely multicultural
+  scholar cohort. They are visual context, never documentary evidence of a
+  listed opportunity; detail pages say this explicitly and authoritative
+  provenance remains in source links and evidence sections. No database
+  column, runtime network image, hotlink, scraped file, or invented third-party
+  license is used. Generation provenance and scene constraints are recorded in
+  [VISUAL_ASSET_PROVENANCE.md](VISUAL_ASSET_PROVENANCE.md).
+- Photo-first registry (`lib/cover-registry.ts`, updated 2026-10-04): central
   `coverSlotFor` mapping (moment slots for hackathon/competition,
   fellowship, internship/jobs, scholarship, conference/events, research,
   public-sector; geography × sector slots for Tanzania/Africa/
-  international) with `coverAssetFor` resolving a local `public/covers/`
-  file when one exists, else `null` → generated SVG fallback rendered via
-  `next/image` (lazy, responsive sizes) when present. All 17 slots are
-  currently `null`: NO licensed file has been added, nothing is hotlinked,
-  and inventing provenance is forbidden. Asset manifest (all pending):
+  international) with `coverAssetFor` choosing a deterministic local
+  `public/images/editorial/` WebP variant by slug. All 17 presentation slots
+  are filled from the coherent nine-image set and render through `next/image`
+  with responsive sizes. Asset coverage:
   tanzania-education, tanzania-technology, tanzania-leadership,
   africa-education, africa-entrepreneurship, africa-technology,
   international-education, international-research, international-career,
   international-leadership, moment-hackathon, moment-fellowship,
   moment-internship, moment-scholarship, moment-conference,
-  moment-research, moment-public-sector. Each file needs: license +
-  photographer credit + subject consent + a caption that never claims the
-  depicted people/event are the listed opportunity. Representation rules:
-  Tanzanian/East-African youth clearly visible, hijabi representation
-  where natural, no safari/tourism clichés, no all-white default mix.
+  moment-research, moment-public-sector. Representation rules remain:
+  Tanzanian/East-African youth clearly visible, hijabi representation where
+  natural, no safari/tourism clichés, and no all-white default mix. The
+  generated subjects are fictional, so no real-person consent or affiliation
+  is implied.
 - Responsive: mobile-first; category rail scrolls under 640px; cards stack
   single-column then `sm:grid-cols-2`; detail aside stacks action-first
   below `lg`. Phone-only (`md:hidden`) bottom nav (Explore/For You/Saved/

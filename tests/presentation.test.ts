@@ -13,7 +13,6 @@ import {
   opportunityCardExcerpt,
 } from "../lib/opportunity-presentation";
 import type { Opportunity } from "../lib/types";
-import { coverSpecFor } from "../components/opportunity-cover";
 import { coverAssetFor, coverSlotFor, pendingCoverSlots } from "../lib/cover-registry";
 
 let passed = 0;
@@ -203,10 +202,9 @@ assert(
   blankLocation.length === 1 && blankLocation[0] === "Location not specified"
 );
 
-// --- deterministic illustrative covers -------------------------------------
-// Covers derive ONLY from stored category/slug (+ derived geography): the
-// same record always renders the same cover, no database column, no network,
-// no external imagery. They are illustrative by contract, never evidence.
+// --- deterministic editorial covers ----------------------------------------
+// Covers derive only from stored category/slug (+ derived geography). They
+// resolve to reviewed local WebP files, never runtime network images.
 function coverRow(overrides: Partial<Opportunity> = {}): Opportunity {
   return {
     id: "cover-1",
@@ -227,31 +225,29 @@ function coverRow(overrides: Partial<Opportunity> = {}): Opportunity {
   } as Opportunity;
 }
 
-const coverA = coverSpecFor(coverRow());
-const coverB = coverSpecFor(coverRow());
+const coverA = coverAssetFor(coverRow());
+const coverB = coverAssetFor(coverRow());
 assert(
-  "13 cover spec is deterministic for the same record",
-  JSON.stringify(coverA) === JSON.stringify(coverB),
-  JSON.stringify(coverA)
+  "13 editorial cover is deterministic for the same record",
+  coverA === coverB,
+  coverA
 );
 assert(
-  "14 cover spec changes with category or slug",
-  coverSpecFor(coverRow({ category: "hackathon" })).base !== coverA.base ||
-    coverSpecFor(coverRow({ slug: "another-slug" })).variant !== coverA.variant,
-  JSON.stringify(coverA)
+  "14 editorial set produces visual variety across records",
+  new Set([
+    coverAssetFor(coverRow({ slug: "alpha" })),
+    coverAssetFor(coverRow({ slug: "beta" })),
+    coverAssetFor(coverRow({ slug: "gamma", category: "internship" })),
+    coverAssetFor(coverRow({ slug: "delta", category: "research-call" })),
+  ]).size >= 3
 );
 assert(
-  "15 cover spec carries a valid motif, palette and initial",
-  ["ridge", "orbit", "field"].includes(coverA.motif) &&
-    /^#[0-9a-fA-F]{6}$/.test(coverA.base) &&
-    /^#[0-9a-fA-F]{6}$/.test(coverA.accent) &&
-    coverA.initial === "F" &&
-    coverA.variant >= 0 &&
-    coverA.variant <= 2,
-  JSON.stringify(coverA)
+  "15 cover paths are local optimized editorial assets",
+  coverA.startsWith("/images/editorial/") && coverA.endsWith(".webp"),
+  coverA
 );
 
-// --- cover registry: photo-first architecture, honest fallbacks -------------
+// --- cover registry: filled photo-first architecture -------------------------
 
 assert(
   "16 moment categories map to moment slots",
@@ -261,8 +257,8 @@ assert(
   "moment mapping broken"
 );
 assert(
-  "17 no licensed asset exists yet, so every slot falls back explicitly",
-  coverAssetFor(coverRow()) === null && pendingCoverSlots().length === 17,
+  "17 all reviewed presentation slots resolve to local assets",
+  pendingCoverSlots().length === 0,
   `pending=${pendingCoverSlots().length}`
 );
 
