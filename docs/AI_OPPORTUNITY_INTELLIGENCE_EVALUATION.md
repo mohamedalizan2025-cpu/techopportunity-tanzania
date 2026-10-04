@@ -412,7 +412,22 @@ enables production AI.
   "Final staging decision" below. No staging or production activation
   performed by agents in any case.
 
-## Final staging decision 2026-10-04 (Gemini 14/16, Groq 9/16, zero hard failures)
+## Staging smoke status 2026-10-04 (owner-executed, pending)
+
+- Owner reports approved AI runtime variables configured in the protected
+  Preview/Staging environment with staging redeployed. Agent verification
+  from outside the gate: deployment responds behind Vercel Authentication
+  (no bypass available or sought), full local suite + build green, no code
+  change required for activation (env-gated chain), production confirmed
+  OFF by default.
+- Live staging evidence (provider distribution, fallback rate, latency,
+  UI smoke across profiles/cases/viewports, in-staging failure simulation)
+  is owner-executed and still pending. No agent-observed staging traffic
+  exists yet. Production stays OFF until the separate production gate
+  (staging behavior + smoke + fallback/latency review + fresh owner
+  cost/privacy decision) is satisfied.
+
+## Final staging decision 2026-10-04 (superseded in part — see above)
 
 - Gemini best (steered): 14/16 ai/ok, 1 timeout, 1 invalid, 0 hard, 80/80
   soft, median ~1.8s. Groq best (budget-fixed, paced): 9/16 ai/ok, 7

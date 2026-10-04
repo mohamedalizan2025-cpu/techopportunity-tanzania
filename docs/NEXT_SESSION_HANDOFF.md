@@ -311,6 +311,35 @@ Evidence + bar distinction in
 Next: owner sets staging env → staging smoke tests → staging-behavior
 review → owner prod decision → user pilot → provider revenue pilot.
 
+## Staging AI smoke attempt 2026-10-04 (configured per owner; live smoke NOT performed here)
+
+Owner reports the approved AI runtime variables configured in the
+protected Preview/Staging environment with staging redeployed. Agent
+findings in this run: staging deployment responds but sits behind Vercel
+Authentication (302 to the auth gate; no bypass token available or sought),
+so no HTTP-level smoke testing was possible from here — no browser
+tooling, no staging session, and no secret handling by agents. Verified
+instead: full `npm verify` green at `4a48c42` (all suites incl. failure
+chain A–D mocks, telemetry allowlist, 8 req/min + 6h/200-entry cache pins),
+`npm run build` green, production OFF by default (AI vars only in ignored
+local env + OFF-default committed example; production takes env from the
+dashboard only), and the staging activation mechanism needs no code change
+(env-gated chain auto-selects when complete, deterministic otherwise).
+Owner also pasted REAL key values into tracked `.env.example` (lines 49–50);
+agents removed them before any push (GitHub push protection independently
+blocked the first attempt) and restored empty values, so the committed
+tree never contained them. Because the values sat in the working tree,
+both keys must be treated as exposed: OWNER MUST ROTATE `GEMINI_API_KEY`
+AND `GROQ_API_KEY` (revoke + reissue), update the staging deployment env
+with the new values, and never place secret values in tracked files again
+(placeholders or empty only). REMAINING
+owner-executed work before any production consideration: staging UI smoke
+matrix (For You/detail/planner/fallback × anonymous/incomplete/complete ×
+National/International/unknown/deadline-soon/no-deadline/missing × 390px +
+1366/1440px), in-staging failure-chain simulation, staging request/cost
+counts. Production AI = OFF. Next: owner smoke results → staging-behavior
+review → owner prod decision → user pilot → provider revenue pilot.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is
