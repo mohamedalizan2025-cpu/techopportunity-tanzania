@@ -87,8 +87,10 @@ mode + exact `gemini,groq` chain string + both credentials + all four
 owner attestations. Partial config cannot promote the backup. Azure is a
 reserved ID only; mock is code/test-injectable only, never env-selected.
 One attempt per provider per uncached insight, shared 8s budget split
-across remaining attempts, 700 output tokens, 64 KiB response ceiling, no
-retries, no SDK. Defaults ship hard zero-spend (`ENABLED=false`,
+across remaining attempts, provider output budgets (Groq 1600 completion
+tokens with low reasoning effort — verified minimum for valid strict JSON
+from gpt-oss-20b; Gemini 700 max output tokens), 64 KiB response ceiling,
+no retries, no SDK. Defaults ship hard zero-spend (`ENABLED=false`,
 `SPEND_MODE=zero`, chain `none`).
 
 ## 8. Failure/fallback architecture
@@ -113,22 +115,44 @@ usefulness — AI may paraphrase, never invent; (c) gated real-provider runs
 attestations + explicit confirmation. Zero hard failures required before
 any staging activation, let alone production.
 
-## 10. Staging rollout
+## 10. Staging rollout (owner-approved 2026-10-04; activation pending secret config)
 
-Only if contract + public-corpus simulation is green AND a real-provider
-run records zero hard failures: enable in staging only (isolated staging
-Supabase, synthetic users), then verify anonymous, signed-in,
-incomplete/full profile, National, International, unknown eligibility,
-deadline-soon, provider-failure, and fallback paths. Production stays OFF.
+STAGING BAR (distinct from production): zero hard authority failures,
+zero private-data leakage, deterministic fallback proven, primary ≥80%
+valid AI responses on the fixed corpus (Gemini measured 14/16 = 87.5%),
+backup materially functional (Groq measured 9/16 with zero quota errors
+after pacing — exercisable, weaker), bounded latency, no uncontrolled
+retries, no uncontrolled billing. Current evidence satisfies this bar;
+the earlier zero-fallback requirement applies to production, not staging.
+Activation is staging-environment variables ONLY (protected branch Preview
+deployment, isolated staging Supabase, synthetic users) — no code change
+is needed: with the variables below set, the chain selects automatically;
+without them every surface falls back to deterministic behavior.
+Required staging variable NAMES (values set by owner in the deployment
+environment, never in code/docs/chat):
+AI_OPPORTUNITY_INTELLIGENCE_ENABLED, AI_OPPORTUNITY_INTELLIGENCE_SPEND_MODE
+(=free-quota), AI_OPPORTUNITY_INTELLIGENCE_PROVIDER_CHAIN (=gemini,groq),
+GEMINI_API_KEY, GROQ_API_KEY,
+AI_OPPORTUNITY_INTELLIGENCE_GEMINI_UNPAID_DATA_USE_CONFIRMED,
+AI_OPPORTUNITY_INTELLIGENCE_GEMINI_NO_BILLING_CONFIRMED,
+AI_OPPORTUNITY_INTELLIGENCE_GROQ_ZDR_CONFIRMED,
+AI_OPPORTUNITY_INTELLIGENCE_GROQ_NO_BILLING_CONFIRMED
+(optional model pins AI_OPPORTUNITY_INTELLIGENCE_GEMINI_MODEL /
+AI_OPPORTUNITY_INTELLIGENCE_GROQ_MODEL; code defaults apply otherwise).
+STATUS: STAGING AI = APPROVED, PENDING SECRET CONFIG (not yet active).
+Then verify anonymous, signed-in, incomplete/full profile, National,
+International, unknown eligibility, deadline-soon, provider-failure, and
+fallback paths at 390px and 1366/1440px. Production stays OFF.
 
-## 11. Production rollout gates
+## 11. Production rollout gates (separate; NOT satisfied by staging approval)
 
-Separate explicit owner decision AFTER: green real-provider evaluation,
-zero hard failures, confirmed privacy terms, confirmed no-billing/free-quota
-account state, verified staging behavior + fallback, no sensitive-data
-leakage, acceptable latency, verified mobile UI. Report is exactly one of
-BLOCKED / READY_FOR_OWNER_APPROVAL / ACTIVE — never ACTIVE without verified
-owner-authorized activation.
+Separate explicit owner decision AFTER: successful staging behavior, real
+UI smoke tests, acceptable observed fallback rate, acceptable provider
+latency, no privacy or authority regression, and a fresh owner cost/privacy
+decision. Staging evidence informs but never auto-satisfies this gate.
+Report is exactly one of BLOCKED / READY_FOR_OWNER_APPROVAL / ACTIVE —
+never ACTIVE without verified owner-authorized activation. Current state:
+PRODUCTION AI = OFF.
 
 ## 12. Telemetry
 

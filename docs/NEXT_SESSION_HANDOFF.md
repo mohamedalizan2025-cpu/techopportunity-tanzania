@@ -288,6 +288,29 @@ Evidence in
 input is complete — sequence holds (staging decision → owner prod decision
 → user pilot → provider revenue pilot).
 
+## Staging AI approved 2026-10-04 (activation pending owner secret config)
+
+Owner approved staging AI under a corrected bar (zero hard failures, zero
+leakage, proven fallback, primary ≥80% — Gemini 14/16 — materially
+functional backup — Groq 9/16 paced; production keeps its own separate
+gate). Agents performed NO activation: staging still needs the owner to
+set the documented env names in the protected Preview deployment
+(AI_OPPORTUNITY_INTELLIGENCE_ENABLED/SPEND_MODE/PROVIDER_CHAIN, both API
+keys, all four attestations); without them every surface stays
+deterministic by construction. Production AI = OFF (verified by default:
+no AI vars in git or committed env; dashboard-only). NOT yet performed
+here (no browser/staging access in this environment — owner-executed):
+staging UI smoke matrix (For You/detail/planner/fallback ×
+anonymous/incomplete/complete profiles × National/International/unknown/
+deadline-soon/no-deadline/missing-requirements × 390px + 1366/1440px),
+failure-chain simulation in staging, and staging request/cost counts.
+Evidence + bar distinction in
+[AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md) (§7, §10,
+§11) and
+[AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
+Next: owner sets staging env → staging smoke tests → staging-behavior
+review → owner prod decision → user pilot → provider revenue pilot.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

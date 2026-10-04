@@ -407,10 +407,10 @@ enables production AI.
   token budget is. Paid quota would not materially solve the proven
   problem; model conformance/budget is the larger issue. No paid billing
   enabled.
-- STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL = NO: best observed 14/16 still
-  trips the zero-fallback pilot bar, and the Groq backup path is
-  effectively non-functional until its token budget is addressed. No
-  staging or production activation performed.
+- STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL was NO under the old
+  zero-fallback bar; SUPERSEDED by the owner-approved staging bar — see
+  "Final staging decision" below. No staging or production activation
+  performed by agents in any case.
 
 ## Final staging decision 2026-10-04 (Gemini 14/16, Groq 9/16, zero hard failures)
 
@@ -419,18 +419,19 @@ enables production AI.
   fallbacks (6 bad-evidence-ref intrinsic + 1 anomalous generation 400),
   0 quota, 0 hard, 80/80 soft, median ~956ms. Fallback behavior is correct
   everywhere, but fallbacks still occur on both paths.
-- STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL = NO. Reason, quantitatively: the
-  in-code pilot bar requires zero fallbacks, and the best measured runs
-  are 14/16 (primary) and 9/16 (backup). A staging pilot would serve
-  deterministic fallbacks on ~12–44% of insights — safe content, but not
-  the reliability evidence the bar demands, and the backup chain cannot
-  yet cover primary misses reliably. Per the milestone rule, poor provider
-  reliability is not hidden behind fallback metrics.
+- SUPERSEDED 2026-10-04 by owner decision: the zero-fallback bar was
+  production-grade and is now scoped to production only. Under the staging
+  bar (zero hard failures, zero leakage, proven fallback, primary ≥80%,
+  materially functional backup, bounded latency, no uncontrolled
+  retry/billing) the evidence qualifies: STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL
+  was answered by owner approval — STAGING AI = APPROVED, PENDING SECRET
+  CONFIG. Production remains separately gated (successful staging behavior,
+  UI smoke tests, acceptable fallback rate/latency, no regression, fresh
+  owner cost/privacy decision): PRODUCTION AI = OFF.
 - Paid Groq: NO, not justified. The binding Groq constraints are
   per-request (token budget — now fixed at 1600 — and intrinsic ref
-  conformance), not quota: pacing already removed all quota_exhausted,
-  and pilot-scale traffic (single requests, 8 req/min route limit, 6h
-  cache) would not trip TPM. Buying quota solves nothing proven.
-- Production AI stays OFF. No staging activation performed. Recommended
-  chain (unchanged, owner approval still required for any production
+  conformance), not quota: pacing already yields zero quota errors, and
+  pilot-scale traffic (single requests, 8 req/min route limit, 6h cache)
+  would not trip TPM. Nothing purchased or activated.
+- Recommended chain (unchanged, owner approval still required for any production
   change): Gemini primary → Groq backup → deterministic fallback.
