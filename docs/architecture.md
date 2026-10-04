@@ -385,8 +385,16 @@ explicitly out of redesign scope.
   `#ffffff`), restrained gold accent (`#C9A227` in covers), emerald/turquoise
   status accents, soft neutral grays. Full dark-mode variable set. No
   gradients-as-decoration, no glassmorphism, no blobs.
-- Typography: Geist Sans; hero `clamp(2rem, 4vw, 3.25rem)` semibold tight;
-  section headings 1.5rem semibold; eyebrow labels 0.75rem uppercase.
+- Typography: Geist Sans for UI/body; system serif stack (Georgia) via
+  `.font-display` for hero and major titles only — never dense staff
+  tables/forms. Hero `clamp(2rem, 4vw, 3.25rem)` semibold; section
+  headings 1.5rem semibold; eyebrow labels 0.75rem uppercase (gold
+  `.eyebrow-gold` on dark brand regions).
+- Brand regions: deep-teal `.hero-dark` homepage hero, staff dashboard
+  heroes (campaigns, moderation, published-management), and login side
+  panel use flat `#082F2B`/`#0D2530` with cream text and gold rules —
+  never whole pages dark. Header keeps cream surfaces with a navy/gold
+  brand mark and gold active underlines.
 - Card rules: 6px radius system-wide (`rounded-md`); opportunity cards carry
   at most TWO trust indicators (deadline status + evidence/eligibility
   line); no badge piles, no percentage gimmicks.
@@ -428,6 +436,12 @@ explicitly out of redesign scope.
 - Trust-badge rules: "Evidence verified" and "Tanzanian access evidenced"
   render ONLY from complete stored evidence; otherwise the UI says unknown
   and points at the source. Badges never outrank evidence.
+- Staff surfaces use the same tokens (submit, published-management,
+  assistant panel converted from zinc/black hardcodes); moderation queue
+  and published list carry cover thumbnails and deadline lines; campaigns
+  dashboard uses a dark hero, status-accented metric cards, opportunity-
+  linked workspace rows, grouped creation workflow, and an aggregate-only
+  privacy callout. No workflow or guard logic changed for styling.
 - Accessibility: skip link, landmarked mains, labelled navs, visible
   `:focus-visible` rings, `prefers-reduced-motion` disables animation,
   decorative covers hidden from assistive tech.

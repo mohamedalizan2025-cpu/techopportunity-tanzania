@@ -35,7 +35,8 @@ export default async function SubmitPage() {
         <p className="mt-3 text-base leading-7 text-[var(--muted)]">
           Know a hackathon, scholarship, competition, internship or tech event
           that Tanzanian students should not miss? Share it below — every
-          submission is reviewed before it is published.
+          submission is reviewed by a person before it is published, and
+          nothing appears publicly until it passes.
         </p>
 
         <div className="mt-8 rounded-md border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6">

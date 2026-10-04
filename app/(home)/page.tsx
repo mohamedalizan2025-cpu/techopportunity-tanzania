@@ -99,19 +99,20 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <main id="main-content" tabIndex={-1} className="flex-1">
-      <section className="border-b border-[var(--line)] bg-[var(--hero)]">
-        <div className={`page-shell ${isFiltered ? "py-5" : "py-7 sm:py-9"}`}>
-          <p className="eyebrow">For Tanzania’s emerging talent</p>
-          <h1 className={isFiltered ? "mt-2 text-3xl font-semibold tracking-tight" : "hero-title mt-3"}>
-            {isFiltered ? "Find your next opportunity" : <>Discover Opportunities.<br />Build Your Future.</>}
+      <section className={`border-b border-[var(--line)] ${isFiltered ? "bg-[var(--hero)]" : "hero-dark"}`}>
+        <div className={`page-shell ${isFiltered ? "py-5" : "py-8 sm:py-12"}`}>
+          <p className={isFiltered ? "eyebrow" : "eyebrow-gold"}>For Tanzania’s emerging talent</p>
+          <h1 className={isFiltered ? "mt-2 text-3xl font-semibold tracking-tight" : "hero-title font-display mt-4 text-[#f7f2e8]"}>
+            {isFiltered ? "Find your next opportunity" : <>Discover Opportunities.<br /><span className="text-[var(--gold)]">Build Your Future.</span></>}
           </h1>
           {!isFiltered ? (
-            <div className="mt-4 grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-center">
-              <div>
-                <p className="max-w-2xl text-base leading-7 text-[var(--muted)]">
-                  Tanzanian, African, and international calls in one place —
-                  each with its source, deadline, and access evidence marked,
-                  so you can see what fits before you apply.
+            <div className="mt-5 grid gap-8 lg:grid-cols-[1.35fr_1fr] lg:items-center">
+              <div className="min-w-0">
+                <p className="max-w-2xl text-base leading-7 hero-muted">
+                  Scholarships, internships, fellowships, competitions and more —
+                  in Tanzania, across Africa and globally. Each listing carries
+                  its source, deadline, and access evidence, so you can see
+                  what fits before you apply.
                 </p>
                 <form
                   action="/#opportunities"
@@ -129,11 +130,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     defaultValue={q ?? ""}
                     maxLength={120}
                     placeholder="Try “AI”, “fellowship”, “internship”…"
-                    className="min-h-12 w-full min-w-0 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-base text-[var(--foreground)] outline-none transition placeholder:text-[var(--subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+                    className="min-h-12 w-full min-w-0 rounded-md border border-white/25 bg-white/10 px-4 text-base text-[#f7f2e8] outline-none transition placeholder:text-[#c9d4cb]/70 focus:border-[var(--gold)] focus:ring-2 focus:ring-[var(--gold)]/40"
                   />
                   <button
                     type="submit"
-                    className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-md bg-[var(--accent)] px-5 text-sm font-semibold text-white transition hover:bg-[#07543f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                    className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-md bg-[var(--gold)] px-5 text-sm font-bold text-[#082f2b] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#082f2b]"
                   >
                     Search
                   </button>
@@ -144,7 +145,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                       <li key={slug}>
                         <Link
                           href={`${buildHref(slug, sort, { q, city, region, deadline, geography, sector })}#opportunities`}
-                          className="inline-flex min-h-11 items-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                          className="inline-flex min-h-11 items-center rounded-md border border-white/25 bg-white/5 px-4 text-sm font-semibold text-[#f7f2e8] transition hover:border-[var(--gold)] hover:text-[var(--gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
                         >
                           {label}
                         </Link>
@@ -152,28 +153,33 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     ))}
                   </ul>
                 ) : null}
-                <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-[var(--muted)]">
+                <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold hero-muted">
                   <li className="inline-flex items-center gap-1.5"><UiIcon name="shield" width="14" height="14" /> Human-reviewed</li>
                   <li className="inline-flex items-center gap-1.5"><UiIcon name="source" width="14" height="14" /> Source-linked</li>
                   <li className="inline-flex items-center gap-1.5"><UiIcon name="clock" width="14" height="14" /> Deadline-tracked</li>
                 </ul>
+                {opportunities.length > 0 ? (
+                  <div className="mt-5 overflow-hidden rounded-md border border-white/20 lg:hidden" aria-hidden="true">
+                    <OpportunityCover opportunity={opportunities[0]} className="aspect-[21/9] w-full" />
+                  </div>
+                ) : null}
               </div>
               {opportunities.length > 0 ? (
                 <div className="hidden gap-4 lg:grid" aria-hidden="true">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-5 gap-4">
                     {opportunities.slice(0, 3).map((item, i) => (
                       <div
                         key={item.id}
-                        className={`overflow-hidden rounded-md border border-[var(--line)] bg-[var(--surface)] ${i === 0 ? "col-span-2" : ""}`}
+                        className={`overflow-hidden rounded-md border border-white/20 bg-white/5 shadow-[0_12px_32px_rgba(0,0,0,0.35)] ${i === 0 ? "col-span-3 row-span-2" : "col-span-2"} ${i === 2 ? "col-start-4" : ""}`}
                       >
-                        <OpportunityCover opportunity={item} className="aspect-[16/9] w-full" />
+                        <OpportunityCover opportunity={item} className="aspect-[16/10] w-full" />
                       </div>
                     ))}
                   </div>
-                  <p className="border-l-2 border-[var(--accent)] pl-4 text-sm leading-6 text-[var(--muted)]">
+                  <p className="border-l-2 border-[var(--gold)] pl-4 text-sm leading-6 hero-muted">
                     Local talent, global opportunity. Evidence and missing
                     details are marked on each listing.{" "}
-                    <a href="#trust-heading" className="font-semibold text-[var(--accent-strong)] underline underline-offset-4">
+                    <a href="#trust-heading" className="font-semibold text-[var(--gold)] underline underline-offset-4">
                       How to read the evidence
                     </a>
                   </p>

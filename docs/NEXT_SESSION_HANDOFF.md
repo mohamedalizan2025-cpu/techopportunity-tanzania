@@ -215,6 +215,25 @@ honest bullets, mobile stacks to form-only). Profile chips aligned to
 changed. Full verify + build green. Next: run the user pilot; collect
 licensed photography only with provenance.
 
+## Visual experience V3 (2026-10-04, HEAD `ddff466` + working tree)
+
+Dark brand system: `--brand-deep`/`--brand-navy`/`--gold` tokens, flat
+`.hero-dark` homepage + campaigns/moderation/published heroes, serif
+`.font-display` titles, gold active underlines, navy/gold brand mark.
+Editorial asymmetric hero collage (desktop) + single mobile visual; covers
+16/10 with on-image status overlay (≤2 indicators kept). Cards show
+evidence-derived Tanzania/International tags. Detail serif title.
+Campaigns rebuilt: dark hero, status-accented metric cards, linked-
+opportunity workspace rows, grouped creation workflow, aggregate-only
+privacy callout. Moderation queue: dark header + cover thumbnails.
+Login panel deepened; submit trust copy; activity status dots; profile
+chips aligned. Real screenshots captured headless (/, 390 + 1366);
+CDP-measured zero horizontal overflow at 390 (scrollWidth == viewport,
+search CTA + bottom nav fully on-screen). Authed/staff pages remain
+visually unverified (no owner session). Photo assets: still zero licensed
+files — registry + manifest authoritative, no unverified downloads. Full
+verify + build green (below). Next: run the user pilot.
+
 ## Superseded detailed log (kept for audit; live facts are in §§1–12 above)
 
 ## Pilot replenishment shortlist (2026-10-02, HEAD `3e45e3b`, read-only, no mutations)

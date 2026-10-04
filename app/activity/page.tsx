@@ -154,7 +154,19 @@ export default async function ActivityPage() {
               if (entries.length === 0) return null;
               return (
                 <div key={status} className="mt-8">
-                  <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-[var(--foreground)]">
+                    <span
+                      aria-hidden="true"
+                      className={`inline-block h-2.5 w-2.5 rounded-full ${
+                        status === "applied"
+                          ? "bg-[var(--accent)]"
+                          : status === "applying"
+                            ? "bg-amber-500"
+                            : status === "interested"
+                              ? "bg-[#3AB7A5]"
+                              : "bg-[var(--line-strong)]"
+                      }`}
+                    />
                     {ACTIVITY_STATUS_LABELS[status]} · {entries.length}
                   </h3>
                   <p className="mt-1 text-sm text-[var(--muted)]">

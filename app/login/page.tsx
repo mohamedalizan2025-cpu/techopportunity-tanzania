@@ -61,8 +61,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
 
         <div className="mt-8 overflow-hidden rounded-md border border-[var(--line)] bg-[var(--surface)] sm:grid sm:grid-cols-[1fr_1.25fr]">
-          <div className="hidden flex-col justify-between gap-6 bg-[#0B3B36] p-7 text-[#F5EFE0] sm:flex">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#C9A227]">
+          <div className="hidden flex-col justify-between gap-6 bg-[var(--brand-deep)] p-7 text-[#F5EFE0] sm:flex">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--gold)]">
               Tech Opportunity
             </p>
             <div>

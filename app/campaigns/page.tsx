@@ -8,7 +8,6 @@ import { listManagedPublishedOpportunities } from "@/lib/data/published-manageme
 import { summarizeFunnel } from "@/lib/campaign-analytics";
 import {
   CAMPAIGN_STATUS_LABELS,
-  CAMPAIGN_STATUS_DESCRIPTIONS,
 } from "@/lib/provider-campaign-state";
 import { logOutAction } from "@/lib/data/auth-actions";
 
@@ -57,19 +56,20 @@ export default async function CampaignPilotPage() {
       tabIndex={-1}
       className="flex-1 bg-[var(--background)]"
     >
-      <section className="border-b border-[var(--line)] bg-[var(--hero)]">
-        <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Internal pilot · staff only
+      <section className="hero-dark border-b border-black/20">
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
+          <p className="eyebrow-gold">
+            Provider campaigns · internal pilot
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl">
-            Provider Campaign Pilot
+          <h1 className="font-display mt-3 text-3xl font-semibold text-[#f7f2e8] sm:text-5xl">
+            Campaign intelligence
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
-            Rehearse the commercial story — Verified Opportunity → Relevant
-            Audience → Engagement Funnel — on public corpus data only. No
-            talent profile, bookmark, activity, or alert data is read or shown
-            here.
+          <div className="hero-rule mt-4" aria-hidden="true" />
+          <p className="mt-4 max-w-2xl text-base leading-7 hero-muted">
+            Manage verified opportunity campaigns and review privacy-safe
+            engagement. Verified Opportunity → Relevant Audience →
+            Engagement Funnel — on public corpus data only. No talent profile,
+            bookmark, activity, or alert data is read or shown here.
           </p>
         </div>
       </section>
@@ -100,15 +100,16 @@ export default async function CampaignPilotPage() {
               <dl className="mt-4 grid gap-3 sm:grid-cols-4">
                 {(
                   [
-                    ["draft", funnel.draft],
-                    ["active", funnel.active],
-                    ["paused", funnel.paused],
-                    ["completed", funnel.completed],
+                    ["draft", funnel.draft, "var(--subtle)", "Ideas not yet running."],
+                    ["active", funnel.active, "var(--accent)", "Live and collecting engagement."],
+                    ["paused", funnel.paused, "#b45309", "On hold; counts frozen."],
+                    ["completed", funnel.completed, "var(--accent-strong)", "Finished; read the report."],
                   ] as const
-                ).map(([status, count]) => (
+                ).map(([status, count, accent, descriptor]) => (
                   <div
                     key={status}
-                    className="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4"
+                    className="rounded-md border border-[var(--line)] bg-[var(--surface)] p-4"
+                    style={{ borderTop: `3px solid ${accent}` }}
                   >
                     <dt className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
                       {CAMPAIGN_STATUS_LABELS[status]}
@@ -117,7 +118,7 @@ export default async function CampaignPilotPage() {
                       {count}
                     </dd>
                     <dd className="mt-1 text-xs leading-5 text-[var(--muted)]">
-                      {CAMPAIGN_STATUS_DESCRIPTIONS[status]}
+                      {descriptor}
                     </dd>
                   </div>
                 ))}
@@ -129,10 +130,18 @@ export default async function CampaignPilotPage() {
                 </p>
               ) : (
                 <ul className="mt-6 grid gap-4 md:grid-cols-2">
-                  {campaigns.campaigns.map((campaign) => (
+                  {campaigns.campaigns.map((campaign) => {
+                    const linkedTitle = published.find(
+                      (opportunity) => opportunity.id === campaign.opportunityId
+                    )?.title;
+                    return (
                     <li
                       key={campaign.id}
-                      className="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5"
+                      className={`rounded-md border bg-[var(--surface)] p-5 transition hover:border-[var(--line-strong)] ${
+                        campaign.status === "active"
+                          ? "border-l-4 border-l-[var(--accent)] border-[var(--line)]"
+                          : "border-[var(--line)]"
+                      }`}
                     >
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent-strong)]">
                         {CAMPAIGN_STATUS_LABELS[campaign.status]}
@@ -145,6 +154,11 @@ export default async function CampaignPilotPage() {
                           {campaign.name}
                         </Link>
                       </h3>
+                      {linkedTitle ? (
+                        <p className="mt-1 text-sm text-[var(--muted)]">
+                          Linked opportunity: {linkedTitle}
+                        </p>
+                      ) : null}
                       <p className="mt-1 text-xs text-[var(--subtle)]">
                         {[
                           campaign.geography ?? "any geography",
@@ -152,10 +166,26 @@ export default async function CampaignPilotPage() {
                           campaign.opportunityType ?? "any type",
                         ].join(" · ")}
                       </p>
+                      <p className="mt-3">
+                        <Link
+                          href={`/campaigns/${campaign.id}`}
+                          className="inline-flex min-h-11 items-center text-sm font-semibold text-[var(--accent-strong)] underline-offset-4 hover:underline"
+                        >
+                          View campaign →
+                        </Link>
+                      </p>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               )}
+              <div className="mt-8 rounded-md border border-[var(--line-strong)] bg-[var(--accent-soft)] p-5 text-sm leading-6 text-[var(--accent-strong)]">
+                <p className="font-semibold">Aggregate only.</p>
+                <p className="mt-1">
+                  No private talent profile or activity data is exposed —
+                  counts only, never names, emails, or per-user lists.
+                </p>
+              </div>
             </>
           )}
           <CreateCampaignForm

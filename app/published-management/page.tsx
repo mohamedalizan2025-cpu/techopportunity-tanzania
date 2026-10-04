@@ -3,9 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logOutAction } from "@/lib/data/auth-actions";
 import { categoryLabel } from "@/lib/category-labels";
+import { formatDeadlinePresentation } from "@/lib/opportunity-presentation";
 import { getModerationAccess } from "@/lib/data/moderation";
 import { listManagedPublishedOpportunities } from "@/lib/data/published-management";
 import { UnpublishControl } from "./unpublish-control";
+import { OpportunityCover } from "@/components/opportunity-cover";
 
 export const metadata: Metadata = {
   title: "Published records · TechOpportunity Tanzania",
@@ -21,8 +23,7 @@ function formatPublished(iso: string): string {
   }).format(new Date(iso));
 }
 
-const signOutButtonClasses =
-  "inline-flex h-9 items-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]";
+const signOutButtonClasses = "unused-staff-signout-placeholder";
 
 /**
  * Staff-only published-record list (Milestone 14). Same authorization
@@ -60,40 +61,48 @@ export default async function PublishedManagementPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-[var(--background)]">
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
-              Published records
-            </h1>
-            <p className="mt-2 text-sm text-[var(--muted)]">
-              Signed in as {signedInAs} ·{" "}
-              {published.length === 0
-                ? "nothing is public right now"
-                : `${published.length} live on the public site`}
-            </p>
+      <div className="hero-dark border-b border-black/20">
+        <div className="mx-auto w-full max-w-2xl px-6 py-8 sm:py-10">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="eyebrow-gold">Staff management</p>
+              <h1 className="font-display mt-2 text-3xl font-semibold text-[#f7f2e8] sm:text-4xl">
+                Published records
+              </h1>
+              <p className="mt-2 text-sm hero-muted">
+                Signed in as {signedInAs} ·{" "}
+                {published.length === 0
+                  ? "nothing is public right now"
+                  : `${published.length} live on the public site`}
+              </p>
+            </div>
+            <form action={logOutAction}>
+              <button
+                type="submit"
+                className="inline-flex h-9 items-center rounded-md border border-white/25 bg-white/5 px-4 text-sm font-medium text-[#f7f2e8] transition-colors hover:border-[var(--gold)]"
+              >
+                Sign out
+              </button>
+            </form>
           </div>
-          <form action={logOutAction}>
-            <button type="submit" className={signOutButtonClasses}>
-              Sign out
-            </button>
-          </form>
-        </div>
 
-        <div className="mt-6 flex flex-wrap gap-3 text-sm">
-          <Link
-            href="/moderation"
-            className="font-medium text-[var(--muted)] underline underline-offset-2 hover:text-[var(--foreground)]"
-          >
-            ← Moderation queue
-          </Link>
-          <Link
-            href="/"
-            className="font-medium text-[var(--muted)] underline underline-offset-2 hover:text-[var(--foreground)]"
-          >
-            View public site ↗
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <Link
+              href="/moderation"
+              className="font-medium text-[#c9d4cb] underline underline-offset-2 hover:text-[var(--gold)]"
+            >
+              ← Moderation queue
+            </Link>
+            <Link
+              href="/"
+              className="font-medium text-[#c9d4cb] underline underline-offset-2 hover:text-[var(--gold)]"
+            >
+              View public site ↗
+            </Link>
+          </div>
         </div>
+      </div>
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-10">
 
         {published.length === 0 ? (
             <p className="mt-10 rounded-md border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--muted)]">
@@ -119,6 +128,9 @@ export default async function PublishedManagementPage() {
                   className="rounded-md border border-[var(--line)] bg-[var(--surface)] p-4"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
+                    <span aria-hidden="true" className="hidden h-16 w-24 shrink-0 overflow-hidden rounded-md sm:block">
+                      <OpportunityCover opportunity={opportunity} className="h-full w-full" />
+                    </span>
                     <div className="min-w-0 flex-1">
                       <p className="break-words font-medium text-[var(--foreground)]">
                         {opportunity.title}
@@ -131,6 +143,8 @@ export default async function PublishedManagementPage() {
                         {opportunity.sourceName
                           ? `Source · ${opportunity.sourceName}`
                           : "Source · none recorded (manually entered)"}
+                        {" · "}
+                        Deadline {formatDeadlinePresentation(opportunity.deadline).dateLabel ?? formatDeadlinePresentation(opportunity.deadline).label}
                         {" · "}
                         Published {formatPublished(opportunity.createdAt)}
                       </p>

@@ -70,7 +70,7 @@ export function OpportunityDetail({
             </span>
           ) : null}
         </div>
-        <h1 className="mt-5 max-w-4xl break-words text-3xl font-semibold leading-[1.15] tracking-[-.04em] sm:text-4xl lg:text-5xl">
+        <h1 className="font-display mt-5 max-w-4xl break-words text-3xl font-semibold leading-[1.15] sm:text-4xl lg:text-5xl">
           {opportunity.title}
         </h1>
         <p className="mt-4 text-base text-[var(--muted)]">

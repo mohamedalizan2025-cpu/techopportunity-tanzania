@@ -41,6 +41,10 @@ export function OpportunityCard({
     <article className="opportunity-card group">
       <div className="opportunity-card-cover" aria-hidden="true">
         <OpportunityCover opportunity={opportunity} />
+        <span className={`opportunity-cover-status status-${deadline.state}`}>
+          <UiIcon name="clock" width="14" height="14" />
+          {deadline.label}
+        </span>
       </div>
       <div className="mt-4 flex flex-wrap items-start justify-between gap-2">
         <span className="flex flex-wrap items-center gap-2">
@@ -53,10 +57,11 @@ export function OpportunityCard({
             </span>
           ) : null}
         </span>
-        <span className={`status-label status-${deadline.state}`}>
-          <UiIcon name="clock" width="14" height="14" />
-          {deadline.label}
-        </span>
+        {badge ? (
+          <span className="trust-badge trust-badge-verified">
+            <UiIcon name="shield" width="14" height="14" /> {badge.label}
+          </span>
+        ) : null}
       </div>
       <div className="mt-4 flex-1">
         <h3 className="text-xl font-semibold leading-7 tracking-tight">
@@ -104,11 +109,12 @@ export function OpportunityCard({
         ) : null}
       </dl>
       <div className="mt-4 border-t border-[var(--line)] pt-3">
-        <p className={badge ? "flex items-center gap-2 text-xs font-semibold text-[var(--accent-strong)]" : "text-xs font-medium text-[var(--muted)]"}>
-          {badge ? <UiIcon name="shield" width="14" height="14" /> : null}
-          {badge?.label ?? "Check source requirements"}
-        </p>
-      <p className="mt-2 flex items-start gap-2 text-xs leading-5 text-[var(--muted)]">
+        {!badge ? (
+          <p className="text-xs font-medium text-[var(--muted)]">
+            Check source requirements
+          </p>
+        ) : null}
+        <p className={`${badge ? "mt-0" : "mt-2"} flex items-start gap-2 text-xs leading-5 text-[var(--muted)]`}>
         <UiIcon
           name="info"
           width="14"

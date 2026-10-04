@@ -92,21 +92,21 @@ export default async function CampaignDetailPage({
       tabIndex={-1}
       className="flex-1 bg-[var(--background)]"
     >
-      <section className="border-b border-[var(--line)] bg-[var(--hero)]">
+      <section className="hero-dark border-b border-black/20">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
           <Link
             href="/campaigns"
-            className="text-sm font-semibold text-[var(--muted)] hover:text-[var(--accent-strong)]"
+            className="text-sm font-semibold text-[#c9d4cb] hover:text-[var(--gold)]"
           >
             ← All campaigns
           </Link>
-          <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
+          <p className="eyebrow-gold mt-4">
             {CAMPAIGN_STATUS_LABELS[campaign.status]} · internal pilot
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl">
+          <h1 className="font-display mt-3 text-3xl font-semibold text-[#f7f2e8] sm:text-5xl">
             {campaign.name}
           </h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">
+          <p className="mt-2 text-sm hero-muted">
             {CAMPAIGN_STATUS_DESCRIPTIONS[campaign.status]}
           </p>
           <div className="mt-5">
@@ -166,7 +166,7 @@ export default async function CampaignDetailPage({
           {!audience.available ? (
             <p
               role="alert"
-              className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+              className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
             >
               Audience estimate unavailable (aggregate schema pending).
             </p>
@@ -214,7 +214,7 @@ export default async function CampaignDetailPage({
           {!engagement.available ? (
             <p
               role="alert"
-              className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+              className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
             >
               Engagement aggregates unavailable (aggregate schema pending).
             </p>

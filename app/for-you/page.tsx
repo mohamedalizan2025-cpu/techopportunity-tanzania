@@ -56,11 +56,11 @@ export default async function ForYouPage({
             Personalized
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl">
-            For You
+            Opportunities matched to what you’re building toward.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
-            Opportunities from the same published list as Explore, ordered by
-            your profile with a clear reason for each. For You never hides
+            Your profile orders the same published list as Explore, with a
+            clear reason for each suggestion. For You never hides
             anything —{" "}
             <Link
               href="/#opportunities"

@@ -30,6 +30,7 @@ import {
   type Sector,
 } from "@/lib/taxonomy";
 import { QueueBulkPanel } from "./queue-bulk-panel";
+import { OpportunityCover } from "@/components/opportunity-cover";
 
 export const metadata: Metadata = {
   title: "Moderation queue · TechOpportunity Tanzania",
@@ -164,41 +165,45 @@ export default async function ModerationPage({
 
   return (
     <div className="flex flex-1 flex-col bg-[var(--background)] font-sans">
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
+      <div className="hero-dark border-b border-black/20">
+        <div className="mx-auto w-full max-w-2xl px-6 py-8 sm:py-10">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
+            <p className="eyebrow-gold">Staff review</p>
+            <h1 className="font-display mt-2 text-3xl font-semibold text-[#f7f2e8] sm:text-4xl">
               Moderation queue
             </h1>
-            <p className="mt-2 text-sm text-[var(--muted)]">
+            <p className="mt-2 text-sm hero-muted">
               Signed in as {signedInAs} ·{" "}
               {pending.length === 0
                 ? "queue is empty"
                 : `${pending.length} awaiting review`}
             </p>
-            <p className="mt-1 text-sm">
+            <p className="mt-2 text-sm">
               <Link
                 href="/published-management"
-                className="font-medium text-[var(--muted)] underline underline-offset-2 hover:text-[var(--foreground)]"
+                className="font-medium text-[#c9d4cb] underline underline-offset-2 hover:text-[var(--gold)]"
               >
                 Published records →
               </Link>
-            </p>
-            <p className="mt-1 text-sm">
+              {" · "}
               <Link
                 href="/campaigns"
-                className="font-medium text-[var(--muted)] underline underline-offset-2 hover:text-[var(--foreground)]"
+                className="font-medium text-[#c9d4cb] underline underline-offset-2 hover:text-[var(--gold)]"
               >
                 Campaign pilot →
               </Link>
             </p>
           </div>
           <form action={logOutAction}>
-            <button type="submit" className={signOutButtonClasses}>
+            <button type="submit" className="inline-flex h-9 items-center rounded-md border border-white/25 bg-white/5 px-4 text-sm font-medium text-[#f7f2e8] transition-colors hover:border-[var(--gold)]">
               Sign out
             </button>
           </form>
         </div>
+        </div>
+      </div>
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-10">
 
         {pending.length === 0 ? (
           <p className="mt-10 rounded-lg border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--muted)]">
@@ -375,6 +380,11 @@ export default async function ModerationPage({
                       href={`/moderation/${opportunity.id}${query}`}
                       className="block rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 transition-colors hover:border-[var(--line-strong)]"
                     >
+                      <div className="flex items-start gap-3">
+                        <span aria-hidden="true" className="hidden h-16 w-24 shrink-0 overflow-hidden rounded-md sm:block">
+                          <OpportunityCover opportunity={opportunity} className="h-full w-full" />
+                        </span>
+                        <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="min-w-0 flex-1 break-words font-medium text-[var(--foreground)]">
                           {opportunity.title}
@@ -407,6 +417,8 @@ export default async function ModerationPage({
                         Submitted {formatSubmitted(opportunity.createdAt)} · Deadline{" "}
                         {formatQueueDeadline(opportunity.deadline)}
                       </p>
+                        </div>
+                      </div>
                     </Link>
                   </li>
                 );
