@@ -33,7 +33,15 @@ Tanzania first; African expansion is a hypothesis, not existing coverage proof.
 Positioning: an opportunity-intelligence and action platform for Tanzania's
 emerging talent. Public promise: **Opportunities worth acting on.** Explain the
 mechanism: inspect source evidence, prioritize with an optional profile, and keep
-private bookmarks and application progress. Use **CareerTech / opportunity
+private bookmarks and application progress. The public site exposes the model:
+the homepage walks talent through Discover → Understand → Prioritize → Act,
+presents the three sides (Talent live, Providers managed pilot,
+Institutions early model) with honest live/pilot/future labels, and the
+dedicated `/organizations` page carries the provider managed-pilot flow
+(verify → distribute → aggregate report), the early institutional model,
+and the privacy rules (never sold, aggregate-only, verification never
+bypassed, no guaranteed numbers) — with no fake customers, partners,
+traction, or dashboards. Use **CareerTech / opportunity
 intelligence** for competitions; EdTech is adjacent through education-to-career
 access, not a claim to teach or improve learning outcomes. Talent infrastructure
 is the longer-term business direction, not today's delivered institutional system.

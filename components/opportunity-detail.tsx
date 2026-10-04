@@ -1,4 +1,5 @@
 import { UiIcon } from "./ui-icon";
+import Link from "next/link";
 import { OpportunityCover } from "./opportunity-cover";
 import { categoryLabel } from "@/lib/category-labels";
 import { SaveOpportunityControl } from "@/components/save-opportunity-control";
@@ -249,6 +250,19 @@ export function OpportunityDetail({
               not a guarantee that the source is still current. Requirements and
               deadlines can change.
             </p>
+          </section>
+          <section aria-label="Share an opportunity" className="mt-8 rounded-md border border-[var(--line)] bg-[var(--muted-surface)] p-5">
+            <h2 className="font-semibold">Know another opportunity?</h2>
+            <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+              Share a legitimate open call. Every submission is reviewed by a
+              person before anything goes public.
+            </p>
+            <Link
+              href="/submit"
+              className="mt-3 inline-flex min-h-11 items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)]"
+            >
+              Submit an opportunity
+            </Link>
           </section>
         </div>
       </div>

@@ -219,6 +219,59 @@ export function opportunityExcerpt(description: string, limit = 180): string {
 }
 
 /**
+ * Card excerpt: drops a leading "Deadline: …." boilerplate sentence when the
+ * card already renders the deadline separately, then shortens. Never invents
+ * or reorders content — pure trimming of duplicated lead text.
+ */
+const DEADLINE_LEAD_PATTERN =
+  /^(?:application\s+)?deadline:\s*(?:january|february|march|april|may|june|july|august|september|october|november|december|jan\.?|feb\.?|mar\.?|apr\.?|jun\.?|jul\.?|aug\.?|sept?\.?|oct\.?|nov\.?|dec\.?)\s+\d{1,2}(?:st|nd|rd|th)?,?\s*\d{0,4}\s*\.?\s*[–—-]?\s*/i;
+
+export function opportunityCardExcerpt(description: string, limit = 110): string {
+  const normalized = description.replace(/\s+/g, " ").trim();
+  const withoutDeadlineLead = normalized.replace(DEADLINE_LEAD_PATTERN, "");
+  const body = withoutDeadlineLead.length > 0 ? withoutDeadlineLead : normalized;
+  if (body.length <= limit) return body;
+  return `${body.slice(0, limit - 1).trimEnd()}…`;
+}
+
+/**
+ * Deterministic featured selection for the homepage: soonest deadlines
+ * first, at most one record per category for type diversity, capped at
+ * `count`. Editorial rule only — never "sponsored", never paid placement.
+ */
+export function featuredOpportunities(
+  opportunities: Opportunity[],
+  now: Date = new Date(),
+  count = 3
+): Opportunity[] {
+  const actionable = opportunities.filter(
+    (opportunity) =>
+      opportunity.status === "published" &&
+      isActionableNow(opportunity.deadline, now) &&
+      isFeatureEligible(opportunity, now)
+  );
+  const byDeadline = [...actionable].sort((a, b) => {
+    const da = a.deadline ? Date.parse(a.deadline) : Number.POSITIVE_INFINITY;
+    const db = b.deadline ? Date.parse(b.deadline) : Number.POSITIVE_INFINITY;
+    if (da !== db) return da - db;
+    return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+  });
+  const picked: Opportunity[] = [];
+  const seenCategories = new Set<string>();
+  for (const opportunity of byDeadline) {
+    if (picked.length >= count) break;
+    if (seenCategories.has(opportunity.category)) continue;
+    seenCategories.add(opportunity.category);
+    picked.push(opportunity);
+  }
+  for (const opportunity of byDeadline) {
+    if (picked.length >= count) break;
+    if (!picked.includes(opportunity)) picked.push(opportunity);
+  }
+  return picked;
+}
+
+/**
  * Pure homepage selection over the already published public corpus. The status
  * check is deliberate defence in depth and makes unpublished leakage impossible
  * even if a future caller passes a mixed collection.

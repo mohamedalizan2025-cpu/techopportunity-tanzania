@@ -23,6 +23,7 @@ import {
 } from "@/lib/data/opportunities";
 import {
   buildHomepageSnapshot,
+  featuredOpportunities,
   formatResultCount,
 } from "@/lib/opportunity-presentation";
 import { parseGeography, parseSector } from "@/lib/taxonomy";
@@ -89,6 +90,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const snapshot = isFiltered
     ? { closingSoon: [], recentlyAdded: [] }
     : buildHomepageSnapshot(opportunities, now);
+  const featured = isFiltered ? [] : featuredOpportunities(opportunities, now, 3);
   const browseHref = `${buildHref(category, sort, { q, city, region, deadline, geography, sector })}#opportunities`;
   const visibleOpportunities = opportunities.slice(0, page * PAGE_SIZE);
   const hasMore = opportunities.length > visibleOpportunities.length;
@@ -197,23 +199,86 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </section>
 
+      {!isFiltered && featured.length > 0 ? (
+        <section aria-labelledby="featured-heading" className="border-b border-[var(--line)] bg-[var(--surface)]">
+          <div className="page-shell py-8 sm:py-10">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="eyebrow">Closing soon across types</p>
+                <h2 id="featured-heading" className="font-display mt-2 text-2xl font-semibold sm:text-3xl">
+                  Featured now
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+                  Chosen by soonest deadline across opportunity types — never
+                  sponsored, never paid placement.
+                </p>
+              </div>
+              <Link
+                href="/#opportunities"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-[var(--accent-strong)] underline-offset-4 hover:underline"
+              >
+                Explore all opportunities →
+              </Link>
+            </div>
+            <ul className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {featured.map((opportunity) => (
+                <li key={opportunity.id} className="min-w-0">
+                  <OpportunityCard
+                    opportunity={opportunity}
+                    now={now}
+                    returnHref="/#opportunities"
+                    isSaved={savedIds.has(opportunity.id)}
+                    isAuthenticated={user !== null}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ) : null}
+
       <section
         id="opportunities"
         aria-labelledby="opportunities-heading"
         className="scroll-mt-20"
       >
         <div className="page-shell py-5 sm:py-7">
-          <OpportunityFilters
-            activeCategory={category}
-            activeSort={sort}
-            activeQuery={q}
-            activeCity={city}
-            activeRegion={region}
-            activeDeadline={deadline}
-            activeGeography={geography}
-            activeSector={sector}
-            locations={locations}
-          />
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-5">
+            <div>
+              <h2
+                id="opportunities-heading"
+                className="font-display text-2xl font-semibold sm:text-3xl"
+              >
+                {isFiltered ? "Search results" : "Explore opportunities"}
+              </h2>
+              <p
+                role="status"
+                aria-live="polite"
+                className="mt-2 text-sm text-[var(--muted)]"
+              >
+                {resultLabel}
+              </p>
+            </div>
+            <p className="text-xs text-[var(--muted)]">
+              {sort === "relevance"
+                ? "Best keyword matches first"
+                : sort === "newest"
+                  ? "Newest additions first"
+                  : "Upcoming deadlines first"}
+            </p>
+          </div>
+          <div className="mt-5">
+            <OpportunityFilters
+              activeCategory={category}
+              activeSort={sort}
+              activeQuery={q}
+              activeCity={city}
+              activeRegion={region}
+              activeDeadline={deadline}
+              activeGeography={geography}
+              activeSector={sector}
+              locations={locations}
+            />
           {liveCategories.length > 0 ? (
             <nav aria-label="Opportunity categories" className="mt-5">
               <ul className="category-links">
@@ -289,31 +354,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </details>
           ) : null}
 
-          <div className="mt-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-5">
-            <div>
-              <h2
-                id="opportunities-heading"
-                className="text-2xl font-semibold tracking-tight"
-              >
-                {isFiltered ? "Search results" : "Explore opportunities"}
-              </h2>
-              <p
-                role="status"
-                aria-live="polite"
-                className="mt-2 text-sm text-[var(--muted)]"
-              >
-                {resultLabel}
-              </p>
-            </div>
-            <p className="text-xs text-[var(--muted)]">
-              {sort === "relevance"
-                ? "Best keyword matches first"
-                : sort === "newest"
-                  ? "Newest additions first"
-                  : "Upcoming deadlines first"}
-            </p>
-          </div>
-          <div className="mt-5">
             {opportunities.length === 0 ? (
               <EmptyState
                 title={
@@ -336,7 +376,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               />
             ) : (
               <>
-                <ul className="grid gap-4 sm:grid-cols-2">
+                <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {visibleOpportunities.map((opportunity) => (
                     <li key={opportunity.id} className="min-w-0">
                       <OpportunityCard
@@ -362,37 +402,154 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </section>
       <section
-        aria-labelledby="trust-heading"
-        className="mt-4 border-t border-[var(--line)] bg-[var(--surface)]"
+        aria-labelledby="how-heading"
+        className="border-t border-[var(--line)] bg-[var(--surface)]"
       >
-        <div className="page-shell grid gap-6 py-10 sm:grid-cols-2 lg:grid-cols-[1.1fr_1fr_1fr]">
-          <div>
-            <p className="eyebrow">Make an informed choice</p>
-            <h2
-              id="trust-heading"
-              className="mt-3 text-xl font-semibold tracking-tight"
-            >
-              From discovery
-              <br />
-              to your next step.
+        <div className="page-shell py-10 sm:py-14">
+          <p className="eyebrow">How Tech Opportunity works</p>
+          <h2 id="how-heading" className="font-display mt-3 max-w-2xl text-2xl font-semibold sm:text-3xl">
+            More than a feed — a path from discovery to application.
+          </h2>
+          <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { n: "01", title: "Discover", body: "Find opportunities from Tanzania, Africa and globally in one place." },
+              { n: "02", title: "Understand", body: "See deadline, source, access evidence — and what is still unknown." },
+              { n: "03", title: "Prioritize", body: "Use your profile and Opportunity Intelligence to see relevance." },
+              { n: "04", title: "Act", body: "Save, mark Interested / Applying / Applied, then apply at the source." },
+            ].map((step) => (
+              <li key={step.n} className="border-t-2 border-[var(--gold)] pt-4">
+                <p className="font-display text-3xl font-semibold text-[var(--accent-strong)]">{step.n}</p>
+                <h3 className="mt-2 font-semibold">{step.title}</h3>
+                <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{step.body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+      <section
+        aria-labelledby="platform-heading"
+        className="hero-dark border-t border-black/20"
+      >
+        <div className="page-shell py-10 sm:py-14">
+          <p className="eyebrow-gold">Built for the opportunity ecosystem</p>
+          <h2 id="platform-heading" className="font-display mt-3 max-w-2xl text-2xl font-semibold text-[#f7f2e8] sm:text-3xl">
+            One trusted platform, three sides.
+          </h2>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="rounded-md border border-white/15 bg-white/5 p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--gold)]">Talent · Live</p>
+              <h3 className="mt-2 text-lg font-semibold text-[#f7f2e8]">Find opportunities worth acting on.</h3>
+              <p className="mt-2 text-sm leading-6 hero-muted">
+                Discover trusted calls, understand access, prioritize
+                relevance and keep track of your application journey.
+              </p>
+              <Link href="/#opportunities" className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--gold)] underline-offset-4 hover:underline">
+                Explore opportunities →
+              </Link>
+            </div>
+            <div className="rounded-md border border-white/15 bg-white/5 p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--gold)]">Providers · Managed pilot</p>
+              <h3 className="mt-2 text-lg font-semibold text-[#f7f2e8]">Reach relevant Tanzanian talent.</h3>
+              <p className="mt-2 text-sm leading-6 hero-muted">
+                We review a legitimate open call, distribute it through an
+                agreed audience and report privacy-safe aggregate engagement.
+                Provider self-service is not yet available.
+              </p>
+              <Link href="/organizations" className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--gold)] underline-offset-4 hover:underline">
+                How the pilot works →
+              </Link>
+            </div>
+            <div className="rounded-md border border-white/15 bg-white/5 p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--gold)]">Institutions · Early pilot</p>
+              <h3 className="mt-2 text-lg font-semibold text-[#f7f2e8]">Make opportunity access easier for your community.</h3>
+              <p className="mt-2 text-sm leading-6 hero-muted">
+                Curated opportunity distribution with future privacy-safe
+                engagement insight for students and emerging talent. No
+                institution dashboards exist yet.
+              </p>
+              <Link href="/organizations" className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--gold)] underline-offset-4 hover:underline">
+                Learn about institutional use →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section
+        aria-labelledby="trust-heading"
+        className="border-t border-[var(--line)] bg-[var(--surface)]"
+      >
+        <div className="page-shell py-10 sm:py-14">
+          <p className="eyebrow">Why trust this platform</p>
+          <h2
+            id="trust-heading"
+            className="font-display mt-3 max-w-2xl text-2xl font-semibold sm:text-3xl"
+          >
+            More than another opportunity feed.
+          </h2>
+          <div className="mt-8 grid gap-6 sm:grid-cols-3">
+            <div>
+              <h3 className="flex items-center gap-2 font-semibold"><UiIcon name="source" width="18" height="18" /> Source evidence</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                We keep the authoritative source visible. Publication
+                requires human review, and “Evidence verified” marks only
+                records that meet the fuller evidence checks.
+              </p>
+            </div>
+            <div>
+              <h3 className="flex items-center gap-2 font-semibold"><UiIcon name="globe" width="18" height="18" /> Tanzanian access</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                Where access is evidenced, we say so. Where it is unknown,
+                we say that too — a location is never treated as proof of
+                eligibility.
+              </p>
+            </div>
+            <div>
+              <h3 className="flex items-center gap-2 font-semibold"><UiIcon name="bookmark" width="18" height="18" /> Action workflow</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                Save, prioritize and track progress instead of losing
+                another link. Use For You to prioritize with an optional
+                profile — these are your private notes.
+              </p>
+              <Link href="/for-you" className="nav-link mt-2 -ml-3 underline underline-offset-4">Open For You →</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section aria-labelledby="cta-heading" className="border-t border-[var(--line)]">
+        <div className="page-shell grid gap-6 py-10 sm:py-14 lg:grid-cols-2">
+          <div className="rounded-md bg-[var(--brand-deep)] p-6 sm:p-8">
+            <h2 id="cta-heading" className="font-display text-2xl font-semibold text-[#f7f2e8]">
+              Ready when an opportunity is.
             </h2>
-          </div>
-          <div>
-            <h3 className="font-semibold">Check the evidence</h3>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              Publication requires human review. “Evidence verified” marks records
-              that meet the fuller evidence checks. Other listings need careful
-              source checks; review is not a guarantee of eligibility.
+            <p className="mt-2 text-sm leading-6 hero-muted">
+              Build a lightweight profile and let For You order the shelf
+              with clear reasons — or keep exploring freely, no account needed.
             </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href="/for-you" className="inline-flex min-h-11 items-center justify-center rounded-md bg-[var(--gold)] px-5 text-sm font-bold text-[#082f2b] transition hover:brightness-110">
+                Open For You
+              </Link>
+              <Link href="/#opportunities" className="inline-flex min-h-11 items-center justify-center rounded-md border border-white/25 px-5 text-sm font-semibold text-[#f7f2e8] hover:border-[var(--gold)] hover:text-[var(--gold)]">
+                Keep exploring
+              </Link>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold">Make it your own</h3>
+          <div className="rounded-md border border-[var(--line-strong)] bg-[var(--surface)] p-6 sm:p-8">
+            <p className="eyebrow">For organizations</p>
+            <h2 className="mt-2 text-xl font-semibold">Share an opportunity with Tanzanian talent.</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              Use For You to prioritize with an optional profile. Save a
-              bookmark, then track Interested, Applying or Applied in Activity.
-              These are your private notes; applications happen at the source.
+              Providers, universities, hubs and NGOs: submit a legitimate
+              open call for human review, or learn how the managed pilot
+              and early institutional model work.
             </p>
-            <Link href="/for-you" className="nav-link mt-2 -ml-3 underline underline-offset-4">Open For You →</Link>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href="/submit" className="button-primary">
+                Submit an opportunity
+              </Link>
+              <Link href="/organizations" className="button-secondary">
+                For organizations
+              </Link>
+            </div>
           </div>
         </div>
       </section>

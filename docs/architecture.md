@@ -445,6 +445,14 @@ explicitly out of redesign scope.
 - Accessibility: skip link, landmarked mains, labelled navs, visible
   `:focus-visible` rings, `prefers-reduced-motion` disables animation,
   decorative covers hidden from assistive tech.
+- Public business surfaces: `app/organizations/page.tsx` is the single
+  public organizations route (provider managed-pilot flow, early
+  institutional model, privacy rules; CTAs use only `/submit` and the
+  public shelf — no invented contact channel). The staff-only
+  `/campaigns` pilot links to it for narrative continuity but is never
+  exposed publicly. Homepage sections (featured/how-it-works/three-sided/
+  trust/final-CTA) present live vs pilot vs future status honestly; no
+  fake counts, testimonials, partners, or dashboards anywhere.
 
 ---
 

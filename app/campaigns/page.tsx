@@ -71,6 +71,14 @@ export default async function CampaignPilotPage() {
             Engagement Funnel — on public corpus data only. No talent profile,
             bookmark, activity, or alert data is read or shown here.
           </p>
+          <p className="mt-3 text-sm">
+            <Link
+              href="/organizations"
+              className="font-medium text-[#c9d4cb] underline underline-offset-2 hover:text-[var(--gold)]"
+            >
+              Public provider &amp; institution story →
+            </Link>
+          </p>
         </div>
       </section>
 

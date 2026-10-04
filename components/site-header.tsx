@@ -25,6 +25,7 @@ export async function SiteHeader() {
           <NavigationLink href="/">Explore</NavigationLink>
           <NavigationLink href="/for-you">For You</NavigationLink>
           <NavigationLink href="/activity">Activity</NavigationLink>
+          <NavigationLink href="/organizations">Organizations</NavigationLink>
           {user ? (
             <>
               <NavigationLink href="/saved">
@@ -64,6 +65,7 @@ export async function SiteHeader() {
           <NavigationLink href="/">Explore opportunities</NavigationLink>
           <NavigationLink href="/for-you">For You</NavigationLink>
           <NavigationLink href="/activity">Your activity</NavigationLink>
+          <NavigationLink href="/organizations">For organizations</NavigationLink>
           <NavigationLink href="/saved">
             Saved opportunities
           </NavigationLink>

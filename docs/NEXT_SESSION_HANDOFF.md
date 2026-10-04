@@ -234,6 +234,25 @@ visually unverified (no owner session). Photo assets: still zero licensed
 files — registry + manifest authoritative, no unverified downloads. Full
 verify + build green (below). Next: run the user pilot.
 
+## Desktop brand + three-sided business experience (2026-10-04, HEAD `a7ec96d` + working tree)
+
+Homepage recomposed into hero → featured (deterministic deadline/type-diverse
+picks, never sponsored) → browse with count-first toolbar → how-it-works
+(01–04 journey) → three-sided platform (Talent LIVE / Providers MANAGED
+PILOT / Institutions EARLY, all honestly labeled) → trust model → dual CTA.
+New public `/organizations` route (provider 5-step pilot flow, early
+institutional model, 5-rule privacy panel; CTAs use only `/submit` and the
+shelf — no invented contact). Desktop nav + mobile menu gain Organizations
+(bottom nav unchanged); footer upgraded to Product/For-organizations/Trust
+groups. Cards use shorter deduplicated excerpts (110 chars, deadline-lead
+stripped, tested) in a 3-column desktop grid; detail pages end with a submit
+CTA. Campaigns links to the public org story. Real screenshots captured
+headless for /, /organizations, /login, /submit, detail (1366/1440/390,
+light + dark); CDP-measured zero overflow at 390. Authed/staff routes
+still visually unverified (no session). Still zero licensed photos —
+registry/manifest stand, photo milestone not claimed. Full verify + build
+green (below). Next: run the user pilot.
+
 ## Superseded detailed log (kept for audit; live facts are in §§1–12 above)
 
 ## Pilot replenishment shortlist (2026-10-02, HEAD `3e45e3b`, read-only, no mutations)

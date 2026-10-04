@@ -9,7 +9,7 @@ import {
   formatCardLocation,
   formatDeadlinePresentation,
   formatTrustBadge,
-  opportunityExcerpt,
+  opportunityCardExcerpt,
   opportunityHref,
   sourcePresentation,
   sourceHostname,
@@ -77,7 +77,7 @@ export function OpportunityCard({
           {opportunity.organization?.trim() || sourceHostname(opportunity.url) || sourcePresentation(opportunity)}
         </p>
         <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-          {opportunityExcerpt(opportunity.description, 140)}
+          {opportunityCardExcerpt(opportunity.description)}
         </p>
       </div>
       <dl className="mt-5 grid gap-2 text-sm text-[var(--muted)]">

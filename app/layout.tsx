@@ -42,29 +42,42 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <SiteHeader />
         {children}
         <footer className="border-t border-[var(--line)] bg-[var(--surface)]">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-5 py-8 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between sm:px-8">
-            <p>
-              <span className="font-semibold text-[var(--foreground)]">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 text-sm sm:grid-cols-2 sm:px-8 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+            <div>
+              <p className="font-semibold text-[var(--foreground)]">
                 Tech Opportunity
-              </span>
-              <span className="mt-1 block">
-                Source evidence. Personal relevance. Your next step.
-              </span>
-            </p>
-            <div className="flex flex-wrap gap-x-5 gap-y-2">
-              <Link
-                href="/#opportunities"
-                className="inline-flex min-h-11 items-center font-semibold hover:text-[var(--accent-strong)]"
-              >
-                Browse
-              </Link>
-              <Link
-                href="/submit"
-                className="inline-flex min-h-11 items-center font-semibold hover:text-[var(--accent-strong)]"
-              >
-                Submit an opportunity
-              </Link>
+              </p>
+              <p className="mt-2 leading-6 text-[var(--muted)]">
+                Opportunities worth acting on — for Tanzania’s emerging talent.
+              </p>
             </div>
+            <nav aria-label="Product">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
+                Product
+              </p>
+              <ul className="mt-3 space-y-1">
+                <li><Link href="/#opportunities" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">Explore</Link></li>
+                <li><Link href="/for-you" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">For You</Link></li>
+                <li><Link href="/activity" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">Activity</Link></li>
+              </ul>
+            </nav>
+            <nav aria-label="For organizations">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
+                For organizations
+              </p>
+              <ul className="mt-3 space-y-1">
+                <li><Link href="/submit" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">Submit opportunity</Link></li>
+                <li><Link href="/organizations" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">Organizations</Link></li>
+              </ul>
+            </nav>
+            <nav aria-label="Trust">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
+                Trust
+              </p>
+              <ul className="mt-3 space-y-1">
+                <li><Link href="/#trust-heading" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--accent-strong)]">How evidence works</Link></li>
+              </ul>
+            </nav>
           </div>
         </footer>
         <BottomNavigation />

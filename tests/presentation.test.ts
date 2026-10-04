@@ -8,7 +8,9 @@
 import { mapLiveCategories } from "../lib/data/categories";
 import {
   buildCardMetaSegments,
+  featuredOpportunities,
   formatLocationDisplay,
+  opportunityCardExcerpt,
 } from "../lib/opportunity-presentation";
 import type { Opportunity } from "../lib/types";
 import { coverSpecFor } from "../components/opportunity-cover";
@@ -262,6 +264,68 @@ assert(
   "17 no licensed asset exists yet, so every slot falls back explicitly",
   coverAssetFor(coverRow()) === null && pendingCoverSlots().length === 17,
   `pending=${pendingCoverSlots().length}`
+);
+
+// --- card excerpts + featured selection --------------------------------------
+
+assert(
+  "18 card excerpt drops a duplicated deadline lead sentence",
+  opportunityCardExcerpt("Deadline: December 13, 2026 Applications are open for a machine learning competition for students.") ===
+    "Applications are open for a machine learning competition for students."
+);
+assert(
+  "19 card excerpt keeps prose without a deadline lead and shortens",
+  opportunityCardExcerpt("A short summary.", 200) === "A short summary." &&
+    opportunityCardExcerpt(`${"word ".repeat(40)}`, 110).endsWith("…")
+);
+
+function featuredRow(slug: string, category: Opportunity["category"], deadline: string | null): Opportunity {
+  return {
+    ...coverRow({ slug, category }),
+    description: `Applications are open for the reviewed ${slug} opportunity with verified evidence and a meaningful description for applicants.`,
+    deadline,
+    deadlinePrecision: deadline === null ? "unknown" : "date",
+    deadlineEvidence: deadline ? `Source states ${deadline}.` : null,
+    trust: {
+      relevanceDecision: "relevant",
+      relevanceEvidence: "Reviewed fixture.",
+      eligibilityDecision: "tanzanians_eligible",
+      eligibilityEvidence: "Fixture states Tanzanian applicants may apply.",
+      qualificationRuleVersion: "test-v1",
+      countryVerification: "verified_other",
+      countryEvidence: "Fixture location: Kenya.",
+      lastVerifiedAt: "2026-09-20T00:00:00.000Z",
+      decidedBy: "22222222-2222-4222-8222-222222222222",
+      decidedAt: "2026-09-20T00:00:00.000Z",
+      canonicalEvidenceUrl: `https://example.org/${slug}`,
+    },
+    location: {
+      venueName: null,
+      address: null,
+      city: null,
+      region: null,
+      country: "Kenya",
+      latitude: null,
+      longitude: null,
+    },
+  };
+}
+
+const featuredPool = [
+  featuredRow("late-fellowship", "fellowship", "2026-12-01"),
+  featuredRow("soon-competition", "competition", "2026-10-12"),
+  featuredRow("soon-fellowship-duplicate", "fellowship", "2026-10-13"),
+  featuredRow("mid-internship", "internship", "2026-11-01"),
+];
+const featured = featuredOpportunities(featuredPool, new Date("2026-10-04T00:00:00.000Z"), 3);
+assert(
+  "20 featured prefers soonest deadlines with one record per category",
+  featured.map((item) => item.slug).join(",") === "soon-competition,soon-fellowship-duplicate,mid-internship",
+  featured.map((item) => item.slug).join(",")
+);
+assert(
+  "21 featured never returns more than requested and excludes unpublished",
+  featuredOpportunities([...featuredPool, { ...featuredPool[0], status: "rejected" } as Opportunity], new Date("2026-10-04T00:00:00.000Z"), 2).length === 2
 );
 
 console.log(`\n${passed} passed, ${failed} failed`);
