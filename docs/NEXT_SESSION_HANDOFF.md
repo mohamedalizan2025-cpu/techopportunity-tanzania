@@ -149,6 +149,24 @@ Cloudflare work without explicit bounded authorization; verification gates
 fail (fix or report, never weaken tests); the task asks for customers,
 revenue, traction, or partnerships evidence that does not exist.
 
+## Public experience redesign (2026-10-04, HEAD `98e8497`)
+
+Real implementation, real data, no backend changes. New hero ("Discover
+Opportunities. Build Your Future." with Tanzania/Africa/International
+framing, prominent search, live category shortcuts, real-record cover
+collage, text-only trust strip — no fake stats). Deterministic SVG cover
+system (`components/opportunity-cover.tsx`, pure `coverSpecFor`, no DB
+column, no external imagery; ridge/orbit/field motifs; illustrative by
+contract, aria-hidden, captioned on detail). Cards carry covers + at most
+two trust indicators + evidence-derived National/International tag. Detail
+pages open with captioned cover banner; hierarchy otherwise preserved.
+Phone-only bottom nav (Explore/For You/Saved/Profile, 60px rows,
+safe-area padding); header nav unchanged for tablet/desktop. For
+You/Activity/Saved/Profile inherit covers automatically; staff UI
+untouched. Real photography still needed (licensed Tanzanian/East-African
+imagery with provenance — see architecture.md §10b). Full verify + build
+green. Next: run the 5–10-user observed pilot on this shelf.
+
 ## Superseded detailed log (kept for audit; live facts are in §§1–12 above)
 
 ## Pilot replenishment shortlist (2026-10-02, HEAD `3e45e3b`, read-only, no mutations)

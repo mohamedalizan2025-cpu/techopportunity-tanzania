@@ -11,6 +11,7 @@ import {
   formatLocationDisplay,
 } from "../lib/opportunity-presentation";
 import type { Opportunity } from "../lib/types";
+import { coverSpecFor } from "../components/opportunity-cover";
 
 let passed = 0;
 let failed = 0;
@@ -197,6 +198,54 @@ const blankLocation = formatLocationDisplay({
 assert(
   "12 blank-only location shows neutral 'not specified' state",
   blankLocation.length === 1 && blankLocation[0] === "Location not specified"
+);
+
+// --- deterministic illustrative covers -------------------------------------
+// Covers derive ONLY from stored category/slug (+ derived geography): the
+// same record always renders the same cover, no database column, no network,
+// no external imagery. They are illustrative by contract, never evidence.
+function coverRow(overrides: Partial<Opportunity> = {}): Opportunity {
+  return {
+    id: "cover-1",
+    slug: "cover-opportunity",
+    title: "Cover Opportunity",
+    category: "fellowship",
+    organization: null,
+    description: "A description.",
+    url: "https://example.org/cover",
+    deadline: null,
+    location: null,
+    imageUrl: null,
+    status: "published",
+    createdAt: "2026-09-01T09:00:00.000Z",
+    deadlinePrecision: "unknown",
+    deadlineEvidence: null,
+    ...overrides,
+  } as Opportunity;
+}
+
+const coverA = coverSpecFor(coverRow());
+const coverB = coverSpecFor(coverRow());
+assert(
+  "13 cover spec is deterministic for the same record",
+  JSON.stringify(coverA) === JSON.stringify(coverB),
+  JSON.stringify(coverA)
+);
+assert(
+  "14 cover spec changes with category or slug",
+  coverSpecFor(coverRow({ category: "hackathon" })).base !== coverA.base ||
+    coverSpecFor(coverRow({ slug: "another-slug" })).variant !== coverA.variant,
+  JSON.stringify(coverA)
+);
+assert(
+  "15 cover spec carries a valid motif, palette and initial",
+  ["ridge", "orbit", "field"].includes(coverA.motif) &&
+    /^#[0-9a-fA-F]{6}$/.test(coverA.base) &&
+    /^#[0-9a-fA-F]{6}$/.test(coverA.accent) &&
+    coverA.initial === "F" &&
+    coverA.variant >= 0 &&
+    coverA.variant <= 2,
+  JSON.stringify(coverA)
 );
 
 console.log(`\n${passed} passed, ${failed} failed`);

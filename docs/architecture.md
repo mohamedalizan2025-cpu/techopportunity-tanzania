@@ -374,6 +374,47 @@ Three habits keep this door open:
 
 ---
 
+## 10b. Public UI/UX design system (authoritative as of 2026-10-04)
+
+One product, one visual language across Explore, For You, Activity, Saved,
+Profile, and detail pages. Staff surfaces reuse the primitives but are
+explicitly out of redesign scope.
+
+- Color tokens (`app/globals.css`): deep teal/forest/navy foundations
+  (`#0B3B36`, `#123F2A`, `#16283F`), warm cream surfaces (`#f7f7f2`,
+  `#ffffff`), restrained gold accent (`#C9A227` in covers), emerald/turquoise
+  status accents, soft neutral grays. Full dark-mode variable set. No
+  gradients-as-decoration, no glassmorphism, no blobs.
+- Typography: Geist Sans; hero `clamp(2rem, 4vw, 3.25rem)` semibold tight;
+  section headings 1.5rem semibold; eyebrow labels 0.75rem uppercase.
+- Card rules: 6px radius system-wide (`rounded-md`); opportunity cards carry
+  at most TWO trust indicators (deadline status + evidence/eligibility
+  line); no badge piles, no percentage gimmicks.
+- Imagery policy: covers are DETERMINISTIC SVG compositions
+  (`components/opportunity-cover.tsx`, pure `coverSpecFor` of stored
+  category/slug + derived geography) — no database column, no network, no
+  hotlinked or scraped photography. National records get a warm ridge
+  motif, international an orbit motif, unknown a dot field. Covers are
+  ILLUSTRATIVE by contract (aria-hidden, captioned as such on detail
+  pages) and never documentary evidence; provenance lives only in source
+  links and the evidence section. Real photography remains a future asset
+  need: licensed Tanzanian/East-African student, campus, and convening
+  imagery with per-image consent/provenance — do not ship random stock,
+  and never show all-white Western-student imagery as the default mix.
+- Responsive: mobile-first; category rail scrolls under 640px; cards stack
+  single-column then `sm:grid-cols-2`; detail aside stacks action-first
+  below `lg`. Phone-only (`md:hidden`) bottom nav (Explore/For You/Saved/
+  Profile, 60px rows, safe-area padding); header nav + hamburger serve
+  tablet and desktop. Touch targets ≥44px everywhere (`min-h-11`+).
+- Trust-badge rules: "Evidence verified" and "Tanzanian access evidenced"
+  render ONLY from complete stored evidence; otherwise the UI says unknown
+  and points at the source. Badges never outrank evidence.
+- Accessibility: skip link, landmarked mains, labelled navs, visible
+  `:focus-visible` rings, `prefers-reduced-motion` disables animation,
+  decorative covers hidden from assistive tech.
+
+---
+
 ## 11. Planned feature: locations & maps
 
 Status: **designed, not implemented.** No map SDK, no API keys, no browser

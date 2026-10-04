@@ -1,4 +1,5 @@
 import { UiIcon } from "./ui-icon";
+import { OpportunityCover } from "./opportunity-cover";
 import { categoryLabel } from "@/lib/category-labels";
 import { SaveOpportunityControl } from "@/components/save-opportunity-control";
 import { ActivityControl } from "@/components/activity-control";
@@ -46,6 +47,14 @@ export function OpportunityDetail({
 
   return (
     <article>
+      <figure className="mb-8">
+        <div className="opportunity-detail-cover" aria-hidden="true">
+          <OpportunityCover opportunity={opportunity} className="h-full w-full" />
+        </div>
+        <figcaption className="mt-2 text-xs text-[var(--muted)]">
+          Illustrative cover — always verify details at the official source.
+        </figcaption>
+      </figure>
       <header className="border-b border-[var(--line)] pb-8">
         <div className="flex flex-wrap items-center gap-3">
           <span className="eyebrow text-[var(--accent-strong)]">

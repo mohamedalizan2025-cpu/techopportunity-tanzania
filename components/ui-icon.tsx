@@ -14,7 +14,8 @@ type IconName =
   | "shield"
   | "check"
   | "globe"
-  | "close";
+  | "close"
+  | "user";
 
 const paths: Record<IconName, React.ReactNode> = {
   search: (
@@ -79,6 +80,12 @@ const paths: Record<IconName, React.ReactNode> = {
     </>
   ),
   close: <path d="M6 6l12 12M18 6 6 18" />,
+  user: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5" />
+    </>
+  ),
 };
 
 export function UiIcon({

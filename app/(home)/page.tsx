@@ -5,6 +5,7 @@ import {
   OpportunityCard,
   SnapshotOpportunityLink,
 } from "@/components/opportunity-card";
+import { OpportunityCover } from "@/components/opportunity-cover";
 import {
   OpportunityFilters,
   buildHref,
@@ -102,18 +103,82 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <div className={`page-shell ${isFiltered ? "py-5" : "py-7 sm:py-9"}`}>
           <p className="eyebrow">For Tanzania’s emerging talent</p>
           <h1 className={isFiltered ? "mt-2 text-3xl font-semibold tracking-tight" : "hero-title mt-3"}>
-            {isFiltered ? "Find your next opportunity" : "Opportunities worth acting on."}
+            {isFiltered ? "Find your next opportunity" : <>Discover Opportunities.<br />Build Your Future.</>}
           </h1>
           {!isFiltered ? (
-            <div className="mt-4 grid gap-4 lg:grid-cols-[1.5fr_1fr] lg:gap-12">
-              <p className="max-w-2xl text-base leading-7 text-[var(--muted)]">
-                Find your next step in study, work or innovation. Check the source,
-                see what fits, and keep track from interest to application.
-              </p>
-              <p className="border-l-2 border-[var(--accent)] pl-4 text-sm leading-6 text-[var(--muted)]">
-                Human-reviewed before publication. Evidence and missing details
-                are marked on each listing. <a href="#trust-heading" className="font-semibold text-[var(--accent-strong)] underline underline-offset-4">How to read the evidence</a>
-              </p>
+            <div className="mt-4 grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+              <div>
+                <p className="max-w-2xl text-base leading-7 text-[var(--muted)]">
+                  Tanzanian, African, and international calls in one place —
+                  each with its source, deadline, and access evidence marked,
+                  so you can see what fits before you apply.
+                </p>
+                <form
+                  action="/#opportunities"
+                  method="get"
+                  role="search"
+                  className="mt-5 flex w-full max-w-xl gap-2"
+                >
+                  <label htmlFor="hero-search" className="sr-only">
+                    Search opportunities
+                  </label>
+                  <input
+                    id="hero-search"
+                    type="search"
+                    name="q"
+                    defaultValue={q ?? ""}
+                    maxLength={120}
+                    placeholder="Try “AI”, “fellowship”, “internship”…"
+                    className="min-h-12 w-full min-w-0 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-base text-[var(--foreground)] outline-none transition placeholder:text-[var(--subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+                  />
+                  <button
+                    type="submit"
+                    className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-md bg-[var(--accent)] px-5 text-sm font-semibold text-white transition hover:bg-[#07543f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                  >
+                    Search
+                  </button>
+                </form>
+                {liveCategories.length > 0 ? (
+                  <ul className="mt-4 flex flex-wrap gap-2" aria-label="Popular categories">
+                    {liveCategories.slice(0, 5).map(({ slug, label }) => (
+                      <li key={slug}>
+                        <Link
+                          href={`${buildHref(slug, sort, { q, city, region, deadline, geography, sector })}#opportunities`}
+                          className="inline-flex min-h-11 items-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                        >
+                          {label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-[var(--muted)]">
+                  <li className="inline-flex items-center gap-1.5"><UiIcon name="shield" width="14" height="14" /> Human-reviewed</li>
+                  <li className="inline-flex items-center gap-1.5"><UiIcon name="source" width="14" height="14" /> Source-linked</li>
+                  <li className="inline-flex items-center gap-1.5"><UiIcon name="clock" width="14" height="14" /> Deadline-tracked</li>
+                </ul>
+              </div>
+              {opportunities.length > 0 ? (
+                <div className="hidden gap-4 lg:grid" aria-hidden="true">
+                  <div className="grid grid-cols-2 gap-4">
+                    {opportunities.slice(0, 3).map((item, i) => (
+                      <div
+                        key={item.id}
+                        className={`overflow-hidden rounded-md border border-[var(--line)] bg-[var(--surface)] ${i === 0 ? "col-span-2" : ""}`}
+                      >
+                        <OpportunityCover opportunity={item} className="aspect-[16/9] w-full" />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="border-l-2 border-[var(--accent)] pl-4 text-sm leading-6 text-[var(--muted)]">
+                    Local talent, global opportunity. Evidence and missing
+                    details are marked on each listing.{" "}
+                    <a href="#trust-heading" className="font-semibold text-[var(--accent-strong)] underline underline-offset-4">
+                      How to read the evidence
+                    </a>
+                  </p>
+                </div>
+              ) : null}
             </div>
           ) : null}
           {user ? (

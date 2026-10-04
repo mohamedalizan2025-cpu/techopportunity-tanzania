@@ -273,6 +273,47 @@ button:disabled {
 .opportunity-card h3 {
   overflow-wrap: anywhere;
 }
+.opportunity-card-cover {
+  margin: -22px -22px 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 6px 6px 0 0;
+  background: var(--muted-surface);
+}
+.opportunity-detail-cover {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--muted-surface);
+  aspect-ratio: 21 / 9;
+}
+.bottom-nav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 40;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.bottom-nav a,
+.bottom-nav-link {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 60px;
+  padding-block: 8px;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--muted);
+}
+.bottom-nav a[aria-current="page"],
+.bottom-nav-link[aria-current="page"] {
+  color: var(--accent-strong);
+}
 .status-label {
   display: inline-flex;
   align-items: center;
@@ -357,6 +398,9 @@ button:disabled {
   .opportunity-card {
     overflow-wrap: anywhere;
     padding: 20px;
+  }
+  .opportunity-card-cover {
+    margin: -20px -20px 0;
   }
   .hero-title {
     max-width: 420px;

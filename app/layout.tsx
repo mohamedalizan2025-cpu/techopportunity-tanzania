@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Geist } from "next/font/google";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { BottomNavigation } from "@/components/bottom-navigation";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -66,6 +67,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
             </div>
           </div>
         </footer>
+        <BottomNavigation />
+        <div aria-hidden="true" className="h-[76px] md:hidden" />
       </body>
     </html>
   );

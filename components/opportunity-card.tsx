@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { UiIcon } from "./ui-icon";
+import { OpportunityCover } from "./opportunity-cover";
 import { categoryLabel } from "@/lib/category-labels";
+import { geographyOf } from "@/lib/taxonomy";
 import { SaveOpportunityControl } from "@/components/save-opportunity-control";
 import {
   formatAddedDate,
@@ -33,14 +35,23 @@ export function OpportunityCard({
   const added = formatAddedDate(opportunity.createdAt);
   const badge = formatTrustBadge(opportunity);
   const eligibility = eligibilityPresentation(opportunity);
+  const geography = geographyOf(opportunity);
 
   return (
     <article className="opportunity-card group">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+      <div className="opportunity-card-cover" aria-hidden="true">
+        <OpportunityCover opportunity={opportunity} />
+      </div>
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-2">
         <span className="flex flex-wrap items-center gap-2">
           <span className="pt-1 text-xs font-semibold uppercase tracking-wider text-[var(--accent-strong)]">
             {categoryLabel(opportunity.category)}
           </span>
+          {geography ? (
+            <span className="pt-1 text-xs font-medium text-[var(--muted)]">
+              · {geography === "national" ? "Tanzania" : "International"}
+            </span>
+          ) : null}
         </span>
         <span className={`status-label status-${deadline.state}`}>
           <UiIcon name="clock" width="14" height="14" />
