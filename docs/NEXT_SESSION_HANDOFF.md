@@ -272,6 +272,22 @@ Full evidence in
 token-budget/quota path, or accept 14/16-with-fallbacks posture in a later
 milestone — then staging decision → owner prod decision → user pilot.
 
+## Groq backup-conformance 2026-10-04 (staging/production stay OFF)
+
+Bounded Groq-only fix (1600 completion tokens + low reasoning effort;
+strict JSON, single request, no retries, validator untouched) lifted the
+paced run from 1/16 to 9/16 ai/ok with zero quota errors, 0 hard failures,
+80/80 soft, median ~956ms. Remaining Groq misses are intrinsic
+(bad-evidence-ref ×6 + one anomalous generation 400). Gemini stands at
+14/16. STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL = NO (zero-fallback bar
+unmet on both paths). Paid Groq NOT justified (binding constraints are
+per-request budget/conformance, not quota). Production OFF, no activation.
+Evidence in
+[AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
+`npm run verify` + `npm run build` green. Next: owner staging decision
+input is complete — sequence holds (staging decision → owner prod decision
+→ user pilot → provider revenue pilot).
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

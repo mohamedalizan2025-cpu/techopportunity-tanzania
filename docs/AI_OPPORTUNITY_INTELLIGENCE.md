@@ -171,9 +171,12 @@ rejects any violation.
 ## 15. Model replacement strategy
 
 Models are configuration (`*_MODEL` env), never architecture: any
-replacement must support JSON-schema structured output, fit the 8s/700-token
-budget, pass the unchanged evaluation corpora with zero hard failures, and
-carry fresh owner privacy/billing attestations for its own data-use terms.
+replacement must support JSON-schema structured output, fit the 8s timeout
+and its provider output budget (Groq gpt-oss-20b: 1600 completion tokens
+with low reasoning effort, verified live 2026-10-04 as the minimum for
+valid strict-JSON documents; user-visible text stays validator-capped),
+pass the unchanged evaluation corpora with zero hard failures, and carry
+fresh owner privacy/billing attestations for its own data-use terms.
 The deterministic contract never changes for a model swap.
 
 ## 16. V2 scope vs future Application Copilot scope

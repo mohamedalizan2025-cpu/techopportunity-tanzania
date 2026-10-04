@@ -142,6 +142,8 @@ test("Groq adapter locks the evaluation model and requests strict structured out
   assert.ok(requestBody);
   assert.equal(requestBody.model, "openai/gpt-oss-20b");
   assert.equal(requestBody.include_reasoning, false);
+  assert.equal(requestBody.max_completion_tokens, 1600);
+  assert.equal(requestBody.reasoning_effort, "low");
   const responseFormat = requestBody.response_format as {
     type: string;
     json_schema: { strict: boolean; schema: Record<string, unknown> };
@@ -149,6 +151,26 @@ test("Groq adapter locks the evaluation model and requests strict structured out
   assert.equal(responseFormat.type, "json_schema");
   assert.equal(responseFormat.json_schema.strict, true);
   assert.equal(responseFormat.json_schema.schema.additionalProperties, false);
+});
+
+test("Groq adapter makes one request only and never retries", async () => {
+  let calls = 0;
+  const fakeFetch = (async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ error: { message: "busy" } }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
+  }) as typeof fetch;
+  const provider = createGroqProvider(
+    "synthetic-test-key",
+    "openai/gpt-oss-20b",
+    fakeFetch
+  );
+  const fixture = OPPORTUNITY_INTELLIGENCE_EVALUATION_CORPUS[0];
+  const input = buildSanitizedOpportunityIntelligenceInput(fixture.opportunity, fixture.profile, EVALUATION_NOW);
+  await assert.rejects(provider.generate(input, new AbortController().signal));
+  assert.equal(calls, 1);
 });
 
 test("Gemini adapter locks the stable free-tier model and requests structured JSON", async () => {

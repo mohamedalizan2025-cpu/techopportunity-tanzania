@@ -107,7 +107,14 @@ export function createGroqProvider(
         body: JSON.stringify({
           model,
           temperature: 0.1,
-          max_completion_tokens: 700,
+          // Groq-specific budget (verified live 2026-10-04): the gpt-oss-20b
+          // reasoning model exhausts a 700-token budget before emitting a
+          // valid strict-JSON document (json_validate_failed). 1600 tokens
+          // with low reasoning effort give it room to construct the bounded
+          // document; user-visible length stays capped by the unchanged
+          // validator (320 chars / 5 items). Gemini is untouched.
+          max_completion_tokens: 1600,
+          reasoning_effort: "low",
           include_reasoning: false,
           messages: buildOpportunityIntelligenceMessages(input),
           response_format: {

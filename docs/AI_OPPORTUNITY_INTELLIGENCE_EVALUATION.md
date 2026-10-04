@@ -327,16 +327,38 @@ enables production AI.
   validator is warranted. Privacy `confirmed-gemini-unpaid-data-use`,
   billing `confirmed-free-quota`.
 
-## Pilot decision after real runs
+## Groq backup-conformance run 2026-10-04 (bounded budget fix, paced)
 
-- Neither provider meets the in-code pilot bar (requires zero fallbacks):
-  Groq is quota-ceilinged at ~6 requests per burst window; Gemini validates
-  6/16 with the strict validator correctly rejecting the rest. Zero hard
-  failures everywhere — deterministic authority never yielded.
-- Staging activation NOT eligible. Production AI stays OFF. No prompt,
-  validator, or gate changes beyond the one verified Gemini wire-shape fix.
-  Only owner path forward: quota headroom decision for Groq (paid tier or
-  paced evaluation) is an owner cost call — not taken here.
+- Adapter change (Groq-specific only): `max_completion_tokens` 700 → 1600
+  plus `reasoning_effort: "low"`; strict `json_schema`, `include_reasoning:
+  false`, one request, no retries, 8s timeout, and full local validation
+  all unchanged. Gemini untouched. Unit-pinned (model, strict, 1600, low,
+  no-reasoning, single-request).
+- Paced run (`--pace-ms=20000`, wall 318s): 16 requests, 9 ai/ok, 7
+  deterministic fallbacks (6 bad-evidence-ref, 1 provider_unavailable),
+  0 quota_exhausted, 0 timeouts, 0 hard failures, 80/80 soft. Latency min
+  604ms / median 956ms / max 2.2s. Statuses: fifteen HTTP 200 (~1.0–1.7KB
+  bodies), one HTTP 400 with an atypical ~9KB body on
+  missing-application-requirements.
+- Interpretation against the previous 1/16 run: (A) budget problem SOLVED
+  — zero `json_validate_failed` budget 400s (the single 400 has a
+  different signature and a live replay of the same case returned 200 with
+  non-conforming content, i.e. model-side variance, not budget); (B)
+  evidence-reference steering PARTIALLY helped — ref misses persist as the
+  dominant class (6 bad-evidence-ref: the model cites catalog-external
+  IDs such as verified.geography/verified.deadline where absent); (C) the
+  remainder is intrinsic gpt-oss-20b non-conformance, correctly contained
+  by the unchanged strict validator.
+- Privacy `confirmed-groq-zdr`, billing `confirmed-free-quota`; no paid
+  billing touched. The backup path is now genuinely exercisable (9/16
+  valid), though still weaker than the primary.
+
+## Pilot decision after real runs (superseded — see conformance sections below)
+
+- This section recorded the pre-conformance state (Groq quota-ceilinged,
+  Gemini 6/16). It is kept for history; the current assessment follows the
+  "Groq backup-conformance run" and the final staging decision below.
+  Zero hard failures everywhere — deterministic authority never yielded.
 
 ## Conformance milestone 2026-10-04 (evaluation-only pacing, no production change)
 
@@ -389,3 +411,26 @@ enables production AI.
   trips the zero-fallback pilot bar, and the Groq backup path is
   effectively non-functional until its token budget is addressed. No
   staging or production activation performed.
+
+## Final staging decision 2026-10-04 (Gemini 14/16, Groq 9/16, zero hard failures)
+
+- Gemini best (steered): 14/16 ai/ok, 1 timeout, 1 invalid, 0 hard, 80/80
+  soft, median ~1.8s. Groq best (budget-fixed, paced): 9/16 ai/ok, 7
+  fallbacks (6 bad-evidence-ref intrinsic + 1 anomalous generation 400),
+  0 quota, 0 hard, 80/80 soft, median ~956ms. Fallback behavior is correct
+  everywhere, but fallbacks still occur on both paths.
+- STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL = NO. Reason, quantitatively: the
+  in-code pilot bar requires zero fallbacks, and the best measured runs
+  are 14/16 (primary) and 9/16 (backup). A staging pilot would serve
+  deterministic fallbacks on ~12–44% of insights — safe content, but not
+  the reliability evidence the bar demands, and the backup chain cannot
+  yet cover primary misses reliably. Per the milestone rule, poor provider
+  reliability is not hidden behind fallback metrics.
+- Paid Groq: NO, not justified. The binding Groq constraints are
+  per-request (token budget — now fixed at 1600 — and intrinsic ref
+  conformance), not quota: pacing already removed all quota_exhausted,
+  and pilot-scale traffic (single requests, 8 req/min route limit, 6h
+  cache) would not trip TPM. Buying quota solves nothing proven.
+- Production AI stays OFF. No staging activation performed. Recommended
+  chain (unchanged, owner approval still required for any production
+  change): Gemini primary → Groq backup → deterministic fallback.
