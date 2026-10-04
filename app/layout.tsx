@@ -4,6 +4,7 @@ import { Geist } from "next/font/google";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,6 +17,15 @@ export const metadata: Metadata = {
   title: "Tech Opportunity",
   description:
     "Opportunities worth acting on for Tanzania’s emerging talent. Check source evidence, find relevant opportunities and track your application progress.",
+  themeColor: "#082f2b",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Tech Opportunity" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 // Explicit prop type: LayoutProps<"/"> is a build-generated global from
@@ -82,6 +92,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         </footer>
         <BottomNavigation />
         <div aria-hidden="true" className="h-[76px] md:hidden" />
+        <PwaRegister />
       </body>
     </html>
   );

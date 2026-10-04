@@ -275,6 +275,30 @@ their correlated GitHub artifacts now satisfy the initial-readiness and
 12-hour portions of step 6; the 24-hour continued-observation portion remains
 open.
 
+## Operational audit 2026-10-04 (read-only)
+
+External-schedule dispatches are succeeding every 2 hours (`17 */2 * * *`
+slots, `triggerKind=external_schedule`, actor `mohamedalizan2025-cpu`):
+the last ~48h show ~24 consecutive successes with zero failures and native
+schedule runs correctly skipped. Latest examined run `37208728482` (slot
+`2026-10-04T14:17:00Z`, head `a7ec96d`): verification passed, 62s worker,
+20/20 sources ok, 261 candidates / 8 qualified / 8 duplicates / 0 inserts,
+zero anomalies, schedule `on_time` (gap 1.999h, latency 2min), 23-run
+baseline established. Per-source (same run): UDSM announcements drove 200
+candidates / 5 qualified (all duplicates); OpportunityDesk 10 found / 3
+qualified (all duplicates); FSDT 11 found, all relevance-rejected; NM-AIST
+events, OFA, SUZA, YOUNA 10 found each, none qualified; 12 of 20 sources
+quiet (0 candidates — normal single-run variance, not death). Pipeline
+means over 23 runs: ~194 candidates, ~95% relevance rejection, ~96%
+duplicate rate, 100% evidence rate. Zero-valid-result runs are valid
+operation, not failure. Defects found: none — no fix made. Standing supply
+facts: aggregators + UDSM listing carry volume; most TZ institutional
+sources are quiet run-to-run; newest-120 pending skew fellowship
+(36)/grant (22)/other (45) with zero jobs/tech-event/workshop/research-call;
+54/120 pending lack deadlines (moderation-time review); fresh items carry
+real deadlines (Oct–Dec 2026). No moderation bypass, no duplicate leak, no
+schema/RLS/Discovery change in this audit.
+
 ## Rollback
 
 Rollback changes triggers only; it never changes database rows or publication:

@@ -292,6 +292,17 @@ invariant("email confirmation uses a canonical callback and safe internal destin
   assert.doesNotMatch(authRedirect, /request\.headers|headers\(\)|x-forwarded-host/i);
 });
 
+invariant("service worker caches static assets only and never private or data responses", () => {
+  const worker = read("public/sw.js");
+  assert.match(worker, /techopportunity-static-v1/);
+  assert.match(worker, /\/_next\/static\//);
+  assert.match(worker, /\/offline/);
+  assert.doesNotMatch(worker, /\/api\//);
+  assert.doesNotMatch(worker, /\/(saved|activity|profile|moderation|campaigns|for-you)["'\s]/);
+  assert.doesNotMatch(worker, /supabase|service_role|NEXT_PUBLIC/i);
+  assert.doesNotMatch(worker, /https?:\/\/(?!location)/i);
+});
+
 invariant("discovery uses one authoritative two-hour UTC schedule and the pending-only worker", () => {
   assert.match(discoveryWorkflow, /cron: ['"]17 \*\/2 \* \* \*['"]/);
   assert.doesNotMatch(discoveryWorkflow, /cron: ['"]0 \*\/2 \* \* \*['"]/);

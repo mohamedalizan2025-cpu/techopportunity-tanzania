@@ -6,6 +6,7 @@ import {
   SnapshotOpportunityLink,
 } from "@/components/opportunity-card";
 import { OpportunityCover } from "@/components/opportunity-cover";
+import { InstallPrompt } from "@/components/install-prompt";
 import {
   OpportunityFilters,
   buildHref,
@@ -160,6 +161,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <li className="inline-flex items-center gap-1.5"><UiIcon name="source" width="14" height="14" /> Source-linked</li>
                   <li className="inline-flex items-center gap-1.5"><UiIcon name="clock" width="14" height="14" /> Deadline-tracked</li>
                 </ul>
+                <InstallPrompt />
                 {opportunities.length > 0 ? (
                   <div className="mt-5 overflow-hidden rounded-md border border-white/20 lg:hidden" aria-hidden="true">
                     <OpportunityCover opportunity={opportunities[0]} className="aspect-[21/9] w-full" />

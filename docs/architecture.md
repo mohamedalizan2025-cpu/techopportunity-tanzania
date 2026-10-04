@@ -454,6 +454,27 @@ explicitly out of redesign scope.
   trust/final-CTA) present live vs pilot vs future status honestly; no
   fake counts, testimonials, partners, or dashboards anywhere.
 
+## 10c. Installable PWA (authoritative as of 2026-10-04)
+
+Web-only installability; no native app, no new dependency. Manifest
+(`app/manifest.ts` → `/manifest.webmanifest`) carries real product values:
+standalone display, `/` scope, deep-teal theme, cream background, local
+brand icons (192/512 + maskable, Apple touch, favicon — all generated
+locally with PIL, committed under `public/icons/`), and shortcuts for the
+three real routes Explore / For You / Saved. Install UX
+(`components/install-prompt.tsx`, public homepage only) renders solely on
+browser `beforeinstallprompt` eligibility (or iOS manual guidance),
+persists dismissal, hides when installed/standalone, and posts no data.
+The service worker (`public/sw.js`, registered best-effort) caches ONLY
+same-origin static assets (`/_next/static/`, `/icons/`, fonts) plus the
+`/offline` shell; navigations are network-first with an honest offline
+fallback (`app/offline`, noindexed, "may have changed — never presented
+as current"); APIs, auth, account/staff pages, and AI responses are
+network-only passthrough and never stored or served stale. A permanent
+boundary invariant locks this cache policy. Manifest screenshots are
+deliberately omitted (no committed localhost imagery); real-device
+install/standalone QA remains owner-side.
+
 ---
 
 ## 11. Planned feature: locations & maps

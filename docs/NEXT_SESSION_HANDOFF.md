@@ -87,10 +87,11 @@ new authoritative evidence.
 
 ## 6. Current validation state
 
-`READY_FOR_USER_PILOT` = YES. The shelf holds 11 open, evidence-backed
-records spanning fellowships, internships, competition, and grants —
-diverse enough for 5–10 testers over two weeks (brief testers that supply
-is fellowship-heavy with one student-competition anchor). Run the protocol
+`READY_FOR_USER_PILOT` = YES (protocol intact, execution explicitly deferred
+by owner priority — do NOT record it as done). The shelf holds 11 open,
+evidence-backed records spanning fellowships, internships, competition, and
+grants — diverse enough for 5–10 testers over two weeks (brief testers that
+supply is fellowship-heavy with one student-competition anchor). Run the protocol
 in [USER_VALIDATION_PILOT_2026-10-02.md](USER_VALIDATION_PILOT_2026-10-02.md):
 15-minute observed mobile tasks (Discover → Understand → Save/Track →
 Apply), 7 post-task questions, per-tester metrics, 7-day follow-up,
@@ -100,20 +101,13 @@ return OR ≥2 truthful application starts, no unfiled critical blocker.
 Provider pilot ([PROVIDER_PILOT_BRIEF_2026-10-02.md](PROVIDER_PILOT_BRIEF_2026-10-02.md))
 runs ONLY after the user pilot passes.
 
-## 7. Next milestone (one only)
+## 7. Next milestone (owner sequence — user pilot explicitly deferred)
 
-AI Opportunity Intelligence V2 — owner-authorized implementation milestone
-(see [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md)):
-For You on-demand explanations, detail intelligence brief with required
-labeling, Interested/Applying readiness planner over existing contract
-fields, telemetry counters, public-facts evaluation corpus, re-verified
-provider docs. Production AI stays OFF until real-provider evaluation is
-green with zero hard failures plus owner privacy/billing confirmations.
-Stop conditions: missing credentials/attestations (stop at OWNER_GATE, do
-not request secrets in chat); any design requiring new outbound personal
-data (defer to Application Copilot milestone); failing gates (fix or
-report, never weaken). The 5–10-user pilot stays READY-but-pending in §6;
-do not record it as done.
+BUSINESS/UI COMPLETE → PWA COMPLETE → DISCOVERY VERIFIED → REAL PROVIDER
+AI EVALUATION → STAGING AI → OWNER PROD-AI DECISION → 5–10 USER PILOT →
+PROVIDER REVENUE PILOT. Do NOT run the user pilot yet; do NOT activate AI.
+Next after this gate: owner-gated real Groq/Gemini fixed-corpus evaluation
+(keys + attestations + explicit confirm tokens, owner-side only).
 
 ## 8. Owner-only gates
 
@@ -251,7 +245,35 @@ headless for /, /organizations, /login, /submit, detail (1366/1440/390,
 light + dark); CDP-measured zero overflow at 390. Authed/staff routes
 still visually unverified (no session). Still zero licensed photos —
 registry/manifest stand, photo milestone not claimed. Full verify + build
-green (below). Next: run the user pilot.
+green (below). Next: owner-gated real-provider AI evaluation (user pilot
+explicitly deferred by owner priority — protocol preserved, not run).
+
+## Pre-AI release gate (2026-10-04, HEAD `6d07a30` + working tree)
+
+PWA: manifest (real values, local brand icons 192/512 + maskable, 3 real
+shortcuts), PIL-generated icon set (teal/gold/cream, committed under
+`public/icons/`), homepage-only install prompt (eligible-only, persistent
+dismiss, standalone/iOS handling, posts nothing), best-effort SW
+registration, safe SW (static-only cache + `/offline` shell; APIs/auth/
+account/staff/AI network-only, never stored). Verified live: manifest
+200, sw.js 200, SW activated with correct scope, install UI correctly
+hidden without eligibility, TRUE offline (server down) serves the honest
+fallback. Install/standalone real-device QA stays owner-side. Discovery:
+external-schedule firing every 2h (~48h, ~24 successes, 0 failures,
+native runs correctly skipped); latest run `37208728482` green (62s,
+20/20 sources, 261 found / 8 qualified / 8 dups / 0 inserts, 0 anomalies,
+on_time). Per-source: UDSM listing volume (200/5, all dup), OD (10/3,
+dup), FSDT 11 all relevance-rejected; 12/20 sources quiet this run
+(normal variance). Supply: pending 233 (newest-120: fellowship 36/grant
+22/other 45, zero jobs/tech-event/workshop/research-call; 54/120
+dateless); fresh Oct 1–3 inserts with real deadlines; flag Jasiri (Kenya
+& Rwanda only?) and Google Ireland (Ireland?) for moderator Tanzania
+checks. No defects found — no Discovery code changed. Corpus: 11 active,
+all verified, no expired/excluded, holds absent. Deploys: canonical prod,
+robots allow on prod, staging isolated per docs, no secrets in repo,
+production AI OFF. Business story exposed on homepage/organizations/
+footer. Full verify + build green (below). Next: owner-gated
+real-provider AI evaluation.
 
 ## Superseded detailed log (kept for audit; live facts are in §§1–12 above)
 
