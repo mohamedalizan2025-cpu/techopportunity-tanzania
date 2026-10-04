@@ -48,9 +48,9 @@ export function AssistantPanel() {
   return (
     <section
       aria-label="Opportunity assistant"
-      className="flex w-full max-w-xl flex-col gap-3 rounded-lg border border-black/[.08] bg-white p-4 text-left dark:border-white/[.145] dark:bg-zinc-950"
+      className="flex w-full max-w-xl flex-col gap-3 rounded-md border border-[var(--line)] bg-[var(--surface)] p-4 text-left"
     >
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-[var(--subtle)]">
         Opportunity assistant
       </p>
       <form onSubmit={ask} className="flex flex-col gap-2 sm:flex-row">
@@ -64,18 +64,18 @@ export function AssistantPanel() {
           onChange={(e) => setQuestion(e.target.value)}
           maxLength={200}
           placeholder="Ask: scholarships closing soon, tech events in Zanzibar…"
-          className="h-10 w-full rounded-full border border-black/[.10] bg-white px-4 text-sm text-black outline-none transition-colors focus:border-black/40 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-white/40"
+          className="h-10 w-full rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition-colors focus:border-[var(--accent)]"
         />
         <button
           type="submit"
           disabled={state === "loading"}
-          className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-colors hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-[#ccc]"
+          className="inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-[var(--accent)] px-6 text-sm font-semibold text-white transition hover:bg-[#07543f] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           {state === "loading" ? "Thinking…" : "Ask"}
         </button>
       </form>
 
-      <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-500">
+      <p className="text-xs leading-5 text-[var(--subtle)]">
         Searches published opportunities only — it never invents results or
         shows unpublished records.
       </p>
@@ -88,17 +88,17 @@ export function AssistantPanel() {
 
       {response ? (
         response.mode === "disabled" ? (
-          <p role="status" className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-            {response.summary}{" "}
-            <Link href="/" className="underline underline-offset-4 hover:text-black dark:hover:text-zinc-50">
+            <p role="status" className="text-sm leading-6 text-[var(--muted)]">
+              {response.summary}{" "}
+              <Link href="/" className="underline underline-offset-4 hover:text-[var(--accent-strong)]">
               Browse all opportunities
             </Link>
           </p>
         ) : (
           <div role="status" className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-black dark:text-zinc-50">{response.summary}</p>
+            <p className="text-sm font-medium text-[var(--foreground)]">{response.summary}</p>
             {response.appliedFilters ? (
-              <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+              <p className="text-xs uppercase tracking-wide text-[var(--subtle)]">
                 Filters:{" "}
                 {[
                   response.appliedFilters.q,
@@ -114,7 +114,7 @@ export function AssistantPanel() {
             <ul className="flex flex-col gap-1">
               {response.results.map((r) => (
                 <li key={r.id}>
-                  <Link href={`/opportunities/${r.slug}`} className="text-sm underline underline-offset-4 hover:text-black dark:hover:text-zinc-50">
+                  <Link href={`/opportunities/${r.slug}`} className="text-sm underline underline-offset-4 hover:text-[var(--accent-strong)]">
                     {r.title}
                   </Link>
                 </li>

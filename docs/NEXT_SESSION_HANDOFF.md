@@ -167,6 +167,21 @@ untouched. Real photography still needed (licensed Tanzanian/East-African
 imagery with provenance — see architecture.md §10b). Full verify + build
 green. Next: run the 5–10-user observed pilot on this shelf.
 
+## Visual system V2 (2026-10-04, HEAD `ddff466`)
+
+Systematic pass over every route. Photo-first registry
+(`lib/cover-registry.ts`): 17 geography×moment slots mapping to local
+`public/covers/` files, all `null` today — generated SVG fallback via
+`next/image`-ready branch, zero hotlinking, manifest + licensing rules in
+architecture.md §10b. Staff unification: submit, published-management,
+assistant-panel converted from zinc/black hardcodes to design tokens;
+submit success uses icon disc (no emoji); campaigns keep shared amber
+`rounded-lg` alerts. Login gains a desktop brand side panel (deep teal,
+honest bullets, mobile stacks to form-only). Profile chips aligned to
+`rounded-md`. For You/Activity/Saved inherit covers; no workflow logic
+changed. Full verify + build green. Next: run the user pilot; collect
+licensed photography only with provenance.
+
 ## Superseded detailed log (kept for audit; live facts are in §§1–12 above)
 
 ## Pilot replenishment shortlist (2026-10-02, HEAD `3e45e3b`, read-only, no mutations)

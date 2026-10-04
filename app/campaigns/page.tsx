@@ -85,7 +85,7 @@ export default async function CampaignPilotPage() {
           {!campaigns.available ? (
             <div
               role="alert"
-              className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+              className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
             >
               Campaigns are temporarily unavailable (schema pending). Public
               browsing and moderation are unaffected.
@@ -108,7 +108,7 @@ export default async function CampaignPilotPage() {
                 ).map(([status, count]) => (
                   <div
                     key={status}
-                    className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4"
+                    className="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4"
                   >
                     <dt className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
                       {CAMPAIGN_STATUS_LABELS[status]}
@@ -132,7 +132,7 @@ export default async function CampaignPilotPage() {
                   {campaigns.campaigns.map((campaign) => (
                     <li
                       key={campaign.id}
-                      className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5"
+                      className="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5"
                     >
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent-strong)]">
                         {CAMPAIGN_STATUS_LABELS[campaign.status]}

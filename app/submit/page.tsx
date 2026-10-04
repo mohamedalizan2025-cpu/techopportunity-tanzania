@@ -20,25 +20,25 @@ export default async function SubmitPage() {
   const categories = await listLiveCategories();
 
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex flex-1 flex-col bg-[var(--background)]">
       <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <Link
           href="/"
-          className="text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
+          className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
         >
           ← All opportunities
         </Link>
 
-        <h1 className="mt-6 text-3xl font-semibold tracking-tight text-black sm:text-4xl dark:text-zinc-50">
+        <h1 className="mt-6 text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
           Submit an opportunity
         </h1>
-        <p className="mt-3 text-base leading-7 text-zinc-600 dark:text-zinc-400">
+        <p className="mt-3 text-base leading-7 text-[var(--muted)]">
           Know a hackathon, scholarship, competition, internship or tech event
           that Tanzanian students should not miss? Share it below — every
           submission is reviewed before it is published.
         </p>
 
-        <div className="mt-8 rounded-lg border border-black/[.08] bg-white p-5 dark:border-white/[.145] dark:bg-zinc-950 sm:p-6">
+        <div className="mt-8 rounded-md border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6">
           <SubmissionForm organizations={organizations} categories={categories} />
         </div>
       </main>

@@ -34,7 +34,7 @@ function ChoiceChip({
 }) {
   return (
     <label
-      className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm font-medium transition ${
+      className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium transition ${
         checked
           ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
           : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent)]"

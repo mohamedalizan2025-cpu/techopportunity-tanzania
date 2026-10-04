@@ -39,7 +39,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <main
         id="main-content"
         tabIndex={-1}
-        className="flex w-full max-w-md flex-1 flex-col justify-center py-8 sm:py-12"
+        className="flex w-full max-w-3xl flex-1 flex-col justify-center py-8 sm:py-12"
       >
         <Link
           href="/"
@@ -60,7 +60,26 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           always remain public.
         </p>
 
-        <div className="mt-8 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-7">
+        <div className="mt-8 overflow-hidden rounded-md border border-[var(--line)] bg-[var(--surface)] sm:grid sm:grid-cols-[1fr_1.25fr]">
+          <div className="hidden flex-col justify-between gap-6 bg-[#0B3B36] p-7 text-[#F5EFE0] sm:flex">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#C9A227]">
+              Tech Opportunity
+            </p>
+            <div>
+              <p className="text-xl font-semibold leading-7">
+                Local talent, global opportunity.
+              </p>
+              <ul className="mt-4 space-y-3 text-sm leading-6 text-[#F5EFE0]/85">
+                <li>Human-reviewed listings with marked evidence.</li>
+                <li>Deadline and access details before you apply.</li>
+                <li>Private Saved list and application progress.</li>
+              </ul>
+            </div>
+            <p className="text-xs text-[#F5EFE0]/70">
+              Free for talent. Applications happen at the source.
+            </p>
+          </div>
+          <div className="p-5 sm:p-7">
           {authError === "confirmation" ? (
             <p
               role="alert"
@@ -71,6 +90,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </p>
           ) : null}
           <LoginForm nextPath={nextPath} />
+          </div>
         </div>
         <p className="mt-4 text-xs leading-5 text-[var(--subtle)]">
           Your saved opportunities are private to your account.

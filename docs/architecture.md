@@ -401,6 +401,25 @@ explicitly out of redesign scope.
   need: licensed Tanzanian/East-African student, campus, and convening
   imagery with per-image consent/provenance — do not ship random stock,
   and never show all-white Western-student imagery as the default mix.
+- Photo-first registry (`lib/cover-registry.ts`, 2026-10-04): central
+  `coverSlotFor` mapping (moment slots for hackathon/competition,
+  fellowship, internship/jobs, scholarship, conference/events, research,
+  public-sector; geography × sector slots for Tanzania/Africa/
+  international) with `coverAssetFor` resolving a local `public/covers/`
+  file when one exists, else `null` → generated SVG fallback rendered via
+  `next/image` (lazy, responsive sizes) when present. All 17 slots are
+  currently `null`: NO licensed file has been added, nothing is hotlinked,
+  and inventing provenance is forbidden. Asset manifest (all pending):
+  tanzania-education, tanzania-technology, tanzania-leadership,
+  africa-education, africa-entrepreneurship, africa-technology,
+  international-education, international-research, international-career,
+  international-leadership, moment-hackathon, moment-fellowship,
+  moment-internship, moment-scholarship, moment-conference,
+  moment-research, moment-public-sector. Each file needs: license +
+  photographer credit + subject consent + a caption that never claims the
+  depicted people/event are the listed opportunity. Representation rules:
+  Tanzanian/East-African youth clearly visible, hijabi representation
+  where natural, no safari/tourism clichés, no all-white default mix.
 - Responsive: mobile-first; category rail scrolls under 640px; cards stack
   single-column then `sm:grid-cols-2`; detail aside stacks action-first
   below `lg`. Phone-only (`md:hidden`) bottom nav (Explore/For You/Saved/

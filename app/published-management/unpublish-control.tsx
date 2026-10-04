@@ -10,9 +10,9 @@ import {
 } from "@/lib/staff-form-state";
 
 const ghostButtonClasses =
-  "inline-flex h-9 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50";
+  "inline-flex h-9 items-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60";
 const dangerButtonClasses =
-  "inline-flex h-9 items-center rounded-full border border-red-300 bg-white px-4 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:bg-zinc-950 dark:text-red-300 dark:hover:bg-red-950/40";
+  "inline-flex h-9 items-center rounded-md border border-red-300 bg-[var(--surface)] px-4 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40";
 
 /**
  * Per-record unpublish control (Milestone 14). Deliberately single-row: no
@@ -34,7 +34,7 @@ export function UnpublishControl({
 
   if (state.status === "success" && state.unpublishedId === id) {
     return (
-      <p role="status" className="text-sm text-zinc-600 dark:text-zinc-400">
+      <p role="status" className="text-sm text-[var(--muted)]">
         {state.message}
       </p>
     );
@@ -54,11 +54,11 @@ export function UnpublishControl({
       {confirming ? (
         <form action={formAction} className="flex max-w-xl flex-col items-end gap-2">
           <input type="hidden" name="opportunityId" value={id} />
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+          <span className="text-xs text-[var(--muted)]">
             Hide “{title}” from the public site? The record is kept, not
             deleted.
           </span>
-          <label className="w-full text-xs font-medium text-zinc-700 dark:text-zinc-300">
+          <label className="w-full text-xs font-medium text-[var(--muted)]">
             Reason (recorded in the moderation audit)
             <textarea
               name="reason"
@@ -67,7 +67,7 @@ export function UnpublishControl({
               maxLength={UNPUBLISH_REASON_MAX_LENGTH}
               rows={2}
               disabled={isPending}
-              className="mt-1 w-full rounded-lg border border-black/[.12] bg-white px-3 py-2 text-sm font-normal text-zinc-900 dark:border-white/[.16] dark:bg-zinc-950 dark:text-zinc-100"
+              className="mt-1 w-full rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-2 text-sm font-normal text-[var(--foreground)]"
             />
           </label>
           <button

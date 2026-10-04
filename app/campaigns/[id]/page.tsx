@@ -63,7 +63,7 @@ export default async function CampaignDetailPage({
         <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8">
           <div
             role="alert"
-            className="rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+            className="rounded-lg border border-amber-300 bg-amber-50 p-6 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
           >
             Campaigns are temporarily unavailable (schema pending).{" "}
             <Link href="/campaigns" className="font-semibold underline underline-offset-2">
@@ -172,7 +172,7 @@ export default async function CampaignDetailPage({
             </p>
           ) : (
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
+              <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
                 <dt className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
                   Matching profiles
                 </dt>
@@ -230,7 +230,7 @@ export default async function CampaignDetailPage({
               ).map(([label, count]) => (
                 <div
                   key={label}
-                  className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4"
+                  className="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4"
                 >
                   <dt className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--subtle)]">
                     {label}

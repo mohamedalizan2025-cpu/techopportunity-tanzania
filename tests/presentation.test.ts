@@ -12,6 +12,7 @@ import {
 } from "../lib/opportunity-presentation";
 import type { Opportunity } from "../lib/types";
 import { coverSpecFor } from "../components/opportunity-cover";
+import { coverAssetFor, coverSlotFor, pendingCoverSlots } from "../lib/cover-registry";
 
 let passed = 0;
 let failed = 0;
@@ -246,6 +247,21 @@ assert(
     coverA.variant >= 0 &&
     coverA.variant <= 2,
   JSON.stringify(coverA)
+);
+
+// --- cover registry: photo-first architecture, honest fallbacks -------------
+
+assert(
+  "16 moment categories map to moment slots",
+  coverSlotFor(coverRow({ category: "hackathon" })) === "moment-hackathon" &&
+    coverSlotFor(coverRow({ category: "fellowship" })) === "moment-fellowship" &&
+    coverSlotFor(coverRow({ category: "scholarship" })) === "moment-scholarship",
+  "moment mapping broken"
+);
+assert(
+  "17 no licensed asset exists yet, so every slot falls back explicitly",
+  coverAssetFor(coverRow()) === null && pendingCoverSlots().length === 17,
+  `pending=${pendingCoverSlots().length}`
 );
 
 console.log(`\n${passed} passed, ${failed} failed`);

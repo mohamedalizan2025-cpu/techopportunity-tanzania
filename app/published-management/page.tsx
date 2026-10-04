@@ -22,7 +22,7 @@ function formatPublished(iso: string): string {
 }
 
 const signOutButtonClasses =
-  "inline-flex h-9 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50";
+  "inline-flex h-9 items-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]";
 
 /**
  * Staff-only published-record list (Milestone 14). Same authorization
@@ -38,11 +38,11 @@ export default async function PublishedManagementPage() {
       redirect("/login?next=%2Fpublished-management");
     }
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-zinc-50 px-6 py-24 text-center font-sans dark:bg-black">
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[var(--background)] px-6 py-24 text-center">
+        <h1 className="text-2xl font-semibold text-[var(--foreground)]">
           Access restricted
         </h1>
-        <p className="max-w-md text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+        <p className="max-w-md text-sm leading-6 text-[var(--muted)]">
           Your account does not have moderation permissions.
         </p>
         <form action={logOutAction}>
@@ -59,14 +59,14 @@ export default async function PublishedManagementPage() {
   const signedInAs = displayName ?? email ?? "staff";
 
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex flex-1 flex-col bg-[var(--background)]">
       <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-black sm:text-4xl dark:text-zinc-50">
+            <h1 className="text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
               Published records
             </h1>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mt-2 text-sm text-[var(--muted)]">
               Signed in as {signedInAs} ·{" "}
               {published.length === 0
                 ? "nothing is public right now"
@@ -83,25 +83,25 @@ export default async function PublishedManagementPage() {
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <Link
             href="/moderation"
-            className="font-medium text-zinc-600 underline underline-offset-2 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
+            className="font-medium text-[var(--muted)] underline underline-offset-2 hover:text-[var(--foreground)]"
           >
             ← Moderation queue
           </Link>
           <Link
             href="/"
-            className="font-medium text-zinc-600 underline underline-offset-2 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
+            className="font-medium text-[var(--muted)] underline underline-offset-2 hover:text-[var(--foreground)]"
           >
             View public site ↗
           </Link>
         </div>
 
         {published.length === 0 ? (
-          <p className="mt-10 rounded-lg border border-dashed border-black/[.15] p-8 text-center text-sm text-zinc-500 dark:border-white/[.2] dark:text-zinc-400">
+            <p className="mt-10 rounded-md border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--muted)]">
             No published opportunities to manage.
           </p>
         ) : (
           <>
-            <p className="mt-8 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mt-8 text-sm text-[var(--muted)]">
               Unpublishing hides one record from the public site. It never
               deletes the row: discovery source, URL, timestamps and the title
               stay intact. A required reason and the authenticated moderator,
@@ -116,30 +116,30 @@ export default async function PublishedManagementPage() {
               {published.map((opportunity) => (
                 <li
                   key={opportunity.id}
-                  className="rounded-lg border border-black/[.08] bg-white p-4 dark:border-white/[.145] dark:bg-zinc-950"
+                  className="rounded-md border border-[var(--line)] bg-[var(--surface)] p-4"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <p className="break-words font-medium text-black dark:text-zinc-50">
+                      <p className="break-words font-medium text-[var(--foreground)]">
                         {opportunity.title}
                       </p>
-                      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                      <p className="mt-1 text-sm text-[var(--muted)]">
                         {categoryLabel(opportunity.category)}
                         {opportunity.organization ? ` · ${opportunity.organization}` : ""}
                       </p>
-                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                      <p className="mt-1 text-xs text-[var(--subtle)]">
                         {opportunity.sourceName
                           ? `Source · ${opportunity.sourceName}`
                           : "Source · none recorded (manually entered)"}
                         {" · "}
                         Published {formatPublished(opportunity.createdAt)}
                       </p>
-                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+                      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[var(--subtle)]">
                         Status · publicly visible
                       </p>
                       <Link
                         href={`/opportunities/${opportunity.slug}`}
-                        className="mt-2 inline-block text-xs font-medium text-zinc-600 underline underline-offset-2 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
+                        className="mt-2 inline-block text-xs font-medium text-[var(--muted)] underline underline-offset-2 hover:text-[var(--foreground)]"
                       >
                         View public page ↗
                       </Link>
@@ -147,7 +147,7 @@ export default async function PublishedManagementPage() {
                     <div className="flex flex-col items-end gap-2">
                       <Link
                         href={`/moderation/${opportunity.id}?mode=published`}
-                        className="inline-flex h-9 items-center rounded-full border border-black/[.10] bg-white px-4 text-sm font-medium text-zinc-600 transition-colors hover:text-black dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+                        className="inline-flex h-9 items-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
                       >
                         Re-review evidence
                       </Link>

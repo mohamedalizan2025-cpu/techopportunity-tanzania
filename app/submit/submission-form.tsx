@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { UiIcon } from "@/components/ui-icon";
 import { submitOpportunityAction } from "@/lib/data/submit-opportunity";
 import { initialSubmissionState } from "@/lib/submission-validation";
 import type { LiveCategory } from "@/lib/data/categories";
@@ -11,13 +12,13 @@ interface OrganizationOption {
 }
 
 const inputBase =
-  "mt-1.5 w-full rounded-lg border bg-white px-3 py-2 text-sm text-black outline-none transition-colors dark:bg-zinc-950 dark:text-zinc-50";
+  "mt-1.5 w-full rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] outline-none transition-colors focus:border-[var(--accent)]";
 
 function fieldClassName(hasError: boolean): string {
   return `${inputBase} ${
     hasError
-      ? "border-red-500 focus:border-red-600 dark:border-red-500"
-      : "border-black/[.10] focus:border-black/40 dark:border-white/[.145] dark:focus:border-white/40"
+      ? "border-red-300 focus:border-red-400 dark:border-red-900"
+      : "border-[var(--line-strong)] focus:border-[var(--accent)]"
   }`;
 }
 
@@ -31,10 +32,10 @@ function Label({
   optional?: boolean;
 }) {
   return (
-    <label htmlFor={htmlFor} className="block text-sm font-medium text-black dark:text-zinc-50">
+    <label htmlFor={htmlFor} className="block text-sm font-medium text-[var(--foreground)]">
       {children}
       {optional ? (
-        <span className="ml-1 font-normal text-zinc-500">(optional)</span>
+        <span className="ml-1 font-normal text-[var(--subtle)]">(optional)</span>
       ) : null}
     </label>
   );
@@ -57,19 +58,19 @@ export function SubmissionForm({
   if (state.status === "success") {
     return (
       <div className="flex flex-col items-center gap-4 py-10 text-center">
-        <p className="text-3xl" aria-hidden>
-          ✅
-        </p>
-        <h2 className="text-xl font-semibold text-black dark:text-zinc-50">
+        <span className="grid h-12 w-12 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent-strong)]">
+          <UiIcon name="check" width="24" height="24" />
+        </span>
+        <h2 className="text-xl font-semibold text-[var(--foreground)]">
           Submitted for review
         </h2>
-        <p className="max-w-md text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+        <p className="max-w-md text-sm leading-6 text-[var(--muted)]">
           Thank you — your opportunity has been received and is now awaiting a
           moderation review. It will appear on the homepage once it is approved.
         </p>
         <Link
           href="/"
-          className="inline-flex h-11 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+          className="inline-flex h-11 items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-6 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           ← Back to homepage
         </Link>
@@ -100,7 +101,7 @@ export function SubmissionForm({
           placeholder="e.g. National AI Hackathon 2027"
         />
         {errors.title ? (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.title}</p>
+          <p className="mt-1 text-sm text-red-700 dark:text-red-300">{errors.title}</p>
         ) : null}
       </div>
 
@@ -115,7 +116,7 @@ export function SubmissionForm({
           placeholder="What is it, who can apply, what are the benefits?"
         />
         {errors.description ? (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+          <p className="mt-1 text-sm text-red-700 dark:text-red-300">
             {errors.description}
           </p>
         ) : null}
@@ -138,7 +139,7 @@ export function SubmissionForm({
             ))}
           </select>
           {errors.category ? (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
               {errors.category}
             </p>
           ) : null}
@@ -162,7 +163,7 @@ export function SubmissionForm({
             ))}
           </select>
           {errors.organizationId ? (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
               {errors.organizationId}
             </p>
           ) : null}
@@ -181,7 +182,7 @@ export function SubmissionForm({
           placeholder="https://example.org/apply"
         />
         {errors.url ? (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.url}</p>
+          <p className="mt-1 text-sm text-red-700 dark:text-red-300">{errors.url}</p>
         ) : null}
       </div>
 
@@ -197,17 +198,17 @@ export function SubmissionForm({
           className={fieldClassName(errors.deadline !== undefined)}
         />
         {errors.deadline ? (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+          <p className="mt-1 text-sm text-red-700 dark:text-red-300">
             {errors.deadline}
           </p>
         ) : null}
-        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+        <p className="mt-1 text-xs text-[var(--subtle)]">
           Leave empty for rolling applications.
         </p>
       </div>
 
-      <fieldset className="rounded-lg border border-dashed border-black/[.15] p-4 dark:border-white/[.2]">
-        <legend className="px-1 text-sm font-medium text-zinc-600 dark:text-zinc-400">
+      <fieldset className="rounded-md border border-dashed border-[var(--line-strong)] p-4">
+        <legend className="px-1 text-sm font-medium text-[var(--muted)]">
           Location (optional)
         </legend>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -282,7 +283,7 @@ export function SubmissionForm({
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex h-12 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-colors hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-[#ccc]"
+        className="inline-flex h-12 items-center justify-center rounded-md bg-[var(--accent)] px-6 text-sm font-semibold text-white transition hover:bg-[#07543f] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
       >
         {isPending ? "Submitting…" : "Submit for review"}
       </button>

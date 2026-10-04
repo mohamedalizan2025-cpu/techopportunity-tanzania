@@ -1,4 +1,6 @@
+import Image from "next/image";
 import { categoryLabel } from "@/lib/category-labels";
+import { coverAssetFor } from "@/lib/cover-registry";
 import { geographyOf } from "@/lib/taxonomy";
 import type { Opportunity, OpportunityCategory } from "@/lib/types";
 
@@ -76,6 +78,19 @@ export function OpportunityCover({
   opportunity: Pick<Opportunity, "category" | "slug"> & Partial<Opportunity>;
   className?: string;
 }) {
+  const asset = coverAssetFor(opportunity);
+  if (asset) {
+    return (
+      <Image
+        src={asset}
+        alt=""
+        aria-hidden="true"
+        fill
+        sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 600px"
+        className={`object-cover ${className ?? ""}`}
+      />
+    );
+  }
   const spec = coverSpecFor(opportunity);
   const seed = spec.variant * 7919 + 13;
   return (
