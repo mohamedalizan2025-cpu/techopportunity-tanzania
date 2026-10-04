@@ -253,6 +253,25 @@ eligible, production OFF, no activation performed. Full results in
 Groq headroom (not taken); otherwise sequence holds (staging decision →
 owner prod decision → user pilot → provider revenue pilot).
 
+## AI conformance milestone 2026-10-04 (staging/production stay OFF)
+
+Paced Groq (20s interval, grounded in measured ~590-token prompts): zero
+quota errors, but TRUE conformance is 1/16 ai/ok — 8× HTTP 400
+(`json_validate_failed`: 700-token budget too small for the reasoning
+model; paid quota would NOT fix this) + 7 ref-rule misses, 0 hard
+failures. Gemini: grouped 10 rejections (mostly unverified-citation —
+prompt never stated the ref rules), applied one bounded prompt
+clarification (ref rules + negative example, validator untouched), reran
+once: 14/16 ai/ok, 0 hard, 80/80 soft. Comparison supports keeping
+Gemini-primary/Groq-backup (recommendation; production order unchanged).
+STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL = NO (zero-fallback bar unmet;
+Groq backup needs a token-budget fix first). No activation performed.
+Full evidence in
+[AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
+`npm run verify` + `npm run build` green. Next: owner decides Groq
+token-budget/quota path, or accept 14/16-with-fallbacks posture in a later
+milestone — then staging decision → owner prod decision → user pilot.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

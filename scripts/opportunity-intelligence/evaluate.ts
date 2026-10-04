@@ -176,6 +176,62 @@ function conciseAndNonRepetitive(insight: OpportunityInsight): boolean {
   return texts.every((text) => text.length <= 320) && new Set(texts).size === texts.length;
 }
 
+/**
+ * Validator rejection classifier (evaluation observation only). Mirrors the
+ * stage order of `validateModelOpportunityAssistance` in
+ * lib/opportunity-intelligence/contract.ts (bounds 320 chars / 5 items) and
+ * reports the FIRST failing stage for an invalid_response payload. Never
+ * alters validation; the strict validator stays authoritative.
+ */
+export function classifyRejection(
+  raw: unknown,
+  input: ReturnType<typeof buildSanitizedOpportunityIntelligenceInput>
+): string {
+  const catalog = new Map(input.evidenceCatalog.map((entry) => [entry.id, entry.basis]));
+  const isRecord = (value: unknown): value is Record<string, unknown> =>
+    Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  const exactKeys = (value: Record<string, unknown>, expected: string[]): boolean => {
+    const keys = Object.keys(value).sort();
+    return keys.length === expected.length && keys.every((key, index) => key === [...expected].sort()[index]);
+  };
+  if (!isRecord(raw)) return "not-object";
+  if (!exactKeys(raw, ["readiness", "missingOrUnclear", "nextActions", "confidence"])) return "top-keys";
+  for (const section of ["readiness", "missingOrUnclear", "nextActions"] as const) {
+    const items = raw[section];
+    if (!Array.isArray(items) || items.length > 5) return "section-shape";
+    for (const item of items) {
+      if (!isRecord(item) || !exactKeys(item, ["text", "basis", "evidenceRefs"])) return "item-keys";
+      const text = item.text;
+      if (
+        typeof text !== "string" || text.trim() !== text || text.length < 2 || text.length > 320 ||
+        /[\u0000-\u001f\u007f<>]/.test(text) ||
+        /\b\d+(?:\.\d+)?\s*%|\bpercent(?:age)?\b|\bmatch\s*score\b/i.test(text)
+      ) {
+        return "text-violation";
+      }
+      if (item.basis !== "verified_fact" && item.basis !== "profile_observation" && item.basis !== "unknown") {
+        return "bad-basis";
+      }
+      const refs = item.evidenceRefs;
+      if (!Array.isArray(refs) || refs.length > 4) return "bad-evidence-ref";
+      if (!refs.every((ref): ref is string => typeof ref === "string" && catalog.has(ref))) {
+        return "bad-evidence-ref";
+      }
+      if (item.basis === "unknown" && refs.length !== 0) return "unknown-with-refs";
+      if (item.basis === "verified_fact" && refs.some((ref) => catalog.get(ref) !== "verified_fact")) {
+        return "unverified-citation";
+      }
+      if (
+        item.basis === "profile_observation" &&
+        (refs.length === 0 || !refs.some((ref) => catalog.get(ref) === "profile_observation"))
+      ) {
+        return "profile-ref-missing";
+      }
+    }
+  }
+  return "confidence";
+}
+
 export interface EvaluationCaseResult {
   id: string;
   coverage: string[];
@@ -183,6 +239,9 @@ export interface EvaluationCaseResult {
   availabilityReason: OpportunityInsight["availabilityReason"];
   latencyMs: number;
   hardFailures: string[];
+  /** Validator rejection category for invalid_response cases, else null.
+   *  Pure observation from the same in-memory payload the validator saw. */
+  rejectionClass: string | null;
   softChecks: {
     usefulWhyFit: boolean;
     readinessPresent: boolean;
@@ -230,6 +289,16 @@ export interface OpportunityIntelligenceEvaluationReport {
       | "not-applicable-contract-simulation";
     billingExposureStatus: "confirmed-free-quota" | "pending-owner-confirmation" | "not-applicable-contract-simulation";
   };
+  /**
+   * Evaluation-only transport observation (real runs only): per-case HTTP
+   * status class and response bytes plus the pacing interval and total
+   * wall-clock time. Never present for contract simulations.
+   */
+  transport?: {
+    paceMs: number;
+    wallClockMs: number;
+    requests: EvaluationTransportEntry[];
+  };
   pilotRecommendation:
     | "do-not-activate-real-provider-not-evaluated"
     | "do-not-activate-hard-failure"
@@ -246,13 +315,33 @@ function median(values: number[]): number | null {
     : Math.round(sorted[middle] * 10) / 10;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export interface EvaluationTransportEntry {
+  caseId: string;
+  status: number | null;
+  bytes: number;
+}
+
 async function evaluateCases(
   providerMode: "contract" | "real",
-  provider: OpportunityIntelligenceProvider | null
+  provider: OpportunityIntelligenceProvider | null,
+  options: {
+    /** Evaluation-only deterministic delay between real cases (0 = unchanged). */
+    paceMs?: number;
+  } = {}
 ): Promise<{ cases: EvaluationCaseResult[]; requestCount: number }> {
   const results: EvaluationCaseResult[] = [];
   let requestCount = 0;
+  const paceMs = Math.max(0, Math.min(options.paceMs ?? 0, 120000));
+  let caseIndex = 0;
   for (const testCase of OPPORTUNITY_INTELLIGENCE_EVALUATION_CORPUS) {
+    if (providerMode === "real" && paceMs > 0 && caseIndex > 0) {
+      await sleep(paceMs);
+    }
+    caseIndex += 1;
     clearOpportunityInsightCacheForTests();
     const input = buildSanitizedOpportunityIntelligenceInput(
       testCase.opportunity,
@@ -268,9 +357,17 @@ async function evaluateCases(
         };
     if (providerMode === "real" && provider) requestCount += 1;
     const started = performance.now();
+    let rawProviderOutput: unknown;
+    let sawProviderOutput = false;
     const insight = await generateOpportunityInsight(testCase.opportunity, testCase.profile, {
       now: EVALUATION_NOW,
       selection,
+      onProviderOutput: providerMode === "real"
+        ? (raw) => {
+            rawProviderOutput = raw;
+            sawProviderOutput = true;
+          }
+        : undefined,
     });
     const latencyMs = Math.round((performance.now() - started) * 10) / 10;
     const hardFailures: string[] = [];
@@ -328,6 +425,13 @@ async function evaluateCases(
       availabilityReason: insight.availabilityReason,
       latencyMs,
       hardFailures,
+      rejectionClass:
+        providerMode === "real" &&
+        insight.mode === "deterministic" &&
+        insight.availabilityReason === "invalid_response" &&
+        sawProviderOutput
+          ? classifyRejection(rawProviderOutput, input)
+          : null,
       softChecks: {
         usefulWhyFit: insight.whyFit.length >= testCase.expected.minimumWhyFit,
         readinessPresent: insight.readiness.length > 0,
@@ -352,19 +456,49 @@ export async function runOpportunityIntelligenceEvaluation(options: {
   confirmation?: string;
   env?: Readonly<Record<string, string | undefined>>;
   fetchImpl?: typeof fetch;
+  /** Evaluation-only pacing between real cases (ms, clamped 0..120000). */
+  paceMs?: number;
 } = {}): Promise<OpportunityIntelligenceEvaluationReport> {
   const env = options.env ?? process.env;
   const requestedProvider = options.realProvider ?? (options.realGroq ? "groq" : null);
+  const paceMs = Math.max(0, Math.min(options.paceMs ?? 0, 120000));
+  // Evaluation-only transport observation: HTTP status class + response
+  // bytes per real request. Reads via a cloned body so the provider path is
+  // untouched; Retry-After is observed here if a provider ever sends one
+  // (neither adapter consumes it — noted, not changed).
+  const transportStatuses: Array<{ status: number | null; bytes: number }> = [];
+  const transportReads: Array<Promise<void>> = [];
+  const observingFetch: typeof fetch = (async (url: unknown, init?: unknown) => {
+    const response = await (options.fetchImpl ?? fetch)(
+      url as string,
+      init as RequestInit
+    );
+    const entry = { status: response.status, bytes: -1 };
+    transportStatuses.push(entry);
+    try {
+      transportReads.push(
+        response.clone().text().then(
+          (text) => {
+            entry.bytes = text.length;
+          },
+          () => {
+            entry.bytes = -1;
+          }
+        )
+      );
+    } catch {
+      entry.bytes = -1;
+    }
+    return response;
+  }) as typeof fetch;
   const realGate = requestedProvider
-    ? resolveRealEvaluationGate(
-        env,
-        options.confirmation,
-        options.fetchImpl ?? fetch,
-        requestedProvider
-      )
+    ? resolveRealEvaluationGate(env, options.confirmation, observingFetch, requestedProvider)
     : null;
   const realReady = realGate?.ready === true;
-  const evaluated = await evaluateCases(realReady ? "real" : "contract", realReady ? realGate.selection.provider : null);
+  const wallClockStarted = performance.now();
+  const evaluated = await evaluateCases(realReady ? "real" : "contract", realReady ? realGate.selection.provider : null, { paceMs });
+  await Promise.all(transportReads);
+  const wallClockMs = Math.round((performance.now() - wallClockStarted) * 10) / 10;
   const cases = evaluated.cases;
   const latencies = cases.map((item) => item.latencyMs);
   const hardFailureCount = cases.reduce((sum, item) => sum + item.hardFailures.length, 0);
@@ -435,6 +569,19 @@ export async function runOpportunityIntelligenceEvaluation(options: {
     },
     pilotRecommendation,
     pendingReasons,
+    ...(realReady
+      ? {
+          transport: {
+            paceMs,
+            wallClockMs,
+            requests: cases.map((item, index) => ({
+              caseId: item.id,
+              status: transportStatuses[index]?.status ?? null,
+              bytes: transportStatuses[index]?.bytes ?? -1,
+            })),
+          },
+        }
+      : {}),
   };
 }
 
@@ -445,7 +592,18 @@ async function main() {
   const confirmation = process.argv
     .find((argument) => argument.startsWith("--confirm="))
     ?.slice("--confirm=".length);
-  const report = await runOpportunityIntelligenceEvaluation({ realProvider, confirmation });
+  const paceMs = Math.max(
+    0,
+    Math.min(
+      Number(
+        process.argv
+          .find((argument) => argument.startsWith("--pace-ms="))
+          ?.slice("--pace-ms=".length) ?? "0"
+      ) || 0,
+      120000
+    )
+  );
+  const report = await runOpportunityIntelligenceEvaluation({ realProvider, confirmation, paceMs });
   console.log("# AI Opportunity Intelligence evaluation");
   console.log(`Execution: ${report.execution}`);
   console.log(`Cases: ${report.summary.caseCount}`);
@@ -455,6 +613,18 @@ async function main() {
   console.log(`Hard failures: ${report.summary.hardFailureCount}`);
   console.log(`Soft checks: ${report.summary.softChecksPassed}/${report.summary.softChecksTotal}`);
   console.log(`Pilot recommendation: ${report.pilotRecommendation}`);
+  if (report.transport) {
+    console.log(`Pace: ${report.transport.paceMs}ms between cases`);
+    console.log(`Wall clock: ${(report.transport.wallClockMs / 1000).toFixed(1)}s`);
+    const statuses = report.transport.requests.map((entry) => entry.status ?? "?").join(",");
+    console.log(`HTTP statuses: ${statuses}`);
+    console.log(
+      `Rejection classes: ${report.cases
+        .filter((item) => item.rejectionClass)
+        .map((item) => `${item.id}=${item.rejectionClass}`)
+        .join("; ") || "none"}`
+    );
+  }
   if (report.pendingReasons.length > 0) {
     console.log(`Pending: ${report.pendingReasons.join("; ")}`);
   }

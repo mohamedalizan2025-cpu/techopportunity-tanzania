@@ -69,6 +69,12 @@ export interface GenerateOpportunityInsightOptions {
   selection?: ProviderSelection;
   /** Test seam; production uses the fixed eight-second upper bound. */
   timeoutMs?: number;
+  /**
+   * Observation seam for the evaluation harness only: receives the raw
+   * provider payload and its validation verdict. Never set in production;
+   * purely observational, cannot alter the outcome.
+   */
+  onProviderOutput?: (raw: unknown, validated: boolean) => void;
 }
 
 export async function generateOpportunityInsight(
@@ -131,6 +137,13 @@ export async function generateOpportunityInsight(
       ]);
       recordInsightAttempt();
       const validated = validateModelOpportunityAssistance(raw, input);
+      if (options.onProviderOutput) {
+        try {
+          options.onProviderOutput(raw, validated !== null);
+        } catch {
+          // Observation must never disturb the outcome.
+        }
+      }
       if (!validated) {
         lastFailure = "invalid_response";
         recordInsightOutcome("invalid_response");

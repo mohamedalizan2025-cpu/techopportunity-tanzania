@@ -337,3 +337,55 @@ enables production AI.
   validator, or gate changes beyond the one verified Gemini wire-shape fix.
   Only owner path forward: quota headroom decision for Groq (paid tier or
   paced evaluation) is an owner cost call — not taken here.
+
+## Conformance milestone 2026-10-04 (evaluation-only pacing, no production change)
+
+- Harness gained evaluation-only pacing (`--pace-ms=`, default 0 so normal
+  behavior is unchanged), per-request transport observation (HTTP status +
+  bytes via cloned bodies; Retry-After is not consumed by either adapter —
+  noted, not changed), wall-clock timing, and an in-memory validator
+  rejection classifier mirroring the strict validator stage order. A pure
+  observation hook (`onProviderOutput`) was added to the service options;
+  it is never set in production and cannot alter outcomes. Unit-pinned in
+  `tests/opportunity-intelligence-eval-harness.test.ts`.
+- Pacing interval: 20000ms, grounded in measured prompt size (avg ~590
+  tokens + 700 completion budget ≈ 1.3K worst-case per request → ~3 RPM,
+  ≈3.9K TPM against the 8K free-tier ceiling and 30 RPM limit).
+- Paced Groq (`--pace-ms=20000`, wall 322s): 16 requests, ZERO
+  quota_exhausted (pacing works), 1 ai/ok, 8 provider_unavailable, 7
+  invalid_response (6 bad-evidence-ref, 1 unverified-citation), 0 hard
+  failures, 80/80 soft. Latency min 874ms / median 1.29s / max 2.0s.
+  Exact 400 cause (captured live, redacted): `json_validate_failed` — "max
+  completion tokens reached before generating a valid document." The 700
+  completion-token budget is too small for the gpt-oss-20b reasoning model;
+  this is a per-request budget ceiling, NOT a quota problem, so paid quota
+  would not fix it. A token-budget adapter change is identified but NOT
+  made here (production request behavior change needs owner approval).
+- Gemini grouping run (unchanged prompt): 7 ai/ok, 9 invalid (7
+  unverified-citation, 1 unknown-with-refs, 1 bad-evidence-ref), all HTTP
+  200. Verdict: mostly category B (prompt never stated the ref rules;
+  catalog carries basis but rules lived only in the validator) with model
+  non-conformance on top. No adapter defect, validator not at fault.
+- Bounded steerability fix (prompt only, shared contract unchanged):
+  SYSTEM_INSTRUCTIONS now states the three evidence-reference rules with
+  one explicit negative example. No validator relaxation, no new data.
+- Steered Gemini rerun (once): 16 requests, 14 ai/ok, 1 timeout (8s cap,
+  international-tech-job), 1 invalid (profile-ref-missing on
+  explicit-tanzania-exclusion), 0 hard failures, 80/80 soft. Latency min
+  1.4s / median 1.8s / max 8.0s. Prior classes (unverified-citation,
+  unknown-with-refs, bad-evidence-ref) went to zero.
+- Comparison: Gemini 14/16 conformance, ~1.8s median, no free-tier quota
+  pressure; Groq 1/16 (budget-capped 400s + ref misses + burst quota wall),
+  ~1.2s median when answering. Evidence supports KEEPING the existing
+  Gemini-primary/Groq-backup order (recommendation only — production
+  ordering unchanged without owner approval).
+- Cost: Groq free tier is NOT the binding problem for a small-user pilot
+  (real traffic is occasional single requests under the 8 req/min route
+  limit, and the 200-entry/6h cache absorbs repeats) — the per-request
+  token budget is. Paid quota would not materially solve the proven
+  problem; model conformance/budget is the larger issue. No paid billing
+  enabled.
+- STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL = NO: best observed 14/16 still
+  trips the zero-fallback pilot bar, and the Groq backup path is
+  effectively non-functional until its token budget is addressed. No
+  staging or production activation performed.

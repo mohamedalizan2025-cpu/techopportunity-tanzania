@@ -161,7 +161,12 @@ Groq receives the full strict schema; Gemini receives a deep-stripped copy
 (`responseMimeType` + `responseSchema`) because the live generateContent
 endpoint rejects `additionalProperties` with 400 — local re-validation
 against the full strict schema stays authoritative for both, so nothing is
-weakened.
+weakened. The system prompt additionally states the evidence-reference rules
+explicitly (verified_fact cites verified_fact only, profile_observation
+needs a profile_observation ref, unknown cites nothing with a negative
+example) — verified live 2026-10-04 to lift Gemini conformance 6/16 to
+14/16 with zero hard failures; the validator is unchanged and still
+rejects any violation.
 
 ## 15. Model replacement strategy
 
