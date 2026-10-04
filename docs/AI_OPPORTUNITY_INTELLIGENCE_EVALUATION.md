@@ -2,10 +2,10 @@
 
 Status: **V2 CONTRACT + PUBLIC-CORPUS SIMULATIONS PASSED · REAL GEMINI/GROQ RUNS BLOCKED AT OWNER CREDENTIAL GATE · PRODUCTION OFF**
 
-Updated: 2026-10-04. Targets: `gemini-3.5-flash-lite` (model ID must be
-re-confirmed against the live models list at activation — current docs
-emphasize newer series) and `openai/gpt-oss-20b` (confirmed current
-2026-10-04, strict structured outputs supported).
+Updated: 2026-10-04. Targets: `gemini-3.5-flash-lite` (VERIFIED current
+2026-10-04: GA stable per the October 2026 changelog, structured outputs
+supported, 1M input / 64K output tokens) and `openai/gpt-oss-20b`
+(confirmed current 2026-10-04, strict structured outputs supported).
 
 This milestone evaluates the existing bounded Opportunity Intelligence layer. It
 does not redesign the product, change deterministic authority, use private
@@ -254,3 +254,17 @@ enables production AI.
   models list before any real run; do not assume it.
 - Staging activation remains ineligible (no green real-provider run);
   production AI remains off in hard zero-spend mode.
+
+## Owner-gated evaluation checkpoint 2026-10-04 (0 external requests)
+
+- Groq fixed-corpus run re-attempted WITHOUT confirmation/keys: harness
+  correctly reports `real-groq-pending` (explicit confirmation, ZDR,
+  no-billing, model, credential, provider reasons), 0 requests, contract
+  simulation unchanged (16 cases, 0 hard, 80/80). The gate fails closed
+  exactly as designed.
+- Gemini `gemini-3.5-flash-lite` pin VERIFIED against current official docs
+  (GA stable, structured outputs supported) — model-ID uncertainty from the
+  V2 audit is closed. No Gemini request sent (no key, no attestations).
+- Staging activation NOT eligible; production activation BLOCKED. Only
+  remaining path: owner configures server-side keys + attestations and runs
+  the two fixed-corpus evaluations locally.

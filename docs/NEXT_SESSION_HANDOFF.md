@@ -164,10 +164,14 @@ with verified evidence); privacy-safe telemetry counters (aggregates only,
 reported by eval harness); 6-case static public-facts corpus 6/6 green;
 provider schema inlined for subset compatibility; provider docs
 re-verified 2026-10-04 (Groq current; Gemini free-tier data-use current;
-`gemini-3.5-flash-lite` pin must be re-confirmed at activation). 16-case
+`gemini-3.5-flash-lite` pin VERIFIED current 2026-10-04: GA stable,
+structured outputs, 1M/64K tokens). 16-case
 simulation still 0 hard / 80-soft green. Real Gemini/Groq runs BLOCKED
-(no keys, no attestations — OWNER_GATE). Production AI OFF. User pilot
-stays READY-but-pending. Next: owner-gated real-provider evaluation.
+(no keys, no attestations — OWNER_GATE; Groq re-attempt reports
+`real-groq-pending`, 0 requests). Production AI OFF. User pilot
+stays READY-but-pending. Next: owner configures keys + attestations and
+runs both fixed-corpus evals locally; staging decision only after green
+runs.
 
 ## 12. Stop conditions
 
