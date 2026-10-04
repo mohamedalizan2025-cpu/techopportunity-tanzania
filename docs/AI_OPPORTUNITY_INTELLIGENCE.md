@@ -156,7 +156,12 @@ false`) + local re-validation; basis/evidenceRef consistency enforced
 (unknown cites nothing; verified_fact cites verified catalog only);
 control characters, HTML, percentages, and score language rejected;
 oversized payloads, hostile slugs, and bodies rejected at the route;
-rate limiting per hashed user.
+rate limiting per hashed user. Wire detail (verified live 2026-10-04):
+Groq receives the full strict schema; Gemini receives a deep-stripped copy
+(`responseMimeType` + `responseSchema`) because the live generateContent
+endpoint rejects `additionalProperties` with 400 — local re-validation
+against the full strict schema stays authoritative for both, so nothing is
+weakened.
 
 ## 15. Model replacement strategy
 

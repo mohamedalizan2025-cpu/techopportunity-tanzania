@@ -143,6 +143,29 @@ export function createGroqProvider(
   };
 }
 
+// Gemini's responseSchema accepts a subset of JSON Schema: in particular
+// `additionalProperties` is rejected with 400 INVALID_ARGUMENT (verified
+// against the live generateContent endpoint for gemini-3.5-flash-lite).
+// Groq strict mode keeps the full MODEL_OUTPUT_SCHEMA; Gemini gets a
+// deep-stripped copy. Local re-validation against the full strict schema
+// stays authoritative either way, so no constraint is weakened.
+export function geminiResponseSchema(): Record<string, unknown> {
+  return stripAdditionalProperties(MODEL_OUTPUT_SCHEMA) as Record<string, unknown>;
+}
+
+function stripAdditionalProperties(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripAdditionalProperties);
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).filter(
+      ([key]) => key !== "additionalProperties"
+    );
+    return Object.fromEntries(
+      entries.map(([key, entry]) => [key, stripAdditionalProperties(entry)])
+    );
+  }
+  return value;
+}
+
 export function createGeminiProvider(
   apiKey: string,
   model: string,
@@ -168,12 +191,8 @@ export function createGeminiProvider(
             generationConfig: {
               temperature: 0.1,
               maxOutputTokens: 700,
-              responseFormat: {
-                text: {
-                  mimeType: "application/json",
-                  schema: MODEL_OUTPUT_SCHEMA,
-                },
-              },
+              responseMimeType: "application/json",
+              responseSchema: geminiResponseSchema(),
             },
           }),
         }

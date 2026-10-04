@@ -283,3 +283,57 @@ enables production AI.
 - No change to the standing conclusion: staging NOT eligible, production
   OFF. Owner path unchanged — configure server-side keys + attestations
   locally, then run the two fixed-corpus evaluations.
+
+## Real Groq runs 2026-10-04 (`openai/gpt-oss-20b`, 16 cases each, owner keys)
+
+- Run 1: 16 requests, 1 structured ai/ok, 15 deterministic fallbacks
+  (10 quota_exhausted, 3 provider_unavailable, 2 invalid_response),
+  0 hard failures, 80/80 soft. Latency min 214ms / median 406ms / max 7.2s.
+- Run 2 (after cooldown, same harness): 16 requests, 1 structured ai/ok,
+  15 fallbacks (10 quota_exhausted, 4 provider_unavailable, 1
+  invalid_response), 0 hard failures, 80/80 soft. Latency min 220ms /
+  median 803ms / max 2.2s.
+- Exact quota cause: ~6 real attempts succeed, then every further request
+  429s in ~220–240ms — the free-tier throughput ceiling (TPM) trips on the
+  sequential 16-request burst. Reproducible across both runs, so further
+  immediate reruns were stopped. The 2 valid Groq outputs passed every
+  authority check (no invented eligibility/geography/deadline, no trust
+  override). Privacy `confirmed-groq-zdr`, billing `confirmed-free-quota`.
+
+## Real Gemini runs 2026-10-04 (`gemini-3.5-flash-lite`, 16 cases each)
+
+- Run 1 (pre-fix adapter): 16 requests, 0 structured, 16
+  provider_unavailable, 0 hard failures (all deterministic fallback).
+- Exact cause (proven with minimal live probes, 3 requests): the adapter
+  sent `generationConfig.responseFormat.text.mimeType: "application/json"`,
+  which the live endpoint rejects with 400 INVALID_ARGUMENT — and the
+  prior doc claim that this shape is accepted was wrong for this model
+  (corrected here and in AI_OPPORTUNITY_INTELLIGENCE.md §14). A second
+  probe showed `responseSchema` additionally rejects `additionalProperties`
+  with 400. A third probe verified the canonical shape
+  (`responseMimeType: "application/json"` + `responseSchema` without
+  `additionalProperties`) returns 200 with valid structured JSON.
+- Bounded fix (no validator weakening): `createGeminiProvider` now sends
+  the verified shape with a deep-stripped schema copy; Groq keeps the full
+  strict schema; local re-validation against the full strict schema stays
+  authoritative. Unit pin updated to the verified shape.
+- Run 2 (post-fix): 16 requests, 6 structured ai/ok, 10
+  deterministic fallbacks (all invalid_response), 0 hard failures, 79/80
+  soft (single soft miss: `unknownsHandled` on explicit-tanzania-exclusion).
+  Latency min 1.4s / median 1.7s / max 3.3s. The 10 rejections were
+  characterized on a live sample: the model mixes `unknown` basis with
+  non-empty evidenceRefs (and similar strictness violations) — the
+  fail-closed validator correctly rejected them, so no fix to the
+  validator is warranted. Privacy `confirmed-gemini-unpaid-data-use`,
+  billing `confirmed-free-quota`.
+
+## Pilot decision after real runs
+
+- Neither provider meets the in-code pilot bar (requires zero fallbacks):
+  Groq is quota-ceilinged at ~6 requests per burst window; Gemini validates
+  6/16 with the strict validator correctly rejecting the rest. Zero hard
+  failures everywhere — deterministic authority never yielded.
+- Staging activation NOT eligible. Production AI stays OFF. No prompt,
+  validator, or gate changes beyond the one verified Gemini wire-shape fix.
+  Only owner path forward: quota headroom decision for Groq (paid tier or
+  paced evaluation) is an owner cost call — not taken here.

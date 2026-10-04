@@ -237,6 +237,22 @@ stays OFF, staging NOT eligible. Recorded in
 server-side keys + attestations locally and runs the two evals → staging
 decision → owner prod decision → user pilot → provider revenue pilot.
 
+## Real AI provider runs 2026-10-04 (owner keys configured; production stays OFF)
+
+Groq `openai/gpt-oss-20b` ×2: 1/16 structured ai/ok each, 0 hard failures,
+80/80 soft each; ~6 real attempts then sustained free-tier 429s (TPM burst
+ceiling, reproducible — reruns stopped). Gemini `gemini-3.5-flash-lite`:
+first 0/16 (adapter sent a wire shape the live endpoint 400s — exact cause
+proven, bounded fix applied to `createGeminiProvider` with live-verified
+shape, validator untouched), then 6/16 ai/ok, 0 hard failures, 79/80 soft;
+10 rejections characterized as correct fail-closed validation (unknown basis
+mixed with refs). Neither meets the zero-fallback pilot bar → staging NOT
+eligible, production OFF, no activation performed. Full results in
+[AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
+`npm run verify` + `npm run build` green. Next: owner cost/quota call for
+Groq headroom (not taken); otherwise sequence holds (staging decision →
+owner prod decision → user pilot → provider revenue pilot).
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

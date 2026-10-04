@@ -180,9 +180,15 @@ test("Gemini adapter locks the stable free-tier model and requests structured JS
   assert.ok(requestBody);
   const generationConfig = requestBody.generationConfig as {
     maxOutputTokens: number;
-    responseFormat: { text: { mimeType: string; schema: Record<string, unknown> } };
+    responseMimeType: string;
+    responseSchema: Record<string, unknown>;
   };
   assert.equal(generationConfig.maxOutputTokens, 700);
-  assert.equal(generationConfig.responseFormat.text.mimeType, "application/json");
-  assert.equal(generationConfig.responseFormat.text.schema.additionalProperties, false);
+  assert.equal(generationConfig.responseMimeType, "application/json");
+  assert.ok(generationConfig.responseSchema);
+  assert.equal(
+    JSON.stringify(generationConfig.responseSchema).includes("additionalProperties"),
+    false,
+    "live generateContent rejects additionalProperties with 400"
+  );
 });
