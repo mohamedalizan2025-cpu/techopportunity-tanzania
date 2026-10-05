@@ -389,6 +389,34 @@ review → owner prod decision → user pilot → provider revenue pilot.
   table + §J quota counts → §L sign-off. Then staging-behavior review →
   owner prod decision. Production AI = OFF.
 
+## Staging branch realignment 2026-10-05 (Preview was serving stale September code)
+
+- DIRECTLY VERIFIED: `origin/staging` was `06155b5` (September), diverged
+  from `origin/main` (`8b393ee`): 10 staging-only vs 120 main-only commits.
+  Astra smoke confirmed the Preview served the old tree (`/for-you` = 404),
+  so the current AI implementation was NOT deployed to staging.
+  Production untouched.
+- DIRECTLY VERIFIED: all 10 staging-only commits audited by final
+  behavior/files, not hashes — migration 0015 byte-identical in main;
+  unpublish/rereview/bulk markers all present in main (main is a strict
+  superset: +0016…0022, bulk moderation, taxonomy/geography gates, brand
+  refinement); staging-touched docs all exist newer in main; no unique
+  required staging work missing from main. Full table in the session record;
+  verdict: ALT-INCORPORATED/SUPERSEDED, nothing to cherry-pick.
+- DIRECTLY VERIFIED: history preserved as `staging-legacy-2026-09-14`
+  pointing exactly to `06155b5`, pushed and confirmed remotely before any
+  staging move. `staging` then moved to exact main HEAD via guarded
+  force-with-lease (expected-value `06155b5`): final `origin/main` ==
+  `origin/staging` == `8b393ee`, divergence 0/0. `main` never modified by
+  the move; no code behavior changed; no secrets handled.
+- OWNER-AUTH REQUIRED: fresh Vercel Preview build from the push (route +
+  deployment SHA confirmation needs dashboard/authenticated browser —
+  anonymous access still hits the Vercel login wall, so `/for-you`
+  existence in the deployed Preview is NOT yet observed here).
+- REMAINING: owner confirms new Preview deployment (Git SHA `8b393ee…`)
+  → full authenticated staging smoke (runbook §§B–K) → staging-behavior
+  review → owner prod decision. Production AI = OFF.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is
