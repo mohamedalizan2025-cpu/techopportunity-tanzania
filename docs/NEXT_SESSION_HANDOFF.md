@@ -113,13 +113,21 @@ BUSINESS/UI COMPLETE → PWA COMPLETE → DISCOVERY VERIFIED → REAL PROVIDER
 AI EVALUATION (done: Gemini 14/16, Groq 9/16, zero hard failures) →
 STAGING AI APPROVED (env reported configured; live smoke NOT yet performed
 here) → OWNER PROD-AI DECISION → 5–10 USER PILOT → PROVIDER REVENUE PILOT.
-Do NOT run the user pilot yet; do NOT activate AI. Exact next-session
-order: (1) confirm both exposed provider keys rotated/revoked; (2) update
-local `.env.local` + Vercel Preview with replacements; (3) redeploy
-Preview; (4) owner-authenticated staging smoke (For You, Intelligence,
-planner, primary/backup/fallback, National/International/unknown, mobile +
-desktop, latency/fallback counts); (5) staging-evidence review; (6) owner
-production-AI decision; (7) user pilot; (8) provider revenue pilot.
+Do NOT run the user pilot yet; do NOT activate AI. The one unmistakable
+current sequence is:
+
+1. Rotate/revoke exposed Gemini + Groq keys
+2. Update .env.local
+3. Update protected Vercel Preview
+4. Redeploy Preview
+5. Execute staging AI smoke runbook ([STAGING_AI_SMOKE_RUNBOOK.md](STAGING_AI_SMOKE_RUNBOOK.md))
+6. Review staging evidence
+7. Owner production-AI decision ([PRODUCTION_AI_DECISION_CHECKLIST.md](PRODUCTION_AI_DECISION_CHECKLIST.md))
+8. Execute 5–10 user pilot ([USER_PILOT_EXECUTION_PACK.md](USER_PILOT_EXECUTION_PACK.md))
+9. Analyze user evidence
+10. Execute provider revenue pilot ([PROVIDER_PILOT_EXECUTION_PACK.md](PROVIDER_PILOT_EXECUTION_PACK.md))
+11. Evaluate willingness to pay / renewal
+12. Investor/funding readiness only after evidence
 
 ## 8. Owner-only gates
 
@@ -150,7 +158,7 @@ verified; never simulate a moderation action.
 
 ## 11. Current HEAD / verification
 
-HEAD `c8b18f0`, working tree expected clean. Production AI OFF;
+HEAD `0d7db93`, working tree clean (verified 2026-10-05). Production AI OFF;
 staging AI owner-approved with env reported configured but live smoke
 never performed here (Vercel-Authentication-blocked agent environment).
 Full `npm run verify` + `npm run build` green at this HEAD. Open items:
@@ -184,13 +192,14 @@ stays READY-but-pending. Next: owner configures keys + attestations and
 runs both fixed-corpus evals locally; staging decision only after green
 runs.
 
-## Staff operations + brand color refinement (2026-10-04, on top of `9079ee6`, uncommitted)
+## Staff operations + brand color refinement (2026-10-04, committed as `d207d3d`)
 
 UI/UX + information architecture only — zero business-logic changes (no
 RLS, moderation authority, Discovery, AI, campaign privacy, classification,
 or audit changes; queue order stays oldest-submitted-first because queue
 navigation depends on it). Starting HEAD `9079ee6` (with prior partial
-staff/color work already in the tree); this session completed it.
+staff/color work already in the tree); this session completed it, committed
+as `d207d3d` (working tree clean).
 Brand: navy/cobalt primary (`#0B1F33 #163A5F #1D4ED8`), cream secondary,
 restrained gold accent; green is now semantic-only (approve buttons,
 "Evidence verified"/"Live" badges, known-from-source hints).
@@ -213,7 +222,7 @@ Next milestone: owner visual review of staff workspace in session, then
 the gated real Groq/Gemini fixed-corpus evaluation (keys + attestations,
 owner-side only); user pilot stays READY-but-pending.
 
-## Auth correctness: sign-out + moderator-only staff navigation (2026-10-04, on top of `d207d3d`, uncommitted)
+## Auth correctness: sign-out + moderator-only staff navigation (2026-10-04, committed as `be637d8`)
 
 Small auth milestone, no AI/Discovery/UI-redesign/schema changes. Root
 cause of the sign-out error page: layout-level client components called
@@ -278,8 +287,9 @@ prompt never stated the ref rules), applied one bounded prompt
 clarification (ref rules + negative example, validator untouched), reran
 once: 14/16 ai/ok, 0 hard, 80/80 soft. Comparison supports keeping
 Gemini-primary/Groq-backup (recommendation; production order unchanged).
-STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL = NO (zero-fallback bar unmet;
-Groq backup needs a token-budget fix first). No activation performed.
+STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL = NO under the old zero-fallback
+bar (SUPERSEDED — see "Staging AI approved" below; Groq backup needed a
+token-budget fix first). No activation performed.
 Full evidence in
 [AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
 `npm run verify` + `npm run build` green. Next: owner decides Groq
@@ -293,8 +303,9 @@ strict JSON, single request, no retries, validator untouched) lifted the
 paced run from 1/16 to 9/16 ai/ok with zero quota errors, 0 hard failures,
 80/80 soft, median ~956ms. Remaining Groq misses are intrinsic
 (bad-evidence-ref ×6 + one anomalous generation 400). Gemini stands at
-14/16. STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL = NO (zero-fallback bar
-unmet on both paths). Paid Groq NOT justified (binding constraints are
+14/16. STAGING_AI_ELIGIBLE_FOR_OWNER_APPROVAL = NO under the old
+zero-fallback bar on both paths (SUPERSEDED — see "Staging AI approved"
+below). Paid Groq NOT justified (binding constraints are
 per-request budget/conformance, not quota). Production OFF, no activation.
 Evidence in
 [AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
@@ -495,7 +506,7 @@ preceding visual entries. Post-change Cloud Browser capture could not run in
 this session because the browser transport returned `Transport closed`; do not
 claim breakpoint screenshot evidence until that external surface is available.
 
-## Superseded detailed log (kept for audit; live facts are in §§1–12 above)
+## Superseded detailed log (HISTORICAL MILESTONES — kept for audit, do not follow as instructions; CURRENT STATE is §§1–12 above)
 
 ## Pilot replenishment shortlist (2026-10-02, HEAD `3e45e3b`, read-only, no mutations)
 

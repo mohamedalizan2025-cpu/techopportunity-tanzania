@@ -1,0 +1,301 @@
+# Staging AI smoke runbook (owner-executed, Preview only)
+
+Status 2026-10-05: **PREPARATION ONLY — NOT YET EXECUTED.** Staging AI is
+owner-approved; the protected Preview environment is reported configured.
+Live smoke has never been performed from an agent environment
+(Vercel-Authentication-blocked) and must be executed by the owner in an
+authenticated browser session. Target time: **10–20 minutes** after key
+rotation + Preview redeploy.
+
+Authoritative design:
+[AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md) (§7, §10),
+evaluation evidence:
+[AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
+Production decision is separate:
+[PRODUCTION_AI_DECISION_CHECKLIST.md](PRODUCTION_AI_DECISION_CHECKLIST.md).
+
+## 0. Prerequisites (do not start without these)
+
+- [ ] Owner has confirmed BOTH provider keys rotated/revoked after the
+      `.env.example` exposure (see
+      [NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md) §11). **Do not run
+      this runbook on pre-rotation keys.**
+- [ ] Protected Preview deployment redeployed with the new values (env names
+      only — values never recorded here):
+      `AI_OPPORTUNITY_INTELLIGENCE_ENABLED`,
+      `AI_OPPORTUNITY_INTELLIGENCE_SPEND_MODE` (`free-quota`),
+      `AI_OPPORTUNITY_INTELLIGENCE_PROVIDER_CHAIN` (`gemini,groq`),
+      `GEMINI_API_KEY`, `GROQ_API_KEY`, and all four attestations
+      (`…_GEMINI_UNPAID_DATA_USE_CONFIRMED`, `…_GEMINI_NO_BILLING_CONFIRMED`,
+      `…_GROQ_ZDR_CONFIRMED`, `…_GROQ_NO_BILLING_CONFIRMED`).
+- [ ] Production AI verified OFF (AI vars absent from production env;
+      production takes env from the dashboard only — §F check F-1 confirms).
+- [ ] Two staging-only synthetic test users ready: one with an
+      **incomplete profile** (no core fields), one with a **complete profile**
+      (career level + field + 1–2 sectors + 1–2 types). Synthetic data only —
+      never copy production identities to staging.
+- [ ] Know which staging records to use: one **National** opportunity, one
+      **International** opportunity, one **unknown-eligibility** record, one
+      **deadline-soon** record (≤14 days). Any pending-vs-published state on
+      staging is fine as long as the detail page renders.
+
+How to fill this in: for every check copy the four rows, run the TEST, write
+what you saw under OBSERVED RESULT, and mark PASS/FAIL. Leave no check blank.
+
+## A. Deployment guard (Preview only, production OFF)
+
+### A-1 Preview deployment only
+
+- TEST: Open the protected branch Preview URL (the `git-staging`
+  deployment on isolated staging Supabase). Confirm the URL is the Preview
+  origin, NOT the canonical production URL.
+- EXPECTED RESULT: Page loads behind Vercel Authentication; canonical
+  production URL is never opened during this runbook.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### A-2 Production AI remains OFF
+
+- TEST: During this whole runbook, never set AI variables on production.
+  Confirm production env has no `AI_OPPORTUNITY_INTELLIGENCE_*` /
+  `GEMINI_API_KEY` / `GROQ_API_KEY` values (dashboard check, names only).
+- EXPECTED RESULT: Production AI = OFF; production behavior unchanged
+  (deterministic guidance everywhere).
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+## B. Authenticated login
+
+### B-1 Staging sign-in (complete-profile user)
+
+- TEST: Sign in on the Preview as the complete-profile synthetic user.
+- EXPECTED RESULT: Login succeeds, session persists after reload, no error
+  page; staff nav NOT visible (non-moderator).
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### B-2 Staging sign-in (incomplete-profile user)
+
+- TEST: Sign out, sign in as the incomplete-profile synthetic user.
+- EXPECTED RESULT: Login succeeds; `/profile` shows empty/skippable fields
+  with no forced sharing.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+## C. For You explanation (both profile states)
+
+### C-1 For You, complete profile
+
+- TEST: As the complete-profile user, open `/for-you`; expand one
+  on-demand per-card AI explanation ("Why this fits you").
+- EXPECTED RESULT: Deterministic reasons always visible; on-demand
+  explanation adds bounded why-fit/readiness/next-action detail; no
+  percentage or score; never auto-fetched on list render.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### C-2 For You, incomplete profile
+
+- TEST: As the incomplete-profile user, open `/for-you`.
+- EXPECTED RESULT: Honestly empty (or minimal) state — no guessed matches,
+  no fabricated reasons; Explore stays complete and ungated.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+## D. Opportunity Intelligence brief (record matrix)
+
+Run D-1 once per record class below (National / International /
+unknown-eligibility / deadline-soon). Open the detail page, trigger the
+"Opportunity Intelligence" brief explicitly.
+
+### D-1 National opportunity
+
+- TEST: Open a National record; trigger the brief.
+- EXPECTED RESULT: Brief labeled "AI-assisted explanation based on verified
+  opportunity data"; geography/eligibility/deadline match the deterministic
+  evidence (National, stated eligibility, real deadline); official source
+  linked; nothing invented.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### D-2 International opportunity
+
+- TEST: Open an International record; trigger the brief.
+- EXPECTED RESULT: Same labeling; classified International with evidenced
+  Tanzanian access stated; no reclassification to National.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### D-3 Unknown eligibility
+
+- TEST: Open an unknown-eligibility record; trigger the brief.
+- EXPECTED RESULT: Eligibility stays honestly unknown; brief states what is
+  NOT known and the next verification step; no eligibility invented.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### D-4 Deadline soon
+
+- TEST: Open a deadline-soon record (≤14 days); trigger the brief.
+- EXPECTED RESULT: Deadline + urgency match the deterministic countdown;
+  brief advises confirming timezone and submitting early; no date invented.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+## E. Readiness planner
+
+### E-1 Planner, Interested/Applying state
+
+- TEST: As the complete-profile user, mark one record Interested (or
+  Applying); open the readiness planner.
+- EXPECTED RESULT: Ordered plan (review eligibility → confirm
+  deadline/timezone → check each required document at the source → submit
+  early). A document appears as REQUIRED only with stored evidence;
+  otherwise the step reads "Check whether the official application
+  requires …". Planning assistance only — never auto-submits.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### E-2 Planner, incomplete profile
+
+- TEST: As the incomplete-profile user, open the planner on the same record.
+- EXPECTED RESULT: Planner still renders honestly (generic steps, unknown
+  handling); no profile fields invented; no forced profiling.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+## F. Provider chain, fallback, failure behavior
+
+### F-1 Gemini primary serves
+
+- TEST: Trigger 2–3 briefs/explanations; note which path served (UI shows
+  "AI-assisted result" mode only — mode by behavior: fast structured brief
+  ≈ primary; record latency in §I).
+- EXPECTED RESULT: Primary serves structured briefs on most attempts
+  (measured 14/16 on the fixed corpus); deterministic facts never
+  overridden.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### F-2 Groq backup exercisable
+
+- TEST: Same session — if a primary attempt falls back, confirm a backup
+  attempt occurs before deterministic fallback (single attempt each, no
+  retry storm).
+- EXPECTED RESULT: Backup path exercisable (measured 9/16 paced, zero quota
+  errors); at most one attempt per provider per uncached insight.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### F-3 Deterministic fallback honest
+
+- TEST: If any brief shows the deterministic/fallback label (or force one
+  by opening an untrusted/inactive record if the route allows), confirm
+  the label.
+- EXPECTED RESULT: Fallback returns deterministic guidance with an honest
+  label; full Explore/For You/detail/Save/Activity works; no stack trace,
+  no fake percentage, no provider name exposed.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### F-4 Timeout / invalid-output behavior (simulate only if safe)
+
+- TEST: Only if safely simulatable in staging (e.g. brief on a record with
+  missing requirements, or a slow-network attempt): observe timeout/invalid
+  handling. Do NOT attack the deployment, throttle production, or touch
+  provider accounts.
+- EXPECTED RESULT: Timeout (8s shared budget) or invalid output fails closed
+  to deterministic guidance with a machine-readable reason; no hang, no
+  partial AI text presented as fact.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+## G. Viewports
+
+### G-1 Mobile 390px
+
+- TEST: Run sections B–F on a 390px-wide viewport (real phone preferred).
+- EXPECTED RESULT: Brief, explanation, and planner readable with no
+  horizontal overflow; touch targets usable; no layout breakage.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+### G-2 Desktop 1366/1440px
+
+- TEST: Repeat core path (C-1 + D-1 + E-1) at 1366px (and 1440px if
+  available).
+- EXPECTED RESULT: Same content/behavior as mobile; layout intact.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+## H. Privacy check
+
+### H-1 No private data leaves the device boundary
+
+- TEST: While signed in with the complete profile, trigger a brief; confirm
+  the product never asks for or sends: name, email, phone, auth/user ID,
+  display name, database IDs, activity history, saved/funnel states, goals,
+  CVs, essays, documents, organization-private metadata, or source URLs.
+  (Allowlist: bounded opportunity evidence + selected profile fields only —
+  see AI doc §6.)
+- EXPECTED RESULT: No identity/contact/activity/CV data transmitted; free-text
+  identifiers redacted; rate-limit keys are one-way hashes.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+## I. Latency + fallback recording
+
+Record every AI-triggered action (aim: ≥6 samples across C/D/E):
+
+| # | Action (brief/explanation/planner) | Profile (complete/incomplete) | Result (AI/fallback) | Latency (s, approx) |
+|---|------------------------------------|-------------------------------|----------------------|---------------------|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
+| 4 | | | | |
+| 5 | | | | |
+| 6 | | | | |
+
+- AI successes: ___ / total: ___
+- Deterministic fallbacks: ___ (reasons seen: ___)
+- Median latency (approx): ___
+- Any timeout/quota/invalid observed: ___
+
+## J. Cost / quota check
+
+### J-1 Free-quota posture
+
+- TEST: After the run, note the provider-dashboard free-tier usage delta for
+  the session (counts only — record numbers, never keys): requests made,
+  any 429/quota responses seen.
+- EXPECTED RESULT: Session fits easily in free quota (single requests under
+  the 8 req/min route limit; 200-entry/6h cache absorbs repeats); zero
+  billing exposure; no paid resource enabled.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+## K. Rollback (emergency kill switch)
+
+If anything deceives (wrong eligibility/deadline/geography/trust), leaks
+private data, or bills:
+
+1. Set `AI_OPPORTUNITY_INTELLIGENCE_ENABLED=false` in the protected Preview
+   env.
+2. Redeploy the Preview.
+3. Re-verify: every surface returns deterministic guidance (fallback label).
+
+- TEST (only if rollback was needed): perform steps 1–3, re-run C-1 + D-1.
+- EXPECTED RESULT: All AI surfaces deterministic; no external calls.
+- PASS/FAIL:
+- OBSERVED RESULT:
+
+## L. Sign-off
+
+- Staging smoke executed by: ___ Date: ___
+- Checks passed: ___ / ___ failed: ___
+- Authority/deadline/eligibility/trust deception observed: YES / NO
+  (any YES blocks the production decision — see
+  [PRODUCTION_AI_DECISION_CHECKLIST.md](PRODUCTION_AI_DECISION_CHECKLIST.md))
+- Staging evidence attached (this filled runbook): YES / NO
+- Next: staging-evidence review → owner production-AI decision (separate
+  gate; staging evidence informs but never auto-satisfies it).

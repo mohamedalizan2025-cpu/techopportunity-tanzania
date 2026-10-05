@@ -1,6 +1,6 @@
 # AI Opportunity Intelligence — controlled evaluation
 
-Status: **V2 CONTRACT + PUBLIC-CORPUS SIMULATIONS PASSED · REAL GEMINI/GROQ RUNS BLOCKED AT OWNER CREDENTIAL GATE · PRODUCTION OFF**
+Status: **V2 CONTRACT + PUBLIC-CORPUS SIMULATIONS PASSED · REAL GEMINI (14/16) + GROQ (9/16 PACED) RUNS MEASURED, ZERO HARD FAILURES EVERYWHERE · STAGING APPROVED, OWNER SMOKE PENDING · PRODUCTION OFF**
 
 Updated: 2026-10-04. Targets: `gemini-3.5-flash-lite` (VERIFIED current
 2026-10-04: GA stable per the October 2026 changelog, structured outputs
@@ -208,6 +208,10 @@ HTTP 429. Consult the current official pages immediately before the real run:
 
 ## Pilot decision
 
+(Historical — recorded before the 2026-10-04 real-provider runs; kept for
+audit. Production remains OFF under the separate gate in
+[PRODUCTION_AI_DECISION_CHECKLIST.md](PRODUCTION_AI_DECISION_CHECKLIST.md).)
+
 **Do not activate a production pilot yet.** The local contract has zero hard
 failures and fallbacks work, but no real structured responses, real latency,
 real quota behavior, Gemini unpaid-data-use acceptance, Groq ZDR state, or
@@ -237,7 +241,9 @@ enables production AI.
   harness.
 - Real-provider gate inspected by key name only: `GEMINI_API_KEY`,
   `GROQ_API_KEY`, and all evaluation attestations remain absent, so both
-  real runs are **BLOCKED** with zero requests by construction.
+  real runs are **BLOCKED** with zero requests by construction. (Checkpoint
+  state at V2 audit time — SUPERSEDED: owner keys were later configured and
+  the real runs completed 2026-10-04, see below.)
 - Provider docs re-verified 2026-10-04: Groq `openai/gpt-oss-20b` current
   with strict `json_schema` + valid `include_reasoning: false`; free plan
   30 RPM / 1K RPD / 8K TPM / 200K TPD with HTTP 429 (our 8 req/min route
@@ -253,7 +259,8 @@ enables production AI.
   table — the owner must re-confirm the exact model ID against the live
   models list before any real run; do not assume it.
 - Staging activation remains ineligible (no green real-provider run);
-  production AI remains off in hard zero-spend mode.
+  production AI remains off in hard zero-spend mode. (SUPERSEDED by the
+  owner-approved staging bar — see "Final staging decision" below.)
 
 ## Owner-gated evaluation checkpoint 2026-10-04 (0 external requests)
 

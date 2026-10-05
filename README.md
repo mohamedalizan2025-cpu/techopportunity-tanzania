@@ -129,15 +129,18 @@ disabled and hard zero-spend mode active.** Trusted opportunity detail pages can
 produce deterministic, evidence-grounded fit/readiness guidance from the existing
 `MatchingInput`; For You links to the same detail insight without changing its
 ranking. A strict privacy allowlist excludes identity, contact, activity, goals,
-CVs, and database metadata. The swappable provider boundary supports a test mock
-and a disabled-by-default Groq adapter; Gemini and Azure AI / Foundry remain clean
-future adapters. Invalid/unavailable/quota-exhausted provider output fails closed
-to deterministic guidance. No provider credential was found or configured, no
-billing was enabled, and no schema or Discovery behavior changed. See
+CVs, and database metadata. The swappable provider boundary implements the
+Gemini-primary → Groq-backup chain (test mock is code/test-injectable only).
+Invalid/unavailable/quota-exhausted provider output fails closed
+to deterministic guidance. Measured 2026-10-04 on the fixed 16-case corpus:
+Gemini 14/16 valid AI responses, Groq 9/16 paced with zero quota errors, zero
+hard failures everywhere; staging AI is owner-approved with the Preview env
+reported configured but live owner smoke still pending, and production AI
+stays OFF. No schema or Discovery behavior changed. See
 [AI_OPPORTUNITY_INTELLIGENCE.md](docs/AI_OPPORTUNITY_INTELLIGENCE.md).
 The fixed 16-case controlled evaluation harness passes its local contract
-simulation, while the real Groq corpus run remains owner-gated and pending with
-zero external requests. See
+simulation, and the real-provider runs are recorded (not pending) with the
+results above. See
 [AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](docs/AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
 
 > _"A web platform for discovering opportunities all across Tanzania."_
