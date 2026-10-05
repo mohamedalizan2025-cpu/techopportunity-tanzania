@@ -457,3 +457,37 @@ enables production AI.
   would not trip TPM. Nothing purchased or activated.
 - Recommended chain (unchanged, owner approval still required for any production
   change): Gemini primary → Groq backup → deterministic fallback.
+
+## Replacement-key re-verification 2026-10-05 (owner-rotated keys, agent-observed)
+
+- Owner reports both provider keys rotated/revoked after the `.env.example`
+  exposure, with replacements in local `.env.local` and the protected Vercel
+  Preview env plus a Preview redeploy (redeploy + dashboard state are
+  OWNER-REPORTED; agents do not handle dashboard secrets).
+- Agent re-ran the documented fixed-corpus harness locally with the
+  replacement keys (`--env-file=.env.local`, existing scripts only, no new
+  secret-handling path). No secret value printed, committed, or persisted
+  outside the ignored local env.
+- Gemini `gemini-3.5-flash-lite` (real-gemini, 16 requests, wall ~30s):
+  16/16 HTTP 200, 11 structured ai/ok + 5 deterministic fallbacks
+  (validator rejection classes: bad-evidence-ref x2, unverified-citation x2,
+  profile-ref-missing x1), 0 hard failures, 79/80 soft (single soft miss:
+  `unknownsHandled` on explicit-tanzania-exclusion — same known class as the
+  prior steered run), latency min ~1.5s / median ~1.8s / max ~2.8s,
+  0 quota, 0 timeouts. Credential ACCEPTED.
+- Groq `openai/gpt-oss-20b` (real-groq, paced `--pace-ms=20000`, wall ~315s):
+  16/16 HTTP 200, 8 structured ai/ok + 8 deterministic fallbacks (dominant
+  class bad-evidence-ref x7 + section-shape x1), 0 hard failures, 80/80 soft,
+  latency min ~0.64s / median ~0.91s / max ~1.34s, 0 quota (pacing holds),
+  0 timeouts. Credential ACCEPTED.
+- Contract simulation (mock, 0 external requests) re-ran green with the
+  replacement keys present: 16 cases, 14 structured, 2 intentional
+  fallbacks, 0 hard, 80/80 — deterministic fallback intact, keys do not
+  alter local zero-spend behavior.
+- Reading: Gemini 11/16 vs the prior steered 14/16 is model-side
+  conformance variance, fail-closed by the unchanged validator (0 hard
+  failures); NOT a defect, no prompt/model tuning warranted.
+- Staging-bar reference unchanged (primary >=80% measured 14/16 best,
+  backup materially functional 9/16 best); these re-runs corroborate
+  credential validity + fail-closed behavior, not a new bar measurement.
+  Production AI = OFF.

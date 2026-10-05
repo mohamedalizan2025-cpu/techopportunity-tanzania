@@ -366,6 +366,29 @@ National/International/unknown/deadline-soon/no-deadline/missing × 390px +
 counts. Production AI = OFF. Next: owner smoke results → staging-behavior
 review → owner prod decision → user pilot → provider revenue pilot.
 
+## Staging AI re-verification 2026-10-05 (replacement keys; browser smoke still owner-executed)
+
+- OWNER-REPORTED: both Gemini + Groq keys rotated, replacements in local
+  `.env.local` and the protected Vercel Preview env, Preview redeployed.
+  Production env untouched by agents; production AI stays OFF.
+- DIRECTLY VERIFIED (agent, existing harness only): `.env.example` holds
+  empty placeholders for both keys; `.env.local` gitignored; no provider
+  secret tracked/staged; replacement credentials ACCEPTED by both providers
+  (Gemini real-gemini 11 ai/ok + 5 fallbacks, 0 hard, 79/80 soft; Groq
+  real-groq paced 8 ai/ok + 8 fallbacks, 0 hard, 80/80; all HTTP 200,
+  0 quota, 0 timeouts); mock contract simulation green (0 hard, 80/80).
+  Evidence in
+  [AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
+- DIRECTLY VERIFIED: Preview deployment responds (anonymous HEAD 200) but
+  browser access is Vercel-Authentication-gated (Vercel login wall), so
+  runbook §§B–K remain OWNER-AUTH REQUIRED. No bypass attempted or sought.
+- REMAINING (owner, shortest checklist): open Preview URL → B-1/B-2 sign-in
+  (complete + incomplete synthetic users) → C-1/C-2 For You → D-1…D-4
+  briefs (National/International/unknown/deadline-soon) → E-1/E-2 planner →
+  F-1…F-4 chain/fallback → G-1/G-2 viewports → H-1 privacy → §I latency
+  table + §J quota counts → §L sign-off. Then staging-behavior review →
+  owner prod decision. Production AI = OFF.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is
