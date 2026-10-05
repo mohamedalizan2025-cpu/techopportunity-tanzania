@@ -158,7 +158,7 @@ verified; never simulate a moderation action.
 
 ## 11. Current HEAD / verification
 
-HEAD `0d7db93`, working tree clean (verified 2026-10-05). Production AI OFF;
+HEAD `39e1aa0`, working tree clean (verified 2026-10-05). Production AI OFF;
 staging AI owner-approved with env reported configured but live smoke
 never performed here (Vercel-Authentication-blocked agent environment).
 Full `npm run verify` + `npm run build` green at this HEAD. Open items:

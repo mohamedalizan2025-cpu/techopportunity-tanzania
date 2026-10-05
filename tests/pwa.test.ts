@@ -80,5 +80,17 @@ check("offline page is never indexed", offline.includes("index: false"));
 check("offline warns facts may have changed", /may have changed/i.test(offline));
 check("offline never presents cached facts as current", /never presented as current/i.test(offline));
 
+// --- theme-color lives in the viewport export (Next 16 rejects it in metadata) -
+
+const layout = read("app/layout.tsx");
+check(
+  "layout sets themeColor through the viewport export",
+  layout.includes("export const viewport") && layout.includes('themeColor: "#0B1F33"')
+);
+check(
+  "layout keeps themeColor out of the metadata export",
+  !/export const metadata[\s\S]*?themeColor/.test(layout.split("export const viewport")[0] ?? "")
+);
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;

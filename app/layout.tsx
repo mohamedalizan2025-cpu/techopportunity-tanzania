@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Geist } from "next/font/google";
 import Link from "next/link";
@@ -17,7 +17,6 @@ export const metadata: Metadata = {
   title: "Tech Opportunity",
   description:
     "Opportunities worth acting on for Tanzania’s emerging talent. Check source evidence, find relevant opportunities and track your application progress.",
-  themeColor: "#0B1F33",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Tech Opportunity" },
   icons: {
     icon: [
@@ -26,6 +25,10 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0B1F33",
 };
 
 // Explicit prop type: LayoutProps<"/"> is a build-generated global from
