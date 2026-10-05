@@ -158,7 +158,8 @@ verified; never simulate a moderation action.
 
 ## 11. Current HEAD / verification
 
-HEAD `b4c47fa`, working tree clean (verified 2026-10-05). Production AI OFF;
+Last verified code HEAD `b4c47fa` (full `npm run verify` + `npm run build`
+green 2026-10-05; this continuity record committed on top). Production AI OFF;
 staging AI owner-approved with env reported configured but live smoke
 never performed here (Vercel-Authentication-blocked agent environment).
 Full `npm run verify` + `npm run build` green at this HEAD. Open items:
