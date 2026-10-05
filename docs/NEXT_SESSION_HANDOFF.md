@@ -417,6 +417,74 @@ review → owner prod decision → user pilot → provider revenue pilot.
   → full authenticated staging smoke (runbook §§B–K) → staging-behavior
   review → owner prod decision. Production AI = OFF.
 
+## Auth engineering + staging recovery (2026-10-05, staging-only; main untouched)
+
+- STARTING SHA: `22ad5c8` (`main` == `staging`). Work branched as
+  `auth-engineering-staging` from that exact commit; `main` was never
+  modified and no production system was touched (no Vercel production vars,
+  no production Supabase reads/writes beyond anonymous public-page renders
+  during local route sanity, no production auth users, production AI OFF).
+- INVALID-CREDENTIALS DIAGNOSIS (code audit, no guessing): the live path is
+  login form → `authenticateAction` → `supabase.auth.signInWithPassword` →
+  SSR cookie session (`@supabase/ssr`, `proxy.ts` refresh) → post-login
+  profile/role lookup (`getModerationAccess`, AFTER successful
+  authentication) → `postLoginDestination`/`sanitizeNextPath`. Verified:
+  staging Preview uses the staging Supabase project via the standard
+  `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` names; email
+  is trimmed only; the password is passed through verbatim (client 128-char
+  bound, no server truncation); missing profile defaults to `user` and
+  cannot masquerade as an invalid password; `email_not_confirmed` is a
+  separate code path from `invalid_credentials`. NO code defect explains the
+  staging result. ASSESSMENT: ENVIRONMENT / TEST-ACCOUNT STATE — a
+  production moderator identity does not exist in the isolated staging
+  project by design. Whether any specific staging identity exists is NOT
+  VERIFIED here (no owner-protected staging tooling available in this
+  environment; `auth.users` never listed, no emails/passwords handled).
+  Staging was NOT pointed at production to make the owner account work.
+- IMPLEMENTED on the staging branch only: `/forgot-password` (generic
+  "If an account exists for that email, we'll send password reset
+  instructions." — no enumeration), `/reset-password` (8–128 chars,
+  confirm-must-match, show/hide, session-gated via `getUser`; anonymous
+  access fails safe to an expired-link state with a fresh-link path;
+  success signs the recovery session out: "Password updated. Sign in with
+  your new password."), `/resend-confirmation` (generic privacy-safe
+  response via `auth.resend` type `signup`; expired-link page now points
+  here instead of account recreation), hardened `/auth/callback`
+  (`type=recovery` forces `/reset-password` ignoring `next`; `token_hash`
+  + `verifyOtp` supported; canonical `resolveSiteOrigin`, never request
+  headers; no raw provider errors), sign-in errors kept safe (invalid →
+  "Invalid email or password.", unconfirmed → "Confirm your email before
+  signing in.", rate-limit and outage mappings), sign-up keeps email +
+  password + confirmation email with no role selection (`user` default from
+  the `handle_new_user` trigger; existing-address sign-up returns the same
+  confirmation-shaped response).
+- SECURITY GUARANTEES: safe internal redirect sanitization unchanged;
+  recovery cannot open-redirect; no account enumeration in
+  forgot/resend/signup; no passwords in URLs/logs; no service-role in
+  browser-reachable code; no RLS change; no new providers.
+- RECOVERY LIMITATIONS: reset links expire (request a fresh one);
+  password change needs the recovery session (or a signed-in session);
+  unconfirmed addresses must confirm first (resend, not re-register).
+- OWNER SYNTHETIC-ACCOUNT PROCEDURE (staging only, nothing committed):
+  1. Open the staging Preview `/login` → Create account with a synthetic
+  staging-only address. 2. Confirm via the email link (resend from
+  `/resend-confirmation` if expired). 3. Use that talent account for For
+  You / Activity / Profile / Opportunity Intelligence / planner smoke. No
+  moderator role is needed for the AI talent smoke; moderator grants, if
+  ever required, use only the existing authorized server/admin procedure —
+  never a UI. Production and staging identities are separate by design.
+- VERIFIED HERE: full `npm test` green (incl. new 31-case
+  `tests/auth-recovery.test.ts`), `tsc` clean, `eslint` clean, 43/43
+  boundaries, `next build` green with the three new routes, local
+  production-build route sanity (`/login`, `/forgot-password`,
+  `/resend-confirmation`, `/reset-password` 200; `/for-you`, `/activity`,
+  `/profile` 307 to login; `/for-you` is NOT a 404).
+- REMAINING (owner/Astra on the new Preview): confirm the staging Preview
+  build for the new staging SHA → sign in with the synthetic staging
+  account → `/for-you` smoke → forgot-password end-to-end (generic message,
+  email arrives, link lands on `/reset-password`, update, fresh sign-in) →
+  resend end-to-end → then the staging AI smoke runbook §§B–K.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

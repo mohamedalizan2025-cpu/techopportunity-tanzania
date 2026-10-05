@@ -91,13 +91,25 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
           <div className="p-5 sm:p-7">
           {authError === "confirmation" ? (
-            <p
+            <div
               role="alert"
               className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
             >
-              That confirmation link is invalid or expired. Request a fresh
-              email by creating the account again.
-            </p>
+              <p>
+                That confirmation link is invalid or expired. Request a fresh
+                link instead of creating the account again.
+              </p>
+              <Link
+                href={
+                  nextPath
+                    ? `/resend-confirmation?next=${encodeURIComponent(nextPath)}`
+                    : "/resend-confirmation"
+                }
+                className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-2"
+              >
+                Resend confirmation email
+              </Link>
+            </div>
           ) : null}
           <LoginForm nextPath={nextPath} />
           </div>

@@ -77,3 +77,15 @@ export function buildAuthCallbackUrl(
   callback.searchParams.set("next", safeNext);
   return callback.toString();
 }
+
+/**
+ * Canonical password-recovery callback: the recovery email returns through
+ * the same safe `/auth/callback` exchange, which forces the destination to
+ * `/reset-password` for `type=recovery` regardless of any `next` value, so a
+ * recovery link can never become an open redirect.
+ */
+export function buildRecoveryCallbackUrl(
+  environment: AuthRedirectEnvironment = process.env
+): string | null {
+  return buildAuthCallbackUrl("/reset-password", environment);
+}

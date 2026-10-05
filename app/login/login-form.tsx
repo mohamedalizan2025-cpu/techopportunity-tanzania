@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { authenticateAction } from "@/lib/data/auth-actions";
 import { initialLoginState } from "@/lib/staff-form-state";
 
@@ -144,6 +145,37 @@ export function LoginForm({ nextPath }: { nextPath: string | null }) {
             ? "Sign in"
             : "Create account"}
       </button>
+
+      {mode === "sign-in" ? (
+        <div className="flex flex-col gap-1 text-sm">
+          <Link
+            href="/forgot-password"
+            className="inline-flex min-h-11 w-fit items-center font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline"
+          >
+            Forgot password?
+          </Link>
+          <p className="leading-6 text-[var(--muted)]">
+            Didn&rsquo;t get the confirmation email?{" "}
+            <Link
+              href="/resend-confirmation"
+              className="inline-flex min-h-11 items-center font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline"
+            >
+              Resend confirmation email
+            </Link>
+          </p>
+        </div>
+      ) : (
+        <p className="text-sm leading-6 text-[var(--muted)]">
+          Confirmation link expired?{" "}
+          <Link
+            href="/resend-confirmation"
+            className="inline-flex min-h-11 items-center font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline"
+          >
+            Resend confirmation email
+          </Link>{" "}
+          — no need to create the account again.
+        </p>
+      )}
     </form>
   );
 }

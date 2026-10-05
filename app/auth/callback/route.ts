@@ -3,12 +3,7 @@ import { resolveSiteOrigin } from "@/lib/auth-redirect";
 import { createSupabaseAuthServerClient } from "@/lib/data/supabase-auth";
 import { postLoginDestination, sanitizeNextPath } from "@/lib/staff-form-state";
 
-function destination(request: NextRequest): string {
-  return postLoginDestination(
-    sanitizeNextPath(request.nextUrl.searchParams.get("next")),
-    false
-  );
-}
+const RECOVERY_DESTINATION = "/reset-password";
 
 function canonicalRedirect(path: string): NextResponse {
   const origin = resolveSiteOrigin();
@@ -21,22 +16,50 @@ function canonicalRedirect(path: string): NextResponse {
   return NextResponse.redirect(new URL(path, origin));
 }
 
+function confirmationFailure(nextPath: string): NextResponse {
+  return canonicalRedirect(
+    `/login?authError=confirmation&next=${encodeURIComponent(nextPath)}`
+  );
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const nextPath = destination(request);
-  const code = request.nextUrl.searchParams.get("code");
-  if (!code) {
-    return canonicalRedirect(
-      `/login?authError=confirmation&next=${encodeURIComponent(nextPath)}`
-    );
+  const params = request.nextUrl.searchParams;
+  const type = params.get("type");
+  const isRecovery = type === "recovery";
+  // A recovery link must always land on the reset page: the caller-supplied
+  // `next` value is ignored for `type=recovery` so a recovery email can
+  // never be repurposed as an open redirect.
+  const nextPath = isRecovery
+    ? RECOVERY_DESTINATION
+    : postLoginDestination(sanitizeNextPath(params.get("next")), false);
+  const code = params.get("code");
+  const tokenHash = params.get("token_hash");
+
+  if (!code && !tokenHash) {
+    if (isRecovery) return canonicalRedirect(RECOVERY_DESTINATION);
+    return confirmationFailure(nextPath);
   }
 
   try {
     const supabase = await createSupabaseAuthServerClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return canonicalRedirect(nextPath);
+    if (code) {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (!error) return canonicalRedirect(nextPath);
+    } else if (tokenHash && type) {
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: type as
+          | "signup"
+          | "invite"
+          | "magiclink"
+          | "recovery"
+          | "email_change"
+          | "email",
+      });
+      if (!error) return canonicalRedirect(nextPath);
+    }
   } catch {}
 
-  return canonicalRedirect(
-    `/login?authError=confirmation&next=${encodeURIComponent(nextPath)}`
-  );
+  if (isRecovery) return canonicalRedirect(RECOVERY_DESTINATION);
+  return confirmationFailure(nextPath);
 }
