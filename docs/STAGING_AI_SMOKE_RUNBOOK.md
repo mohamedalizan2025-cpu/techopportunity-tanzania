@@ -34,10 +34,18 @@ Production decision is separate:
       **incomplete profile** (no core fields), one with a **complete profile**
       (career level + field + 1–2 sectors + 1–2 types). Synthetic data only —
       never copy production identities to staging.
-- [ ] Know which staging records to use: one **National** opportunity, one
-      **International** opportunity, one **unknown-eligibility** record, one
-      **deadline-soon** record (≤14 days). Any pending-vs-published state on
-      staging is fine as long as the detail page renders.
+- [ ] Know which staging records to use — the synthetic smoke corpus in
+      [STAGING_AI_SMOKE_CORPUS.md](STAGING_AI_SMOKE_CORPUS.md) (insert first,
+      staging dashboard only; verify Step 2 there before starting here):
+  - `staging-smoke-national-fellowship-2026` (National, AI-searchable)
+  - `staging-smoke-international-fellowship-2026` (International,
+    AI-searchable)
+  - `staging-smoke-no-deadline-grant-2026` (no deadline, AI-searchable)
+  - `staging-smoke-unknown-eligibility-2026` (unknown eligibility, insight
+    WITHHELD by design — D-3 PASS condition, not a defect)
+- [ ] No deadline-soon (≤14 days) synthetic record exists in this corpus by
+  design (stable far-future deadlines keep the smoke repeatable). D-4 is
+  N/A unless a qualifying record happens to exist on staging at run time.
 
 How to fill this in: for every check copy the four rows, run the TEST, write
 what you saw under OBSERVED RESULT, and mark PASS/FAIL. Leave no check blank.
@@ -104,9 +112,9 @@ what you saw under OBSERVED RESULT, and mark PASS/FAIL. Leave no check blank.
 
 ## D. Opportunity Intelligence brief (record matrix)
 
-Run D-1 once per record class below (National / International /
-unknown-eligibility / deadline-soon). Open the detail page, trigger the
-"Opportunity Intelligence" brief explicitly.
+Run D-1…D-3 on the synthetic corpus slugs from §0
+([STAGING_AI_SMOKE_CORPUS.md](STAGING_AI_SMOKE_CORPUS.md)). Open the detail
+page, trigger the "Opportunity Intelligence" brief explicitly where offered.
 
 ### D-1 National opportunity
 
@@ -126,19 +134,29 @@ unknown-eligibility / deadline-soon). Open the detail page, trigger the
 - PASS/FAIL:
 - OBSERVED RESULT:
 
-### D-3 Unknown eligibility
+### D-3 Unknown eligibility (withheld panel = PASS)
 
-- TEST: Open an unknown-eligibility record; trigger the brief.
-- EXPECTED RESULT: Eligibility stays honestly unknown; brief states what is
-  NOT known and the next verification step; no eligibility invented.
+- TEST: Open `staging-smoke-unknown-eligibility-2026`. Confirm the detail
+  page renders AND the Opportunity Insight panel is absent (no
+  `#ai-opportunity-insight` section, no "Get Opportunity Insight" button).
+  Optionally POST the slug to the insight endpoint and confirm it refuses.
+- EXPECTED RESULT: "Who can apply?" shows the honest unknown-eligibility
+  fallback; no insight UI is offered; no AI-generated unknown-eligibility
+  response is required or expected. AI must NOT run when the deterministic
+  trust/eligibility gate is unsatisfied. Panel withheld = PASS, not a
+  defect. Do NOT weaken `isAiSearchableOpportunity()` to make this produce
+  a brief.
 - PASS/FAIL:
 - OBSERVED RESULT:
 
-### D-4 Deadline soon
+### D-4 Deadline soon (N/A for this corpus)
 
-- TEST: Open a deadline-soon record (≤14 days); trigger the brief.
-- EXPECTED RESULT: Deadline + urgency match the deterministic countdown;
-  brief advises confirming timezone and submitting early; no date invented.
+- TEST: Only if a ≤14-day record happens to exist on staging at run time;
+  otherwise record N/A. The synthetic corpus intentionally carries stable
+  far-future deadlines, so there is no dedicated deadline-soon record.
+- EXPECTED RESULT (if run): Deadline + urgency match the deterministic
+  countdown; brief advises confirming timezone and submitting early; no
+  date invented.
 - PASS/FAIL:
 - OBSERVED RESULT:
 
