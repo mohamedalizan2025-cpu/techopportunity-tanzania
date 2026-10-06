@@ -58,15 +58,16 @@ export default async function ActivityPage() {
       <section className="border-b border-[var(--line)] bg-[var(--hero)]">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Your account
+            Personal workspace
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-4xl">
             Your activity
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
-            Saved bookmarks and application progress in one private place.
-            Only you can see this list — Explore stays the full published
-            list for everyone.
+            Saved bookmarks and application progress in one private place:
+            save anything, then move it through Interested → Applying →
+            Applied. Only you can see this list — Explore stays the full
+            published list for everyone.
           </p>
           <p className="mt-3 break-words text-xs text-[var(--subtle)]">
             Signed in as {signedInAs}
@@ -155,18 +156,18 @@ export default async function ActivityPage() {
               return (
                 <div key={status} className="mt-8">
                   <h3 className="flex items-center gap-2 text-lg font-semibold text-[var(--foreground)]">
-                    <span
-                      aria-hidden="true"
-                      className={`inline-block h-2.5 w-2.5 rounded-full ${
-                        status === "applied"
-                          ? "bg-[var(--accent)]"
-                          : status === "applying"
-                            ? "bg-amber-500"
-                            : status === "interested"
-                              ? "bg-[#3AB7A5]"
-                              : "bg-[var(--line-strong)]"
-                      }`}
-                    />
+                      <span
+                        aria-hidden="true"
+                        className={`inline-block h-2.5 w-2.5 rounded-full ${
+                          status === "applied"
+                            ? "bg-[var(--verified)]"
+                            : status === "applying"
+                              ? "bg-[var(--gold)]"
+                              : status === "interested"
+                                ? "bg-[var(--brand)]"
+                                : "bg-[var(--line-strong)]"
+                        }`}
+                      />
                     {ACTIVITY_STATUS_LABELS[status]} · {entries.length}
                   </h3>
                   <p className="mt-1 text-sm text-[var(--muted)]">

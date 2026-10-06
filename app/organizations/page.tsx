@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { UiIcon } from "@/components/ui-icon";
 
@@ -40,19 +39,38 @@ export default function OrganizationsPage() {
               </Link>
             </div>
           </div>
-          <figure className="editorial-section-media">
-            <Image
-              src="/images/editorial/organizations-partnership.webp"
-              alt="African education and program leaders planning how to reach students"
-              fill
-              preload
-              sizes="(max-width: 1024px) 100vw, 58vw"
-              className="object-cover"
-            />
-            <figcaption className="editorial-photo-note">
-              Opportunity access is built with providers, universities and communities.
-            </figcaption>
-          </figure>
+          <div
+            className="rounded-md border border-white/15 bg-white/5 p-6 sm:p-7"
+            aria-label="Sample campaign report with illustrative data"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--gold)]">
+              Sample report · illustrative data, not real results
+            </p>
+            <h2 className="mt-2 text-lg font-semibold text-[#f7f2e8]">
+              What a campaign report looks like
+            </h2>
+            <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { label: "Relevant audience", value: "1,240" },
+                { label: "Saved", value: "48" },
+                { label: "Interested", value: "12" },
+                { label: "Applying", value: "5" },
+                { label: "Applied", value: "2" },
+              ].map((row) => (
+                <div key={row.label} className="rounded-md bg-white/5 px-4 py-3">
+                  <dt className="text-xs text-[#c9d4cb]">{row.label}</dt>
+                  <dd className="mt-1 text-2xl font-semibold text-[#f7f2e8]">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
+              <div className="h-full w-3/4 rounded-full bg-[var(--gold)]" />
+            </div>
+            <p className="mt-4 text-sm leading-6 hero-muted">
+              Counts only — no names, emails, or per-user lists. You receive
+              aggregate engagement for your call, never personal data.
+            </p>
+          </div>
         </div>
       </section>
 

@@ -525,6 +525,41 @@ review → owner prod decision → user pilot → provider revenue pilot.
   §L sign-off → staging-behavior review → owner prod decision.
   Production AI stays OFF until that separate owner decision.
 
+## Civic Hybrid P1 2026-10-06 (staging-only UI; owner-approved P0; main untouched; production OFF)
+
+- SCOPE: detail, For You, Activity, Profile, Organizations, auth
+  surfaces. No schema/RLS/Discovery/trust/AI/activity/auth/API change;
+  no behavior change (copy + layout + image presence only).
+- DETAIL: AI-cover banner removed (image-free default); compact source
+  line under title (`Source · Evidence verified/Human-reviewed ·
+  checked date`); CTA/controls/eligibility/evidence/AI order kept;
+  AI panel already last, muted, required-labeled — untouched.
+- FOR YOU: "Personal workspace" header, profile-sharpens-ordering
+  guidance (never affects eligibility), match-count wording;
+  deterministic ranking, explicit AI trigger, empty states unchanged.
+- ACTIVITY: funnel dots retokened (Interested brand / Applying gold /
+  Applied verified); workflow copy names the four states; semantics kept.
+- PROFILE: header names what improves recommendations + private-only +
+  never-affects-eligibility; schema/behavior untouched.
+- ORGANIZATIONS: AI hero image removed (image-free); labeled SAMPLE
+  campaign-report visual (48/12/5/2 illustrative counts, "not real
+  results"); no partners/logos/testimonials invented.
+- AUTH: login AI side photo removed (solid ink evidence panel);
+  forgot/reset/resend already image-free; all auth behavior preserved.
+- IMAGERY: P1 AI-people usages removed: detail covers (all),
+  organizations hero, login panel. Remaining AI assets: staff
+  `/campaigns` hero (P2 staff surface), card/detail registry slots
+  (dormant — no P0/P1 caller renders covers), login-adjacent rotation
+  none. No new images introduced.
+- VERIFIED: `npm test` / `verify` / `build` green; zero cobalt hex in
+  `app/`+`components/`; P0 hero/cards AI-free; detail CTA
+  ("Open source and application details") + AI labels intact per tests.
+- REMAINING P2: staff/campaign surfaces recolor, empty-state
+  differentiation, full registry migration to real assets, measured
+  contrast audit, justified motion only. Owner eyeball: detail page,
+  `/for-you`, `/activity`, `/profile`, `/organizations`,
+  `/login` at 390px + desktop, light + dark.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

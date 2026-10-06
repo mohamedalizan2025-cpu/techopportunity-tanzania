@@ -26,19 +26,21 @@ export default async function ProfilePage() {
       <section className="border-b border-[var(--line)] bg-[var(--hero)]">
         <div className="mx-auto w-full max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Your account
+            Personal workspace
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-4xl">
             Build your profile
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
-            Tell us a little about yourself and we&apos;ll order your{" "}
+            Your level, field, sectors and followed types are what improve
+            your{" "}
             <span className="font-semibold text-[var(--foreground)]">
               For You
             </span>{" "}
-            feed with clear reasons for every suggestion. This is optional —
-            Explore always shows the full published list, with or without a
-            profile.
+            ordering, with a clear reason on every suggestion. This is
+            optional, stays private to your account, and only sharpens
+            relevance — it never affects your eligibility. Explore always
+            shows the full published list, with or without a profile.
           </p>
         </div>
       </section>

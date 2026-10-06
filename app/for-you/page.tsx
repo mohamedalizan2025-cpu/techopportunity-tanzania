@@ -53,14 +53,16 @@ export default async function ForYouPage({
       <section className="border-b border-[var(--line)] bg-[var(--hero)]">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Personalized
+            Personal workspace
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-4xl">
             Opportunities matched to what you’re building toward.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
             Your profile orders the same published list as Explore, with a
-            clear reason for each suggestion. For You never hides
+            clear reason for each suggestion. Adding your level, field,
+            sectors and types sharpens the ordering — it never affects
+            your eligibility. For You never hides
             anything —{" "}
             <Link
               href="/#opportunities"
@@ -86,8 +88,8 @@ export default async function ForYouPage({
               {forYou.hasProfile ? (
                 <p role="status" className="mt-2 text-sm text-[var(--muted)]">
                   {forYou.entries.length}{" "}
-                  {forYou.entries.length === 1 ? "match" : "matches"} from your
-                  profile
+                  {forYou.entries.length === 1 ? "match" : "matches"} ordered
+                  by your profile, each with its reason shown
                 </p>
               ) : null}
             </div>

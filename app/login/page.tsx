@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
@@ -62,20 +61,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
 
         <div className="mt-8 overflow-hidden rounded-md border border-[var(--line)] bg-[var(--surface)] sm:grid sm:grid-cols-[1fr_1.25fr]">
-          <div className="relative hidden min-h-[430px] flex-col justify-between gap-6 overflow-hidden bg-[var(--brand-deep)] p-7 text-[#F5EFE0] sm:flex">
-            <Image
-              src="/images/editorial/career-mentorship.webp"
-              alt="A young Tanzanian professional reviewing work with a mentor"
-              fill
-              preload
-              sizes="360px"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,47,43,0.2),rgba(8,47,43,0.94)_68%)]" aria-hidden="true" />
-            <p className="relative z-10 text-sm font-bold uppercase tracking-[0.18em] text-[var(--gold)]">
+          <div className="relative hidden min-h-[430px] flex-col justify-between gap-6 overflow-hidden rounded-md bg-[var(--brand-deep)] p-7 text-[#F5EFE0] sm:flex">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--gold)]">
               Tech Opportunity
             </p>
-            <div className="relative z-10">
+            <div>
               <p className="text-xl font-semibold leading-7">
                 Local talent, global opportunity.
               </p>
@@ -85,7 +75,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 <li>Private Saved list and application progress.</li>
               </ul>
             </div>
-            <p className="relative z-10 text-xs text-[#F5EFE0]/80">
+            <p className="text-xs text-[#F5EFE0]/80">
               Free for talent. Applications happen at the source.
             </p>
           </div>

@@ -1,6 +1,5 @@
 import { UiIcon } from "./ui-icon";
 import Link from "next/link";
-import { OpportunityCover } from "./opportunity-cover";
 import { categoryLabel } from "@/lib/category-labels";
 import { SaveOpportunityControl } from "@/components/save-opportunity-control";
 import { ActivityControl } from "@/components/activity-control";
@@ -48,14 +47,6 @@ export function OpportunityDetail({
 
   return (
     <article>
-      <figure className="mb-8">
-        <div className="opportunity-detail-cover" aria-hidden="true">
-          <OpportunityCover opportunity={opportunity} className="h-full w-full" />
-        </div>
-        <figcaption className="mt-2 text-xs text-[var(--muted)]">
-          Editorial image for visual context — verify every detail at the official source.
-        </figcaption>
-      </figure>
       <header className="border-b border-[var(--line)] pb-8">
         <div className="flex flex-wrap items-center gap-3">
           <span className="eyebrow text-[var(--primary-text)]">
@@ -76,6 +67,16 @@ export function OpportunityDetail({
         </h1>
         <p className="mt-4 text-base text-[var(--muted)]">
           {opportunity.organization?.trim() || "Organizer not specified"}
+        </p>
+        <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          <span className="font-semibold text-[var(--foreground)]">
+            Source: {hostname || "official source"}
+          </span>
+          <span aria-hidden="true" className="text-[var(--subtle)]">·</span>
+          <span className="text-[var(--muted)]">
+            {badge ? badge.label : "Human-reviewed"}
+            {verifiedAt ? ` · ${verifiedAt}` : ""}
+          </span>
         </p>
         {added ? (
           <p className="mt-2 text-sm text-[var(--muted)]">{added}</p>
