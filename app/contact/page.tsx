@@ -37,9 +37,9 @@ export default function ContactPage() {
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
           Message us on WhatsApp for support, privacy requests, listing
-          corrections, or provider enquiries. Structured in-product
-          reporting is coming separately — for now, a message with the
-          listing title gets a human review.
+          corrections, or provider enquiries. If you are signed in you can
+          also report a problem directly from any opportunity page — a
+          message here with the listing title gets the same human review.
         </p>
 
         <div className="mt-6 rounded-md border border-[var(--line)] bg-[var(--surface)] p-6">

@@ -659,6 +659,40 @@ review → owner prod decision → user pilot → provider revenue pilot.
 - P0A COMPLETE. Remaining P0: structured listing reports + triage,
   account deletion, incident runbook, final pre-pilot gate.
 
+## Pre-pilot P0B 2026-10-06 (branch `pre-pilot-trust-readiness`; main/production untouched)
+
+- SHIPPED on branch: migration `0023_listing_reports.sql`
+  (sha256 `DB9F3908…8640D1`; reasons 6, statuses 4, details 4–1000,
+  note ≤500; owner insert/select on published rows, staff
+  read/triage, no anon/provider access, no delete grant) + data
+  actions (auth submit with published-check, 24h duplicate window,
+  5/min rate reuse; staff list/triage, opportunity rows never
+  written) + detail "Report a problem" (auth form w/ sensitive-data
+  warning; anon sign-in + WhatsApp fallback) + `/reports` staff
+  queue (triage reviewed/resolved/dismissed, review-queue deep links)
+  + privacy/contact copy updates + 15-test suite.
+- STAGING APPLIED (target proved `pumzofcwfjqswkiwfqty`, production
+  never connected): table exists, RLS on, exactly the 4 policies,
+  authenticated INSERT/SELECT/UPDATE only, anon insert denied live,
+  row count 0, all 8 constraints. Note: the file's own
+  begin/commit persisted the DDL before a harness post-step failed;
+  live state re-verified read-only and green. The 0021 contract
+  lines are static-only on migrated DBs; live enforcement is 0023's
+  own statements (convergent on fresh restores).
+- VERIFIED: new suite 15/15, full `npm test` / `verify` / `build`
+  green (incl. data-api-grants 15 tables), runtime audit 0.
+  Build caught + fixed one `"use server"` export violation (state
+  constants moved to `lib/listing-report-state.ts`).
+- OWNER-EXECUTED REMAINING on Preview (1 staging user, 2 published
+  rows present): sign in → submit a real report on a published
+  detail → triage it at `/reports` (reviewed/resolved/dismissed) →
+  confirm the listing is byte-unchanged → delete the test report
+  rows if any remain. No synthetic rows left by this session.
+- P0B COMPLETE (code + staging proof). Remaining P0: account
+  deletion, incident runbook, final pre-pilot gate. Audit-doc
+  P0B marking deferred to branch convergence (audit file lives on
+  local main). Pilot stays paused.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

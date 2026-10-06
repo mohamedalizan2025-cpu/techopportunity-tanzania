@@ -94,6 +94,14 @@ export default function PrivacyPage() {
               on this site.
             </li>
             <li>
+              <span className="font-semibold text-[var(--foreground)]">Listing reports you send</span>{" "}
+              (reason, details, and your account identifier), stored so
+              authorized staff can review reported problems. Reports are
+              visible only to staff — never to providers or other users —
+              and never change a listing automatically. Do not include
+              passwords or sensitive personal information in a report.
+            </li>
+            <li>
               <span className="font-semibold text-[var(--foreground)]">Privacy-safe aggregate counts</span>{" "}
               (for example how many people saved an opportunity) used in
               provider reports. These contain no names, emails, or

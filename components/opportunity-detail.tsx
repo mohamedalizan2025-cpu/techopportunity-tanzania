@@ -17,6 +17,7 @@ import {
 } from "@/lib/opportunity-presentation";
 import type { Opportunity } from "@/lib/types";
 import { OpportunityInsightPanel } from "@/components/opportunity-insight";
+import { ReportOpportunityControl } from "@/components/report-opportunity-control";
 
 export function OpportunityDetail({
   opportunity,
@@ -252,6 +253,12 @@ export function OpportunityDetail({
               deadlines can change.
             </p>
           </section>
+          <ReportOpportunityControl
+            opportunityId={opportunity.id}
+            isAuthenticated={isAuthenticated}
+            loginHref={`/login?next=${encodeURIComponent(returnTo)}`}
+            returnTo={returnTo}
+          />
           <section aria-label="Share an opportunity" className="mt-8 rounded-md border border-[var(--line)] bg-[var(--muted-surface)] p-5">
             <h2 className="font-semibold">Know another opportunity?</h2>
             <p className="mt-1 text-sm leading-6 text-[var(--muted)]">

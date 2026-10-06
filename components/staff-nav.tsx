@@ -26,6 +26,7 @@ export function StaffNav() {
         <span className="mr-1 hidden h-5 w-px shrink-0 bg-white/15 sm:inline-block" aria-hidden="true" />
         <NavigationLink href="/moderation">Review queue</NavigationLink>
         <NavigationLink href="/published-management">Published</NavigationLink>
+        <NavigationLink href="/reports">Reports</NavigationLink>
         <NavigationLink href="/campaigns">Campaigns</NavigationLink>
       </div>
     </nav>

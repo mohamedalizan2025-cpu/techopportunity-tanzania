@@ -60,6 +60,11 @@ revoke all on table public.talent_opportunity_activity
   from public, anon, authenticated, service_role;
 revoke all on table public.provider_campaigns
   from public, anon, authenticated, service_role;
+-- 0023 (structured listing reports, pre-pilot P0B): closed-first like every
+-- application table. Live enforcement also ships inside 0023 itself, so this
+-- line keeps the contract complete on databases where 0021 already ran.
+revoke all on table public.listing_reports
+  from public, anon, authenticated, service_role;
 
 -- Anonymous product surface. opportunity_sources SELECT is intentionally
 -- grantable but returns zero rows under RLS; public opportunity projections
@@ -88,6 +93,9 @@ grant select on table public.deadline_alert_events to authenticated;
 grant select, insert, update on table public.talent_profiles to authenticated;
 grant select, insert, update, delete on table public.talent_opportunity_activity to authenticated;
 grant select, insert, update, delete on table public.provider_campaigns to authenticated;
+-- 0023: owner insert/select plus staff-gated update; no delete, no
+-- service-role caller (staff triage uses authenticated JWT + RLS).
+grant select, insert, update on table public.listing_reports to authenticated;
 
 -- Operational service clients. There is deliberately no blanket service-role
 -- grant. DELETE/INSERT on opportunities is retained only for the existing
