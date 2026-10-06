@@ -129,8 +129,9 @@ export default async function ActivityPage() {
             </div>
             <div className="mt-8">
               <EmptyState
+                icon="clock"
                 title="Nothing tracked yet"
-                message="Open any opportunity and mark it Interested, Applying, or Applied. Your saved bookmarks stay separate so you can revisit anything later."
+                message="Open any opportunity and mark it Interested, Applying, or Applied to watch it move through your workflow. Your saved bookmarks stay separate so you can revisit anything later."
                 actionHref="/#opportunities"
                 actionLabel="Browse opportunities"
               />

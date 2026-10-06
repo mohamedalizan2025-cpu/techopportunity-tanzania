@@ -29,7 +29,6 @@ import {
   type Sector,
 } from "@/lib/taxonomy";
 import { QueueBulkPanel } from "./queue-bulk-panel";
-import { OpportunityCover } from "@/components/opportunity-cover";
 import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
@@ -468,11 +467,8 @@ export default async function ModerationPage({
                   <li key={opportunity.id}>
                     <Link
                       href={`/moderation/${opportunity.id}${query}`}
-                      className="grid gap-3 rounded-md border border-[var(--line)] bg-[var(--surface)] p-3 transition-colors hover:border-[var(--line-strong)] sm:grid-cols-[64px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:p-4"
+                      className="grid gap-3 rounded-md border border-[var(--line)] bg-[var(--surface)] p-3 transition-colors hover:border-[var(--line-strong)] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:p-4"
                     >
-                      <span aria-hidden="true" className="hidden h-14 w-16 shrink-0 overflow-hidden rounded-md sm:block">
-                        <OpportunityCover opportunity={opportunity} className="h-full w-full" />
-                      </span>
                       <span className="min-w-0">
                         <span className="flex flex-wrap items-center gap-2">
                           <span className={triageBadgeClasses(bucket)}>

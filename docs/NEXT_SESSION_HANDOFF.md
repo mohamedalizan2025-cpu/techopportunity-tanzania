@@ -560,6 +560,41 @@ review → owner prod decision → user pilot → provider revenue pilot.
   `/for-you`, `/activity`, `/profile`, `/organizations`,
   `/login` at 390px + desktop, light + dark.
 
+## Civic Hybrid P2 2026-10-06 (staging-only polish; P0/P1 owner-approved; main untouched; production OFF)
+
+- SCOPE: staff/campaign visual pass, empty-state differentiation, image
+  registry cleanup, measured contrast audit, dead-CSS removal, no new
+  motion. No schema/RLS/Discovery/trust/AI/activity/auth/API change.
+- STAFF: moderation queue thumbnails removed (dense text rows, grid
+  simplified); campaign hero AI image + navy gradient removed
+  (image-free operational hero, smaller title); authorization, workflow,
+  RPCs, audit semantics untouched.
+- EMPTY STATES: contextual glyphs (Saved bookmark, Activity clock,
+  For You setup user; Explore/no-match stay search); Saved privacy line;
+  Activity workflow copy; WHAT/WHY/NEXT already held everywhere.
+- IMAGERY: ZERO active production-facing AI-people callers remain
+  (homepage/cards/detail/organizations/login/campaigns/moderation all
+  image-free; card `showCover` off everywhere). Nine files RETAINED on
+  disk: `presentation.test.ts` pins the registry contract (deletion
+  would force weakening tests) and the slot map is the real-photo
+  target — recorded in provenance + registry header. Nothing fetched.
+- CONTRAST (computed, WCAG formula): 26/26 pairs pass, minimum 5.12
+  (gold-on-ink, restricted use); body 15.06, links 7.20, buttons
+  7.64–10.14, dark pairs 6.80–15.60, triage/status pills 5.67–14.33,
+  focus ring 7.20. No failures; no token changes needed.
+- CONSISTENCY: zero cobalt/blue hex in `app/`+`components/`; no
+  white-on-gold; dead editorial/detail-cover CSS removed (~90 lines);
+  no new motion added (existing transitions + reduced-motion guard
+  kept); single deadline line on cards; AI subordinate everywhere.
+- VERIFIED: `npm test` / `verify` / `build` green (verify selected
+  moderation-auth + deadline-alerts gates on copy-only edits — both
+  covered by the passing suite; deployed-access check is owner work).
+- MILESTONE COMPLETE: Civic Hybrid P0/P1/P2 done on staging. Owner
+  eyeball remaining: staff queue + campaigns (staff session), homepage,
+  detail, For You/Activity/Profile/Saved, organizations, login at
+  390px + desktop, light + dark. No visual blockers before user pilot
+  beyond that eyeball pass.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

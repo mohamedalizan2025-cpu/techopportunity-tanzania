@@ -126,6 +126,7 @@ export default async function ForYouPage({
           ) : !forYou.hasProfile ? (
             <div className="mt-8">
               <EmptyState
+                icon="user"
                 title="Set up your profile to see For You"
                 message="Add a few optional details — your level, field, sectors, and the types you follow — and we'll order opportunities for you with clear reasons. You can skip this and keep using Explore."
                 actionHref="/profile"

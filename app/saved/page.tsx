@@ -108,8 +108,9 @@ export default async function SavedOpportunitiesPage() {
           ) : result.entries.length === 0 ? (
             <div className="mt-8">
               <EmptyState
+                icon="bookmark"
                 title="You haven't saved any opportunities yet"
-                message="Browse opportunities and save the ones you want to revisit."
+                message="Browse opportunities and save the ones you want to revisit. Saved items stay private to your account."
                 actionHref="/#opportunities"
                 actionLabel="Browse opportunities"
               />

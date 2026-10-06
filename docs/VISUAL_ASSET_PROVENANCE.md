@@ -35,3 +35,17 @@ The generated PNG originals remain in the local ImageGen output directory.
 Repository assets are resized to at most 1800 pixels wide and encoded as WebP
 at quality 84 for production delivery. No third-party license is asserted;
 repository and platform terms govern use of the generated outputs.
+
+## Retirement status 2026-10-06 (Civic Hybrid P2)
+
+These nine files have ZERO active production-facing callers: P0 removed
+the homepage hero and default card covers; P1 removed detail banners,
+the organizations hero, and the login panel; P2 removed the staff
+campaign hero and moderation queue thumbnails, and public cards default
+to image-free (`showCover` off everywhere). The files are RETAINED on
+disk (not deleted) for exactly two reasons: `tests/presentation.test.ts`
+pins the registry's deterministic local-asset contract (deleting the
+files would force weakening tests, which is forbidden), and
+`lib/cover-registry.ts` remains the mapping target for future real,
+provenanced assets. No new AI-generated people may be added; replacement
+follows the ranked sourcing strategy with full five-field provenance.

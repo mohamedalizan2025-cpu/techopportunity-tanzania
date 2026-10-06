@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { UiIcon } from "./ui-icon";
 
+type EmptyStateIcon = "search" | "bookmark" | "clock" | "user" | "pin";
+
 interface EmptyStateProps {
   title: string;
   message: string;
   actionHref?: string;
   actionLabel?: string;
   showBrowseAll?: boolean;
+  /** Contextual glyph; defaults to search. Decorative (title carries meaning). */
+  icon?: EmptyStateIcon;
 }
 
 export function EmptyState({
@@ -15,11 +19,12 @@ export function EmptyState({
   actionHref,
   actionLabel,
   showBrowseAll = false,
+  icon = "search",
 }: EmptyStateProps) {
   return (
     <div role="status" className="state-panel w-full">
       <span className="mb-2 grid h-12 w-12 place-items-center rounded-md bg-[var(--muted-surface)] text-[var(--muted)]">
-        <UiIcon name="search" width="24" height="24" />
+        <UiIcon name={icon} width="24" height="24" />
       </span>
       <p className="text-xl font-semibold tracking-tight text-[var(--foreground)]">
         {title}

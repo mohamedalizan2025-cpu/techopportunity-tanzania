@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CreateCampaignForm } from "@/components/create-campaign-form";
@@ -60,21 +59,12 @@ export default async function CampaignPilotPage() {
     >
       <StaffNav />
       <section className="hero-dark border-b border-black/20">
-        <div className="relative mx-auto w-full max-w-6xl overflow-hidden px-5 py-8 sm:px-8 sm:py-12">
-          <Image
-            src="/images/editorial/organizations-partnership.webp"
-            alt=""
-            aria-hidden="true"
-            fill
-            sizes="1200px"
-            className="object-cover object-center opacity-25"
-          />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--primary-ink)_20%,rgba(11,31,51,0.94)_52%,rgba(11,31,51,0.48))]" aria-hidden="true" />
-          <div className="relative z-10">
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
+          <div>
           <p className="eyebrow-gold">
             Provider campaigns · internal pilot
           </p>
-          <h1 className="font-display mt-3 text-3xl font-semibold text-[#f7f2e8] sm:text-5xl">
+          <h1 className="font-display mt-3 text-3xl font-semibold text-[#f7f2e8] sm:text-4xl">
             Campaign intelligence
           </h1>
           <div className="hero-rule mt-4" aria-hidden="true" />
@@ -87,7 +77,7 @@ export default async function CampaignPilotPage() {
           <p className="mt-3 text-sm">
             <Link
               href="/organizations"
-              className="font-medium text-[#c9d4cb] underline underline-offset-2 hover:text-[var(--gold)]"
+              className="font-medium hero-muted underline underline-offset-2 hover:text-[var(--gold)]"
             >
               Public provider &amp; institution story →
             </Link>

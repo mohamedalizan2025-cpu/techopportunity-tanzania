@@ -168,55 +168,8 @@ button:disabled {
   width: 56px;
   border-top: 3px solid var(--gold);
 }
-.editorial-hero-media,
-.editorial-hero-mobile,
-.editorial-section-media {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 0.2);
-  border-radius: 10px;
-  background: var(--brand-navy);
-  box-shadow: 0 24px 55px rgb(0 0 0 / 0.28);
-}
-.editorial-hero-media {
-  min-height: 470px;
-}
-.editorial-hero-mobile {
-  aspect-ratio: 16 / 10;
-}
-.editorial-section-media {
-  aspect-ratio: 4 / 3;
-}
-.editorial-hero-wash {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgb(8 47 43 / 0.88));
-}
-.editorial-hero-card {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
-  width: min(330px, calc(100% - 48px));
-  border-left: 3px solid var(--gold);
-  background: rgb(8 47 43 / 0.9);
-  padding: 16px 18px;
-  box-shadow: 0 12px 30px rgb(0 0 0 / 0.24);
-  backdrop-filter: blur(8px);
-}
-.editorial-photo-note {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  max-width: calc(100% - 24px);
-  border-left: 2px solid var(--gold);
-  background: rgb(8 47 43 / 0.88);
-  padding: 8px 11px;
-  color: #f7f2e8;
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1.4;
-  box-shadow: 0 8px 22px rgb(0 0 0 / 0.2);
-}
+/* Civic Hybrid P2: AI-photo editorial treatments removed with their
+   markup. Covers render only behind an explicit real-asset flag. */
 .trust-badge {
   display: inline-flex;
   align-items: center;
@@ -479,31 +432,6 @@ nav[aria-label="Staff"] .nav-link[aria-current="page"] {
   border-radius: 10px 10px 0 0;
   background: var(--muted-surface);
 }
-.opportunity-cover-status {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  line-height: 1.5;
-  font-weight: 650;
-  border-radius: 6px;
-  padding: 5px 10px;
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
-  color: var(--foreground);
-  box-shadow: 0 2px 10px rgba(8, 47, 43, 0.25);
-}
-.opportunity-detail-cover {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--muted-surface);
-  aspect-ratio: 21 / 9;
-  box-shadow: 0 16px 42px rgb(8 47 43 / 0.1);
-}
 .bottom-nav {
   position: fixed;
   inset-inline: 0;
@@ -603,9 +531,6 @@ nav[aria-label="Staff"] .nav-link[aria-current="page"] {
   padding: clamp(24px, 5vw, 48px);
 }
 @media (min-width: 1024px) {
-  .editorial-section-media {
-    min-height: 430px;
-  }
   .detail-body {
     grid-template-columns: minmax(0, 1fr) 330px;
     gap: 48px;
@@ -638,11 +563,6 @@ nav[aria-label="Staff"] .nav-link[aria-current="page"] {
   }
   .category-links li {
     flex-shrink: 0;
-  }
-  .editorial-photo-note {
-    right: 10px;
-    bottom: 10px;
-    max-width: calc(100% - 20px);
   }
 }
 

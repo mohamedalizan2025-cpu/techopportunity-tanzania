@@ -13,6 +13,12 @@ import type { Opportunity } from "./types";
  * locally stored, AI-generated editorial photography with its generation
  * record in `docs/VISUAL_ASSET_PROVENANCE.md`. The images are visual context,
  * never documentary evidence of the listed opportunity.
+ *
+ * RETIRED (Civic Hybrid P2, 2026-10-06): no production-facing caller
+ * renders these assets — public cards default to image-free and staff
+ * surfaces no longer mount covers. Retained because
+ * `tests/presentation.test.ts` pins this registry's local-asset contract
+ * and because the slot map is the future real-photography target.
  */
 
 type CoverSlot =
