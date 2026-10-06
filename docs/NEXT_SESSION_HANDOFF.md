@@ -726,6 +726,19 @@ review → owner prod decision → user pilot → provider revenue pilot.
   branch convergence (audit file lives on local main). Pilot stays
   paused.
 
+## Pre-pilot P0D 2026-10-06 (branch `pre-pilot-trust-readiness`; docs-only)
+
+- SHIPPED: `docs/INCIDENT_RESPONSE_RUNBOOK.md` (severity SEV-0..3,
+  8-step universal flow, 10 capability-grounded playbooks incl.
+  rotation-once secret rule, human-only listing response, fail-closed
+  AI kill, Vercel rollback via previous Ready deployment, vendor map,
+  WhatsApp comms, one-page quick response, log template as §9).
+  No compliance claims, no invented deadlines, no PR templates.
+- VERIFIED: `npm test` / `verify` green; zero product-code change
+  (single untracked docs file at gate time).
+- P0D COMPLETE. Remaining P0: final pre-pilot gate (re-run audit).
+  Pilot stays paused until then.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is
