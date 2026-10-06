@@ -27,8 +27,9 @@ export async function SiteHeader() {
         </Link>
         <nav aria-label="Main" className="hidden items-center gap-1 xl:flex">
           <NavigationLink href="/">Explore</NavigationLink>
-          <NavigationLink href="/for-you">For You</NavigationLink>
+          <NavigationLink href="/for-you">AI Match</NavigationLink>
           <NavigationLink href="/activity">Activity</NavigationLink>
+          <NavigationLink href="/ask">Ask</NavigationLink>
           <NavigationLink href="/organizations">Organizations</NavigationLink>
           {user ? (
             <>
@@ -67,8 +68,9 @@ export async function SiteHeader() {
         </nav>
         <MobileNavigation>
           <NavigationLink href="/">Explore opportunities</NavigationLink>
-          <NavigationLink href="/for-you">For You</NavigationLink>
+          <NavigationLink href="/for-you">AI Match</NavigationLink>
           <NavigationLink href="/activity">Your activity</NavigationLink>
+          <NavigationLink href="/ask">Ask Tech Opportunity</NavigationLink>
           <NavigationLink href="/organizations">For organizations</NavigationLink>
           <NavigationLink href="/saved">
             Saved opportunities

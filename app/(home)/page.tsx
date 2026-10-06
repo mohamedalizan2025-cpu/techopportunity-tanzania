@@ -207,7 +207,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           {user ? (
             <nav aria-label="Your journey" className="mt-4 flex flex-wrap gap-x-5 text-sm">
               <span className="inline-flex min-h-11 items-center font-semibold">Explore</span>
-              <Link href="/for-you" className="inline-flex min-h-11 items-center font-semibold text-[var(--accent-strong)] underline underline-offset-4">For You</Link>
+              <Link href="/for-you" className="inline-flex min-h-11 items-center font-semibold text-[var(--accent-strong)] underline underline-offset-4">AI Match</Link>
               <Link href="/activity" className="inline-flex min-h-11 items-center font-semibold text-[var(--accent-strong)] underline underline-offset-4">Your activity</Link>
             </nav>
           ) : null}
@@ -523,10 +523,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               <h3 className="flex items-center gap-2 font-semibold"><UiIcon name="bookmark" width="18" height="18" /> Action workflow</h3>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                 Save, prioritize and track progress instead of losing
-                another link. Use For You to prioritize with an optional
+                another link. Use AI Match to prioritize with an optional
                 profile — these are your private notes.
               </p>
-              <Link href="/for-you" className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--brand)] underline underline-offset-4">Open For You →</Link>
+              <Link href="/for-you" className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--brand)] underline underline-offset-4">Open AI Match →</Link>
             </div>
             <div>
               <h3 className="flex items-center gap-2 font-semibold"><UiIcon name="shield" width="18" height="18" /> Assistance, not authority</h3>
@@ -538,6 +538,33 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
         </div>
       </section>
+      <section
+        aria-labelledby="ai-entry-heading"
+        className="border-t border-[var(--line)] bg-[var(--surface)]"
+      >
+        <div className="page-shell py-10 sm:py-14">
+          <p className="eyebrow">AI assistance, verified facts first</p>
+          <h2
+            id="ai-entry-heading"
+            className="font-display mt-3 max-w-2xl text-2xl font-semibold sm:text-3xl"
+          >
+            Find your best verified matches.
+          </h2>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--muted)]">
+            Complete your profile and let AI explain which verified
+            opportunities fit you — or ask about deadlines, access, and
+            how the platform works. AI never decides eligibility.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href="/for-you" className="button-primary">
+              Try AI Match
+            </Link>
+            <Link href="/ask" className="button-secondary">
+              Ask Tech Opportunity
+            </Link>
+          </div>
+        </div>
+      </section>
       <section aria-labelledby="cta-heading" className="border-t border-[var(--line)]">
         <div className="page-shell grid gap-6 py-10 sm:py-14 lg:grid-cols-2">
           <div className="rounded-md bg-[var(--brand-deep)] p-6 sm:p-8">
@@ -545,12 +572,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               Ready when an opportunity is.
             </h2>
             <p className="mt-2 text-sm leading-6 hero-muted">
-              Build a lightweight profile and let For You order the shelf
+              Build a lightweight profile and let AI Match order the shelf
               with clear reasons — or keep exploring freely, no account needed.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href="/for-you" className="inline-flex min-h-11 items-center justify-center rounded-md bg-[var(--gold)] px-5 text-sm font-bold text-[#082f2b] transition hover:brightness-110">
-                Open For You
+                Open AI Match
               </Link>
               <Link href="/#opportunities" className="inline-flex min-h-11 items-center justify-center rounded-md border border-white/25 px-5 text-sm font-semibold text-[#f7f2e8] hover:border-[var(--gold)] hover:text-[var(--gold)]">
                 Keep exploring

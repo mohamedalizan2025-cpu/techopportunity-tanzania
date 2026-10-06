@@ -759,6 +759,23 @@ review → owner prod decision → user pilot → provider revenue pilot.
   `docs/REAL_USER_PILOT_2026-10.md`; youth/minor legal review rides
   with broader launch.
 
+## AI Frontend V1 2026-10-06 (branch `ai-frontend-v1`; production untouched, AI OFF)
+
+- SHIPPED on branch: AI Match workspace (`/for-you` reworked with
+  eligible/unknown split + profile summary; nav "AI Match";
+  `/ai-match` alias) + Ask Tech Opportunity (`/ask` FAQ + authed
+  custom Q&A over curated knowledge + grounded corpus, strict
+  validator, no persistence) + shared provider-transport helpers +
+  homepage AI entry. No schema, no duplicate profile storage, no
+  chatbot bubble, no predictions/submissions.
+- VERIFIED: new ai-match (7) + ask (12) suites, full `npm test` /
+  `verify` / `build` green, runtime audit 0, real-provider staging
+  smoke (Gemini + Groq serve after one bounded prompt clarification;
+  refusals/fallbacks honest, zero authority/privacy failures).
+  Evidence: `docs/AI_FRONTEND_V1.md`.
+- Pilot: TECHNICALLY READY BUT OWNER DEFERRED until AI Frontend V1
+  approved + real photography restored + final owner QA.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

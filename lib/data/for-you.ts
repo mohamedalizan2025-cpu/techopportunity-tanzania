@@ -5,6 +5,7 @@ import {
   buildMatchingInput,
   hasCoreProfile,
   rankForYou,
+  type MatchingInput,
   type RankedOpportunity,
 } from "../personalization";
 
@@ -21,12 +22,15 @@ export interface ForYouResult {
   /** True when the profile carries at least one usable core signal. */
   hasProfile: boolean;
   entries: RankedOpportunity[];
+  /** Normalized matching input driving the ranking (null when unavailable). */
+  input: MatchingInput | null;
 }
 
 const EMPTY_FOR_YOU: ForYouResult = {
   available: false,
   hasProfile: false,
   entries: [],
+  input: null,
 };
 
 export async function getForYouData(
@@ -41,12 +45,13 @@ export async function getForYouData(
 
   const input = buildMatchingInput(profileResult.profile);
   if (!hasCoreProfile(input)) {
-    return { available: true, hasProfile: false, entries: [] };
+    return { available: true, hasProfile: false, entries: [], input };
   }
 
   return {
     available: true,
     hasProfile: true,
     entries: rankForYou(browse.opportunities, input),
+    input,
   };
 }

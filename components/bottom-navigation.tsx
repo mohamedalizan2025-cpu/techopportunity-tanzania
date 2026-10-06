@@ -26,15 +26,15 @@ export function BottomNavigation() {
           </NavigationLink>
           <NavigationLink href="/for-you" className="bottom-nav-link">
             <UiIcon name="check" width="20" height="20" />
-            For You
+            AI Match
           </NavigationLink>
-          <NavigationLink href="/saved" className="bottom-nav-link">
-            <UiIcon name="bookmark" width="20" height="20" />
-            Saved
+          <NavigationLink href="/activity" className="bottom-nav-link">
+            <UiIcon name="clock" width="20" height="20" />
+            Activity
           </NavigationLink>
-          <NavigationLink href="/profile" className="bottom-nav-link">
-            <UiIcon name="user" width="20" height="20" />
-            Profile
+          <NavigationLink href="/ask" className="bottom-nav-link">
+            <UiIcon name="search" width="20" height="20" />
+            Ask
           </NavigationLink>
         </div>
       </nav>

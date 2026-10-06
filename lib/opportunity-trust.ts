@@ -174,6 +174,17 @@ export function isAiSearchableOpportunity(
   return true;
 }
 
+/**
+ * Deterministic Tanzanian-access verdict for AI Match lists. True ONLY when
+ * stored evidence confirms access — unknown eligibility never qualifies,
+ * no matter what any model output claims.
+ */
+export function hasVerifiedTanzanianAccess(opportunity: Opportunity): boolean {
+  return opportunity.trust?.eligibilityDecision === "tanzanians_eligible" &&
+    opportunity.trust.eligibilityEvidence !== null &&
+    opportunity.trust.eligibilityEvidence.trim().length > 0;
+}
+
 export type PublicQualityBand = "trusted" | "reviewable" | "excluded";
 
 export function publicQualityBand(

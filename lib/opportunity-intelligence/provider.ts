@@ -88,6 +88,57 @@ const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
 const MAX_PROVIDER_RESPONSE_BYTES = 64 * 1024;
 
+/**
+ * Shared transport observations for every structured-output provider
+ * caller (Opportunity Intelligence insight briefs and Ask answers alike):
+ * status mapping, response-size guard, and envelope content extraction.
+ * Pure and behavior-fixed; both adapters below are thin callers.
+ */
+export function throwForProviderStatus(status: number): never {
+  if (status === 429) throw new ProviderQuotaError();
+  throw new ProviderUnavailableError();
+}
+
+export function guardProviderResponseSize(declaredLength: number, text: string): void {
+  if (declaredLength > MAX_PROVIDER_RESPONSE_BYTES) {
+    throw new ProviderUnavailableError("response too large");
+  }
+  if (text.length > MAX_PROVIDER_RESPONSE_BYTES) {
+    throw new ProviderUnavailableError("response too large");
+  }
+}
+
+export function parseProviderEnvelopeText(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new ProviderUnavailableError("invalid provider envelope");
+  }
+}
+
+export function parseGroqMessageContent(envelope: unknown): string {
+  const content = (envelope as { choices?: Array<{ message?: { content?: unknown } }> })
+    .choices?.[0]?.message?.content;
+  if (typeof content !== "string") throw new ProviderUnavailableError("missing provider content");
+  return content;
+}
+
+export function parseGeminiTextContent(envelope: unknown): string {
+  const content = (envelope as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: unknown }> } }>;
+  }).candidates?.[0]?.content?.parts?.[0]?.text;
+  if (typeof content !== "string") throw new ProviderUnavailableError("missing provider content");
+  return content;
+}
+
+export function parseProviderContentJson(content: string): unknown {
+  try {
+    return JSON.parse(content);
+  } catch {
+    throw new ProviderUnavailableError("invalid provider content");
+  }
+}
+
 export function createGroqProvider(
   apiKey: string,
   model: string,
@@ -127,26 +178,12 @@ export function createGroqProvider(
           },
         }),
       });
-      if (response.status === 429) throw new ProviderQuotaError();
-      if (!response.ok) throw new ProviderUnavailableError();
+      if (!response.ok) throwForProviderStatus(response.status);
       const declaredLength = Number(response.headers.get("content-length") ?? "0");
-      if (declaredLength > MAX_PROVIDER_RESPONSE_BYTES) throw new ProviderUnavailableError("response too large");
       const text = await response.text();
-      if (text.length > MAX_PROVIDER_RESPONSE_BYTES) throw new ProviderUnavailableError("response too large");
-      let envelope: unknown;
-      try {
-        envelope = JSON.parse(text);
-      } catch {
-        throw new ProviderUnavailableError("invalid provider envelope");
-      }
-      const content = (envelope as { choices?: Array<{ message?: { content?: unknown } }> })
-        .choices?.[0]?.message?.content;
-      if (typeof content !== "string") throw new ProviderUnavailableError("missing provider content");
-      try {
-        return JSON.parse(content);
-      } catch {
-        throw new ProviderUnavailableError("invalid provider content");
-      }
+      guardProviderResponseSize(declaredLength, text);
+      const envelope = parseProviderEnvelopeText(text);
+      return parseProviderContentJson(parseGroqMessageContent(envelope));
     },
   };
 }
@@ -161,7 +198,7 @@ export function geminiResponseSchema(): Record<string, unknown> {
   return stripAdditionalProperties(MODEL_OUTPUT_SCHEMA) as Record<string, unknown>;
 }
 
-function stripAdditionalProperties(value: unknown): unknown {
+export function stripAdditionalProperties(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stripAdditionalProperties);
   if (value !== null && typeof value === "object") {
     const entries = Object.entries(value as Record<string, unknown>).filter(
@@ -205,27 +242,12 @@ export function createGeminiProvider(
           }),
         }
       );
-      if (response.status === 429) throw new ProviderQuotaError();
-      if (!response.ok) throw new ProviderUnavailableError();
+      if (!response.ok) throwForProviderStatus(response.status);
       const declaredLength = Number(response.headers.get("content-length") ?? "0");
-      if (declaredLength > MAX_PROVIDER_RESPONSE_BYTES) throw new ProviderUnavailableError("response too large");
       const text = await response.text();
-      if (text.length > MAX_PROVIDER_RESPONSE_BYTES) throw new ProviderUnavailableError("response too large");
-      let envelope: unknown;
-      try {
-        envelope = JSON.parse(text);
-      } catch {
-        throw new ProviderUnavailableError("invalid provider envelope");
-      }
-      const content = (envelope as {
-        candidates?: Array<{ content?: { parts?: Array<{ text?: unknown }> } }>;
-      }).candidates?.[0]?.content?.parts?.[0]?.text;
-      if (typeof content !== "string") throw new ProviderUnavailableError("missing provider content");
-      try {
-        return JSON.parse(content);
-      } catch {
-        throw new ProviderUnavailableError("invalid provider content");
-      }
+      guardProviderResponseSize(declaredLength, text);
+      const envelope = parseProviderEnvelopeText(text);
+      return parseProviderContentJson(parseGeminiTextContent(envelope));
     },
   };
 }
