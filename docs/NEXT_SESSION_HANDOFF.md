@@ -624,6 +624,27 @@ review → owner prod decision → user pilot → provider revenue pilot.
 - NEXT: owner Preview eyeball of the patched build, then this patch
   is main-mergeable; production deploy stays a separate owner act.
 
+## Release candidate 2026-10-06 (staging `f3a2fa6`; main NOT moved — owner approval required)
+
+- CANDIDATE: staging `f3a2fa68df12c1a9a3d796575d45684ff6e7d274`
+  (9 commits over main `22ad5c8`, fast-forwardable, main verified
+  ancestor). Contents: auth engineering (forgot/reset/resend,
+  hardened callback/sign-in) + AI/trust/runbook hardening + Civic
+  Hybrid P0/P1/P2 + Next 16.3.8. No secrets, no .env, no smoke rows,
+  no RLS/auth/AI-contract changes in the diff.
+- QUALITY: `npm test` / `verify` / `build` green; runtime audit 0
+  (full: dev-only braces chain, breaking fix deferred); routes
+  probed on the release build (public 200s, gated 307s, manifest/
+  robots/offline 200); robots Preview-disallow + production-canonical
+  intact; zero cobalt, zero active AI people.
+- PRODUCTION AI: still OFF (committed defaults fail-closed; no
+  partial-env activation path). No DB touched in this gate.
+- PROMOTION: **HELD — pushing `main` auto-deploys Production**
+  (`docs/architecture.md` §6: push-to-main → production deploy), so
+  `main` stays at `22ad5c8` until the owner approves the production
+  push. Next after approval: fast-forward main → staging, then
+  Production smoke, then real-user pilot.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is
