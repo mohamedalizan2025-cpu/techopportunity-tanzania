@@ -50,13 +50,13 @@ export default function PrivacyPage() {
 
         <Section id="privacy-who-for" title="Who the service is for">
           <p>
-            Students — including secondary and high-school students —,
-            university students, graduates, technology learners and builders,
-            young professionals, and general opportunity seekers. There is
-            no minimum-age restriction for browsing or holding an account,
-            so we keep data collection minimal, collect no date of birth,
-            keep profiles private by default, and never make talent activity
-            visible to providers or other users.
+            Tech Opportunity is designed for students and opportunity
+            seekers, including secondary-school and university students,
+            graduates, technology learners and builders, young
+            professionals, and general opportunity seekers. Because younger
+            students may use the service, we keep data collection minimal,
+            collect no date of birth, keep profiles private by default, and
+            never make talent activity visible to providers or other users.
           </p>
         </Section>
 

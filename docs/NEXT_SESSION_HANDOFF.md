@@ -739,6 +739,26 @@ review → owner prod decision → user pilot → provider revenue pilot.
 - P0D COMPLETE. Remaining P0: final pre-pilot gate (re-run audit).
   Pilot stays paused until then.
 
+## Final pre-pilot release 2026-10-06 (promoted to production)
+
+- RECONCILED: local docs commits `c204bde` (pilot package) +
+  `79ebe3c` (audit) verified docs-only and absorbed byte-identical
+  onto the branch (+ P0 record §17, age wording per owner direction);
+  branch handoff kept as newest; nothing lost, nothing blind-merged.
+- RELEASE: P0A trust shell + P0B reporting + P0C deletion + P0D
+  runbook; migrations 0023/0024 reviewed, gated green (tests/verify/
+  build, runtime audit 0), applied to production in order with live
+  RLS/grant/anon-denial proof (342 opps / 3 users unchanged, 0 rows).
+- PROMOTED: `main` fast-forwarded to the release branch HEAD (no
+  merge, no force; local-only docs commits superseded after
+  reconciliation, SHAs recorded); single `main` push → Vercel
+  Production; deploy + smoke verified below in the final report.
+- PRODUCTION AI: OFF (unchanged, fail-closed). No env changes, no
+  user-data writes, no test accounts created.
+- NEXT: owner runs the 5–10 real-user pilot on live production per
+  `docs/REAL_USER_PILOT_2026-10.md`; youth/minor legal review rides
+  with broader launch.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is
