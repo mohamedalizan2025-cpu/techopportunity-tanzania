@@ -146,6 +146,24 @@ export function LoginForm({ nextPath }: { nextPath: string | null }) {
             : "Create account"}
       </button>
 
+      <p className="text-xs leading-5 text-[var(--subtle)]">
+        By continuing you agree to our{" "}
+        <Link
+          href="/terms"
+          className="font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline"
+        >
+          Terms
+        </Link>{" "}
+        and acknowledge the{" "}
+        <Link
+          href="/privacy"
+          className="font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline"
+        >
+          Privacy Policy
+        </Link>
+        .
+      </p>
+
       {mode === "sign-in" ? (
         <div className="flex flex-col gap-1 text-sm">
           <Link

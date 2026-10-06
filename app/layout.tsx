@@ -89,6 +89,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
               </p>
               <ul className="mt-3 space-y-1">
                 <li><Link href="/#trust-heading" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">How evidence works</Link></li>
+                <li><Link href="/privacy" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Privacy</Link></li>
+                <li><Link href="/terms" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Terms</Link></li>
+                <li><Link href="/contact" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Contact</Link></li>
               </ul>
             </nav>
           </div>

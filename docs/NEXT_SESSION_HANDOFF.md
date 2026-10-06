@@ -645,6 +645,20 @@ review → owner prod decision → user pilot → provider revenue pilot.
   push. Next after approval: fast-forward main → staging, then
   Production smoke, then real-user pilot.
 
+## Pre-pilot P0A 2026-10-06 (branch `pre-pilot-trust-readiness`; main/production untouched)
+
+- SHIPPED on branch: `/privacy` (actual data map, vendors, AI, cookies,
+  retention, controls, WhatsApp), `/terms` (sources authoritative, no
+  guarantees, providers, as-is), `/contact` (owner WhatsApp
+  +255 624 295 705 via wa.me link, 7 categories, no SLA claims);
+  footer Trust links; login Terms/Privacy line; profile Privacy link.
+  No 18+ gate, no DOB, no invented entity/jurisdiction/SLA.
+- VERIFIED: new `trust-pages` suite (11 tests) + full `npm test` /
+  `verify` / `build` green; runtime audit 0; /privacy /terms /contact
+  200 with h1 on a fresh production build.
+- P0A COMPLETE. Remaining P0: structured listing reports + triage,
+  account deletion, incident runbook, final pre-pilot gate.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

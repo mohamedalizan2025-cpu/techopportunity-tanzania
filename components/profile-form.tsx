@@ -238,7 +238,12 @@ export function ProfileForm({ profile }: { profile: TalentProfile }) {
       </div>
       <p className={helpText}>
         Your profile is private to your account. It is never shared with
-        organizations and never changes what you can see in Explore.
+        organizations and never changes what you can see in Explore. See
+        the{" "}
+        <Link href="/privacy" className="font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline">
+          Privacy Policy
+        </Link>
+        .
       </p>
     </form>
   );
