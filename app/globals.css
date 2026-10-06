@@ -1,29 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f7f2;
-  --foreground: #192d29;
+  /* Civic Hybrid P0 tokens. Text pairs verified 2026-10-06; see
+     docs/CIVIC_HYBRID_DESIGN_SYSTEM_2026-10-06.md §2. Cobalt retired:
+     --primary* now aliases the teal family (no blue hex remains). */
+  --background: #FAF8F3;
+  --foreground: #132238;
   --surface: #ffffff;
-  --hero: #f0f2e9;
-  --muted-surface: #f0f3ee;
-  --muted: #53655e;
-  --subtle: #5c6e65;
-  --line: #d4ddd5;
-  --line-strong: #c7d7cd;
-  --accent: #08694f;
-  --accent-strong: #07583f;
-  --accent-soft: #dff1e7;
-  --brand-deep: #082f2b;
-  --brand-navy: #0d2530;
-  --brand-forest: #0e5a47;
-  --gold: #d7a93a;
-  --gold-soft: #f4e7c3;
-  --cream: #f7f2e8;
-  --primary: #1d4ed8;
-  --primary-deep: #163a5f;
-  --primary-ink: #0b1f33;
-  --primary-soft: #e3ebf7;
-  --primary-text: #1d4ed8;
+  --surface-raised: #ffffff;
+  --hero: #F0EBE1;
+  --muted-surface: #F0EBE1;
+  --muted: #4E5D62;
+  --subtle: #55636A;
+  --line: #DCD5C5;
+  --line-strong: #C6BCA4;
+  --brand: #075E57;
+  --brand-hover: #054A45;
+  --brand-soft: #DDEDE8;
+  --accent: #087F75;
+  --accent-strong: #075E57;
+  --accent-soft: #DDEDE8;
+  --brand-deep: #132238;
+  --brand-navy: #132238;
+  --brand-forest: #075E57;
+  --gold: #B88A36;
+  --gold-soft: #F5EAD0;
+  --cream: #FAF8F3;
+  --verified: #0B6B4F;
+  --verified-soft: #E4F3EA;
+  --warning: #7A5200;
+  --warning-soft: #FDF3E0;
+  --danger: #B3261E;
+  --danger-soft: #FCEBE9;
+  --primary: #075E57;
+  --primary-deep: #054A45;
+  --primary-ink: #132238;
+  --primary-soft: #DDEDE8;
+  --primary-text: #075E57;
 }
 
 @theme inline {
@@ -35,38 +48,56 @@
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --background: #0d1712;
-    --foreground: #edf6f0;
-    --surface: #13221a;
-    --hero: #101e17;
-    --muted-surface: #192a21;
-    --muted: #afc0b6;
-    --subtle: #8fa097;
-    --line: #263a2f;
-    --line-strong: #385144;
-    --accent: #15815e;
-    --accent-strong: #87d9b8;
-    --accent-soft: #183d2f;
+    --background: #0E1A26;
+    --foreground: #F5F1E8;
+    --surface: #16283A;
+    --surface-raised: #1B3049;
+    --hero: #13222F;
+    --muted-surface: #1A2C3E;
+    --muted: #C2CFD8;
+    --subtle: #A9B8C2;
+    --line: #2A3E55;
+    --line-strong: #3B4F68;
+    --brand: #2FB3A6;
+    --brand-hover: #35BFB2;
+    --brand-soft: #143B3A;
+    --accent: #2FB3A6;
+    --accent-strong: #7FD6A8;
+    --accent-soft: #143B3A;
+    --brand-deep: #0E1A26;
+    --brand-navy: #0E1A26;
+    --brand-forest: #2FB3A6;
+    --gold: #D3A85C;
+    --gold-soft: #2A230F;
+    --cream: #F5F1E8;
+    --verified: #7FD6A8;
+    --verified-soft: #12291F;
+    --warning: #F0C36D;
+    --warning-soft: #2A230F;
+    --danger: #F2A49E;
+    --danger-soft: #33110F;
   }
 
   .status-urgent {
-    background: #3d2f0a;
-    color: #ffd98a;
+    background: #2A230F;
+    color: #F0C36D;
   }
 
   :root {
-    --primary-text: #8fb0f5;
-    --primary-ink: #eef1f4;
-    --primary-soft: #1b2c47;
+    --primary: #2FB3A6;
+    --primary-deep: #35BFB2;
+    --primary-ink: #F5F1E8;
+    --primary-soft: #143B3A;
+    --primary-text: #2FB3A6;
   }
   .triage-action {
     background: var(--primary-soft);
-    color: #aec6f8;
+    color: var(--primary-text);
     border-color: var(--primary-text);
   }
   .status-active {
     background: var(--primary-soft);
-    color: #aec6f8;
+    color: var(--primary-text);
   }
 }
 
@@ -196,8 +227,8 @@ button:disabled {
   font-weight: 500;
 }
 .trust-badge-verified {
-  background: var(--accent-soft);
-  color: var(--accent-strong);
+  background: var(--verified-soft, #E4F3EA);
+  color: var(--verified, #0B6B4F);
 }
 /* Semantic triage badges: navy/gold for high value, blue for actionable,
    slate for ambiguous, amber for warnings. Green never marks triage. */
@@ -286,12 +317,13 @@ nav[aria-label="Staff"] .nav-link[aria-current="page"] {
     border-color 0.15s;
 }
 .button-primary {
-  background: var(--primary);
+  /* Fixed deep-teal brand button: white text holds 7.64 in both modes. */
+  background: #075E57;
   color: #fff;
   border: 1px solid transparent;
 }
 .button-primary:hover {
-  background: var(--primary-deep);
+  background: #054A45;
 }
 .button-secondary {
   background: var(--surface);
@@ -300,7 +332,7 @@ nav[aria-label="Staff"] .nav-link[aria-current="page"] {
 }
 .button-secondary:hover {
   background: var(--muted-surface);
-  border-color: var(--primary);
+  border-color: var(--brand);
 }
 .brand {
   display: inline-flex;
@@ -317,9 +349,9 @@ nav[aria-label="Staff"] .nav-link[aria-current="page"] {
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 5px;
+  border-radius: 6px;
   color: white;
-  background: var(--brand-navy);
+  background: #075E57;
   box-shadow: inset 0 -3px var(--gold);
 }
 .nav-link {
@@ -363,7 +395,7 @@ nav[aria-label="Staff"] .nav-link[aria-current="page"] {
   width: 100%;
 }
 .hero-title {
-  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-size: clamp(2.25rem, 4.5vw, 3.5rem);
   font-weight: 600;
   letter-spacing: -0.045em;
   line-height: 1.12;
@@ -590,6 +622,11 @@ nav[aria-label="Staff"] .nav-link[aria-current="page"] {
   }
   .opportunity-card-cover {
     margin: -20px -20px 0;
+  }
+  /* Civic Hybrid P0: covers are desktop-only until real photography
+     arrives; cards stay information-first on mobile. */
+  .opportunity-card-cover {
+    display: none;
   }
   .hero-title {
     max-width: 420px;

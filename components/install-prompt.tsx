@@ -126,7 +126,7 @@ export function InstallPrompt() {
       <button
         type="button"
         onClick={install}
-        className="inline-flex min-h-11 items-center justify-center rounded-md bg-[var(--accent)] px-5 text-sm font-semibold text-white transition hover:bg-[#07543f]"
+        className="inline-flex min-h-11 items-center justify-center rounded-md bg-[var(--brand)] px-5 text-sm font-semibold text-white transition hover:bg-[var(--brand-hover)]"
       >
         Install
       </button>

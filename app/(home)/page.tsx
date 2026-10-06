@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { UiIcon } from "@/components/ui-icon";
 import { EmptyState } from "@/components/empty-state";
 import {
@@ -105,22 +104,36 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <section className={`border-b border-[var(--line)] ${isFiltered ? "bg-[var(--hero)]" : "hero-dark"}`}>
         <div className={`page-shell ${isFiltered ? "py-5" : "py-8 sm:py-12"}`}>
           <p className={isFiltered ? "eyebrow" : "eyebrow-gold"}>For Tanzania’s emerging talent</p>
-          <h1 className={isFiltered ? "mt-2 text-3xl font-semibold tracking-tight" : "hero-title font-display mt-4 text-[#f7f2e8]"}>
-            {isFiltered ? "Find your next opportunity" : <>Discover Opportunities.<br /><span className="text-[var(--gold)]">Build Your Future.</span></>}
+          <h1 className={isFiltered ? "mt-2 text-3xl font-semibold tracking-tight" : "hero-title font-display mt-4 max-w-3xl text-[#f7f2e8]"}>
+            {isFiltered ? "Find your next opportunity" : "Find opportunities worth acting on."}
           </h1>
           {!isFiltered ? (
-            <div className="mt-5 grid gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(460px,1.08fr)] lg:items-center">
+            <div className="mt-5 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
               <div className="min-w-0">
                 <p className="max-w-2xl text-base leading-7 hero-muted">
-                  Scholarships, internships, fellowships, competitions and more —
-                  in Tanzania, across Africa and globally. Each listing carries
-                  its source, deadline, and access evidence, so you can see
-                  what fits before you apply.
+                  Human-reviewed opportunities with eligibility evidence,
+                  deadlines and tools that help you move from discovery to
+                  application.
                 </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Link
+                    href="/#opportunities"
+                    className="inline-flex min-h-12 items-center justify-center rounded-md bg-[var(--gold)] px-6 text-sm font-bold text-[#082f2b] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#082f2b]"
+                  >
+                    Explore opportunities
+                  </Link>
+                  <Link
+                    href="/for-you"
+                    className="inline-flex min-h-12 items-center justify-center rounded-md border border-white/25 px-6 text-sm font-semibold text-[#f7f2e8] transition hover:border-[var(--gold)] hover:text-[var(--gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+                  >
+                    Get recommendations
+                  </Link>
+                </div>
                 <form
                   action="/#opportunities"
                   method="get"
                   role="search"
+                  aria-label="Search opportunities"
                   className="mt-5 flex w-full max-w-xl gap-2"
                 >
                   <label htmlFor="hero-search" className="sr-only">
@@ -132,12 +145,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     name="q"
                     defaultValue={q ?? ""}
                     maxLength={120}
-                    placeholder="Try “AI”, “fellowship”, “internship”…"
+                    placeholder="Try “fellowship”, “internship”, “grant”…"
                     className="min-h-12 w-full min-w-0 rounded-md border border-white/25 bg-white/10 px-4 text-base text-[#f7f2e8] outline-none transition placeholder:text-[#c9d4cb]/70 focus:border-[var(--gold)] focus:ring-2 focus:ring-[var(--gold)]/40"
                   />
                   <button
                     type="submit"
-                    className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-md bg-[var(--gold)] px-5 text-sm font-bold text-[#082f2b] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#082f2b]"
+                    className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-md border border-white/25 px-5 text-sm font-semibold text-[#f7f2e8] transition hover:border-[var(--gold)] hover:text-[var(--gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#082f2b]"
                   >
                     Search
                   </button>
@@ -161,39 +174,33 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <li className="inline-flex items-center gap-1.5"><UiIcon name="source" width="14" height="14" /> Source-linked</li>
                   <li className="inline-flex items-center gap-1.5"><UiIcon name="clock" width="14" height="14" /> Deadline-tracked</li>
                 </ul>
-                <InstallPrompt />
-                <div className="editorial-hero-mobile mt-6 lg:hidden">
-                  <Image
-                    src="/images/editorial/hero-students.webp"
-                    alt="Tanzanian university students collaborating in an innovation studio"
-                    fill
-                    preload
-                    sizes="100vw"
-                    className="object-cover"
-                  />
-                  <span className="editorial-photo-note">Tanzanian talent, pictured editorially</span>
-                </div>
               </div>
-              <div className="editorial-hero-media hidden lg:block">
-                <Image
-                  src="/images/editorial/hero-students.webp"
-                  alt="Tanzanian university students collaborating in an innovation studio"
-                  fill
-                  preload
-                  sizes="(max-width: 1200px) 46vw, 620px"
-                  className="object-cover"
-                />
-                <div className="editorial-hero-wash" aria-hidden="true" />
-                <div className="editorial-hero-card">
-                  <p className="eyebrow-gold">Built around action</p>
-                  <p className="mt-2 text-sm leading-6 text-[#f7f2e8]">
-                    From a verified call to a confident application — with the
-                    source, deadline and access evidence kept in view.
-                  </p>
-                  <a href="#trust-heading" className="mt-3 inline-flex text-sm font-semibold text-[var(--gold)] underline underline-offset-4">
-                    How evidence works
-                  </a>
-                </div>
+              <div
+                className="rounded-md border border-white/15 bg-white/5 p-6 sm:p-7"
+                aria-label="What every listing carries"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--gold)]">Every listing carries</p>
+                <ul className="mt-4 space-y-4">
+                  {[
+                    { icon: "source", title: "Source evidence", body: "The authoritative source stays attached to every record." },
+                    { icon: "clock", title: "Structured deadlines", body: "Closing dates tracked; unknowns stated as unknown." },
+                    { icon: "globe", title: "Tanzania access checked", body: "Eligibility evidence where it exists — never inferred." },
+                    { icon: "shield", title: "Human publication", body: "Nothing goes public without human review. AI never decides eligibility." },
+                  ].map((row) => (
+                    <li key={row.title} className="flex items-start gap-3">
+                      <span aria-hidden="true" className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-md bg-white/10 text-[var(--gold)]">
+                        <UiIcon name={row.icon as "source" | "clock" | "globe" | "shield"} width="18" height="18" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-[#f7f2e8]">{row.title}</span>
+                        <span className="mt-0.5 block text-sm leading-6 hero-muted">{row.body}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <a href="#trust-heading" className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--gold)] underline underline-offset-4">
+                  How evidence works →
+                </a>
               </div>
             </div>
           ) : null}
@@ -418,12 +425,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <h2 id="how-heading" className="font-display mt-3 max-w-2xl text-2xl font-semibold sm:text-3xl">
             More than a feed — a path from discovery to application.
           </h2>
-          <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
             {[
               { n: "01", title: "Discover", body: "Find opportunities from Tanzania, Africa and globally in one place." },
-              { n: "02", title: "Understand", body: "See deadline, source, access evidence — and what is still unknown." },
-              { n: "03", title: "Prioritize", body: "Use your profile and Opportunity Intelligence to see relevance." },
-              { n: "04", title: "Act", body: "Save, mark Interested / Applying / Applied, then apply at the source." },
+              { n: "02", title: "Verify", body: "Check the source, deadline and access evidence — and what is still unknown." },
+              { n: "03", title: "Prioritize", body: "Order the shelf with your profile and plain reasons per suggestion." },
+              { n: "04", title: "Track", body: "Save, then mark Interested, Applying or Applied as you progress." },
+              { n: "05", title: "Apply", body: "Submit at the authoritative source. The platform never applies for you." },
             ].map((step) => (
               <li key={step.n} className="border-t-2 border-[var(--gold)] pt-4">
                 <p className="font-display text-3xl font-semibold text-[var(--accent-strong)]">{step.n}</p>
@@ -494,7 +502,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           >
             More than another opportunity feed.
           </h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <h3 className="flex items-center gap-2 font-semibold"><UiIcon name="source" width="18" height="18" /> Source evidence</h3>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
@@ -518,7 +526,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 another link. Use For You to prioritize with an optional
                 profile — these are your private notes.
               </p>
-              <Link href="/for-you" className="nav-link mt-2 -ml-3 underline underline-offset-4">Open For You →</Link>
+              <Link href="/for-you" className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--brand)] underline underline-offset-4">Open For You →</Link>
+            </div>
+            <div>
+              <h3 className="flex items-center gap-2 font-semibold"><UiIcon name="shield" width="18" height="18" /> Assistance, not authority</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                Explanations help you read verified facts faster. AI never
+                decides eligibility, deadlines or trust — the evidence does.
+              </p>
             </div>
           </div>
         </div>
@@ -561,6 +576,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
         </div>
       </section>
+      <div className="page-shell pb-10">
+        <InstallPrompt />
+      </div>
     </main>
   );
 }

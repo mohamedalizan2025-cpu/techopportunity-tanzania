@@ -23,12 +23,19 @@ export function OpportunityCard({
   returnHref,
   isSaved = false,
   isAuthenticated = false,
+  showCover = false,
 }: {
   opportunity: Opportunity;
   now?: Date;
   returnHref?: string;
   isSaved?: boolean;
   isAuthenticated?: boolean;
+  /**
+   * Civic Hybrid P0: cards are information-first and image-free by
+   * default. A cover renders only when a caller explicitly passes a
+   * real, provenanced asset path via `showCover` in a future milestone.
+   */
+  showCover?: boolean;
 }) {
   const deadline = formatDeadlinePresentation(opportunity.deadline, now);
   const place = formatCardLocation(opportunity.location);
@@ -39,96 +46,84 @@ export function OpportunityCard({
 
   return (
     <article className="opportunity-card group">
-      <div className="opportunity-card-cover" aria-hidden="true">
-        <OpportunityCover opportunity={opportunity} />
-        <span className={`opportunity-cover-status status-${deadline.state}`}>
-          <UiIcon name="clock" width="14" height="14" />
-          {deadline.label}
-        </span>
-      </div>
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-2">
-        <span className="flex flex-wrap items-center gap-2">
-          <span className="pt-1 text-xs font-semibold uppercase tracking-wider text-[var(--primary-text)]">
-            {categoryLabel(opportunity.category)}
-          </span>
-          {geography ? (
-            <span className="pt-1 text-xs font-medium text-[var(--muted)]">
-              · {geography === "national" ? "Tanzania" : "International"}
-            </span>
-          ) : null}
-        </span>
-        {badge ? (
-          <span className="trust-badge trust-badge-verified">
-            <UiIcon name="shield" width="14" height="14" /> {badge.label}
+      {showCover ? (
+        <div className="opportunity-card-cover" aria-hidden="true">
+          <OpportunityCover opportunity={opportunity} />
+        </div>
+      ) : null}
+      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
+        {categoryLabel(opportunity.category)}
+        {geography ? (
+          <span className="font-medium normal-case tracking-normal text-[var(--muted)]">
+            {" "}· {geography === "national" ? "Tanzania" : "International"}
           </span>
         ) : null}
-      </div>
-      <div className="mt-4 flex-1">
-        <h3 className="text-xl font-semibold leading-7 tracking-tight text-[var(--primary-ink)]">
-          <Link
-            href={opportunityHref(opportunity.slug, returnHref)}
-            prefetch={false}
-            className="after:absolute after:inset-0 after:rounded-md hover:text-[var(--primary-text)]"
-          >
-            {opportunity.title}
-          </Link>
-        </h3>
-        <p className="mt-2 text-sm text-[var(--muted)]">
-          {opportunity.organization?.trim() || sourceHostname(opportunity.url) || sourcePresentation(opportunity)}
-        </p>
-        <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-          {opportunityCardExcerpt(opportunity.description)}
-        </p>
-      </div>
-      <dl className="mt-5 grid gap-2 text-sm text-[var(--muted)]">
-        <div>
-          <dt className="sr-only">Location</dt>
-          <dd className="flex items-start gap-2">
+      </p>
+      <h3 className="mt-2 text-lg font-semibold leading-6 tracking-tight text-[var(--foreground)]">
+        <Link
+          href={opportunityHref(opportunity.slug, returnHref)}
+          prefetch={false}
+          className="after:absolute after:inset-0 after:rounded-md hover:text-[var(--brand)]"
+        >
+          {opportunity.title}
+        </Link>
+      </h3>
+      <p className="mt-1.5 text-[0.8125rem] text-[var(--muted)]">
+        {opportunity.organization?.trim() || sourceHostname(opportunity.url) || sourcePresentation(opportunity)}
+      </p>
+      <p className="mt-2.5 text-sm leading-6 text-[var(--muted)]">
+        {opportunityCardExcerpt(opportunity.description)}
+      </p>
+      <ul className="mt-4 space-y-2 border-t border-[var(--line)] pt-3 text-[0.8125rem] leading-5 text-[var(--muted)]">
+        <li className="flex items-start gap-2">
+          <UiIcon
+            name="pin"
+            width="16"
+            height="16"
+            className="mt-0.5 shrink-0"
+            aria-hidden="true"
+          />
+          <span>{place ?? "Location not specified"}</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <UiIcon
+            name="clock"
+            width="16"
+            height="16"
+            className="mt-0.5 shrink-0"
+            aria-hidden="true"
+          />
+          <span>
+            <span className={`status-label status-${deadline.state} mr-2`}>{deadline.label}</span>
+            {deadline.dateLabel ? deadline.dateLabel : null}
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          {badge ? (
             <UiIcon
-              name="pin"
+              name="shield"
+              width="16"
+              height="16"
+              className="mt-0.5 shrink-0 text-[var(--verified)]"
+              aria-hidden="true"
+            />
+          ) : (
+            <UiIcon
+              name="info"
               width="16"
               height="16"
               className="mt-0.5 shrink-0"
+              aria-hidden="true"
             />
-            <span>{place ?? "Location not specified"}</span>
-          </dd>
-        </div>
-        {deadline.dateLabel ? (
-          <div>
-            <dt className="sr-only">Deadline date</dt>
-            <dd className="flex items-start gap-2">
-              <UiIcon
-                name="clock"
-                width="16"
-                height="16"
-                className="mt-0.5 shrink-0"
-              />
-              <span>{deadline.dateLabel}</span>
-            </dd>
-          </div>
-        ) : null}
-      </dl>
-      <div className="mt-4 border-t border-[var(--line)] pt-3">
-        {!badge ? (
-          <p className="text-xs font-medium text-[var(--muted)]">
-            Check source requirements
-          </p>
-        ) : null}
-        <p className={`${badge ? "mt-0" : "mt-2"} flex items-start gap-2 text-xs leading-5 text-[var(--muted)]`}>
-        <UiIcon
-          name="info"
-          width="14"
-          height="14"
-          className="mt-0.5 shrink-0"
-        />
-        <span>{eligibility.label}</span>
-      </p>
-      </div>
+          )}
+          <span>{badge ? `${badge.label} · ` : ""}{eligibility.label}</span>
+        </li>
+      </ul>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <span
             aria-hidden="true"
-            className="flex items-center gap-2 text-sm font-semibold text-[var(--primary-text)]"
+            className="flex items-center gap-2 text-sm font-semibold text-[var(--brand)]"
           >
             View details <UiIcon name="arrow" width="16" height="16" />
           </span>
