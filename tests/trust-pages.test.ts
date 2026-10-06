@@ -87,9 +87,12 @@ test("privacy claims no analytics and no cookie banner", () => {
   assert.doesNotMatch(text, /we use cookies to (track|personalize ads|measure)/i);
 });
 
-test("privacy describes deletion honestly (no fake self-service)", () => {
+test("privacy describes deletion honestly (self-service since P0C)", () => {
   const text = flat(privacy);
-  assert.ok(text.includes("self-service account deletion is being built"));
+  assert.ok(text.includes("Delete your whole account yourself on the Profile page"));
+  assert.ok(text.includes("identity removed"));
+  assert.ok(text.includes("cannot be purged instantly"));
+  assert.doesNotMatch(text, /self-service account deletion is being built/i);
   assert.doesNotMatch(text, /delete your account (anytime|instantly|in settings)/i);
 });
 

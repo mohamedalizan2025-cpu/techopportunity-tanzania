@@ -165,7 +165,7 @@ export interface StaffListingReport {
   details: string;
   status: string;
   createdAt: string;
-  reporterUserId: string;
+  reporterUserId: string | null;
   reviewedBy: string | null;
   reviewedAt: string | null;
   resolutionNote: string | null;

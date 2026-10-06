@@ -693,6 +693,39 @@ review → owner prod decision → user pilot → provider revenue pilot.
   P0B marking deferred to branch convergence (audit file lives on
   local main). Pilot stays paused.
 
+## Pre-pilot P0C 2026-10-06 (branch `pre-pilot-trust-readiness`; main/production untouched)
+
+- SHIPPED on branch: migration `0024_account_deletion.sql`
+  (sha256 `D85F639E…D4351930`; reports reporter SET NULL + nullable;
+  parameterless `request_own_account_deletion()` SECURITY DEFINER,
+  `search_path=public`, deletes exactly `auth.uid()`, fail-closed;
+  closed-first grants, authenticated execute only) + 0021 contract
+  lines + `deleteOwnAccountAction` (session-only target, no UUID
+  field, no service-role/admin API, signOut + `/login?deleted=1`)
+  + Profile Delete-account section (type DELETE, removals listed,
+  WhatsApp alternative) + login deleted banner + staff null-reporter
+  tolerance + privacy self-service wording + 12-test suite.
+- STAGING APPLIED (target proved `pumzofcwfjqswkiwfqty`, production
+  never connected): function present, SECURITY DEFINER, reporter
+  nullable + SET NULL, execute = authenticated only. Rolled-back
+  live cascade proof with synthetic victim + bystander (bcrypt,
+  profile/saved/activity/prefs/events/report each): victim identity
+  + all 5 private tables gone, victim report anonymized (not
+  deleted), bystander fully intact incl. attributed report,
+  opportunities unchanged — 16/16 checks true, zero residue
+  (counts identical before/after). No synthetic rows remain.
+- VERIFIED: new suite 12/12, full `npm test` / `verify` / `build`
+  green, runtime audit 0. Service-role stays out of app code
+  (boundary gate green).
+- OWNER-EXECUTED REMAINING on Preview: disposable-account
+  click-through (Profile → type DELETE → login banner → re-login
+  impossible) + one report-anonymization spot check. Owner staging
+  account never touched by this session.
+- P0C COMPLETE (code + staging proof). Remaining P0: incident
+  runbook, final pre-pilot gate. Audit-doc P0C marking deferred to
+  branch convergence (audit file lives on local main). Pilot stays
+  paused.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

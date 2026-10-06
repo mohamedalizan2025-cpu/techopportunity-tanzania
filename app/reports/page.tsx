@@ -61,7 +61,7 @@ function Group({
             </p>
             <p className="mt-1 text-xs text-[var(--muted)]">
               Listing status: {entry.opportunity ? entry.opportunity.status : "unknown"}
-              {" · "}Reported {entry.createdAt} by reporter {entry.reporterUserId.slice(0, 8)}…
+              {" · "}Reported {entry.createdAt}{entry.reporterUserId ? ` by reporter ${entry.reporterUserId.slice(0, 8)}…` : " by a removed account (identity anonymized)"}
               {entry.reviewedAt ? ` · Last triaged ${entry.reviewedAt}` : ""}
             </p>
             <p className="mt-2 text-sm leading-6 text-[var(--foreground)]">

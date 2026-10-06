@@ -14,6 +14,7 @@ interface LoginPageProps {
   searchParams: Promise<{
     next?: string | string[];
     authError?: string | string[];
+    deleted?: string | string[];
   }>;
 }
 
@@ -24,6 +25,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const authError = Array.isArray(params.authError)
     ? params.authError[0]
     : params.authError;
+  const rawDeleted = Array.isArray(params.deleted) ? params.deleted[0] : params.deleted;
+  const justDeleted = rawDeleted === "1";
   const user = await getAuthenticatedUser();
   if (user) {
     redirect(
@@ -99,6 +102,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               >
                 Resend confirmation email
               </Link>
+            </div>
+          ) : null}
+          {justDeleted ? (
+            <div
+              role="status"
+              className="mb-4 rounded-md border border-[var(--line-strong)] bg-[var(--accent-soft)] p-3 text-sm text-[var(--accent-strong)]"
+            >
+              <p>
+                Your account has been deleted. Your profile, saved items,
+                and activity are gone; reports you sent stay for moderation
+                with your identity removed.
+              </p>
             </div>
           ) : null}
           <LoginForm nextPath={nextPath} />

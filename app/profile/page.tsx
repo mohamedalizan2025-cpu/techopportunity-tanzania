@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { DeleteAccountSection } from "@/components/delete-account-section";
 import { ProfileForm } from "@/components/profile-form";
 import { getTalentProfile } from "@/lib/data/talent-profile";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
@@ -51,7 +52,10 @@ export default async function ProfilePage() {
             Progressive profile
           </h2>
           {available ? (
-            <ProfileForm profile={profile} />
+            <>
+              <ProfileForm profile={profile} />
+              <DeleteAccountSection />
+            </>
           ) : (
             <div
               role="alert"

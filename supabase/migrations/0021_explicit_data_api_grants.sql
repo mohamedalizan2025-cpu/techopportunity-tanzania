@@ -65,6 +65,10 @@ revoke all on table public.provider_campaigns
 -- line keeps the contract complete on databases where 0021 already ran.
 revoke all on table public.listing_reports
   from public, anon, authenticated, service_role;
+-- 0024 (self-service account deletion, pre-pilot P0C): the parameterless
+-- deletion function, closed-first here; live enforcement ships in 0024.
+revoke all on function public.request_own_account_deletion()
+  from public, anon, authenticated, service_role;
 
 -- Anonymous product surface. opportunity_sources SELECT is intentionally
 -- grantable but returns zero rows under RLS; public opportunity projections
@@ -96,6 +100,10 @@ grant select, insert, update, delete on table public.provider_campaigns to authe
 -- 0023: owner insert/select plus staff-gated update; no delete, no
 -- service-role caller (staff triage uses authenticated JWT + RLS).
 grant select, insert, update on table public.listing_reports to authenticated;
+-- 0024: authenticated users may invoke only their own deletion (the
+-- function deletes exactly auth.uid() and takes no parameters).
+grant execute on function public.request_own_account_deletion()
+  to authenticated;
 
 -- Operational service clients. There is deliberately no blanket service-role
 -- grant. DELETE/INSERT on opportunities is retained only for the existing

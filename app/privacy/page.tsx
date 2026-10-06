@@ -168,8 +168,11 @@ export default function PrivacyPage() {
             Your account data is kept while your account exists so the
             product keeps working. There are currently no fixed automatic
             deletion schedules beyond what you control below, and platform
-            backups follow the hosting providers&rsquo; own cycles. If fixed
-            retention periods are introduced later, this policy will say so.
+            backups follow the hosting providers&rsquo; own cycles, so
+            backup copies cannot be purged instantly on request. Anonymized
+            listing reports (content kept, reporter removed) are retained
+            for moderation and trust purposes. If fixed retention periods
+            are introduced later, this policy will say so.
           </p>
         </Section>
 
@@ -180,10 +183,16 @@ export default function PrivacyPage() {
             <li>Turn deadline reminders on or off.</li>
             <li>Sign out on any device to end the session.</li>
             <li>
-              Ask for anything else — a copy of your data, correction, or
-              deletion — through WhatsApp (see Contact below). Full
-              self-service account deletion is being built; until it ships,
-              deletion requests are handled manually on request.
+              Delete your whole account yourself on the Profile page
+              (Delete account, confirm by typing DELETE). This permanently
+              removes your profile, saved opportunities, application
+              activity, and reminder preferences, and signs you out.
+              Listing reports you sent stay for moderation with your
+              identity removed.
+            </li>
+            <li>
+              Ask for anything else — a copy of your data or a correction —
+              through WhatsApp (see Contact below).
             </li>
           </ul>
         </Section>
