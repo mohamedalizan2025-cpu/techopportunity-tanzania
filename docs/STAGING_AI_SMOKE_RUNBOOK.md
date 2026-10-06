@@ -317,3 +317,84 @@ private data, or bills:
 - Staging evidence attached (this filled runbook): YES / NO
 - Next: staging-evidence review → owner production-AI decision (separate
   gate; staging evidence informs but never auto-satisfies it).
+
+## M. Engineering-side validation record 2026-10-06 (staging branch only, no product code)
+
+Status: **ENGINEERING-SIDE COMPLETE — OWNER VISUAL CHECK REMAINING.**
+Browser §§B–K were NOT executed here (no browser tooling, Preview is
+Vercel-Authentication-gated). This section records only what was
+directly verified from the agent environment with existing tooling.
+It does not fill §§B–L and does not approve production.
+
+- [DIRECTLY VERIFIED] Starting staging SHA
+  `f944899b9644bcd5315c3e7612a093046cdc2f1e`; main
+  `22ad5c89d0c335f663dcc8ed33bf56b66d755378` untouched (no main
+  commit, no production env/config change).
+- [LIVE STAGING DATA] Pre-validation probe (read-only, staging ref
+  `pumzofcwfjqswkiwfqty` only): `smoke_rows=4`,
+  `canonical_references=4`, `non_smoke_rows=6`, `total=10`,
+  non-published smoke `0`. Slugs exactly the corpus in
+  [STAGING_AI_SMOKE_CORPUS.md](STAGING_AI_SMOKE_CORPUS.md).
+- [DIRECTLY VERIFIED + LIVE STAGING DATA] Real trust gate
+  `isAiSearchableOpportunity()` on live rows:
+  National `TRUE` (national, trusted),
+  International `TRUE` (international, trusted),
+  No-deadline `TRUE` (national, trusted),
+  Unknown-eligibility `FALSE` (reviewable, insight withheld = PASS).
+  Local gate proof `tests/staging-ai-smoke-corpus.test.ts` 6/6 green.
+- [LOCAL INTEGRATION] Real-provider smoke (existing service/validator,
+  complete synthetic profile, chain Gemini-primary/Groq-backup):
+  National `AI/gemini/fallback-NO/2017.4ms`,
+  International `AI/gemini/fallback-NO/1507.2ms`,
+  No-deadline `AI/gemini/fallback-NO/1193.3ms`;
+  all `hard=0`, all within 8s budget, no invented
+  eligibility/deadline/geography/requirements/documents, no completion,
+  no selection probability, evidence refs valid.
+  Mock paths: valid-AI, quota→`quota_exhausted`,
+  invalid→`invalid_response`, timeout→`timeout` (~52–57ms) — all
+  fail-closed honest, `hard=0`. Fixed-corpus contract simulation
+  16 cases `14 AI / 2 fallbacks / 0 hard / 80-soft` green.
+  Authority/deception failures `0`; privacy failures `0`
+  (allowlist only; goals never sent; identifiers redacted).
+- [LOCAL INTEGRATION] Unknown-eligibility guard PASS:
+  `searchable=false`; detail renders with honest unknown fallback;
+  `showOpportunityInsight=false` so no `#ai-opportunity-insight`
+  section/button; API route refuses with 409
+  (code truth `app/api/opportunity-insight/route.ts`).
+- [LOCAL INTEGRATION] Readiness planner PASS (deterministic insight):
+  Interested/Applying/Applied all render planning-only steps
+  (National 6, International 6, No-deadline 5);
+  never claims submission (`never submits on your behalf`);
+  no document called REQUIRED; unknown stays
+  `Check whether the official application requires …`;
+  deterministic activity state remains authoritative
+  (code truth `components/opportunity-insight.tsx`).
+- [LOCAL INTEGRATION + STATIC/STRUCTURAL] For You PASS (non-browser):
+  deterministic `rankForYou` first (complete profile 2 matches,
+  incomplete 0 honestly empty); AI only on explicit
+  `Why this fits you` click (no `useEffect`, no auto-fetch);
+  no fit percentage, no selection probability
+  (validator rejects `%`/score language).
+- [STATIC/STRUCTURAL, not browser proof] Responsive:
+  login, forgot-password, For You, opportunity detail,
+  Opportunity Insight, readiness planner all use fluid
+  `w-full/max-w/px-5/sm:px-8`, single-column mobile →
+  `sm:grid/sm:grid-cols-2`, `min-h-11` targets, `break-words/min-w-0`;
+  no fixed width above 390px observed in code.
+  Real 390px + desktop rendering still requires owner browser proof.
+- [DIRECTLY VERIFIED] Test gates at staging HEAD:
+  `npm test` PASS (exit 0), `npm run verify` PASS (exit 0),
+  `npm run build` PASS (exit 0).
+- [DIRECTLY VERIFIED + LIVE STAGING DATA] Cleanup (bounded,
+  staging-only, after validation): `delete … where slug like
+  'staging-smoke-%'` → `deleted=4`, `smoke_rows_after=0`,
+  `smoke_references_after=0`, `non_smoke_unchanged=true`
+  (6 rows, digest preserved). Production never connected;
+  production touched `NO`.
+- [OWNER VISUAL CHECK REMAINING] In the protected Preview with
+  synthetic users: B-1/B-2 login, C-1/C-2 For You,
+  D-1/D-2 briefs + D-3 withheld panel, E-1/E-2 planner,
+  F-1…F-4 chain/fallback/timeout, G-1 390px + G-2 desktop,
+  H-1 privacy, §I latency table, §J quota counts, §K rollback
+  rehearsal, §L sign-off. Then staging-behavior review →
+  owner production decision.

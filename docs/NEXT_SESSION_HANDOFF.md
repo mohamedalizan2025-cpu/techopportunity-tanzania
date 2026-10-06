@@ -485,6 +485,46 @@ review → owner prod decision → user pilot → provider revenue pilot.
   email arrives, link lands on `/reset-password`, update, fresh sign-in) →
   resend end-to-end → then the staging AI smoke runbook §§B–K.
 
+## Staging AI engineering validation 2026-10-06 (staging-only docs; main untouched; production OFF)
+
+- STARTING SHA: `f944899b9644bcd5315c3e7612a093046cdc2f1e` (`staging`);
+  `main` `22ad5c89d0c335f663dcc8ed33bf56b66d755378` never modified.
+  No product code changed; no trust/AI gate weakened; no unrelated code.
+  Staging target proved `pumzofcwfjqswkiwfqty` (0 prod refs);
+  production `jltuufukcwztugvojwjd` never connected; `.env.local`
+  (production-pointed) never loaded for staging DB work.
+- [LIVE STAGING DATA] Smoke corpus `staging-smoke-*` verified live then
+  cleaned: probe `smoke=4/canonical=4/non-smoke=6/total=10`,
+  trust via real `isAiSearchableOpportunity()` —
+  National TRUE (national/trusted), International TRUE
+  (international/trusted), No-deadline TRUE (national/trusted),
+  Unknown FALSE (reviewable/withheld = PASS); gate-proof test 6/6.
+  Cleanup bounded `slug like 'staging-smoke-%'` → `deleted=4`,
+  `smoke_after=0`, `refs_after=0`, `non_smoke_unchanged=true`.
+- [LOCAL INTEGRATION] AI: real chain on 3 positives —
+  National AI/gemini/2017.4ms, International AI/gemini/1507.2ms,
+  No-deadline AI/gemini/1193.3ms (`0` authority/deception, `0`
+  privacy, all <8s); mock valid-AI + quota/invalid/timeout fallbacks
+  all honest (`quota_exhausted`/`invalid_response`/`timeout`);
+  contract simulation 16 cases `0` hard / `80/80` soft.
+  Unknown guard PASS (detail valid, panel absent, API 409).
+  Planner PASS (Interested/Applying/Applied; never submits; unknown
+  stays `Check whether …`). For You PASS (deterministic first;
+  complete 2 / incomplete 0; explicit-request AI only; no %).
+- [STATIC/STRUCTURAL] Login, forgot-password, For You, detail,
+  Insight, planner: fluid mobile → `sm:` desktop, `min-h-11`,
+  no fixed >390px in code. Real-device rendering is owner work.
+- [DIRECTLY VERIFIED] `npm test` PASS, `npm run verify` PASS,
+  `npm run build` PASS (all exit 0 at staging HEAD).
+- `PRODUCTION_AI_ELIGIBLE_PENDING_OWNER_VISUAL_CHECK = YES`
+  (engineering-side only).
+- REMAINING (owner, tiny visual check in protected Preview):
+  B-1/B-2 login → C-1/C-2 For You → D-1/D-2 briefs + D-3 withheld →
+  E-1/E-2 planner → F-1…F-4 chain/fallback → G-1 390px + G-2 desktop →
+  H-1 privacy → §I latency + §J quota → §K rollback rehearsal →
+  §L sign-off → staging-behavior review → owner prod decision.
+  Production AI stays OFF until that separate owner decision.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is
