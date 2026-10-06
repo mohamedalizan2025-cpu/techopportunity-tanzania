@@ -595,6 +595,35 @@ review → owner prod decision → user pilot → provider revenue pilot.
   390px + desktop, light + dark. No visual blockers before user pilot
   beyond that eyeball pass.
 
+## Controlled Next.js security patch 2026-10-06 (staging-only deps; main untouched; production OFF)
+
+- SCOPE: `next` 16.3.2 → 16.3.8 (same major.minor, patch-only —
+  the exact release npm names as the fix) + `eslint-config-next`
+  matched 16.3.2 → 16.3.8 + lockfile transitives only. No app code,
+  no Civic Hybrid change, no behavior change.
+- REASON: pre-patch audit showed Next 16.0.0–16.3.5 under three
+  advisories (GHSA-p293-qw3h-jr36 Windows-hosted RCE,
+  GHSA-2xp9-vwfh-vxw4 image-optimization AVIF RCE, GHSA-vcvr-r3jv-pc5j
+  next/og ImageResponse RCE) — critical, runtime, directly applicable
+  (Windows-hosted + image optimization in use). 16.3.8 is the
+  smallest release clearing all three; no major/minor jump needed.
+- AUDIT: before full 10 (9 high + 1 critical) / runtime 3 (2 high +
+  1 critical: next, sharp libheif, source-map-js DoS). After:
+  runtime **0**; full 5 high remaining = one dev-only chain
+  (`braces` via micromatch ← fast-glob ← @next/eslint-plugin-next ←
+  eslint-config-next, lint toolchain only, never shipped) whose fix
+  demands breaking `eslint-config-next@14.2.35` — deferred, no
+  `--force` run. sharp → 0.35.5, source-map-js → 1.2.2 via lockfile.
+- GATES: `npm test` / `verify` / `build` green on the patched tree.
+  Patched production-build probe: `/`, `/login`,
+  `/forgot-password`, `/organizations`, manifest, robots → 200;
+  `/for-you`, `/activity`, `/profile` → 307 to login (auth intact).
+  PWA/manifest/robots/metadataBase/redirects untouched (no diff).
+- REMAINING RISK: dev-only braces chain (above); revisit only when a
+  non-breaking path exists. No runtime advisories open.
+- NEXT: owner Preview eyeball of the patched build, then this patch
+  is main-mergeable; production deploy stays a separate owner act.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is
