@@ -116,17 +116,25 @@ truthful application starts, no unfiled critical blocker. Provider pilot
 ([PROVIDER_PILOT_BRIEF_2026-10-02.md](PROVIDER_PILOT_BRIEF_2026-10-02.md))
 runs ONLY after the user pilot passes.
 
-## 7. Next milestone: Assisted Queue Approval (after convergence verify + owner QA)
+## 7. Next milestone: Assisted Queue Approval — IMPLEMENTED 2026-10-07
 
-Scope is fixed by the pre-pilot audit (§9, human gate preserved): a
-per-pending-row read-only "review readiness" checklist DERIVED from the
-existing deterministic gates, surfaced in the queue as "READY FOR REVIEW"
-only when every item passes; approve/reject/unpublish remain human buttons
-with verbatim reasons + audit rows. NOTHING auto-mutates corpus state — no
-auto-publish, auto-reject, quarantine state, or report-driven mutation; no
-new visibility state; no schema change without a separate owner gate.
-After it: Preview AI smoke §§B–K → privacy-section flip → owner prod-AI
-decision ([PRODUCTION_AI_DECISION_CHECKLIST.md](PRODUCTION_AI_DECISION_CHECKLIST.md))
+Implemented on this branch: `lib/review-readiness.ts` (pure, no DB) derives
+a per-pending-row checklist from the existing deterministic gates —
+source-usable (evidence link + attribution + contamination guard),
+not-duplicate (canonical-URL + cross-source title-core rules ported from
+`scripts/discovery/dedupe.ts`), deadline-clear (consistent truth or
+reviewable source value, never expired), evidence-complete (qualification
+evidence + meaningful description + country truth; eligibility `unknown`
+stays valid moderator input). States: READY FOR REVIEW / NEEDS EVIDENCE /
+POSSIBLE DUPLICATE / SOURCE PROBLEM / DEADLINE UNCLEAR, fixed priority in
+that gate order. Surfaced display-only: queue per-row badges + "Ready for
+review" summary count, and a review-page checklist (pending mode only).
+Queue order, filters, navigation, decision form, RPCs, RLS, and Discovery
+are untouched: approve/reject/unpublish remain human buttons with verbatim
+reasons + audit rows. No auto-mutation, no new visibility state, no schema
+change. Contract suite `tests/review-readiness.test.ts` 21/21, wired into
+`npm test`. After it: Preview AI smoke §§B–K → privacy-section flip → owner
+prod-AI decision ([PRODUCTION_AI_DECISION_CHECKLIST.md](PRODUCTION_AI_DECISION_CHECKLIST.md))
 → 5–10 user pilot → provider revenue pilot. Do NOT run the user pilot yet;
 do NOT activate AI.
 
@@ -166,17 +174,22 @@ not restart closed work.
 
 ## 11. Current HEAD / verification
 
-Convergence verified 2026-10-07 at merge `214e782` (base `33053c8` +
-`3d70190` + `054b0b8`, zero conflicts): full `npm run verify` green (all
-suites incl. ai-match 7/7 + ask 12/12, tsc clean, eslint clean, 43/43
-boundaries; docs-only plan gate, no production evidence required, no owner
-actions) and `npm run build` green (30 pages incl. `/ai-match`, `/ask`,
-`/api/ask`). `git diff --check` clean. Production AI OFF; production
-untouched (no commits to main, no deploys, no DB/env changes). Open items:
-owner visual checks (§8); staging UI smoke + failure simulation
-(owner-executed); audit-ledger rows confirmable only in a staff session;
-scheduler 24h-observation incident (separate track). No code risks
-outstanding. This reconciliation is committed on top of `214e782`.
+Assisted Queue Approval implemented 2026-10-07 on `pre-pilot-convergence`
+(base `6ea1328`; convergence itself verified green at merge `214e782`): `lib/review-readiness.ts` + `tests/review-readiness.test.ts`
+21/21 (wired into `npm test`) + queue badges/count + review-page checklist,
+all display-only. Full `npm run verify` green (all suites, tsc clean, eslint
+clean, 43/43 boundaries; plan selected build + moderation-auth gates, no
+production evidence satisfiable from here, no owner actions), explicit
+`test:review` 40/40 + `test:published-management` 53/53 green, `npm run build`
+green (30 pages incl. `/moderation`, `/moderation/[id]`). `git diff --check`
+clean. No migration, no RLS, no Discovery/Cloudflare, no env/secret change;
+production untouched (no commits to main, no deploys, no DB writes);
+production AI OFF. Deployed staff-queue access proof remains owner-side (a
+staff browser session is required to see the badges live). Open items: owner
+visual checks (§8); staging UI smoke + failure simulation (owner-executed);
+audit-ledger rows confirmable only in a staff session; scheduler
+24h-observation incident (separate track). No code risks outstanding. This
+milestone is committed on top of `6ea1328`.
 
 ## 12. Stop conditions
 

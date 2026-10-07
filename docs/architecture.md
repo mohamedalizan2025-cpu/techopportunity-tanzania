@@ -664,6 +664,13 @@ The durable invariants distilled from them — and authoritative today — are:
 - Auth/data ownership, reporting/deletion, and AI-as-replaceable-
   infrastructure per §§5a, 10d, 10e. AI production status lives in the AI doc
   and handoff — any "AI disabled / NO-GO" statement below is superseded.
+- Assisted Queue Approval (`lib/review-readiness.ts`): per-pending-row
+  read-only readiness derived from these same gates (source-usable,
+  not-duplicate, deadline-clear, evidence-complete → ready-for-review /
+  needs-evidence / possible-duplicate / source-problem / deadline-unclear),
+  surfaced as queue badges/counts and a review-page checklist. Hints only:
+  approve/reject/unpublish stay human buttons; no auto-mutation, no new
+  visibility state, no schema change.
 
 When a historical subsection below conflicts with §§5–11 or live code, §§5–11
 and the code win; correct the stale record instead of following it.

@@ -20,6 +20,11 @@ import {
   type TriageBucket,
 } from "@/lib/triage-bucket";
 import {
+  REVIEW_READINESS_LABEL,
+  REVIEW_READINESS_NOTE,
+  reviewReadinessOf,
+} from "@/lib/review-readiness";
+import {
   GEOGRAPHY_GROUPS,
   GEOGRAPHY_LABELS,
   SECTOR_LABELS,
@@ -140,6 +145,19 @@ export default async function ModerationPage({
   }));
   const bucketById = new Map(triageItems.map((item) => [item.id, item.bucket]));
 
+  // Assisted Queue Approval — deterministic review-readiness per row. Pure
+  // hints for review order only: nothing here approves, rejects, or
+  // reclassifies; queue order and decision logic are untouched.
+  const readinessById = new Map(
+    pending.map((opportunity) => [
+      opportunity.id,
+      reviewReadinessOf(opportunity, pending).state,
+    ])
+  );
+  const readyCount = [...readinessById.values()].filter(
+    (state) => state === "ready-for-review"
+  ).length;
+
   // Server-side VIEW filters (Milestone 11): triage bucket + source. They
   // only narrow what this page renders — pending status, ordering and
   // decision logic are untouched, and the filter is always clearable.
@@ -248,11 +266,12 @@ export default async function ModerationPage({
             {/* Operational summary — counts only, from the same pending list. */}
             <dl
               aria-label="Queue summary"
-              className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-5"
+              className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-6"
             >
               {(
                 [
                   ["Pending", pending.length, "Awaiting a decision."],
+                  ["Ready for review", readyCount, "All readiness checks pass — verify."],
                   ["High value", bucketCounts.get(2) ?? 0, "Scholarships, fellowships, grants, internships."],
                   ["Actionable", (bucketCounts.get(1) ?? 0), "Title reads like an open call — verify."],
                   ["Ambiguous", bucketCounts.get(7) ?? 0, "Needs closer reading."],
@@ -463,6 +482,7 @@ export default async function ModerationPage({
             <ul className="mt-4 flex flex-col gap-2">
               {paginatedVisible.map((opportunity) => {
                 const bucket = bucketById.get(opportunity.id);
+                const readiness = readinessById.get(opportunity.id);
                 return (
                   <li key={opportunity.id}>
                     <Link
@@ -474,6 +494,11 @@ export default async function ModerationPage({
                           <span className={triageBadgeClasses(bucket)}>
                             {triageBadgeLabel(bucket)}
                           </span>
+                          {readiness ? (
+                            <span className="rounded-full border border-dashed border-[var(--line)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--muted)]">
+                              {REVIEW_READINESS_LABEL[readiness]}
+                            </span>
+                          ) : null}
                           <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--subtle)]">
                             {categoryLabel(opportunity.category)}
                           </span>
@@ -525,7 +550,7 @@ export default async function ModerationPage({
             )}
             <p className="mt-4 text-xs text-[var(--muted)]">
               {TRIAGE_HEURISTIC_NOTE} Furniture lists only exact reviewed
-              site-furniture titles.
+              site-furniture titles. {REVIEW_READINESS_NOTE}
             </p>
           </>
         )}

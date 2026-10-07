@@ -10,6 +10,7 @@ import {
   getQueueNavigation,
   isQueueFilterEmpty,
   isValidOpportunityId,
+  listPendingOpportunities,
   listReviewCategoryOptions,
   parseQueueFilter,
   queueFilterQuery,
@@ -18,6 +19,11 @@ import { listOrganizationOptions } from "@/lib/data/opportunities";
 import { getPublishedOpportunityById } from "@/lib/data/published-management";
 import { formatLocationDisplay } from "@/lib/opportunity-presentation";
 import { TRIAGE_BUCKET_LABEL, triageBucketOf } from "@/lib/triage-bucket";
+import {
+  REVIEW_READINESS_LABEL,
+  REVIEW_READINESS_NOTE,
+  reviewReadinessOf,
+} from "@/lib/review-readiness";
 import { DecisionForm } from "../decision-form";
 import { StaffNav } from "@/components/staff-nav";
 
@@ -127,6 +133,13 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
   );
 
   const triageBucket = triageBucketOf(opportunity.category, opportunity.title);
+  // Assisted Queue Approval — per-row readiness checklist. Display-only:
+  // derived from stored evidence through the same deterministic gates, with
+  // the pending queue as duplicate context. Pending mode only; published
+  // re-review keeps its own evidence flow. Never a decision input.
+  const readiness = isPublishedReview
+    ? null
+    : reviewReadinessOf(opportunity, await listPendingOpportunities());
   const dateFormatter = new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "short",
@@ -202,6 +215,32 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
             </p>
           </details>
         </section>
+
+        {/* Review readiness — deterministic checklist, hints only. The
+            decision form aside remains the only path to any status change. */}
+        {readiness ? (
+          <section
+            aria-label="Review readiness"
+            className="mt-6 rounded-lg border border-dashed border-[var(--line)] bg-[var(--surface)] p-5"
+          >
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Review readiness · {REVIEW_READINESS_LABEL[readiness.state]}
+            </h2>
+            <ul className="mt-3 flex flex-col gap-2 text-sm">
+              {readiness.checks.map((check) => (
+                <li key={check.id} className="leading-6">
+                  <span className="font-medium text-[var(--foreground)]">
+                    {check.pass ? "Pass" : "Check"} — {check.label}:{" "}
+                  </span>
+                  <span className="text-[var(--muted)]">{check.detail}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-[var(--muted)]">
+              {REVIEW_READINESS_NOTE}
+            </p>
+          </section>
+        ) : null}
 
         {/* Source evidence — the moderator's verification anchor. */}
         <section
