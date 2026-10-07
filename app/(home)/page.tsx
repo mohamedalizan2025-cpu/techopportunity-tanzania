@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EditorialPhotograph } from "@/components/editorial-photograph";
 import { UiIcon } from "@/components/ui-icon";
 import { EmptyState } from "@/components/empty-state";
 import {
@@ -175,12 +176,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <li className="inline-flex items-center gap-1.5"><UiIcon name="clock" width="14" height="14" /> Deadline-tracked</li>
                 </ul>
               </div>
-              <div
-                className="rounded-md border border-white/15 bg-white/5 p-6 sm:p-7"
-                aria-label="What every listing carries"
-              >
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--gold)]">Every listing carries</p>
-                <ul className="mt-4 space-y-4">
+              <div className="min-w-0">
+                <EditorialPhotograph photo="hall" onDark eager />
+                <div className="mt-5 border-t border-white/15 pt-5" aria-label="What every listing carries">
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#f7f2e8]">Every listing carries</p>
+                <ul className="mt-4 grid gap-4 sm:grid-cols-2">
                   {[
                     { icon: "source", title: "Source evidence", body: "The authoritative source stays attached to every record." },
                     { icon: "clock", title: "Structured deadlines", body: "Closing dates tracked; unknowns stated as unknown." },
@@ -188,7 +188,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     { icon: "shield", title: "Human publication", body: "Nothing goes public without human review. AI never decides eligibility." },
                   ].map((row) => (
                     <li key={row.title} className="flex items-start gap-3">
-                      <span aria-hidden="true" className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-md bg-white/10 text-[var(--gold)]">
+                      <span aria-hidden="true" className="mt-0.5 shrink-0 text-[#c2cfd8]">
                         <UiIcon name={row.icon as "source" | "clock" | "globe" | "shield"} width="18" height="18" />
                       </span>
                       <span className="min-w-0">
@@ -198,9 +198,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     </li>
                   ))}
                 </ul>
-                <a href="#trust-heading" className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--gold)] underline underline-offset-4">
+                <a href="#trust-heading" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-[#f7f2e8] underline underline-offset-4">
                   How evidence works →
                 </a>
+                </div>
               </div>
             </div>
           ) : null}
@@ -248,6 +249,27 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 </li>
               ))}
             </ul>
+          </div>
+        </section>
+      ) : null}
+
+      {!isFiltered ? (
+        <section aria-labelledby="ai-entry-heading" className="border-b border-[var(--line)] bg-[var(--brand-soft)]">
+          <div className="page-shell grid gap-5 py-7 sm:py-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+            <div>
+              <p className="eyebrow">AI assistance, verified facts first</p>
+              <h2 id="ai-entry-heading" className="font-display mt-2 text-2xl font-semibold">
+                Find your best verified matches.
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+                Add your profile for explained matches, or ask about opportunities.
+                AI never decides eligibility. Explore stays open to everyone.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/for-you" className="button-primary">Try AI Match</Link>
+              <Link href="/ask" className="button-secondary">Ask Tech Opportunity</Link>
+            </div>
           </div>
         </section>
       ) : null}
@@ -535,33 +557,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 decides eligibility, deadlines or trust — the evidence does.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-      <section
-        aria-labelledby="ai-entry-heading"
-        className="border-t border-[var(--line)] bg-[var(--surface)]"
-      >
-        <div className="page-shell py-10 sm:py-14">
-          <p className="eyebrow">AI assistance, verified facts first</p>
-          <h2
-            id="ai-entry-heading"
-            className="font-display mt-3 max-w-2xl text-2xl font-semibold sm:text-3xl"
-          >
-            Find your best verified matches.
-          </h2>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--muted)]">
-            Complete your profile and let AI explain which verified
-            opportunities fit you — or ask about deadlines, access, and
-            how the platform works. AI never decides eligibility.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/for-you" className="button-primary">
-              Try AI Match
-            </Link>
-            <Link href="/ask" className="button-secondary">
-              Ask Tech Opportunity
-            </Link>
           </div>
         </div>
       </section>

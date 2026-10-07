@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { UiIcon } from "@/components/ui-icon";
+import { EditorialPhotograph } from "@/components/editorial-photograph";
 
 export const metadata: Metadata = {
   title: "For Organizations | Tech Opportunity",
@@ -110,10 +111,19 @@ export default function OrganizationsPage() {
 
       <section aria-labelledby="institutions-heading" className="border-b border-[var(--line)] bg-[var(--surface)]">
         <div className="page-shell py-10 sm:py-14">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+          <div>
           <p className="eyebrow">For universities &amp; hubs</p>
           <h2 id="institutions-heading" className="font-display mt-3 text-2xl font-semibold sm:text-3xl">
             One trusted discovery workflow for your community.
           </h2>
+          <p className="mt-4 max-w-xl text-base leading-7 text-[var(--muted)]">
+            Help your community move from discovering a call to checking its
+            evidence and taking their own next step.
+          </p>
+          </div>
+          <EditorialPhotograph photo="campus" />
+          </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
               { icon: "source" as const, title: "Curated opportunities", body: "Calls relevant to your students, filtered for evidence and access — not an unfiltered feed." },

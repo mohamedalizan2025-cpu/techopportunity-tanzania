@@ -22,9 +22,9 @@ export default async function AskPage() {
       <section className="border-b border-[var(--line)] bg-[var(--hero)]">
         <div className="mx-auto w-full max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Ask Tech Opportunity
+            Grounded answers
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-4xl">
+          <h1 className="font-display mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-4xl">
             Ask Tech Opportunity
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">

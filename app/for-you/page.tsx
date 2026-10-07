@@ -56,7 +56,7 @@ function MatchingProfileSummary({ input }: { input: MatchingInput }) {
         Your matching profile
       </span>
       {signals.map((signal) => (
-        <span key={signal} className="trust-badge trust-badge-verified">
+        <span key={signal} className="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]">
           {signal}
         </span>
       ))}
@@ -85,20 +85,6 @@ function MatchList({
     <ul className="mt-8 grid gap-4 sm:grid-cols-2">
       {entries.map(({ opportunity, reasons }) => (
         <li key={opportunity.id} className="min-w-0">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-strong)]">
-              <UiIcon name="check" width="14" height="14" />
-              Why this fits you
-            </span>
-            {reasons.map((reason) => (
-              <span
-                key={reason}
-                className="trust-badge trust-badge-verified"
-              >
-                {reason}
-              </span>
-            ))}
-          </div>
           <OpportunityCard
             opportunity={opportunity}
             now={now}
@@ -106,6 +92,20 @@ function MatchList({
             isSaved={savedIds.has(opportunity.id)}
             isAuthenticated
           />
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--muted)]">
+              <UiIcon name="user" width="14" height="14" />
+              Why this fits you
+            </span>
+            {reasons.map((reason) => (
+              <span
+                key={reason}
+                className="rounded-md bg-[var(--muted-surface)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]"
+              >
+                {reason}
+              </span>
+            ))}
+          </div>
           {isAiSearchableOpportunity(opportunity) ? (
             <ForYouExplanation slug={opportunity.slug} title={opportunity.title} />
           ) : null}
@@ -159,9 +159,9 @@ export default async function ForYouPage({
       <section className="border-b border-[var(--line)] bg-[var(--hero)]">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            AI Match
+            Your opportunity workspace
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-4xl">
+          <h1 className="font-display mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-4xl">
             AI Match
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
@@ -276,7 +276,8 @@ export default async function ForYouPage({
           )}
 
           {forYou.hasProfile && otherRelevant.length > 0 ? (
-            <div className="mt-12">
+            <div className="mt-12 border-t-2 border-[var(--warning)] pt-6">
+              <p className="mb-2 text-sm font-semibold text-[var(--warning)]">Eligibility not verified</p>
               <h2 className="text-2xl font-semibold text-[var(--foreground)]">
                 Explore other relevant opportunities
               </h2>
