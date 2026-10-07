@@ -74,12 +74,15 @@ export function ProfileForm({ profile }: { profile: TalentProfile }) {
         </p>
       ) : null}
 
-      <fieldset className="flex flex-col gap-6">
-        <legend className="section-heading">Core profile</legend>
-        <p className="mt-1 text-sm text-[var(--muted)]">
-          The essentials for personalized recommendations. Every field is
-          optional — add what you want and skip the rest.
-        </p>
+      <fieldset className="flex min-w-0 flex-col gap-6">
+        <legend className="sr-only">Core profile</legend>
+        <div className="space-y-2">
+          <h2 className="section-heading">Core profile</h2>
+          <p className="text-sm text-[var(--muted)]">
+            The essentials for personalized recommendations. Every field is
+            optional — add what you want and skip the rest.
+          </p>
+        </div>
 
         <div>
           <label htmlFor="careerLevel" className={fieldLabel}>
@@ -148,12 +151,15 @@ export function ProfileForm({ profile }: { profile: TalentProfile }) {
         </div>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-6 border-t border-[var(--line)] pt-8">
-        <legend className="section-heading">Optional details</legend>
-        <p className="mt-1 text-sm text-[var(--muted)]">
-          Add these anytime to sharpen your recommendations. They stay private
-          to your account.
-        </p>
+      <fieldset className="flex min-w-0 flex-col gap-6 border-t border-[var(--line)] pt-8">
+        <legend className="sr-only">Optional details</legend>
+        <div className="space-y-2">
+          <h2 className="section-heading">Optional details</h2>
+          <p className="text-sm text-[var(--muted)]">
+            Add these anytime to sharpen your recommendations. They stay
+            private to your account.
+          </p>
+        </div>
 
         <div>
           <label htmlFor="skills" className={fieldLabel}>
