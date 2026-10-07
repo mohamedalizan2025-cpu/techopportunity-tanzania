@@ -17,15 +17,19 @@ application route — and will they come back?
 
 ## 2. Participants (5–10)
 
-Mix: university students (any discipline, ≥1 outside tech), recent
-graduates, young professionals/opportunity seekers. Tanzania/Zanzibar
-first. Own phones, own data, non-technical welcome. No payment; state
-plainly: 15 minutes observed + two short follow-ups.
+Mix (aim for at least one of each): secondary/high-school students,
+university students (any discipline, ≥1 outside tech), recent
+graduates, tech learners/builders, young professionals, general
+opportunity seekers. Tanzania/Zanzibar first. Own phones, own data,
+non-technical welcome. No payment; state plainly: 15 minutes observed
++ two short follow-ups. No 18+ restriction; never collect date of
+birth or any data beyond §2 metadata.
 
-Record per participant only: ID (P01…), broad category (student /
-graduate / professional), device type, rough familiarity with
-opportunity platforms (new / occasional / regular). No names, contacts
-beyond the follow-up channel they consent to, or any other personal data.
+Record per participant only: ID (P01…), broad category
+(secondary / university / graduate / builder / professional /
+seeker), device type, rough familiarity with opportunity platforms
+(new / occasional / regular). No names, contacts beyond the
+follow-up channel they consent to, or any other personal data.
 
 ## 3. Consent + privacy note (read aloud, 30 seconds)
 
@@ -39,8 +43,11 @@ Record consent + follow-up consent. If no: thank them, end.
 
 ## 4. Observed session script (~15 min, tester drives, signed out)
 
-Premise (once): "Find something worth your effort, check whether you
-can trust it, and keep track of it." Do not demo anything first.
+Setup (before the clock starts): tester's own phone and browser,
+signed OUT, stable data connection. Note device/browser. Read the
+consent note (§3), then premise (once): "Find something worth your
+effort, check whether you can trust it, and keep track of it." Do not
+demo anything first.
 
 | # | Task (prompt) | Time | Record |
 |---|---|---|---|
@@ -80,6 +87,13 @@ Did you save anything else, or start/apply to anything? Did you share
 it with anyone? What stopped you, if anything?" Record: returned
 YES/NO, saves, starts/applies (truthful only), shares, blocker.
 
+## 7b. 2-week return-use check (closes the pilot)
+
+Re-contact all consenting testers: any return visit in week 2? Any
+application progress changed truthfully? Would they recommend it to a
+classmate — and did they? Record per tester; close the sheet with
+totals (returned __/__, progressed __, recommended __).
+
 ## 8. Per-participant result table
 
 | ID | Category | Device | T1 | T2 | T3 (deadline/TZ/apply/trust) | T4 | T5 | T6 | Unassisted /5 | Trust Q notes | Blocker |
@@ -87,6 +101,15 @@ YES/NO, saves, starts/applies (truthful only), shares, blocker.
 | P01 | … | … | … | … | … | … | … | … | … | … | … |
 
 Core tasks for the unassisted score: T1–T5 (T6 conditional).
+Scoring: PASS or HESITATED = 1 unassisted point; HELP REQUIRED or
+FAILED = 0. Per-tester score = points / 5; pilot score = median across
+testers (need ≥4/5).
+Trust/deception failure (automatic P0): the tester states a wrong
+deadline, wrong eligibility, or wrong application route AND cites the
+platform as the reason — e.g. "it closes in December" on a passed
+deadline, "Tanzanians cannot apply" on an evidenced-eligible listing,
+or starting an application on a lookalike/scraper link reached from
+the listing. Honest unknowns ("it doesn't say") are never failures.
 Severity per issue: **P0** trust/deception/security/application-routing
 failure · **P1** blocks a core task · **P2** clear confusion/friction ·
 **P3** cosmetic/preference. Any P0 stops the pilot for a fix-first
