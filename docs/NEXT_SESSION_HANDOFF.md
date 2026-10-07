@@ -236,3 +236,50 @@ revenue, traction, or partnerships evidence that does not exist.
   INCIDENT_RESPONSE_RUNBOOK.md, STAGING_AI_SMOKE_RUNBOOK.md,
   PRODUCTION_AI_DECISION_CHECKLIST.md, USER_PILOT_EXECUTION_PACK.md,
   PROVIDER_PILOT_EXECUTION_PACK.md.
+
+## Production release 2026-10-07 (promoted to production, owner QA APPROVED)
+
+- STARTING BASELINE: `origin/main` `3928f7d` (final pre-pilot P0A–P0D),
+  confirmed before any move. RELEASE: `pre-pilot-convergence` `10069a2`
+  (AI Match + Ask V1, real UDSM photography, Assisted Queue Approval
+  display-only, Profile robust fieldset headings, pilot-ops docs,
+  durable-rules docs). `3928f7d` verified ancestor of `10069a2` —
+  fast-forward only, no force, no merge commit.
+- PRE-PUSH GATES at `10069a2`: `git diff --check` clean; full
+  `npm run verify` green (all suites incl. review-readiness 21/21,
+  ai-match 7/7, ask 12/12; tsc, eslint, 43/43 boundaries clean);
+  `npm run build` green (30 pages). Diff review `3928f7d..10069a2`:
+  47 files, zero `supabase/migrations` entries (no DB migration expected
+  or applied), zero `.env` changes, `.env.example` empty placeholders,
+  secret scan clean (only `ask-*` identifier false positives), provider
+  diff is a pure transport refactor with fail-closed defaults intact,
+  Privacy diff is the For-You→AI-Match rename only (no active-AI flip).
+- PROMOTION: `main` fast-forwarded `3928f7d..10069a2` in an isolated
+  worktree and pushed with plain `git push origin main` (no `--force`).
+  Push-to-main auto-deploys Production (architecture.md §6). No env,
+  dashboard, or AI-config change; no DB writes; no credentials handled.
+- PRODUCTION SMOKE (anonymous, canonical
+  `https://techopportunity-tanzania.vercel.app`, post-push): `/` 200
+  with AI Match + Ask AI nav/footer, 11 opportunities, Nkrumah Hall
+  caption live; both editorial WebP binaries 200; `/organizations` 200
+  with Nkrumah exterior caption + SAMPLE-labeled illustrative report;
+  `/ask` 200 with "Talk to AI · grounded answers" FAQ + sign-in gate
+  for custom Q; `/privacy` `/terms` `/contact` 200 with "Production AI
+  is currently OFF" live; `/ai-match` `/for-you` `/profile`
+  `/activity` `/saved` `/moderation` all behind the sign-in wall for
+  anonymous (auth + moderator gates intact); `/saved` 307 → login;
+  `/manifest.webmanifest` 200 with AI Match shortcut; `/robots.txt`
+  production-allow; `/offline` 200. Zero `showCover` callers in tree —
+  no active AI-generated people. Profile overlap fix is code-verified
+  (sr-only legends + visible `h2`, zero `-mt-` hacks, `min-w-0`
+  fieldsets, wrapping chips); signed-in 390px visual remains owner-side
+  (no staff/session tooling here). Assisted Queue Approval UI is
+  code-present + 21/21 contract green but staff-gated — live badge
+  eyeball needs a moderator session (owner-side).
+- PRODUCTION AI: OFF (live Privacy text + `ENABLED !== "true"` /
+  zero-spend fail-closed defaults; nothing activated, nothing
+  configured). PRODUCTION DB: UNCHANGED (no migration in release, no
+  writes performed). No unexpected regression observed in smoke.
+- NEXT: 5–10 real-user pilot on live production per
+  `docs/REAL_USER_PILOT_2026-10.md`; owner prod-AI decision stays a
+  separate gate; youth/minor legal review rides with broader launch.
