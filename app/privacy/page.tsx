@@ -141,9 +141,11 @@ export default function PrivacyPage() {
             </li>
             <li>
               <span className="font-semibold text-[var(--foreground)]">Gemini and Groq</span> are
-              AI providers used only in staging and evaluation. Production AI
-              is currently OFF, so these providers receive no Production user
-              information today. Fonts ship with the application; no font
+              the configured AI providers. They receive Production information
+              only when you request an AI-assisted explanation or send a
+              custom Ask question, and only the bounded, redacted context
+              described below — Gemini first, Groq only if Gemini cannot
+              answer. Fonts ship with the application; no font
               provider receives your data when you use the site.
             </li>
           </ul>
@@ -151,15 +153,22 @@ export default function PrivacyPage() {
 
         <Section id="privacy-ai" title="AI-assisted features">
           <p>
-            Explanations labelled AI-assisted may be enabled separately. They
+            Explanations labelled AI-assisted are active. They
             help you read verified facts faster and are always subordinate to
             them: deterministic verified information remains authoritative,
             AI never decides eligibility, and AI cannot guarantee selection.
-            Only bounded, approved context is ever sent to an AI service —
-            opportunity evidence plus selected profile fields. Your identity,
-            contact details, activity history, CVs, and documents are never
-            sent. AI features never run without you asking (for example by
-            tapping an explanation button).
+            When you request an explanation or send a custom Ask question,
+            only bounded, approved context is sent to the configured AI
+            providers — opportunity evidence plus, for AI Match
+            explanations, selected profile fields (level, field, sectors,
+            types, skills, region, experience). Your question is redacted
+            before sending (emails, links, phone numbers, and identifiers
+            removed). Your identity, contact details, activity history, CVs,
+            and documents are never sent. Custom questions and answers are
+            never stored — only privacy-safe aggregate counts are kept.
+            Suggested answers on the Ask page are deterministic and never
+            call a provider. AI features never run without you asking (for
+            example by tapping an explanation button).
           </p>
         </Section>
 

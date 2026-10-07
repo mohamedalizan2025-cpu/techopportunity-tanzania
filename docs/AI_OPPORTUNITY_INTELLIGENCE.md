@@ -210,9 +210,12 @@ PRODUCTION AI = OFF. Full evidence template:
 [PRODUCTION_AI_DECISION_CHECKLIST.md](PRODUCTION_AI_DECISION_CHECKLIST.md).
 Emergency kill switch (production, if ever activated): set
 `AI_OPPORTUNITY_INTELLIGENCE_ENABLED=false` in the production env, redeploy,
-and verify all surfaces deterministic with no external calls. The Ask surface
-has its own independent kill switch (`ASSISTANT_ENABLED`); disabling either
-surface never affects the other's deterministic fallback.
+and verify all surfaces deterministic with no external calls. This one gate
+covers both V1 surfaces (AI Match explanations and Ask custom Q&A share the
+selection verdict, verified in `lib/ask/providers.ts` — Ask V1 has no
+`ASSISTANT_ENABLED` reference). The legacy assistant route keeps its own
+independent kill switch (`ASSISTANT_ENABLED`). Disabling any surface never
+affects deterministic behavior elsewhere.
 
 ## 12. Telemetry
 

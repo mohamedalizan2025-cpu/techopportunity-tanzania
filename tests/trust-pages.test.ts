@@ -5,7 +5,8 @@
  * pages, the footer links them, the owner-approved WhatsApp channel is
  * present exactly once per surface, and the pages make no claim the
  * product cannot honor (no incorporation, no 18+ gate, no analytics
- * banner, no fake deletion self-service, AI OFF stated honestly).
+ * banner, no fake deletion self-service, active-AI processing stated
+ * honestly with bounded redacted context and no persistence).
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -65,12 +66,21 @@ test("privacy documents actual data categories and controls", () => {
 });
 
 test("vendor disclosure names real processors with correct AI status", () => {
-  for (const fragment of ["Supabase", "Vercel", "Gemini", "Groq", "Production AI", "OFF"]) {
+  for (const fragment of ["Supabase", "Vercel", "Gemini", "Groq"]) {
     assert.ok(privacy.includes(fragment), fragment);
   }
+  const text = flat(privacy);
   assert.ok(
-    flat(privacy).includes("receive no Production user information today"),
-    "no production AI traffic claimed"
+    text.includes("only when you request an AI-assisted explanation"),
+    "provider traffic is user-triggered only"
+  );
+  assert.ok(text.includes("redacted"), "redaction disclosed");
+  assert.ok(text.includes("never stored"), "no Ask persistence claimed");
+  assert.doesNotMatch(text, /Production AI is currently OFF/, "stale OFF claim gone");
+  assert.doesNotMatch(
+    text,
+    /receive no Production user information today/,
+    "stale zero-traffic claim gone"
   );
 });
 

@@ -283,3 +283,68 @@ revenue, traction, or partnerships evidence that does not exist.
 - NEXT: 5–10 real-user pilot on live production per
   `docs/REAL_USER_PILOT_2026-10.md`; owner prod-AI decision stays a
   separate gate; youth/minor legal review rides with broader launch.
+
+## Production AI activation readiness 2026-10-07 (branch `prod-ai-activation`; production OFF, main untouched)
+
+- OWNER DECISION RECEIVED: proceed with the activation readiness
+  milestone. Activation itself (dashboard env + keys + redeploy) is
+  owner-only per [PRODUCTION_AI_DECISION_CHECKLIST.md](PRODUCTION_AI_DECISION_CHECKLIST.md)
+  ("agents must never handle keys or activate production") — this
+  milestone completes everything inside agent authority and STOPS at
+  that gate. No models, schema, RLS, moderation, Discovery, or
+  matching-authority change.
+- OWNER-GATE VERDICT (documented procedure): engineering-side items
+  PASS; owner-side items are UNEVIDENCED from here, so activation is
+  NO-GO until the owner completes them: (1) staging smoke runbook
+  §§B–K filled — NOT evidenced (Vercel-auth-blocked here); (2) zero
+  staging deception observed — UNKNOWN here; (3) fresh PRODUCTION
+  privacy/billing attestations — NOT evidenced; (4) rollback rehearsed
+  on Preview — NOT evidenced; (5) signed decision template
+  (`PRODUCTION_AI_ELIGIBLE_FOR_OWNER_APPROVAL = YES`) — NOT filled.
+  Satisfied: key rotation (owner-side 2026-10-05), env separation
+  (production carries no AI vars; defaults fail closed).
+- CODE TRUTH CONFIRMED (read, not assumed): AI Match sends exactly
+  `buildSanitizedOpportunityIntelligenceInput` (level, field, sectors,
+  types, skills, region, experience — no goals/identity/activity/IDs);
+  Ask sends only the redacted question (emails/URLs/phones/UUIDs →
+  `[removed]`, 4–500 chars) + grounded public facts + matched FAQ
+  text, zero profile data, zero persistence (no Supabase refs in
+  `lib/ask/*`); strict validators reject extra keys, invented refs,
+  percentages, and authority claims; deterministic
+  eligibility/trust/deadline/geography/ranking stay sole authority.
+  Kill-switch truth: ONE shared gate
+  (`AI_OPPORTUNITY_INTELLIGENCE_ENABLED=false` → both V1 surfaces
+  deterministic, pinned by ask "unconfigured → fallback" tests +
+  boundary "defaults to zero spend"); `ASSISTANT_ENABLED` is
+  legacy-route-only — [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md)
+  §11 corrected to say so (docs must match code). Kill-switch state
+  IS the current production state (OFF), so there was nothing to
+  disable; no trust/privacy gate failed in code — the blockers are
+  missing owner-side evidence, not code defects.
+- READINESS EDITS (branch-only, MUST ship with activation, never
+  before): `/privacy` vendors bullet + `privacy-ai` section flipped
+  to active voice per [AI_FRONTEND_V1.md](AI_FRONTEND_V1.md) §6
+  (user-triggered provider traffic, bounded redacted context,
+  never-stored Q&A, deterministic FAQ); `trust-pages` vendor pin
+  re-pointed from the OFF contract to the active contract (same
+  honesty bar, not weakened). Production AI remains OFF and live
+  Privacy still (correctly) says OFF until activation deploys.
+- GATES: full `npm run verify` green (all suites incl. trust-pages
+  11/11, ai-match 7/7, ask 12/12; tsc, eslint, 43/43 boundaries;
+  plan selected build only), `npm run build` green (30 pages),
+  `git diff --check` clean. No live authenticated smoke possible
+  here (no owner session/keys): AI Match explanation, Ask
+  opportunity/product/unsupported questions, fallback path,
+  latency, grounding, and privacy-boundary smoke are OWNER steps
+  post-activation.
+- EXACT OWNER STEPS TO ACTIVATE (dashboard only): set production
+  env `AI_OPPORTUNITY_INTELLIGENCE_ENABLED=true`,
+  `AI_OPPORTUNITY_INTELLIGENCE_SPEND_MODE=free-quota`,
+  `AI_OPPORTUNITY_INTELLIGENCE_PROVIDER_CHAIN=gemini,groq`,
+  both API keys + all four attestations (fresh production
+  attestations, distinct credentials) → redeploy production →
+  run the post-activation smoke (Match explanation, Ask
+  opportunity/product/unsupported, fallback, latency ≤8s,
+  grounding, privacy) → fill the decision template → on ANY
+  deception/leakage set `AI_OPPORTUNITY_INTELLIGENCE_ENABLED=false`
+  and redeploy immediately.
