@@ -113,7 +113,7 @@ export default function PrivacyPage() {
         <Section id="privacy-use" title="Why we use it">
           <ul className="list-disc space-y-2 pl-5">
             <li>Operating your account and keeping it secure.</li>
-            <li>Ordering your For You recommendations and explaining each suggestion.</li>
+            <li>Ordering your AI Match recommendations and explaining each suggestion.</li>
             <li>Keeping your saved list and application progress.</li>
             <li>Sending deadline reminders you explicitly enabled.</li>
             <li>Reporting honest aggregate engagement to opportunity providers.</li>

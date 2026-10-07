@@ -83,7 +83,7 @@ export default async function ActivityPage() {
               href="/for-you"
               className="inline-flex min-h-11 w-fit items-center justify-center rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             >
-              For You
+              AI Match
             </Link>
             <Link
               href="/saved"

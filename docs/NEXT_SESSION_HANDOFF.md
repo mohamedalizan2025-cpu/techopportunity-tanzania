@@ -191,6 +191,27 @@ audit-ledger rows confirmable only in a staff session; scheduler
 24h-observation incident (separate track). No code risks outstanding. This
 milestone is committed on top of `6ea1328`.
 
+Frontend QA/fix pass 2026-10-07 on `pre-pilot-convergence` (base `c2bd0c2`):
+Profile legend/paragraph negative-margin overlap removed (both fieldsets now
+clean stacked spacing, light + dark via existing tokens); desktop header,
+mobile footer, homepage journey strip, and footer all name "Ask AI" (mobile
+menu keeps "Ask Tech Opportunity"); `/ask` eyebrow reads "Talk to AI ·
+grounded answers"; homepage AI entry (AI Match + Ask buttons, Explore
+untouched) and AI Match → Ask link retained; no chatbot bubble added.
+User-facing "For You" renamed to "AI Match" (activity/saved/profile/privacy
+copy, manifest shortcut, profile-saved message; route `/for-you` unchanged).
+Real photos verified present and valid WebP (hall renders on homepage hero,
+campus on Organizations, both with captions/credits; AI set retained on disk
+but unrendered — zero `showCover` callers). Full `npm run verify` green
+(all suites incl. updated ai-match/commercial-demo pins, tsc, eslint, 43/43
+boundaries; plan selected build + moderation-auth + deadline-alerts, all
+satisfied locally except deployed-access proof), `npm run build` green
+(30 pages), `git diff --check` clean. No schema/RLS/moderation/Discovery/env
+change; production untouched; production AI OFF. Signed-in 390px rendering
+and light/dark eyeball QA remain owner-side (no browser tooling here); this
+pass is static + contract evidence, not a visual sign-off. This pass is
+committed on top of `c2bd0c2`.
+
 ## 12. Stop conditions
 
 Stop — do not invent a workaround — when: moderator authentication is

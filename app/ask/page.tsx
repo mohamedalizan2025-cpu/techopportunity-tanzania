@@ -22,7 +22,7 @@ export default async function AskPage() {
       <section className="border-b border-[var(--line)] bg-[var(--hero)]">
         <div className="mx-auto w-full max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-            Grounded answers
+            Talk to AI · grounded answers
           </p>
           <h1 className="font-display mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-4xl">
             Ask Tech Opportunity

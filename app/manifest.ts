@@ -37,7 +37,7 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       { name: "Explore", url: "/", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       {
-        name: "For You",
+        name: "AI Match",
         url: "/for-you",
         icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
       },

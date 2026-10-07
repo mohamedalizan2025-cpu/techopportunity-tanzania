@@ -72,7 +72,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <li><Link href="/#opportunities" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Explore</Link></li>
                 <li><Link href="/for-you" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">AI Match</Link></li>
                 <li><Link href="/activity" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Activity</Link></li>
-                <li><Link href="/ask" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Ask</Link></li>
+                <li><Link href="/ask" className="inline-flex min-h-11 items-center font-medium text-[var(--muted)] hover:text-[var(--primary-text)]">Ask AI</Link></li>
               </ul>
             </nav>
             <nav aria-label="For organizations">

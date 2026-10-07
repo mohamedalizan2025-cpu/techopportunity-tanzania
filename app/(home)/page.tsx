@@ -209,6 +209,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <nav aria-label="Your journey" className="mt-4 flex flex-wrap gap-x-5 text-sm">
               <span className="inline-flex min-h-11 items-center font-semibold">Explore</span>
               <Link href="/for-you" className="inline-flex min-h-11 items-center font-semibold text-[var(--accent-strong)] underline underline-offset-4">AI Match</Link>
+              <Link href="/ask" className="inline-flex min-h-11 items-center font-semibold text-[var(--accent-strong)] underline underline-offset-4">Ask AI</Link>
               <Link href="/activity" className="inline-flex min-h-11 items-center font-semibold text-[var(--accent-strong)] underline underline-offset-4">Your activity</Link>
             </nav>
           ) : null}

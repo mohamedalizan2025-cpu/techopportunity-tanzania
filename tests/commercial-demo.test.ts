@@ -49,7 +49,7 @@ test("Saved continues to Activity and For You", () => {
   assert.match(saved, /href="\/activity"/);
   assert.match(saved, /Track progress in your activity/);
   assert.match(saved, /href="\/for-you"/);
-  assert.match(saved, /Personalized For You/);
+  assert.match(saved, /Personalized AI Match/);
 });
 
 test("Activity links the full journey", () => {

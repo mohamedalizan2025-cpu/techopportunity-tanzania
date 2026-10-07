@@ -62,6 +62,6 @@ export async function saveTalentProfileAction(
   revalidatePath("/profile");
   return {
     status: "success",
-    message: "Profile saved. Your For You feed is updated.",
+    message: "Profile saved. Your AI Match ranking is updated.",
   };
 }

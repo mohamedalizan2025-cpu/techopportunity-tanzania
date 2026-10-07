@@ -8,7 +8,7 @@ import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 export const metadata: Metadata = {
   title: "Your profile | Tech Opportunity",
   description:
-    "Add optional details to personalize your For You recommendations. Explore stays open to everyone.",
+    "Add optional details to personalize your AI Match recommendations. Explore stays open to everyone.",
   robots: { index: false, follow: false },
 };
 
@@ -36,7 +36,7 @@ export default async function ProfilePage() {
             Your level, field, sectors and followed types are what improve
             your{" "}
             <span className="font-semibold text-[var(--foreground)]">
-              For You
+              AI Match
             </span>{" "}
             ordering, with a clear reason on every suggestion. This is
             optional, stays private to your account, and only sharpens

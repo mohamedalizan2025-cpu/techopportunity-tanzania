@@ -190,9 +190,10 @@ test("AI Match is reachable from navigation and the alias preserves links", () =
   const header = read("components/site-header.tsx");
   assert.match(header, /AI Match/);
   assert.match(header, /href="\/ask"/);
+  assert.match(header, /Ask AI/);
   const bottom = read("components/bottom-navigation.tsx");
   assert.match(bottom, /AI Match/);
-  assert.match(bottom, /Ask/);
+  assert.match(bottom, /Ask AI/);
   assert.match(bottom, /Activity/);
   const alias = read("app/ai-match/page.tsx");
   assert.match(alias, /redirect\("\/for-you"\)/);

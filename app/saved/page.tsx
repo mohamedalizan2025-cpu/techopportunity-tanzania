@@ -93,7 +93,7 @@ export default async function SavedOpportunitiesPage() {
               href="/for-you"
               className="font-medium text-[var(--muted)] underline-offset-2 hover:underline"
             >
-              Personalized For You →
+              Personalized AI Match →
             </Link>
           </div>
 

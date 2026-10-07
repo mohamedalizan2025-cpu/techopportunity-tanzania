@@ -29,7 +29,7 @@ export async function SiteHeader() {
           <NavigationLink href="/">Explore</NavigationLink>
           <NavigationLink href="/for-you">AI Match</NavigationLink>
           <NavigationLink href="/activity">Activity</NavigationLink>
-          <NavigationLink href="/ask">Ask</NavigationLink>
+          <NavigationLink href="/ask">Ask AI</NavigationLink>
           <NavigationLink href="/organizations">Organizations</NavigationLink>
           {user ? (
             <>

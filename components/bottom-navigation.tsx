@@ -34,7 +34,7 @@ export function BottomNavigation() {
           </NavigationLink>
           <NavigationLink href="/ask" className="bottom-nav-link">
             <UiIcon name="search" width="20" height="20" />
-            Ask
+            Ask AI
           </NavigationLink>
         </div>
       </nav>
