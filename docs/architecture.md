@@ -450,34 +450,42 @@ explicitly out of redesign scope.
   shallow teal shadow. Opportunity cards carry
   at most TWO trust indicators (deadline status + evidence/eligibility
   line); no badge piles, no percentage gimmicks.
-- Imagery policy: real visible editorial imagery is the production default.
-  Nine locally stored, custom AI-generated photographs cover Tanzanian and
-  Zanzibar students, East African technology and career settings, wider
-  African entrepreneurship/research/leadership, and a genuinely multicultural
-  scholar cohort. They are visual context, never documentary evidence of a
-  listed opportunity; detail pages say this explicitly and authoritative
+- Imagery policy (superseded 2026-10-07 by real-photo restoration): genuine
+  archival University of Dar es Salaam photographs are the visible default —
+  homepage hero (Nkrumah Hall, Nick Fraser, CC BY-SA 2.0) and the
+  Organizations institutions section (Nkrumah exterior, Alexander Landfair,
+  public domain), served locally as responsive WebP with source links,
+  retrieval dates, rights, and a retirement inventory recorded in
+  [VISUAL_ASSET_PROVENANCE.md](VISUAL_ASSET_PROVENANCE.md). No photography on
+  auth, opportunity cards/detail, AI Match, or Ask; no fabricated community
+  proof. The nine historical AI-generated photographs are RETAINED on disk
+  with their registry/test contract but UNRENDERED (`showCover` defaults to
+  false, no page caller enables it); no new AI-generated people may be added.
+  All imagery is visual context, never documentary evidence of a
+  listed opportunity; authoritative
   provenance remains in source links and evidence sections. No database
   column, runtime network image, hotlink, scraped file, or invented third-party
   license is used. Generation provenance and scene constraints are recorded in
   [VISUAL_ASSET_PROVENANCE.md](VISUAL_ASSET_PROVENANCE.md).
-- Photo-first registry (`lib/cover-registry.ts`, updated 2026-10-04): central
+- Photo registry (`lib/cover-registry.ts`): central
   `coverSlotFor` mapping (moment slots for hackathon/competition,
   fellowship, internship/jobs, scholarship, conference/events, research,
   public-sector; geography × sector slots for Tanzania/Africa/
   international) with `coverAssetFor` choosing a deterministic local
-  `public/images/editorial/` WebP variant by slug. All 17 presentation slots
-  are filled from the coherent nine-image set and render through `next/image`
-  with responsive sizes. Asset coverage:
+  `public/images/editorial/` WebP variant by slug. The registry and its
+  contract are retained for provenance, but NO page renders covers today
+  (`showCover` off everywhere): the 17-slot mapping to the retired nine-image
+  set is dormant, not the visible default. Asset coverage (historical):
   tanzania-education, tanzania-technology, tanzania-leadership,
   africa-education, africa-entrepreneurship, africa-technology,
   international-education, international-research, international-career,
   international-leadership, moment-hackathon, moment-fellowship,
   moment-internship, moment-scholarship, moment-conference,
-  moment-research, moment-public-sector. Representation rules remain:
-  Tanzanian/East-African youth clearly visible, hijabi representation where
-  natural, no safari/tourism clichés, and no all-white default mix. The
-  generated subjects are fictional, so no real-person consent or affiliation
-  is implied.
+  moment-research, moment-public-sector. Historical representation rules
+  (Tanzanian/East-African youth visible, hijabi representation where natural,
+  no safari/tourism clichés, no all-white default mix) and the fictional-subject
+  consent note apply to the retired set only; real photographs carry their own
+  source-recorded rights (see provenance doc).
 - Responsive: mobile-first; category rail scrolls under 640px; cards stack
   single-column then `sm:grid-cols-2`; detail aside stacks action-first
   below `lg`. Phone-only (`md:hidden`) bottom nav (Explore/For You/Saved/

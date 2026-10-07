@@ -55,8 +55,8 @@ is the longer-term business direction, not today's delivered institutional syste
 | Public Explore, filters, pagination, source/detail links | Implemented in app and lib/data. No account required by route code. |
 | Publication, qualification, dedupe and lifecycle | Human publication boundary and deterministic gates exist. Expired stored dates are filtered. A missing structured date can leave an old listing visible; pipeline controls do not certify all legacy records. |
 | Trust evidence | Optional trust fields; complete evidence controls the verified badge. Eligibility renders ONLY from stored decisions AND supporting evidence; otherwise unknown. Location and eligibility stay separate. |
-| Profile and AI Match (route `/for-you`) | Owner-only profile; deterministic reasons over published data, no match percentages. Explore remains independent and never restricted by profile. AI explanations are on-demand over the same contract; production AI stays OFF until separately approved (see AI doc). |
-| Ask Tech Opportunity (bounded Q&A) | Opportunity-first question surface over published listings only: out-of-scope questions get a product-boundary response (no search, no provider call); unconfigured provider falls back to a deterministic plan. Disabled by default; no general-purpose chatbot. |
+| Profile and AI Match (routes `/for-you`, alias `/ai-match`) | Branch-implemented eligible-match workspace: owner-only profile; deterministic reasons over published data, verified-eligibility partition, no match percentages. Explore remains independent and never restricted by profile. AI explanations are on-demand over the same contract; production AI stays OFF until separately approved (see AI doc). |
+| Ask Tech Opportunity (V1, route `/ask`) | Branch-implemented bounded Q&A: deterministic FAQ with no load-time provider call plus auth-gated custom questions grounded in published listings only (sanitized, rate-limited, never persisted). Out-of-scope questions get a product-boundary response; failures fall closed to deterministic guidance. Production AI stays OFF until separately approved; no general-purpose chatbot. |
 | Saved and Interested / Applying / Applied | Private bookmarks and separate self-reported progress. Applying/Applied do not submit an application or prove a provider received one. |
 | Deadline alerts | Preference/worker implementation exists. Delivery and scheduler operation must be re-proved before any dependability promise. Broader execution assistance is future. |
 | Campaign pilot | Staff-only campaigns and integer-only audience/activity RPCs. Counts describe current states, not attributed campaign conversions or outcomes. No provider self-service. |
@@ -185,7 +185,7 @@ privacy-safe data model. Each has a distinct, permanent job:
   including visitors with no account and signed-in users with no profile.
   Personalization must NEVER replace, restrict, hide, down-rank, or gate
   Explore. It is the unfiltered, always-available baseline.
-- **AI Match** (route `/for-you`) — a personalized layer over the SAME
+- **AI Match** (routes `/for-you`, alias `/ai-match`) — a personalized layer over the SAME
   published corpus. It only orders and explains a subset of already-published,
   already-verified opportunities using the user's own optional profile, with a
   plain deterministic reason per suggestion (never a percentage or score).
@@ -197,12 +197,13 @@ privacy-safe data model. Each has a distinct, permanent job:
   Interested / Applying / Applied progress. Activity records progress but
   never submits on the user's behalf and never proves a provider received an
   application.
-- **Ask Tech Opportunity** — bounded opportunity Q&A over published listings
+- **Ask Tech Opportunity** (route `/ask`) — bounded opportunity Q&A over published listings
   only. It answers "which calls fit, what is verified, what is unknown, what
-  to do next" from corpus evidence and the optional profile. Clearly
+  to do next" from corpus evidence plus matched public help text — it sends NO
+  profile data. Clearly
   non-opportunity questions get a product-boundary response with no search and
   no provider call. It is NOT a general-purpose chatbot: no open-web answers,
-  no memory of private data beyond the allowlisted profile, no autonomous
+  no memory of private data, no autonomous
   applications, no CV/essay/document handling (deferred to a future
   Application Copilot privacy/consent milestone).
 

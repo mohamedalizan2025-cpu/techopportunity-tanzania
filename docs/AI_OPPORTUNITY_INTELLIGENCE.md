@@ -54,10 +54,18 @@ The provider has no database client and no write path.
 
 ## 5. User-facing AI surfaces
 
-- **AI Match "Why this fits you" (route `/for-you`)**: deterministic reasons
-  always visible; an on-demand per-card AI explanation (same endpoint, same
-  contract) adds bounded why-fit/readiness/next-action detail. Never
-  auto-fetched on list render; never a percentage or score.
+- **AI Match "Why this fits you" (route `/for-you`, alias `/ai-match`)**:
+  eligible-match workspace: deterministic reasons always visible, ranked
+  entries partitioned into verified-eligibility matches vs honestly labeled
+  unknown-eligibility rows; an on-demand per-card AI explanation (same
+  endpoint, same contract) adds bounded why-fit/readiness/next-action detail.
+  Never auto-fetched on list render; never a percentage or score. Implemented
+  on the Preview branch; production AI stays OFF until separately approved.
+- **Detail "Opportunity Intelligence" brief**: plain summary of what the
+  call is, why it may fit, eligibility snapshot, what is known, what is NOT
+  known, suggested next steps, official source. Labeled "AI-assisted
+  explanation based on verified opportunity data" — never "AI verified this
+  opportunity."
 - **Detail "Opportunity Intelligence" brief**: plain summary of what the
   call is, why it may fit, eligibility snapshot, what is known, what is NOT
   known, suggested next steps, official source. Labeled "AI-assisted
@@ -69,27 +77,30 @@ The provider has no database client and no write path.
   is listed as REQUIRED only when stored evidence supports it; otherwise
   the step reads "Check whether the official application requires …".
   Planning assistance only — never automatic submission.
-- **Ask Tech Opportunity** (bounded Q&A over published listings only;
-  `app/api/assistant/ask/route.ts`): opportunity-first questions execute a
-  deterministic-or-AI plan against published rows only. Contract: kill switch
-  `ASSISTANT_ENABLED` (default disabled — disabled returns a browse-guidance
-  response with no search and no provider call); ≤200-char questions;
-  per-client rate limit; `isNonOpportunityQuery` out-of-scope guard returns a
-  product-boundary response with no search, no provider call, and no news
-  retrieval (uncertain questions are treated as opportunity queries);
-  unconfigured provider uses the deterministic `fallbackPlan` (the provider
-  never sees database content); execution runs published-only queries with
-  explicit caps. Same posture as the insight surfaces: deterministic-first,
-  fail-closed, production OFF until separately approved. Any thin Ask page is
-  a client over this same contract, never a second authority.
+- **Ask Tech Opportunity** (V1: `/ask` page + `app/api/ask/route.ts` over
+  `lib/ask/*`): curated deterministic FAQ plus auth-gated custom Q&A grounded
+  in published rows only. Contract: no load-time provider call (FAQ renders
+  deterministically; `AskForm` fetches on submit only); custom questions
+  require sign-in (401 otherwise), 2 KB body cap, 4–500-char sanitized
+  question with identifier redaction, hashed-user rate limit, private
+  no-store; deterministic fast paths (FAQ hits, refusals, empty grounding)
+  spend ZERO provider budget; grounded answers may use ONE attempt per
+  configured provider inside a shared 8 s budget, then fail closed to the
+  deterministic composition; raw questions and answers are never persisted
+  (aggregate telemetry only). Same posture as the insight surfaces:
+  deterministic-first, fail-closed, production OFF until separately approved.
+  The legacy `app/api/assistant/ask` route remains behind its own
+  `ASSISTANT_ENABLED` kill switch (default disabled) and is not the V1 path.
 - Future **Application Copilot** (CV review, drafting, interview prep) is
   explicitly deferred: it needs a separate privacy/consent milestone before
   any CV, essay, or identifying content may leave the device boundary.
 
 ## 5b. What AI is NOT
 
-- **No general-purpose chatbot.** Both the insight surfaces and Ask answer
-  ONLY from the moderated corpus plus the allowlisted profile (§6). Open-web
+- **No general-purpose chatbot.** The insight surfaces answer ONLY from the
+  moderated corpus plus the allowlisted profile (§6); Ask V1 answers ONLY
+  from published listing facts plus matched public FAQ text and sends NO
+  profile data at all. Open-web
   questions, news retrieval, memory of private data beyond the allowlist, and
   follow-up reasoning outside the fixed readiness task are out of scope —
   out-of-scope input gets a boundary response, not an attempted answer.
@@ -275,8 +286,13 @@ privacy/consent design plus this V2 passing evaluation.
 - `lib/opportunity-intelligence/telemetry.ts` — privacy-safe counters.
 - `app/api/opportunity-insight/route.ts` — auth, slug/shape/size checks,
   rate limit, published+active+trusted gate, RLS profile, private no-store.
-- `app/api/assistant/ask/route.ts` — kill switch, 200-char bound, rate limit,
-  out-of-scope guard, deterministic fallback plan, published-only execution.
+- `app/api/ask/route.ts` + `lib/ask/*` (V1) — auth-gated custom Q&A:
+  2 KB cap, 4–500-char sanitized question, hashed-user rate limit, private
+  no-store, deterministic fast paths with zero provider spend, one attempt
+  per provider inside a shared 8 s budget, no persistence.
+- `app/api/assistant/ask/route.ts` (legacy) — kill switch, 200-char bound,
+  rate limit, out-of-scope guard, deterministic fallback plan,
+  published-only execution. Not the V1 path.
 - `components/opportunity-insight.tsx` — user-triggered fetch, mode labels,
   readiness-plan section for Interested/Applying/Applied states.
 - `components/for-you-explanation.tsx` — AI Match on-demand per-card explanation.
