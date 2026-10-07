@@ -56,6 +56,20 @@ Signed-out homepage and Ask inspected in dark mobile view. The old homepage
 AI entry was below the shelf and the Ask eyebrow duplicated its heading;
 the delivered changes address those concrete hierarchy issues.
 
+### DIRECTLY VERIFIED — delivered Preview
+
+Implementation commit `bd694cc53d4788413d32c0be4f9391c47e36f4d4` was
+pushed only to `ai-frontend-v1`. Vercel deployment `75FgUWdkUVLFdinWdU74DiZZ9xiP`
+visibly reported **Ready**, **Preview**, that source branch and commit.
+Immutable URL:
+<https://techopportunity-tanzania-64l5extjd-techopportunity.vercel.app>.
+The branch Preview homepage was then inspected at 1440 × 900 and 390 × 844
+in dark mode: the new photograph loaded, source/license were present,
+Explore remained dominant and neither viewport had horizontal overflow.
+The updated Ask heading and signed-out help were verified on the deployed
+mobile view. Both `/for-you` and `/ai-match` redirected to the protected
+login destination as expected. Signed-in visuals remain unverified.
+
 ### STATIC/STRUCTURAL — not browser proof
 
 - AI Match: responsive one/two-column cards, wrapping neutral profile/reason
