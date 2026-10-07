@@ -35,6 +35,13 @@ remains the corpus + workflow, never the model.
 
 ## 4. Deterministic authority vs AI responsibility
 
+Deterministic eligibility comes BEFORE AI, in this fixed order: stored
+eligibility decision + evidence (`unknown` / `tanzanians_eligible` /
+`tanzanians_not_eligible`, evidence required for any non-unknown value) is
+read from the moderated record and rendered as the eligibility snapshot;
+only then may AI add bounded readiness observations around it. AI never
+decides, overrides, or rephrases eligibility, and unknown stays unknown.
+
 Deterministic code is SOLE authority for: publication/active/trust status,
 type, sector, geography, eligibility decision and evidence, deadline and
 urgency, `explainMatch` reasons, and all moderation/database state. A
@@ -47,10 +54,10 @@ The provider has no database client and no write path.
 
 ## 5. User-facing AI surfaces
 
-- **For You "Why this fits you"**: deterministic reasons always visible; an
-  on-demand per-card AI explanation (same endpoint, same contract) adds
-  bounded why-fit/readiness/next-action detail. Never auto-fetched on list
-  render; never a percentage or score.
+- **AI Match "Why this fits you" (route `/for-you`)**: deterministic reasons
+  always visible; an on-demand per-card AI explanation (same endpoint, same
+  contract) adds bounded why-fit/readiness/next-action detail. Never
+  auto-fetched on list render; never a percentage or score.
 - **Detail "Opportunity Intelligence" brief**: plain summary of what the
   call is, why it may fit, eligibility snapshot, what is known, what is NOT
   known, suggested next steps, official source. Labeled "AI-assisted
@@ -62,11 +69,45 @@ The provider has no database client and no write path.
   is listed as REQUIRED only when stored evidence supports it; otherwise
   the step reads "Check whether the official application requires …".
   Planning assistance only — never automatic submission.
+- **Ask Tech Opportunity** (bounded Q&A over published listings only;
+  `app/api/assistant/ask/route.ts`): opportunity-first questions execute a
+  deterministic-or-AI plan against published rows only. Contract: kill switch
+  `ASSISTANT_ENABLED` (default disabled — disabled returns a browse-guidance
+  response with no search and no provider call); ≤200-char questions;
+  per-client rate limit; `isNonOpportunityQuery` out-of-scope guard returns a
+  product-boundary response with no search, no provider call, and no news
+  retrieval (uncertain questions are treated as opportunity queries);
+  unconfigured provider uses the deterministic `fallbackPlan` (the provider
+  never sees database content); execution runs published-only queries with
+  explicit caps. Same posture as the insight surfaces: deterministic-first,
+  fail-closed, production OFF until separately approved. Any thin Ask page is
+  a client over this same contract, never a second authority.
 - Future **Application Copilot** (CV review, drafting, interview prep) is
   explicitly deferred: it needs a separate privacy/consent milestone before
   any CV, essay, or identifying content may leave the device boundary.
 
+## 5b. What AI is NOT
+
+- **No general-purpose chatbot.** Both the insight surfaces and Ask answer
+  ONLY from the moderated corpus plus the allowlisted profile (§6). Open-web
+  questions, news retrieval, memory of private data beyond the allowlist, and
+  follow-up reasoning outside the fixed readiness task are out of scope —
+  out-of-scope input gets a boundary response, not an attempted answer.
+- **No autonomous applications.** The platform records Interested / Applying /
+  Applied progress but never submits on the user's behalf, never proves a
+  provider received an application, and never auto-fills external forms.
+
 ## 6. Privacy/data boundary
+
+The profile allowlist is EXACTLY the sanitized matching input — nothing else
+may leave the boundary:
+
+- Allowed profile fields: career/education level, field/discipline,
+  sectors/interests, preferred opportunity types, skills, region, experience
+  level. Goals are never sent.
+- Allowed opportunity evidence: bounded type/sector/geography/description
+  (≤3,500 chars), eligibility decision + evidence, deadline value/precision +
+  evidence (≤1,000 chars), deterministic reasons/urgency, evidence catalog.
 
 External input is exactly `SanitizedOpportunityIntelligenceInput`: bounded
 opportunity type/sector/geography/description/eligibility/deadline evidence,
@@ -82,9 +123,11 @@ V2 adds no new outbound field.
 ## 7. Provider architecture
 
 `OpportunityIntelligenceProvider.generate(input, signal)`; exact chain
-Gemini primary → Groq backup, selected ONLY when enabled + free-quota spend
-mode + exact `gemini,groq` chain string + both credentials + all four
-owner attestations. Partial config cannot promote the backup. Azure is a
+Gemini primary → Groq backup → deterministic fallback, selected ONLY when
+enabled + free-quota spend mode + exact `gemini,groq` chain string + both
+credentials + all four owner attestations. Partial config cannot promote the
+backup: any missing link fails closed to the deterministic insight with a
+machine-readable `availabilityReason`. Azure is a
 reserved ID only; mock is code/test-injectable only, never env-selected.
 One attempt per provider per uncached insight, shared 8s budget split
 across remaining attempts, provider output budgets (Groq 1600 completion
@@ -152,7 +195,13 @@ latency, no privacy or authority regression, and a fresh owner cost/privacy
 decision. Staging evidence informs but never auto-satisfies this gate.
 Report is exactly one of BLOCKED / READY_FOR_OWNER_APPROVAL / ACTIVE —
 never ACTIVE without verified owner-authorized activation. Current state:
-PRODUCTION AI = OFF.
+PRODUCTION AI = OFF. Full evidence template:
+[PRODUCTION_AI_DECISION_CHECKLIST.md](PRODUCTION_AI_DECISION_CHECKLIST.md).
+Emergency kill switch (production, if ever activated): set
+`AI_OPPORTUNITY_INTELLIGENCE_ENABLED=false` in the production env, redeploy,
+and verify all surfaces deterministic with no external calls. The Ask surface
+has its own independent kill switch (`ASSISTANT_ENABLED`); disabling either
+surface never affects the other's deterministic fallback.
 
 ## 12. Telemetry
 
@@ -226,8 +275,10 @@ privacy/consent design plus this V2 passing evaluation.
 - `lib/opportunity-intelligence/telemetry.ts` — privacy-safe counters.
 - `app/api/opportunity-insight/route.ts` — auth, slug/shape/size checks,
   rate limit, published+active+trusted gate, RLS profile, private no-store.
+- `app/api/assistant/ask/route.ts` — kill switch, 200-char bound, rate limit,
+  out-of-scope guard, deterministic fallback plan, published-only execution.
 - `components/opportunity-insight.tsx` — user-triggered fetch, mode labels,
   readiness-plan section for Interested/Applying/Applied states.
-- `components/for-you-explanation.tsx` — on-demand per-card explanation.
+- `components/for-you-explanation.tsx` — AI Match on-demand per-card explanation.
 - `scripts/opportunity-intelligence/` — 16-case synthetic corpus, static
   public-facts corpus, mock-first harness, independently gated real runs.

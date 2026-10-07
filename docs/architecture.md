@@ -1,16 +1,19 @@
 # TechOpportunity Tanzania — Architecture
 
-**Current checkpoint and owner gates: [NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md).**
-This architecture record contains historical environment and rollout statements;
-they are not current staging evidence or authorization. AI remains NO-GO.
-
-Historical architecture status: **Operational MVP + discovery pipeline + AI scaffold** · Last updated: 2026-08-29
+**Durable architecture contract. Current checkpoint and owner gates:
+[NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md). Permanent engineering
+rules: [ENGINEERING_RULES.md](ENGINEERING_RULES.md).**
+Staging/production evidence and dated rollout history live in the handoff, not
+here. When this file conflicts with live code, inspect the implementation and
+correct this file. AI remains OFF in production until the separate owner
+decision in [AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md).
 
 This document explains *how the system is put together and why*. It is written
 for a student learning software architecture — implementation details live in
-the code; this file explains the decisions behind it. Use it for architectural
-rationale; the linked handoff is the authoritative engineering continuity record; §12 records the architecture-
-hardening decisions from the 2026-08-29 audit.
+the code; this file explains the decisions behind it. §12 preserves the
+2026-08-29 hardening history for reference; the durable invariants distilled
+from it are stated inline in §§5–9 and §12.0 below, which supersede any stale
+statement in the historical subsections.
 
 ---
 
@@ -67,17 +70,18 @@ reuse this exact backend without rebuilding anything.
 | Question | Answer |
 |---|---|
 | Where does the frontend live? | `app/` (pages/layouts) and `components/` (reusable UI), rendered by Next.js |
-| Where does the backend / server logic live? | Two places: Next.js server-side code running on Vercel, and database-level logic in Postgres (Row Level Security policies, views). There is no separate backend server. |
-| Where does the database live? | Supabase-hosted PostgreSQL (staging project during development, production project at launch) |
+| Where does the backend / server logic live? | Two places: Next.js server-side code running on Vercel, and database-level logic in Postgres (Row Level Security policies, views, `SECURITY INVOKER` RPCs, audit triggers). There is no separate backend server. |
+| Where does the database live? | Supabase-hosted PostgreSQL (staging project for development, production project for the live product — never merged) |
 | How do frontend and backend communicate? | UI never talks to the database directly. Components call functions in `lib/data/`; those functions use the Supabase client over HTTPS (PostgREST). |
-| How does authentication work? | Supabase Auth issues signed JWT tokens on login. Row Level Security policies decide what each authenticated role may read/write. |
+| How does authentication work? | Supabase Auth (SSR cookie sessions) issues signed JWTs. `proxy.ts` refreshes tokens; identity is verified with `getClaims()` (JWT signature check). `profiles.role` (`moderator`/`admin` = staff) is read through RLS. See §5a. |
 | Where are uploaded files stored? | Supabase Storage buckets, with access policies tied to auth. Not on the web server. |
-| Where is the app deployed? | Vercel (frontend + server logic). Database and files stay in Supabase. |
+| Where is the app deployed? | Vercel (frontend + server logic) — ONE project. Database and files stay in Supabase. |
 | How does GitHub connect to deployment? | Vercel watches the repository. A push to `main` → production deploy. Any pull request → isolated preview URL. |
-| How do environment variables work? | Locally: `.env.local` (git-ignored, you create it). In the cloud: Vercel project settings. See §7. |
+| How do environment variables work? | Locally: target-specific credentials (`.env.local` is production-only, never loaded for staging). In the cloud: Vercel project settings scoped per environment (Preview vs Production). See §7. |
 | How do staging and production differ? | Same code, different data and URLs — see §6. |
 | When would we need another backend service? | Only when a trigger from §8 fires. |
 | What about a future mobile app? | It would connect to the *same* Supabase database, auth, and storage via official Supabase mobile SDKs — no backend rebuild needed. See §10a. |
+| Where does scheduled discovery run? | Cloudflare Workers Free cron (`17 */2 * * *` UTC) dispatches the GitHub Actions `Discovery sync` workflow, which runs the TypeScript worker (`scripts/discovery/`) with pending-only writes. See §9. |
 
 ---
 
@@ -135,6 +139,35 @@ so even the SDK import stays inside the data layer. Reads use the anon key,
 which means Row Level Security is always in force. `mock-opportunities.ts`
 remains as an offline fixture file and is not part of the real data path.
 
+## 5a. Auth and data ownership (durable)
+
+- **Identity:** Supabase Auth owns identity (`auth.users`). Sessions are
+  httpOnly SSR cookies; `proxy.ts` refreshes tokens; server code verifies
+  identity with `getClaims()` and fails closed to anonymous — auth reads never
+  500 a render.
+- **Talent data is owner-only:** `talent_profiles`, `saved_opportunities`,
+  `talent_opportunity_activity`, `user_alert_preferences`,
+  `deadline_alert_events` are readable/writable only by their owning user
+  (RLS `auth.uid()`). Staff moderation does NOT read talent profiles.
+  Every user table FKs `auth.users (id) on delete cascade`, so deleting the
+  auth identity removes private rows automatically.
+- **Staff boundary:** moderation, published-management, campaigns, and reports
+  triage sit behind `getModerationAccess()` (`moderator`/`admin` via RLS
+  `is_staff()`). Privileged writes go through `SECURITY INVOKER` RPCs that
+  derive the actor from `auth.uid()`, validate the reason, touch exactly one
+  `id + expected-status` row, and insert the audit in the same transaction —
+  trigger failure aborts the mutation, so unattributed transitions cannot land.
+  `PUBLIC`, `anon`, and `service_role` are revoked on those RPCs. Application
+  code supplies no actor identifier.
+- **Public reads are anon + published-only:** anonymous clients see only
+  `published` rows through RLS; pending/rejected rows, the source registry,
+  and audit rows are invisible. Candidate inserts run through the anon client
+  constrained by the RLS INSERT policy (`status='pending'`); the service-role
+  key is confined to `scripts/` (registry reads, source-health updates, gated
+  enrichment tooling).
+- **Campaigns are aggregate-only:** staff RPCs return integers only; per-talent
+  engagement analytics are explicitly not built.
+
 ---
 
 ## 6. Environments
@@ -158,10 +191,11 @@ historical table below):
 - Production and staging Supabase projects are never merged; staging uses
   synthetic data only. `.env.local` is production-only in this repository.
 
-The table below is the historical/intended separation model, not an inventory of
-verified current projects. As of the 2026-09-08 handoff, no trustworthy isolated
-staging environment is established. The owner intends a second Supabase Free
-project for staging; do not repurpose the existing operational project.
+The table below is the historical/intended separation model. The canonical
+policy above is authoritative; historical project nicknames (`tto-staging`,
+`tto-prod`) and the 2026-09-08 "no trustworthy staging" statement are
+superseded — staging is the protected branch Preview on isolated staging
+Supabase per the handoff. Do not repurpose the operational production project.
 
 | | Local development | Staging | Production |
 |---|---|---|---|
@@ -200,7 +234,10 @@ a small scheduled GitHub Actions "keep-alive" ping solves this later.
 6. **CI/CD secrets** (later) go in GitHub repository settings and are
    referenced as `${{ secrets.NAME }}` inside workflows.
 7. **If a secret leaks, rotate it immediately** in the provider dashboard —
-   deleting it from a commit is not enough.
+   deleting it from a commit is not enough. Then STOP: do NOT rotate again
+   without a NEW exposure (rotation-once rule —
+   [INCIDENT_RESPONSE_RUNBOOK.md](INCIDENT_RESPONSE_RUNBOOK.md) §4). Real
+   secrets never belong in `.env.example`, docs, chat, Git history, or logs.
 
 ---
 
@@ -253,8 +290,16 @@ approved external sources  →  discovery worker  →  normalize
 ```
 
 Current implementation state: the worker is TypeScript
-(`scripts/discovery/`), scheduled daily by `.github/workflows/discovery.yml`
-(cron + manual dispatch). Extraction runs through a small **source-adapter
+(`scripts/discovery/`), executed by the `Discovery sync` GitHub Actions
+workflow (manual dispatch + external schedule) and triggered on a fixed
+cadence by a Cloudflare Workers Free cron (`17 */2 * * *` UTC) that calls the
+workflow-dispatch API (see
+[DISCOVERY_EXTERNAL_SCHEDULER.md](DISCOVERY_EXTERNAL_SCHEDULER.md)). The
+workflow runs the permanent gates without credentials, then exposes Supabase
+secrets ONLY to the pending-only worker step. It runs in a fixed
+non-cancelling concurrency lane with a 30-minute timeout; scheduled-run
+evidence is valid only when the workflow `head_sha` equals the claimed commit.
+Extraction runs through a small **source-adapter
 registry** (`scripts/discovery/adapters.ts`): an ordered list of pure
 extractor functions (JSON-LD, RSS, Atom, HTML) with a separate feed-family
 list; the runner, the dry-run tool and the tests all share this single
@@ -493,6 +538,42 @@ install/standalone QA remains owner-side.
 
 ---
 
+## 10d. Reporting and self-service deletion (durable)
+
+- **Listing reports (migration 0023).** Authenticated users report a problem
+  with a published listing from its detail page (reason select + optional
+  ≤500-char note) into `public.listing_reports` (owner-insert/select on
+  published rows, staff-read triage at `/reports`, no anon/provider access,
+  no delete grant). Reports NEVER auto-mutate listings — triage is a
+  read-only queue first; resolution stays a human moderation action with a
+  verbatim reason and audit row.
+- **Account deletion (migration 0024).** Parameterless
+  `request_own_account_deletion()` (`SECURITY DEFINER`, session-only target,
+  no service-role/admin path) deletes the caller's auth identity; FK
+  `on delete cascade` removes profile/saves/activity/alerts automatically,
+  while `listing_reports.reporter` is `SET NULL` (report anonymized, listing
+  and bystander rows intact). No service-role key in app code; never report
+  success on failure; no repeated destructive retries until state is known.
+- **Moderation attribution (migrations 0015/0016).** `published → rejected`
+  (unpublish) and `pending → rejected` each go through a reason-bearing
+  invoker-rights RPC + `AFTER UPDATE OF status` trigger in one transaction.
+  Missing/invalid reason, actor mismatch, stale/non-pending target, or audit
+  failure leaves no mutation.
+
+## 10e. AI as replaceable infrastructure (durable)
+
+Models are configuration, never architecture. The deterministic corpus,
+moderation gate, `lib/data/` path, RLS, and matching-input contract never
+change for a model swap. Any provider must support JSON-schema structured
+output, fit the timeout/output budget, pass the unchanged evaluation corpora
+with zero hard failures, and carry fresh owner privacy/billing attestations
+for its own data-use terms. Production AI stays OFF until the separate owner
+decision — staging approval never activates production. Full contract:
+[AI_OPPORTUNITY_INTELLIGENCE.md](AI_OPPORTUNITY_INTELLIGENCE.md); production
+gate: [PRODUCTION_AI_DECISION_CHECKLIST.md](PRODUCTION_AI_DECISION_CHECKLIST.md).
+
+---
+
 ## 11. Planned feature: locations & maps
 
 Status: **designed, not implemented.** No map SDK, no API keys, no browser
@@ -543,12 +624,41 @@ exactly two operations: *render coordinates* and *build a directions URL*.
 Swapping providers later touches one file.
 
 Geocoding (turning venue/address text into coordinates) will happen
-**offline** in the Phase-2 Python pipeline during ingestion — never inside
+**offline** in the discovery pipeline during ingestion — never inside
 page requests.
 
 ---
 
-## 12. Architecture hardening decisions (2026-08-29 audit)
+## 12. Architecture hardening decisions (2026-08-29 audit — HISTORICAL)
+
+§§12.1–12.21 below are the frozen 2026-08-29 audit trail, kept for reference.
+They are NOT current staging evidence, rollout authorization, or AI status.
+The durable invariants distilled from them — and authoritative today — are:
+
+- Pending-only discovery; human moderation is the sole publication path; no
+  auto-publish, auto-reject, or report-driven auto-mutation (§§5, 9, 10d).
+- Location and eligibility are separate dimensions; unknown stays unknown;
+  country is NULL without structured evidence; lifecycle is derived
+  (`active` / `expired` / `rolling`-only-with-explicit-evidence / `unknown`),
+  never stored or fabricated.
+- One row, one opportunity; URL-exact dedupe plus a narrow deterministic
+  cross-source fallback; ambiguous matches go to human review.
+- All network reads funnel through the single hardened acquisition choke
+  point (`scripts/discovery/fetch.ts`: http/https only, SSRF screen, ≤3
+  redirects each re-validated, 2 MB cap, 20 s per-hop timeout); robots/terms
+  compliance and no protection bypass govern any expansion.
+- Source-adapter registry (`scripts/discovery/adapters.ts`): extraction is an
+  ordered list of pure functions; normalization/validation/dedupe/moderation
+  are adapter-agnostic.
+- Explicit pagination everywhere (no silent 1,000-row dependence); CI gates
+  install → test → typecheck → lint → discovery with secrets only on the
+  worker step.
+- Auth/data ownership, reporting/deletion, and AI-as-replaceable-
+  infrastructure per §§5a, 10d, 10e. AI production status lives in the AI doc
+  and handoff — any "AI disabled / NO-GO" statement below is superseded.
+
+When a historical subsection below conflicts with §§5–11 or live code, §§5–11
+and the code win; correct the stale record instead of following it.
 
 A full-repository architecture audit was performed on 2026-08-29 (read-only
 code review + green verification of typecheck, lint and all three test
