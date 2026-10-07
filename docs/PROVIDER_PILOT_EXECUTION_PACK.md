@@ -22,14 +22,13 @@ Saved/Interested/Applying/Applied states, not a causal funnel.
 
 ## 1. Short outreach message (copy/paste, one provider only)
 
-> Hello [Name/Organization]! We run Tech Opportunity, a platform helping
-> Tanzanian students and young professionals find verified openings. We'd
-> like to offer you a FREE 2-week trial: we verify and feature your current
-> open call ([opportunity title]), share it with one student/developer
-> community we can reach, and send you a simple report (how many viewed,
-> saved, or started applying — totals only, no personal data). No cost, no
-> obligation — afterwards we just ask whether a repeat would be worth paying
-> for. Interested in a 15-minute call?
+> Hello [Name/Organization]! We run Tech Opportunity, helping
+> Tanzanian students and young professionals find verified openings.
+> We'd like to offer a FREE 2-week trial: we verify and feature your
+> current open call, share it with one student community we can reach,
+> then send aggregate engagement such as Saved, Interested, Applying
+> and Applied, where available — never personal data. No cost, no
+> obligation. Open to a 15-minute call?
 
 ## 2. One-page managed-campaign explanation (send after YES)
 
@@ -109,3 +108,26 @@ Renewal decision: YES / NO — reason: ___
 4. Who else should we talk to? (referral — no claim made about them)
 5. May we quote your YES/NO + reason anonymously in our internal evidence?
    (Y/N)
+
+## 7. Success / failure criteria + staff-hours log (added for the run)
+
+First pilot is free/low-risk by design: the provider pays nothing; we
+spend staff hours to learn whether paid repeats are viable. Track
+every hour — verification, distribution, reporting, calls.
+
+Staff-hours log:
+
+| Date | Activity (verify / distribute / report / call) | Hours |
+|---|---|---|
+|  |  |  |
+| Total |  | ___ |
+
+SUCCESS (justifies a priced offer): report delivered on time from
+honestly measured counts; zero private-data exposure; provider says a
+part of the report was useful; a scoped repeat price is proposed and a
+YES/NO renewal with reason is recorded — either answer counts as
+learning, but only YES justifies outreach to a second provider.
+FAILURE (do not repeat this shape): counts couldn't be measured
+honestly; provider found nothing useful; no buyer named for a next
+run; or any privacy/verification rule was bent — that routes to
+process fixes, not to more pilots.
