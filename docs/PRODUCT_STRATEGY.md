@@ -1,8 +1,10 @@
-# Product audit and first professional-product milestone
+# Product strategy (durable)
 
-Audit: 2026-10-02. Starting HEAD: `bd0bf4aaee7d7ec9e2597f5251f63cfe5c4dc514`, clean worktree.
-This is the current product/business interpretation. Historical operational
-evidence remains in NEXT_SESSION_HANDOFF.md; dated counts are not current traction.
+This is the durable product/business contract. Dated counts, audit snapshots,
+and rollout history live in [NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md)
+and the pilot packs — never reuse them as current traction. Permanent
+engineering rules: [ENGINEERING_RULES.md](ENGINEERING_RULES.md). Platform
+design direction: [PLATFORM_ARCHITECTURE.md](PLATFORM_ARCHITECTURE.md).
 
 ## Problem, audience and positioning
 
@@ -48,29 +50,26 @@ is the longer-term business direction, not today's delivered institutional syste
 
 ## What actually exists
 
-| Capability | Evidence and limit |
+| Capability | Contract and limit |
 |---|---|
-| Public Explore, filters, pagination, source/detail links | Implemented in app and lib/data; deployed browse inspected 2026-10-02 (six visible then) and 2026-10-04 (eleven visible after cleanup + 9 approvals). No account required by route code. |
+| Public Explore, filters, pagination, source/detail links | Implemented in app and lib/data. No account required by route code. |
 | Publication, qualification, dedupe and lifecycle | Human publication boundary and deterministic gates exist. Expired stored dates are filtered. A missing structured date can leave an old listing visible; pipeline controls do not certify all legacy records. |
-| Trust evidence | Optional trust fields behind existing M31 flag; complete evidence controls the existing verified badge. Current card/detail copy incorrectly always calls eligibility unknown. |
-| Profile and For You | Owner-only profile; deterministic reasons over published data, no match percentages. Explore remains independent. Profile/ranking code is implemented; migrations have historical rollout proof. |
-| Saved and Interested / Applying / Applied | Private bookmarks and separate self-reported progress. Applying/Applied do not submit an application or prove a provider received one. 0019 rollout recorded September 17. |
-| Deadline alerts | Preference/worker implementation exists. Delivery and scheduler operation were not re-proved in this audit; do not promise dependable reminders. Broader execution assistance is future. |
-| Campaign pilot | Staff-only campaigns and integer-only audience/activity RPCs; 0020 rollout recorded September 17. Counts describe current states, not attributed campaign conversions or outcomes. No provider self-service. |
-| AI | Deterministic insight and disabled Gemini/Groq adapters; historical synthetic 16-case evaluation, zero external requests. Natural-language search is separately disabled. No activated model or model-quality claim. |
+| Trust evidence | Optional trust fields; complete evidence controls the verified badge. Eligibility renders ONLY from stored decisions AND supporting evidence; otherwise unknown. Location and eligibility stay separate. |
+| Profile and AI Match (route `/for-you`) | Owner-only profile; deterministic reasons over published data, no match percentages. Explore remains independent and never restricted by profile. AI explanations are on-demand over the same contract; production AI stays OFF until separately approved (see AI doc). |
+| Ask Tech Opportunity (bounded Q&A) | Opportunity-first question surface over published listings only: out-of-scope questions get a product-boundary response (no search, no provider call); unconfigured provider falls back to a deterministic plan. Disabled by default; no general-purpose chatbot. |
+| Saved and Interested / Applying / Applied | Private bookmarks and separate self-reported progress. Applying/Applied do not submit an application or prove a provider received one. |
+| Deadline alerts | Preference/worker implementation exists. Delivery and scheduler operation must be re-proved before any dependability promise. Broader execution assistance is future. |
+| Campaign pilot | Staff-only campaigns and integer-only audience/activity RPCs. Counts describe current states, not attributed campaign conversions or outcomes. No provider self-service. |
+| AI | Deterministic insight plus disabled provider adapters with synthetic evaluation and zero external requests in production. No activated production model or model-quality claim. |
 | Institutions, payments, consent-based introductions | Future. No dashboards, integrations, commercial checkout or validated pricing. |
 
-Read-only deployed inspection found a mixed-quality public corpus: IMLC 2026 has
-an Evidence verified badge; Ogilvy's title targets South Africans and its description
-states September 7 while the structured deadline is absent; AIJC's description
-states September 4 while its card says no deadline; an August job roundup remains
-visible. These are editorial review candidates, not authorization to change rows.
-The current “trusted universe” wording overstates the entire public list. No
-source-count or cadence headline should be advertised from configuration alone.
-The September handoff's scheduler proof covers 14 hours; no fresh 24-hour proof
-was collected here. A saved state is visible in the existing signed-in session,
-so old documentation's “today: zero saves/activity/audience” cannot be reused.
-No personal values are retained as research or traction evidence.
+Corpus honesty rule: the public shelf is a moderated subset, not a certified
+"trusted universe". Never advertise source counts or cadence from configuration
+alone, never present legacy records as fully evidenced, and never claim
+"first", "only", "largest", guaranteed eligibility/selection, superior AI, or
+verified partnerships without evidence. Specific per-listing quality issues are
+editorial review candidates handled through the human moderation queue — not
+bulk-deleted, silently reclassified, or fixed by agents without authorization.
 
 ## Current alternatives (public research, 2026-10-02)
 
@@ -156,7 +155,7 @@ Validated in code or by direct inspection: human publication gating exists;
 deterministic profile matching with reasons works; Saved and Interested /
 Applying / Applied states are implemented with owner-only privacy; source,
 deadline and eligibility evidence fields exist; legacy corpus contains stale
-and geography-mismatched records; six listings were visible on 2026-10-02.
+and geography-mismatched records.
 
 Unvalidated: that talent loses track often enough to return weekly; that
 evidence presentation changes application decisions; that a campus community
@@ -177,45 +176,82 @@ Suitable now for a candid prototype/pilot conversation, not a validated growth
 story. Do not use numerical readiness scores or extrapolate market size from
 student populations. Technical validation is not customer validation.
 
-## UX audit and implementation plan (written before UI changes)
+## Talent surfaces: Explore / AI Match / Activity / Ask (durable roles)
 
-Keep the existing green identity and Geist; use a restrained ink/paper palette,
-clear rules, smaller corner radii and denser typography. Local relevance should
-come from language, geography and useful evidence, not decorative national motifs.
+All four talent surfaces share one trusted, human-moderated corpus and one
+privacy-safe data model. Each has a distinct, permanent job:
 
-1. Replace generic tech-only hero with emerging-talent/action positioning and a
-   compact source/profile/progress explanation. Keep search and useful records
-   close to the top; collapse secondary highlights instead of duplicating the
-   whole opportunity inventory above results. Avoid category availability claims.
-2. Preserve Explore / For You / Activity. Expose those destinations anonymously
-   (existing login redirects apply), show active navigation and move crowded
-   authenticated navigation to a menu until laptop width. Preserve Saved/Profile.
-3. Improve card scan order: type, title, organizer/source domain, short summary,
-   deadline/location, evidence status, actions. Do not badge all records verified.
-   Render eligibility only from stored decisions AND supporting evidence; retain
-   unknown when trust fields are unavailable. Keep location separate from access.
-4. Detail: expose canonical evidence separately from discovery/source links;
-   explain verified badge scope and recorded versus checked dates. Do not derive
-   new facts from prose or change trust admission. Keep Save/Activity behavior.
-5. Align public forms, login, For You, Profile, Activity and loading surfaces with
-   shared design primitives. Replace implementation vocabulary (“corpus”, etc.)
-   with user-facing language. Keep errors actionable and focus visible.
-6. Verify existing full contract + build, then browser QA at 360, 412, 768, 1366
-   and 1920 widths, long titles, missing metadata, empty states, keyboard controls
-   and authenticated/anonymous surfaces. Report any untested state explicitly.
+- **Explore** — the complete trusted opportunity universe, open to everyone
+  including visitors with no account and signed-in users with no profile.
+  Personalization must NEVER replace, restrict, hide, down-rank, or gate
+  Explore. It is the unfiltered, always-available baseline.
+- **AI Match** (route `/for-you`) — a personalized layer over the SAME
+  published corpus. It only orders and explains a subset of already-published,
+  already-verified opportunities using the user's own optional profile, with a
+  plain deterministic reason per suggestion (never a percentage or score).
+  Optional: skipping profiling keeps full Explore access. On-demand AI
+  explanations may add bounded why-fit/readiness/next-action detail around —
+  never over — deterministic facts; production AI stays OFF until separately
+  approved.
+- **Activity** — private Saved bookmarks kept separate from self-reported
+  Interested / Applying / Applied progress. Activity records progress but
+  never submits on the user's behalf and never proves a provider received an
+  application.
+- **Ask Tech Opportunity** — bounded opportunity Q&A over published listings
+  only. It answers "which calls fit, what is verified, what is unknown, what
+  to do next" from corpus evidence and the optional profile. Clearly
+  non-opportunity questions get a product-boundary response with no search and
+  no provider call. It is NOT a general-purpose chatbot: no open-web answers,
+  no memory of private data beyond the allowlisted profile, no autonomous
+  applications, no CV/essay/document handling (deferred to a future
+  Application Copilot privacy/consent milestone).
 
-Observed weaknesses: generic hero; extensive empty space before records; many
-equally weighted category/buttons/cards; no active main navigation; tablet staff
-navigation can overrun its space; repeated unknown eligibility hides existing
-evidence; generic “Source page available” loses provenance; dark hero accent has
-poor contrast; dated operational docs overstate trust and freshness. Existing
-strengths: skip link, real forms, reduced-motion handling, query-preserving filters,
-empty/error components, progressive profile and no required onboarding.
+Card/detail honesty rules (permanent): at most the verified deadline state +
+evidence/eligibility line; "Evidence verified" and "Tanzanian access evidenced"
+render ONLY from complete stored evidence, otherwise the UI says unknown and
+points at the source. Badges never outrank evidence. Detail pages expose
+canonical evidence separately from discovery/source links and state the
+verified-badge scope honestly.
 
-Boundary: no schema, RLS, migrations, data mutations, Discovery/Cloudflare changes,
-AI activation, payments, provider self-service or institutional dashboard work.
-No production deployment is included. A local verification result is not online
-proof of the new UI. Existing source truth and product architecture are preserved.
+## Privacy promises (permanent)
+
+- Private talent data is never sold. Providers and institutions never receive
+  identifiable talent profiles.
+- Talent profiles, saves, activity, and alert preferences are owner-only
+  (self read/write; staff moderation does not read profiles).
+- Commercial value comes ONLY from consent-based connection and privacy-safe
+  targeting/analytics (aggregate, non-identifying, with small-cell suppression
+  reviewed before any external report) — never from selling private data.
+- Paid promotion is clearly labeled Sponsored and never changes verification,
+  eligibility rules, or the completeness of Explore.
+- Introductions require specific consent and remain unbuilt. Unknown stays
+  unknown: blank profile fields are absent, never inferred.
+
+## Moat
+
+The moat must be EARNED through trusted local data, useful workflow, and
+distribution — none is an established moat today. Accumulated local evidence
+(verified Tanzanian-access corpus with provenance, deadline lifecycle, and
+explainable matching) plus repeat community distribution could become
+defensible. The model is replaceable infrastructure by design; "AI",
+Tanzania-first, and opportunity intelligence are each claimed by others and
+confer no uniqueness. Never present models or common UI features as the moat.
+
+## Intentionally out of scope
+
+- Provider self-service publishing/promotion/targeting; institution
+  dashboards, integrations, or commercial checkout — staff-managed pilot only.
+- Guaranteed applicant counts, attributed conversions/outcomes, or verified
+  partnerships without evidence.
+- General-purpose chatbot, open-web Q&A, autonomous applications, CV/essay
+  drafting, interview prep, or any new outbound personal data without the
+  separate AI/privacy gates.
+- Native mobile apps, maps/geolocation, paid infrastructure, or new
+  analytics/tracking without their own consent design and authorization.
+- Bulk or automated moderation, deletions/corpus resets, silent
+  reclassification, and any report-driven auto-mutation.
+- Numerical readiness scores, market-size extrapolation from student
+  populations, and technical validation presented as customer validation.
 
 ## Exact next milestone and immediate validation experiments
 
