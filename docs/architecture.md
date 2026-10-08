@@ -191,6 +191,23 @@ historical table below):
 - Production and staging Supabase projects are never merged; staging uses
   synthetic data only. `.env.local` is production-only in this repository.
 
+Deployment topology (canonical, durable as of 2026-10-08):
+
+- ONE Vercel project. There is no separate staging Vercel project and no
+  permanent staging product URL.
+- `main` = Production. Every push to `main` deploys the canonical
+  Production deployment.
+- Branch Preview deployments are temporary internal QA only. They exist
+  for pre-release checks, must never be treated as separate product
+  environments, and must never be shared as the canonical application.
+- Preview URLs are never canonical product URLs. Users receive only the
+  canonical URL. Stale Preview URLs are non-authoritative.
+- Preview deployments use Staging Supabase (`pumzofcwfjqswkiwfqty`) only
+  and must never touch the Production database. The canonical Production
+  deployment uses Production Supabase (`jltuufukcwztugvojwjd`) only and
+  must never touch the Staging database.
+- After every release, final validation repeats on the canonical URL.
+
 The table below is the historical/intended separation model. The canonical
 policy above is authoritative; historical project nicknames (`tto-staging`,
 `tto-prod`) and the 2026-09-08 "no trustworthy staging" statement are

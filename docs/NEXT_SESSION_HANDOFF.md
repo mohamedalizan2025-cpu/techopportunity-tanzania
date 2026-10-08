@@ -429,3 +429,18 @@ revenue, traction, or partnerships evidence that does not exist.
   fallback, latency, grounding, privacy, §K rollback rehearsal),
   staging-behavior review, fresh production attestations, signed
   decision template, dashboard config + redeploy.
+
+## Deployment topology (canonical, durable as of 2026-10-08)
+
+- ONE Vercel project. Canonical public URL (only linkable product
+  URL): `https://techopportunity-tanzania.vercel.app`.
+- `main` = Production. Branch Preview deployments are temporary
+  internal QA only — never separate product environments, never
+  shared as the canonical application.
+- Preview URLs are never canonical product URLs; users receive only
+  the canonical URL; stale Preview URLs are non-authoritative.
+- Preview deployments use Staging Supabase only and must never touch
+  the Production database. The canonical Production deployment uses
+  Production Supabase only and must never touch the Staging database.
+- After every release, final validation repeats on the canonical URL.
+- Authoritative detail: [architecture.md §6](architecture.md).
