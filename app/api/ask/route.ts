@@ -6,7 +6,10 @@ import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 import { checkOpportunityInsightRateLimit } from "@/lib/opportunity-intelligence/rate-limit";
 import { ASK_QUESTION_MAX_LENGTH } from "@/lib/ask/contract";
 
-const MAX_REQUEST_BYTES = 2_048;
+// 4 KiB envelope: question (≤500) + bounded history (≤8 turns × 240 chars,
+// ≤1200 total) + bounded slugs. Per-field caps keep worst cases small;
+// the service re-sanitizes every turn and slug before use.
+const MAX_REQUEST_BYTES = 4_096;
 const PRIVATE_HEADERS = { "Cache-Control": "private, no-store" };
 
 function json(body: unknown, init?: { status?: number }) {
@@ -39,12 +42,20 @@ export async function POST(request: Request) {
   } catch {
     return json({ error: "Invalid request body." }, { status: 400 });
   }
-  const question =
-    body && typeof body === "object" && typeof (body as { question?: unknown }).question === "string"
-      ? (body as { question: string }).question
-      : "";
+  const fields =
+    body && typeof body === "object" ? (body as { question?: unknown; history?: unknown; contextSlugs?: unknown }) : null;
+  const question = typeof fields?.question === "string" ? fields.question : "";
   if (question.trim().length === 0 || question.length > ASK_QUESTION_MAX_LENGTH + 100) {
     return json({ error: "Ask a question between 4 and 500 characters." }, { status: 400 });
+  }
+  // Ephemeral multi-turn context: arrays only if present; the service
+  // strictly re-sanitizes every turn and slug (400 on structural abuse).
+  const { history, contextSlugs } = fields ?? {};
+  if (
+    (history !== undefined && !Array.isArray(history)) ||
+    (contextSlugs !== undefined && !Array.isArray(contextSlugs))
+  ) {
+    return json({ error: "Invalid request body." }, { status: 400 });
   }
 
   const rateKey = createHash("sha256").update(`ask:${user.userId}`).digest("hex");
@@ -57,6 +68,6 @@ export async function POST(request: Request) {
   }
 
   const browse = await getPublicBrowseData({});
-  const answer = await answerAsk(question, browse.opportunities);
+  const answer = await answerAsk(question, browse.opportunities, { history, contextSlugs });
   return json({ answer });
 }

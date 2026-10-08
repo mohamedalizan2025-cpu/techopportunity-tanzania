@@ -168,6 +168,8 @@ const CONVERSATIONAL_MARKERS = [
   "your name",
   "what are you",
   "what can you do",
+  "can you help me",
+  "help me",
   "about yourself",
   "tell me about",
   "about this platform",
@@ -177,6 +179,28 @@ const CONVERSATIONAL_MARKERS = [
   " hey ",
   "good morning",
   "good afternoon",
+  "good evening",
+  "how are you",
+  "how are u",
+  "hows it going",
+  "how's it going",
+  "how is it going",
+  " thank ",
+  " thanks ",
+  "thank you",
+  " thx ",
+  " okay ",
+  " ok ",
+  " great ",
+  " i understand ",
+  " understood ",
+  " got it ",
+  "what do you mean",
+  "explain again",
+  "explain that again",
+  "tell me more",
+  " bye ",
+  "goodbye",
 ];
 
 const OUT_OF_SCOPE_MARKERS = [
@@ -229,6 +253,20 @@ export type AskClassification =
   | { kind: "refusal"; reason: "injection" | "out_of_scope" };
 
 /**
+ * Wellbeing-style openers that deserve the warm deterministic fallback
+ * variant ("I'm doing well — thanks for asking…") when no provider is
+ * available. A tiny explicit set per product decision — not a general
+ * intent table; everything else conversational shares one fallback.
+ */
+export const CONVERSATIONAL_WARM_MARKERS = [
+  "how are you",
+  "how are u",
+  "hows it going",
+  "how's it going",
+  "how is it going",
+];
+
+/**
  * Deterministic intent classifier. Runs BEFORE any provider call: safety
  * refusals never spend a provider token, but faq, opportunities, and
  * conversational questions are all eligible for AI phrasing over supplied
@@ -265,7 +303,10 @@ export function classifyAskQuestion(question: string): AskClassification {
   for (const marker of OUT_OF_SCOPE_MARKERS) {
     if (lowered.includes(marker)) return { kind: "refusal", reason: "out_of_scope" };
   }
-  return { kind: "refusal", reason: "out_of_scope" };
+  // Safe-but-unmatched input defaults to conversational — never the generic
+  // refusal — so ordinary chat ("hmm, interesting", "oh I see") stays polite.
+  // Genuinely unrelated requests still match OUT_OF_SCOPE_MARKERS above.
+  return { kind: "conversational" };
 }
 
 export function faqEntryById(id: string): AskFaqEntry | null {

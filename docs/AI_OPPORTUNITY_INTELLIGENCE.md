@@ -77,17 +77,20 @@ The provider has no database client and no write path.
   is listed as REQUIRED only when stored evidence supports it; otherwise
   the step reads "Check whether the official application requires …".
   Planning assistance only — never automatic submission.
-- **Ask Tech Opportunity** (V1: `/ask` page + `app/api/ask/route.ts` over
-  `lib/ask/*`): curated deterministic FAQ plus auth-gated custom Q&A grounded
-  in published rows only. Contract: no load-time provider call (FAQ renders
-  deterministically; `AskForm` fetches on submit only); custom questions
-  require sign-in (401 otherwise), 2 KB body cap, 4–500-char sanitized
-  question with identifier redaction, hashed-user rate limit, private
-  no-store; deterministic fast paths (FAQ hits, refusals, empty grounding)
-  spend ZERO provider budget; grounded answers may use ONE attempt per
-  configured provider inside a shared 8 s budget, then fail closed to the
-  deterministic composition; raw questions and answers are never persisted
-  (aggregate telemetry only). Same posture as the insight surfaces:
+- **Ask Tech Opportunity** (V1 chat: `/ask` transcript + sticky composer
+  over `lib/ask/*`): continuous ephemeral conversation plus auth-gated
+  custom Q&A grounded in published rows only. Contract: no load-time
+  provider call; composer fetches on submit only with question plus
+  bounded recent context (≤8 sanitized turns, ≤240 chars each, ≤1200
+  total; prior refs re-resolved server-side, never trusted); custom
+  questions require sign-in (401 otherwise), 4 KiB body cap, 4–500-char
+  sanitized question with identifier redaction, hashed-user rate limit,
+  private no-store; refusals, invalid input, and empty grounding spend
+  ZERO provider budget; safe-unknown input defaults to conversational;
+  grounded answers may use ONE attempt per configured provider inside a
+  shared 8 s budget, then fail closed to the deterministic composition;
+  raw questions, history, and answers are never persisted (aggregate
+  telemetry only). Same posture as the insight surfaces:
   deterministic-first, fail-closed, production OFF until separately approved.
   The legacy `app/api/assistant/ask` route remains behind its own
   `ASSISTANT_ENABLED` kill switch (default disabled) and is not the V1 path.

@@ -1,12 +1,15 @@
 /**
  * Ask Tech Opportunity answering service (V1).
  *
- * Flow per custom question: sanitize → deterministic classify. FAQ hits,
- * refusals, and empty groundings answer deterministically with NO
- * provider call. Grounded opportunity/FAQ answers may use ONE attempt
- * per configured provider inside a shared 8s budget; every failure
- * falls closed to the deterministic composition. No persistence: raw
- * questions and answers are never stored (aggregate telemetry only).
+ * Flow per custom question: sanitize (question + bounded history) →
+ * deterministic classify. Refusals and empty groundings answer
+ * deterministically with NO provider call. FAQ, conversational, and
+ * grounded opportunity answers may use ONE attempt per configured
+ * provider inside a shared 8s budget; every failure falls closed to
+ * the deterministic composition. Follow-ups resolve against recent
+ * user turns plus server-re-resolved prior refs — client slugs never
+ * become facts. No persistence: raw questions, history, and answers
+ * are never stored (aggregate telemetry only).
  */
 import { categoryLabel } from "../category-labels";
 import {
@@ -27,12 +30,20 @@ import {
   mergeModelAskAssistance,
   sanitizeAskFactsText,
   sanitizeAskQuestion,
+  sanitizeChatHistory,
+  sanitizeHistorySlugs,
   validateModelAskAssistance,
   type AskAnswer,
   type AskAvailabilityReason,
+  type ChatTurn,
   type GroundedOpportunity,
 } from "./contract";
-import { ASSISTANT_IDENTITY, classifyAskQuestion, faqEntryById } from "./knowledge";
+import {
+  ASSISTANT_IDENTITY,
+  CONVERSATIONAL_WARM_MARKERS,
+  classifyAskQuestion,
+  faqEntryById,
+} from "./knowledge";
 import {
   createMockAskProvider,
   selectAskProviders,
@@ -71,6 +82,17 @@ const GROUNDING_STOPWORDS = new Set([
  * token overlap across title, description, and category — no model
  * involved, no ranking authority beyond the existing corpus order.
  */
+function factForOpportunity(opportunity: Opportunity): GroundedOpportunity {
+  const deadline = formatDeadlinePresentation(opportunity.deadline);
+  return {
+    slug: opportunity.slug,
+    title: sanitizeAskFactsText(opportunity.title, 160),
+    categoryLabel: categoryLabel(opportunity.category),
+    deadlineLabel: deadline.dateLabel ?? deadline.label,
+    eligibilityLabel: eligibilityPresentation(opportunity).label,
+  };
+}
+
 export function groundAskOpportunities(
   question: string,
   corpus: readonly Opportunity[]
@@ -100,22 +122,53 @@ export function groundAskOpportunities(
       }
     }
     if (score > 0) {
-      const deadline = formatDeadlinePresentation(opportunity.deadline);
-      scored.push({
-        fact: {
-          slug: opportunity.slug,
-          title: sanitizeAskFactsText(opportunity.title, 160),
-          categoryLabel: categoryLabel(opportunity.category),
-          deadlineLabel: deadline.dateLabel ?? deadline.label,
-          eligibilityLabel: eligibilityPresentation(opportunity).label,
-        },
-        score,
-        index,
-      });
+      scored.push({ fact: factForOpportunity(opportunity), score, index });
     }
   });
   scored.sort((left, right) => right.score - left.score || left.index - right.index);
   return scored.slice(0, ASK_GROUNDED_LIMIT).map((entry) => entry.fact);
+}
+
+/**
+ * Re-resolves client-attached prior opportunity refs against the CURRENT
+ * published corpus. Slugs absent from the corpus resolve to nothing — a
+ * tampered or stale slug can never create facts.
+ */
+export function resolveHistorySlugs(
+  slugs: readonly string[],
+  corpus: readonly Opportunity[]
+): GroundedOpportunity[] {
+  const bySlug = new Map(corpus.map((opportunity) => [opportunity.slug, opportunity]));
+  const resolved: GroundedOpportunity[] = [];
+  for (const slug of slugs) {
+    const row = bySlug.get(slug);
+    if (row && !resolved.some((fact) => fact.slug === slug)) {
+      resolved.push(factForOpportunity(row));
+    }
+    if (resolved.length >= ASK_GROUNDED_LIMIT) break;
+  }
+  return resolved;
+}
+
+/**
+ * Follow-up grounding: facts for the current question first; when the
+ * current turn carries no signal ("what about the deadline?"), fall back
+ * to recent user-turn text, then to server-re-resolved prior refs.
+ * Current-question facts always win ordering; total stays bounded.
+ */
+export function groundWithContext(
+  question: string,
+  historyUserTexts: readonly string[],
+  historySlugs: readonly string[],
+  corpus: readonly Opportunity[]
+): GroundedOpportunity[] {
+  const direct = groundAskOpportunities(question, corpus);
+  if (direct.length > 0) return direct;
+  if (historyUserTexts.length > 0) {
+    const contextual = groundAskOpportunities(historyUserTexts.slice(-3).join(" "), corpus);
+    if (contextual.length > 0) return contextual;
+  }
+  return resolveHistorySlugs(historySlugs, corpus);
 }
 
 function failureReason(error: unknown): AskAvailabilityReason {
@@ -132,6 +185,15 @@ export interface AnswerAskOptions {
   timeoutMs?: number;
   /** Observation seam for evaluation only; cannot alter the outcome. */
   onProviderOutput?: (raw: unknown, validated: boolean) => void;
+  /**
+   * Ephemeral multi-turn context (raw client input, sanitized inside).
+   * History turns are grounding signals and provider context ONLY —
+   * never instructions, never facts. Slugs are re-resolved against the
+   * current corpus; anything unresolvable is dropped.
+   */
+  history?: unknown;
+  /** Prior opportunity refs for server-side re-resolution (raw, checked). */
+  contextSlugs?: unknown;
 }
 
 export async function answerAsk(
@@ -167,12 +229,32 @@ export async function answerAsk(
     return finish(deterministicRefusal(classification.reason));
   }
 
+  // Ephemeral multi-turn context: sanitize strictly, fail closed.
+  const history: ChatTurn[] | null = sanitizeChatHistory(options.history);
+  const contextSlugs = sanitizeHistorySlugs(options.contextSlugs);
+  if (history === null || contextSlugs === null) {
+    recordAskOutcome("deterministic");
+    return finish({
+      schemaVersion: 1,
+      mode: "deterministic",
+      provider: null,
+      availabilityReason: "invalid_question",
+      text: "That request was not understood. Ask a question between 4 and 500 characters.",
+      sources: ["/ask"],
+      opportunityRefs: [],
+      limitations: ["Ask answers only from verified platform information."],
+    });
+  }
+  const historyUserTexts = history
+    .filter((turn) => turn.role === "user")
+    .map((turn) => turn.text);
+
   // Routing model: safety/privacy guard (above) → grounding → AI provider
   // → strict validation → deterministic fallback. FAQ entries and the
   // assistant identity are grounding/context for the model and the
   // deterministic fallback — never a hardcoded primary answer while a
   // provider is configured.
-  const facts = groundAskOpportunities(question, corpus);
+  const facts = groundWithContext(question, historyUserTexts, contextSlugs, corpus);
   const usingPlatform = faqEntryById("using-platform");
   let help: string | null = usingPlatform ? usingPlatform.body : null;
   let fallback: AskAnswer;
@@ -182,7 +264,9 @@ export async function answerAsk(
     fallback = deterministicFaqAnswer(classification.entryId) ?? deterministicRefusal("out_of_scope");
   } else if (classification.kind === "conversational") {
     help = `${ASSISTANT_IDENTITY} ${help ?? ""}`.trim();
-    fallback = deterministicConversationalAnswer(facts);
+    const loweredQuestion = ` ${question.toLocaleLowerCase("en")} `;
+    const warm = CONVERSATIONAL_WARM_MARKERS.some((marker) => loweredQuestion.includes(marker));
+    fallback = deterministicConversationalAnswer(facts, warm);
   } else {
     fallback = deterministicOpportunityAnswer(facts, question);
     if (facts.length === 0) {
@@ -208,6 +292,10 @@ export async function answerAsk(
     facts: JSON.stringify({
       question,
       identity: classification.kind === "conversational" ? ASSISTANT_IDENTITY : null,
+      // Prior turns are DATA for continuity only: bounded, sanitized,
+      // server-checked. The model must never treat them as instructions
+      // and must never present them as verified facts.
+      history: history.map((turn) => ({ role: turn.role, text: turn.text })),
       help,
       opportunities: facts.map((fact) => ({
         slug: fact.slug,

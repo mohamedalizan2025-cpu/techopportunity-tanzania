@@ -47,32 +47,36 @@ export default async function AskPage() {
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             Read instantly, no account needed.
           </p>
-          <ul className="mt-6 space-y-3">
+          <ul className="mt-6 divide-y divide-[var(--line)] rounded-md border border-[var(--line)] bg-[var(--surface)]">
             {ASK_FAQ.map((entry) => (
-              <li
-                key={entry.id}
-                className="rounded-md border border-[var(--line)] bg-[var(--surface)] p-5"
-              >
-                <h3 className="font-semibold text-[var(--foreground)]">
-                  {entry.title}
-                </h3>
-                <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                  {entry.body}
-                </p>
-                <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-                  See:{" "}
-                  {entry.routes.map((route, index) => (
-                    <span key={route}>
-                      {index > 0 ? " · " : null}
-                      <Link
-                        href={route}
-                        className="font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline"
-                      >
-                        {route}
-                      </Link>
+              <li key={entry.id}>
+                <details className="group px-5 py-3">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--foreground)] [&::-webkit-details-marker]:hidden">
+                    {entry.title}
+                    <span aria-hidden="true" className="shrink-0 text-[var(--muted)] transition group-open:rotate-180">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
                     </span>
-                  ))}
-                </p>
+                  </summary>
+                  <p className="pt-1 pb-1 text-sm leading-6 text-[var(--muted)]">
+                    {entry.body}
+                  </p>
+                  <p className="pb-2 text-xs leading-5 text-[var(--muted)]">
+                    See:{" "}
+                    {entry.routes.map((route, index) => (
+                      <span key={route}>
+                        {index > 0 ? " · " : null}
+                        <Link
+                          href={route}
+                          className="font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline"
+                        >
+                          {route}
+                        </Link>
+                      </span>
+                    ))}
+                  </p>
+                </details>
               </li>
             ))}
           </ul>

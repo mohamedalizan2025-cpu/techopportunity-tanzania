@@ -16,16 +16,22 @@ import {
   faqEntryById,
 } from "../lib/ask/knowledge";
 import {
+  ASK_HISTORY_MAX_TURNS,
+  ASK_HISTORY_MAX_TURN_CHARS,
   deterministicConversationalAnswer,
   deterministicFaqAnswer,
   deterministicOpportunityAnswer,
   deterministicRefusal,
   sanitizeAskQuestion,
+  sanitizeChatHistory,
+  sanitizeHistorySlugs,
   validateModelAskAssistance,
 } from "../lib/ask/contract";
 import {
   answerAsk,
   groundAskOpportunities,
+  groundWithContext,
+  resolveHistorySlugs,
 } from "../lib/ask/service";
 import { createMockAskProvider, selectAskProviders } from "../lib/ask/providers";
 import { selectConfiguredOpportunityIntelligenceProvider } from "../lib/opportunity-intelligence/provider";
@@ -131,6 +137,13 @@ test("classifier routes faq, opportunities, and refusals deterministically", () 
   assert.deepEqual(classifyAskQuestion("Who are you?"), { kind: "conversational" });
   assert.deepEqual(classifyAskQuestion("What can you do?"), { kind: "conversational" });
   assert.deepEqual(classifyAskQuestion("Tell me about this platform."), { kind: "conversational" });
+  assert.deepEqual(classifyAskQuestion("hello"), { kind: "conversational" });
+  assert.deepEqual(classifyAskQuestion("How are you?"), { kind: "conversational" });
+  assert.deepEqual(classifyAskQuestion("Thanks!"), { kind: "conversational" });
+  assert.deepEqual(classifyAskQuestion("Thank you"), { kind: "conversational" });
+  assert.deepEqual(classifyAskQuestion("Can you help me?"), { kind: "conversational" });
+  assert.deepEqual(classifyAskQuestion("okay"), { kind: "conversational" });
+  assert.deepEqual(classifyAskQuestion("hmm, interesting"), { kind: "conversational" });
   assert.deepEqual(classifyAskQuestion("Write my physics homework"), {
     kind: "refusal",
     reason: "out_of_scope",
@@ -230,6 +243,10 @@ test("deterministic composers stay honest", () => {
   assert.equal(hello.availabilityReason, "assistant");
   assert.ok(hello.text.includes("Ask AI"));
   assert.ok(hello.text.includes("not human"));
+  const warm = deterministicConversationalAnswer([], true);
+  assert.ok(warm.text.includes("doing well"));
+  assert.ok(warm.text.includes("Ask AI"));
+  assert.doesNotMatch(warm.text, /I don't have enough verified information/);
   const empty = deterministicOpportunityAnswer([], "Which internships are open?");
   assert.equal(empty.availabilityReason, "no_matches");
   assert.equal(empty.opportunityRefs.length, 0);
@@ -451,6 +468,60 @@ test("Groq success returns first; Groq failure tries Gemini; both fail falls bac
   assert.doesNotMatch(fallen.text, /eligible, guaranteed/);
 });
 
+test("history is sanitized, trimmed, and bounded", () => {
+  assert.deepEqual(sanitizeChatHistory(undefined), []);
+  assert.deepEqual(sanitizeHistorySlugs(undefined), []);
+  assert.equal(sanitizeChatHistory("nope"), null);
+  assert.equal(sanitizeChatHistory([{ role: "user", text: "hi" }])?.length, 1);
+  assert.equal(sanitizeChatHistory([{ role: "system", text: "hi" }]), null);
+  assert.equal(
+    sanitizeChatHistory([{ role: "user", text: "hi", extra: 1 }]),
+    null
+  );
+  const long = Array.from({ length: 12 }, (_, index) => ({
+    role: "user" as const,
+    text: `question number ${index} about internships`,
+  }));
+  const trimmed = sanitizeChatHistory(long);
+  assert.equal(trimmed?.length, ASK_HISTORY_MAX_TURNS);
+  assert.ok(trimmed?.[trimmed.length - 1].text.includes("question number 11"));
+  assert.equal(
+    sanitizeChatHistory([{ role: "user", text: "x".repeat(ASK_HISTORY_MAX_TURN_CHARS + 50) }])?.[0].text.length,
+    ASK_HISTORY_MAX_TURN_CHARS,
+    "overlong turns truncate to the per-turn bound"
+  );
+  assert.deepEqual(sanitizeHistorySlugs(["alpha-internship", "alpha-internship"]), ["alpha-internship"]);
+  assert.equal(sanitizeHistorySlugs(["not a slug!!"]), null);
+  assert.equal(sanitizeHistorySlugs(["../../etc/passwd"]), null);
+  assert.equal(
+    sanitizeHistorySlugs(["a-1", "b-2", "c-3", "d-4", "e-5", "f-6", "g-7"]),
+    null
+  );
+});
+
+test("follow-up resolves prior refs against the published corpus only", () => {
+  const resolved = resolveHistorySlugs(["alpha-internship", "evil-slug"], CORPUS);
+  assert.deepEqual(resolved.map((fact) => fact.slug), ["alpha-internship"]);
+  assert.deepEqual(resolveHistorySlugs([], CORPUS), []);
+  const contextual = groundWithContext("what about the deadline?", ["Tell me about the alpha internship"], [], CORPUS);
+  assert.ok(contextual.some((fact) => fact.slug === "alpha-internship"));
+});
+
+test("how-are-you gets the warm fallback, never the generic refusal", async () => {
+  resetAskTelemetryForTests();
+  const offline = { providers: [], reason: "not_configured" } as const;
+  const answer = await answerAsk("How are you?", CORPUS, { selection: offline });
+  assert.equal(answer.mode, "deterministic");
+  assert.ok(answer.text.includes("doing well"));
+  assert.ok(answer.text.includes("Ask AI"));
+  assert.doesNotMatch(answer.text, /I don't have enough verified information/);
+  const malformed = await answerAsk("Which internships are open?", CORPUS, {
+    history: [{ role: "user", text: "hi" }, { role: "intruder", text: "x" }],
+    selection: offline,
+  });
+  assert.equal(malformed.availabilityReason, "invalid_question");
+});
+
 test("quota and invalid provider output fall back deterministically", async () => {
   resetAskTelemetryForTests();
   const { ProviderQuotaError } = await import("../lib/opportunity-intelligence/provider");
@@ -513,10 +584,38 @@ test("ask page serves deterministic help with no load-time provider call", () =>
   assert.doesNotMatch(page, /answerAsk|generate\(|fetch\("\/api\/ask"/);
   const form = read("components/ask-form.tsx");
   assert.match(form, /onSubmit=\{askQuestion\}/);
-  assert.match(form, /JSON\.stringify\(\{ question \}\)/);
+  assert.match(form, /JSON\.stringify\(\{ question, \.\.\.context \}\)/);
   assert.match(form, /Sign in to ask/);
-  assert.doesNotMatch(form, /useEffect/);
+  assert.match(form, /history/);
+  assert.match(form, /contextSlugs/);
   assert.doesNotMatch(form, /email|userId|profile|goals|saved/i);
+});
+
+test("ask chat is ephemeral, keyboard-first, and voice-capable", () => {
+  const form = read("components/ask-form.tsx");
+  assert.doesNotMatch(form, /localStorage|sessionStorage|indexedDB/, "no browser chat storage");
+  assert.doesNotMatch(form, /\.from\(/, "no database access");
+  assert.match(form, /sticky/, "composer stays available");
+  assert.match(form, /aria-label="Send question"/);
+  assert.match(form, /aria-label="Starter questions"/, "starters secondary to transcript");
+  assert.match(form, /Shift\+Enter/, "newline hint documented");
+  assert.match(form, /SpeechRecognition/);
+  assert.match(form, /webkitSpeechRecognition/, "webkit fallback probed");
+  assert.match(form, /aria-pressed=\{listening\}/, "microphone state announced");
+  assert.match(form, /setVoiceSupported\(false\)/, "unsupported browsers hide voice cleanly");
+  assert.match(form, /\.onerror =/, "microphone errors handled");
+  assert.match(form, /role="status"/, "sending state announced");
+  assert.match(form, /<ol[^>]*aria-label="Conversation with Ask AI"/, "transcript semantics");
+  const route = read("app/api/ask/route.ts");
+  assert.match(route, /contextSlugs/);
+  assert.match(route, /history/);
+});
+
+test("ask route validates history shape and stays bounded", () => {
+  const route = read("app/api/ask/route.ts");
+  assert.match(route, /MAX_REQUEST_BYTES = 4_096/);
+  assert.match(route, /status: 400/);
+  assert.match(route, /!Array\.isArray\(history\)/);
 });
 
 chain.then(

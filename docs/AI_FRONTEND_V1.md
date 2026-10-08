@@ -15,8 +15,11 @@ deterministic ranking/grounding → AI phrasing → user action:
 - **AI Match** (`/for-you`, alias `/ai-match`, nav "AI Match"):
   eligible-match workspace with profile summary and explicit AI
   explanations.
-- **Ask Tech Opportunity** (`/ask`, nav "Ask"): curated help plus
-  grounded opportunity Q&A. No chatbot bubble, no chat history.
+- **Ask Tech Opportunity** (`/ask`, nav "Ask"): continuous chat —
+  transcript above, sticky composer below, starter chips at empty
+  state only. Ephemeral multi-turn continuity (client state, bounded
+  recent context per request, server re-grounds every turn). No
+  chatbot bubble, no stored chat history.
 
 AI can never invent eligibility, deadlines, geography, requirements,
 publication/trust state, selection probability, or submissions.
@@ -42,11 +45,14 @@ refusals), `contract.ts` (question sanitizer 4–500 chars with
 identifier redaction, strict output validator, deterministic
 composers), `providers.ts` (Gemini/Groq adapters over the shared
 transport helpers from `provider.ts`, Ask strict schema),
-`service.ts` (sanitize → safety-guard classify → grounding → provider
-attempts carrying FAQ/identity/opportunity context, one per provider
+`service.ts` (sanitize question + bounded history → safety-guard
+classify → grounding with follow-up resolution → provider attempts
+carrying FAQ/identity/opportunity/history context, one per provider
 inside a shared 8s budget → strict validation → fail-closed
 deterministic fallback; refusals, invalid input, and empty opportunity
-grounding stay deterministic with ZERO provider spend), `telemetry.ts`
+grounding stay deterministic with ZERO provider spend; safe-unknown
+input defaults to conversational, never the generic refusal),
+`telemetry.ts`
 (aggregate counters only; raw conversations never persisted
 anywhere — no table exists).
 `app/api/ask/route.ts`: auth-required custom questions (401
@@ -59,11 +65,14 @@ call; `AskForm` fetches on submit only and posts the question text.
 AI Match sends the existing sanitized matching input only
 (level, field, sectors, types, skills, region, experience — no name,
 email, phone, UUIDs, saves, activity, goals, CVs). Ask sends NO
-profile data at all: sanitized question + grounded public opportunity
+profile data at all: sanitized question + bounded sanitized history
+turns (≤8, ≤240 chars each, ≤1200 total) + grounded public opportunity
 facts + matched public FAQ text + the static assistant-identity string
-for conversational questions. FAQ entries and the identity string are
-grounding/context for the model and the deterministic fallback — the
-model writes the natural response; no intent-to-answer table exists.
+for conversational questions. Prior opportunity refs are re-resolved
+server-side against the current corpus — client slugs never become
+facts. FAQ entries and the identity string are grounding/context for
+the model and the deterministic fallback — the model writes the
+natural response; no intent-to-answer table exists.
 
 ## 5. Authority boundaries
 
@@ -76,13 +85,18 @@ authority claims ("eligible", "guaranteed", "best chance",
 ## 6. Privacy
 
 Ask: no profile transmitted, no conversation stored, aggregate
-telemetry only. Current `/privacy` AI section ("may be enabled
-separately") stays accurate while production AI is OFF — no policy
-edit in this milestone. REQUIRED BEFORE ACTIVATION: flip the AI
-section to active voice and disclose that custom Ask questions are
-sent to the configured providers (bounded, redacted), answered from
-verified information, and never stored; FAQ answers stay
-deterministic without provider calls.
+telemetry only. Chat continuity is ephemeral client state (refresh
+clears it for V1 — sessionStorage deliberately NOT used, pending a
+privacy-contract review). Voice input is browser-native speech
+recognition only: recognized text fills the editable composer, no
+audio is uploaded or stored, no speech provider added. Current
+`/privacy` AI section ("may be enabled separately") stays accurate
+while production AI is OFF — no policy edit in this milestone.
+REQUIRED BEFORE ACTIVATION: flip the AI section to active voice and
+disclose that custom Ask questions are sent to the configured
+providers (bounded, redacted), answered from verified information,
+and never stored; FAQ answers stay deterministic without provider
+calls.
 
 ## 7. Provider chain, fallback, out-of-scope
 

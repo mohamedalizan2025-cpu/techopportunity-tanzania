@@ -20,6 +20,20 @@ export const ASK_QUESTION_MIN_LENGTH = 4;
 export const ASK_QUESTION_MAX_LENGTH = 500;
 export const ASK_ANSWER_MAX_LENGTH = 800;
 export const ASK_GROUNDED_LIMIT = 3;
+/** Bounded recent context window (V1): at most this many prior turns. */
+export const ASK_HISTORY_MAX_TURNS = 8;
+/** Per-turn bound for history text sent with a follow-up. */
+export const ASK_HISTORY_MAX_TURN_CHARS = 240;
+/** Total bound across all history turns in one request. */
+export const ASK_HISTORY_MAX_TOTAL_CHARS = 1200;
+/** Prior opportunity refs the client may attach for server re-resolution. */
+export const ASK_HISTORY_MAX_SLUGS = 6;
+
+/** One ephemeral conversation turn. Client state only — never persisted. */
+export interface ChatTurn {
+  role: "user" | "assistant";
+  text: string;
+}
 
 export type AskMode = "ai" | "deterministic";
 export type AskAvailabilityReason =
@@ -88,6 +102,61 @@ export function sanitizeAskQuestion(raw: unknown): string | null {
 
 export function sanitizeAskFactsText(value: string, max: number): string {
   return cleanFreeText(value, max) ?? "";
+}
+
+function sanitizeChatTurnText(value: unknown, max: number): string | null {
+  if (typeof value !== "string") return null;
+  const cleaned = cleanFreeText(value, max);
+  if (!cleaned || cleaned.length < 1 || cleaned.length > max) return null;
+  return cleaned;
+}
+
+/**
+ * Bounded recent-context sanitizer. Accepts an unknown client-supplied
+ * history array and returns clean turns (oldest first) or null when the
+ * shape is hostile. Rules: plain objects with exactly role+text, role in
+ * {user, assistant}, per-turn and total char bounds, at most
+ * ASK_HISTORY_MAX_TURNS turns (oldest trimmed first). Every turn is
+ * re-sanitized with identifier redaction — client text is data, never
+ * instructions, and opportunity slugs are NEVER accepted here (see
+ * sanitizeHistorySlugs + server-side re-resolution).
+ */
+export function sanitizeChatHistory(raw: unknown): ChatTurn[] | null {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw)) return null;
+  const turns: ChatTurn[] = [];
+  for (const entry of raw) {
+    if (!plainObject(entry)) return null;
+    const keys = Object.keys(entry).sort();
+    if (keys.length !== 2 || keys[0] !== "role" || keys[1] !== "text") return null;
+    if (entry.role !== "user" && entry.role !== "assistant") return null;
+    const text = sanitizeChatTurnText(entry.text, ASK_HISTORY_MAX_TURN_CHARS);
+    if (text === null) return null;
+    turns.push({ role: entry.role, text });
+  }
+  const trimmed = turns.slice(-ASK_HISTORY_MAX_TURNS);
+  const total = trimmed.reduce((sum, turn) => sum + turn.text.length, 0);
+  if (total > ASK_HISTORY_MAX_TOTAL_CHARS) return null;
+  return trimmed;
+}
+
+/**
+ * Client-attached prior opportunity refs. Returns slug-shaped strings only
+ * (bounded count/length); every slug MUST still be re-resolved server-side
+ * against the current published corpus — a slug here proves nothing.
+ */
+export function sanitizeHistorySlugs(raw: unknown): string[] | null {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw)) return null;
+  if (raw.length > ASK_HISTORY_MAX_SLUGS) return null;
+  const slugs: string[] = [];
+  for (const entry of raw) {
+    if (typeof entry !== "string") return null;
+    const cleaned = entry.trim().slice(0, 120);
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(cleaned)) return null;
+    if (!slugs.includes(cleaned)) slugs.push(cleaned);
+  }
+  return slugs;
 }
 
 function plainObject(value: unknown): value is Record<string, unknown> {
@@ -163,18 +232,23 @@ export function deterministicFaqAnswer(entryId: string): AskAnswer | null {
  * Deterministic fallback for conversational questions when no provider is
  * available: assistant identity plus the platform-help summary, extended
  * with grounded opportunity lines when the question also matched listings.
- * Never a primary answer while providers are configured.
+ * Wellbeing openers ("how are you?") get the warm variant. Never a primary
+ * answer while providers are configured.
  */
 export function deterministicConversationalAnswer(
-  facts: readonly GroundedOpportunity[]
+  facts: readonly GroundedOpportunity[],
+  warm = false
 ): AskAnswer {
   const help = faqEntryById("using-platform");
   const lines = facts.map((fact) =>
     `${fact.title} (${fact.categoryLabel}) — ${fact.deadlineLabel}. ${fact.eligibilityLabel}`
   );
+  const opener = warm
+    ? "I'm doing well — thanks for asking. "
+    : "";
   const text = lines.length > 0
-    ? `${ASSISTANT_IDENTITY} Based on your question, the closest published listings are: ${lines.join(" ")} Open any listing to confirm details at the official source.`
-    : `${ASSISTANT_IDENTITY} ${help !== null ? help.body : "Ask me about opportunities, eligibility and deadlines, or using the platform."}`;
+    ? `${opener}${ASSISTANT_IDENTITY} Based on your question, the closest published listings are: ${lines.join(" ")} Open any listing to confirm details at the official source.`
+    : `${opener}${ASSISTANT_IDENTITY} ${help !== null ? help.body : "Ask me about opportunities, eligibility and deadlines, or using the platform."}`;
   return {
     schemaVersion: ASK_SCHEMA_VERSION,
     mode: "deterministic",
