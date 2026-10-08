@@ -420,8 +420,9 @@ revenue, traction, or partnerships evidence that does not exist.
   kill-switch mechanism PASS (disabled/zero-spend/unconfigured =
   zero external requests). Deception failures 0, privacy
   failures 0. Real-provider latency NOT measured (no keys).
-- PROCEDURE NOTE: runbook §§F-1/F-2 still say Gemini-primary;
-  code is Groq-first — owner reads F-1 as Groq, F-2 as Gemini.
+- PROCEDURE NOTE (corrected 2026-10-08, docs-only): runbook
+  §§F-1/F-2 now name the canonical Groq-primary/Gemini-backup
+  order. No code touched; completed evidence unaltered.
 - PROD_AI_READY = NO. Exact remaining blockers: owner-executed
   Preview smoke §§B–K with synthetic users + configured keys
   (Match explanation, Ask opportunity/product/unsupported,

@@ -184,24 +184,25 @@ page, trigger the "Opportunity Intelligence" brief explicitly where offered.
 
 ## F. Provider chain, fallback, failure behavior
 
-### F-1 Gemini primary serves
+### F-1 Groq primary serves
 
 - TEST: Trigger 2–3 briefs/explanations; note which path served (UI shows
   "AI-assisted result" mode only — mode by behavior: fast structured brief
   ≈ primary; record latency in §I).
 - EXPECTED RESULT: Primary serves structured briefs on most attempts
-  (measured 14/16 on the fixed corpus); deterministic facts never
-  overridden.
+  (reference: Groq 9/16 paced with zero quota errors after the
+  token-budget fix; Gemini measured 14/16 as the former primary);
+  deterministic facts never overridden.
 - PASS/FAIL:
 - OBSERVED RESULT:
 
-### F-2 Groq backup exercisable
+### F-2 Gemini backup exercisable
 
-- TEST: Same session — if a primary attempt falls back, confirm a backup
+- TEST: Same session — if a Groq attempt falls back, confirm a Gemini
   attempt occurs before deterministic fallback (single attempt each, no
   retry storm).
-- EXPECTED RESULT: Backup path exercisable (measured 9/16 paced, zero quota
-  errors); at most one attempt per provider per uncached insight.
+- EXPECTED RESULT: Backup path exercisable (reference: Gemini 14/16 on
+  the fixed corpus); at most one attempt per provider per uncached insight.
 - PASS/FAIL:
 - OBSERVED RESULT:
 
@@ -442,11 +443,11 @@ except mechanism proofs, which PASS.
   here (no keys); mock timeout path ~52–57ms; 8s shared budget
   unchanged in code. Zero raw-chat persistence (source scans +
   route tests green).
-- [PROCEDURE NOTE] §§F-1/F-2 below still name the former
-  Gemini-primary/Groq-backup order. Current code is Groq-first:
-  at owner smoke time read F-1 as Groq-primary-serves and F-2 as
-  Gemini-backup-exercisable. Do NOT edit F-1/F-2 expectations
-  without a matching code change.
+- [PROCEDURE NOTE — CORRECTED 2026-10-08] §§F-1/F-2 now name the
+  canonical Groq-primary/Gemini-backup order, matching the code.
+  Historical references kept (Groq 9/16 paced; Gemini 14/16 as
+  former primary). §M above is untouched dated evidence of the
+  former order.
 - §§B–K RESULT: BLOCKED (owner session + configured Preview keys
   required). §§B–L left blank intentionally — owner fills on
   execution. PROD_AI_READY = NO.
