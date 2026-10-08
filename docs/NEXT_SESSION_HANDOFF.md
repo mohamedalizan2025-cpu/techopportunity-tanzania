@@ -398,3 +398,33 @@ revenue, traction, or partnerships evidence that does not exist.
   BLOCKERS (unchanged, owner-side): filled staging runbook §§B–K,
   zero-deception evidence, fresh production attestations, rollback
   rehearsal, signed decision template, dashboard config + redeploy.
+
+## Staging validation 2026-10-08 (branch `prod-ai-activation`; staging-only, production untouched)
+
+- SCOPE: validate Groq-first code @ `e6c2fa1` with real providers
+  where possible; everything else by mocks/static proofs. Env
+  probe (names only, values never read/printed): all 11
+  provider/AI names ABSENT_OR_EMPTY, no `.env.local`/`.env` —
+  zero real-provider calls made or possible. Zero DB writes.
+  §§B–K BLOCKED (no browser, no Preview session, no keys);
+  runbook §§B–L left blank for the owner, new §N records the
+  engineering-side evidence. No main push, no production change.
+- EVIDENCE (all exit 0, fresh at `e6c2fa1`): ask 16/16, ai-match
+  8/8, opportunity-intelligence 23/23, eval-harness 6/6,
+  public-facts corpus 6/6 (mock), staging-smoke-corpus 6/6.
+  Groq-first + Gemini-second proven on both selectors; Groq
+  success / Groq-fail→Gemini / both-fail→grounded-fallback all
+  PASS (mock); conversational + FAQ reach provider; refusals /
+  invalid / empty-grounding spend zero; injection + private-data
+  probes refused; validators + allowlist + no-persistence green;
+  kill-switch mechanism PASS (disabled/zero-spend/unconfigured =
+  zero external requests). Deception failures 0, privacy
+  failures 0. Real-provider latency NOT measured (no keys).
+- PROCEDURE NOTE: runbook §§F-1/F-2 still say Gemini-primary;
+  code is Groq-first — owner reads F-1 as Groq, F-2 as Gemini.
+- PROD_AI_READY = NO. Exact remaining blockers: owner-executed
+  Preview smoke §§B–K with synthetic users + configured keys
+  (Match explanation, Ask opportunity/product/unsupported,
+  fallback, latency, grounding, privacy, §K rollback rehearsal),
+  staging-behavior review, fresh production attestations, signed
+  decision template, dashboard config + redeploy.

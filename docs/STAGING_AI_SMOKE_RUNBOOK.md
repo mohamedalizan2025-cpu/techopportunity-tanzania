@@ -398,3 +398,55 @@ It does not fill §§B–L and does not approve production.
   H-1 privacy, §I latency table, §J quota counts, §K rollback
   rehearsal, §L sign-off. Then staging-behavior review →
   owner production decision.
+
+## N. Engineering-side validation record 2026-10-08 (branch `prod-ai-activation` @ `e6c2fa1`, Groq-first code)
+
+Status: **LOCAL/MOCK EVIDENCE ONLY — §§B–L STAY BLANK FOR THE OWNER.**
+No browser tooling, no Preview session, no provider keys in this
+environment (all 11 `GEMINI/GROQ/AI_OPPORTUNITY_INTELLIGENCE_*` names
+probed present/absent-only: every one ABSENT_OR_EMPTY; no
+`.env.local`, no `.env`). Zero real-provider calls made or possible;
+zero DB writes (staging or production); production env untouched;
+production AI stays OFF. §§B–K below are therefore BLOCKED here
+except mechanism proofs, which PASS.
+
+- [DIRECTLY VERIFIED] Chain order on both surfaces (mock, no
+  network): `selectConfiguredOpportunityIntelligenceProvider` and
+  `selectAskProviders` under a complete fake env return
+  `[groq, gemini]` with `provider.id === "groq"`.
+- [MOCK] Groq primary success: first-attempt Groq answer returns
+  `ai/groq` with zero backup calls.
+- [MOCK] Gemini fallback: Groq quota failure → single Gemini attempt
+  returns `ai/gemini`; both fail (quota + invalid) → deterministic
+  grounded fallback, refs kept, no raw error text.
+- [MOCK] Ask routing at this SHA: "Who are you?" / "What can you
+  do?" classify `conversational` and reach the provider when
+  configured (`ai`), identity fallback when not; FAQ questions are
+  provider-phrased with FAQ grounding as fallback; refusals,
+  invalid input, and empty grounding spend zero provider tokens.
+- [MOCK + STATIC] Safety probes PASS with zero provider calls:
+  another-user private data, `service_role`/`service-role` key,
+  internal instructions, staff notes, system-prompt extraction —
+  all `refused`; "Tell me a joke" / homework stay `out_of_scope`.
+- [STATIC + TESTS] Authority unchanged: strict validators reject
+  extra keys, invented refs, percentages, eligibility/guarantee
+  claims; unknown stays unknown; AI Match sanitized input carries
+  exactly the 7 allowlisted profile fields (goals/identity/
+  activity text absent). Deception failures: 0. Privacy failures: 0.
+- [MECHANISM PASS] Kill switch: disabled / zero-spend /
+  unconfigured selections make zero external requests (pinned by
+  tests + 43/43 boundary gates). Preview dashboard rollback (§K)
+  rehearsal is BLOCKED (owner-only env + redeploy).
+- [STATIC] Staging-smoke corpus gate proofs 6/6; public-facts
+  corpus 6/6 green (mock). Real-provider latency: NOT measured
+  here (no keys); mock timeout path ~52–57ms; 8s shared budget
+  unchanged in code. Zero raw-chat persistence (source scans +
+  route tests green).
+- [PROCEDURE NOTE] §§F-1/F-2 below still name the former
+  Gemini-primary/Groq-backup order. Current code is Groq-first:
+  at owner smoke time read F-1 as Groq-primary-serves and F-2 as
+  Gemini-backup-exercisable. Do NOT edit F-1/F-2 expectations
+  without a matching code change.
+- §§B–K RESULT: BLOCKED (owner session + configured Preview keys
+  required). §§B–L left blank intentionally — owner fills on
+  execution. PROD_AI_READY = NO.
