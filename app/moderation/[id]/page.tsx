@@ -6,23 +6,25 @@ import { categoryLabel } from "@/lib/category-labels";
 import {
   getEnrichmentAuditStatus,
   getModerationAccess,
-  getPendingOpportunityById,
-  getQueueNavigation,
   isQueueFilterEmpty,
   isValidOpportunityId,
-  listPendingOpportunities,
   listReviewCategoryOptions,
   parseQueueFilter,
   queueFilterQuery,
 } from "@/lib/data/moderation";
+import {
+  getReviewQueueNavigation,
+  getReviewWorkspaceItem,
+} from "@/lib/data/review-workspace";
 import { listOrganizationOptions } from "@/lib/data/opportunities";
 import { getPublishedOpportunityById } from "@/lib/data/published-management";
 import { formatLocationDisplay } from "@/lib/opportunity-presentation";
+import { geographyOf } from "@/lib/taxonomy";
 import { TRIAGE_BUCKET_LABEL, triageBucketOf } from "@/lib/triage-bucket";
 import {
   REVIEW_READINESS_LABEL,
   REVIEW_READINESS_NOTE,
-  reviewReadinessOf,
+  duplicateWhy,
 } from "@/lib/review-readiness";
 import { DecisionForm } from "../decision-form";
 import { StaffNav } from "@/components/staff-nav";
@@ -94,9 +96,12 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
     );
   }
 
+  const workspaceItem = isPublishedReview
+    ? null
+    : await getReviewWorkspaceItem(id);
   const opportunity = isPublishedReview
     ? await getPublishedOpportunityById(id)
-    : await getPendingOpportunityById(id);
+    : workspaceItem?.opportunity ?? null;
 
   if (!opportunity) {
     return (
@@ -123,7 +128,7 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
   const auditStatus = await getEnrichmentAuditStatus();
   const navigation = isPublishedReview
     ? { position: null, total: 0, nextId: null }
-    : await getQueueNavigation(id, filter);
+    : await getReviewQueueNavigation(id, filter);
   const nextHref = navigation.nextId
     ? `/moderation/${navigation.nextId}${filterQuery}`
     : null;
@@ -135,11 +140,32 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
   const triageBucket = triageBucketOf(opportunity.category, opportunity.title);
   // Assisted Queue Approval — per-row readiness checklist. Display-only:
   // derived from stored evidence through the same deterministic gates, with
-  // the pending queue as duplicate context. Pending mode only; published
-  // re-review keeps its own evidence flow. Never a decision input.
-  const readiness = isPublishedReview
-    ? null
-    : reviewReadinessOf(opportunity, await listPendingOpportunities());
+  // the full corpus (pending + published) as duplicate context. Pending mode
+  // only; published re-review keeps its own evidence flow. Never a decision
+  // input.
+  const readiness = workspaceItem?.readiness ?? null;
+  const duplicate = readiness?.duplicate ?? null;
+  // Compact reviewer workspace facts — every line derived from stored
+  // evidence, never inferred. Unknown stays unknown; the Discovery source is
+  // a lead, never publication authority.
+  const canonicalUrl = opportunity.trust?.canonicalEvidenceUrl?.trim() || opportunity.url;
+  const geography = geographyOf(opportunity);
+  const geographyLabel =
+    geography === "national"
+      ? "National — Tanzania-based or Tanzania-focused (evidenced)"
+      : geography === "international"
+        ? "International — evidenced access for Tanzanians"
+        : "Unknown — country/eligibility evidence missing";
+  const accessDecision = readiness?.access.decision ?? opportunity.trust?.eligibilityDecision ?? "unknown";
+  const accessEvidence = (readiness?.access.evidence ?? opportunity.trust?.eligibilityEvidence ?? null)?.trim() || null;
+  const lastVerified = opportunity.trust?.lastVerifiedAt ?? opportunity.trust?.decidedAt ?? null;
+  const duplicateHref = duplicate
+    ? duplicate.status === "published" && duplicate.slug
+      ? `/opportunities/${duplicate.slug}`
+      : duplicate.status === "pending"
+        ? `/moderation/${duplicate.id}`
+        : null
+    : null;
   const dateFormatter = new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "short",
@@ -235,7 +261,67 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
                   <span className="text-[var(--muted)]">{check.detail}</span>
                 </li>
               ))}
+              <li className="leading-6">
+                <span className="font-medium text-[var(--foreground)]">
+                  {accessEvidence ? "Pass" : "Check"} — Tanzania eligibility/access evidence:{" "}
+                </span>
+                <span className="text-[var(--muted)]">
+                  {accessDecision === "tanzanians_eligible"
+                    ? `Evidenced — Tanzanians may apply: ${accessEvidence}`
+                    : accessDecision === "tanzanians_not_eligible"
+                      ? `Evidenced — Tanzanians may NOT apply: ${accessEvidence} (fast path is a reasoned rejection)`
+                      : "Unknown — the Discovery source is not publication authority; verify on the official page before approving."}
+                </span>
+              </li>
+              <li className="leading-6">
+                <span className="font-medium text-[var(--foreground)]">
+                  Geography:{" "}
+                </span>
+                <span className="text-[var(--muted)]">{geographyLabel}</span>
+              </li>
+              <li className="leading-6">
+                <span className="font-medium text-[var(--foreground)]">
+                  Last checked:{" "}
+                </span>
+                <span className="text-[var(--muted)]">
+                  {lastVerified
+                    ? dateFormatter.format(new Date(lastVerified))
+                    : "Never verified — this review is the first check."}
+                  {opportunity.discoveredAt ? ` · Discovered ${dateFormatter.format(new Date(opportunity.discoveredAt))}` : ""}
+                </span>
+              </li>
             </ul>
+            {duplicate ? (
+              <div
+                role="note"
+                className="mt-3 rounded-lg border border-red-300 bg-red-50/60 p-3 text-sm leading-6 text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300"
+              >
+                <span className="font-medium">Possible duplicate — </span>
+                {duplicateWhy(duplicate)}{" "}
+                {duplicateHref ? (
+                  <Link
+                    href={duplicateHref}
+                    className="font-medium underline underline-offset-2"
+                  >
+                    Compare with “{duplicate.title}” →
+                  </Link>
+                ) : (
+                  <span>Compare with “{duplicate.title}”.</span>
+                )}{" "}
+                Never auto-deleted: keep, reject with a reason, or approve only if distinct.
+              </div>
+            ) : null}
+            <p className="mt-3 text-xs text-[var(--muted)]">
+              Official source for verification:{" "}
+              <a
+                href={canonicalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all font-medium underline underline-offset-2"
+              >
+                {canonicalUrl}
+              </a>
+            </p>
             <p className="mt-3 text-xs text-[var(--muted)]">
               {REVIEW_READINESS_NOTE}
             </p>

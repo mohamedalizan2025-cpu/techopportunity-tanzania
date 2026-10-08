@@ -365,3 +365,58 @@ revenue, traction, or partnerships evidence that does not exist.
   light) awaits owner browser checks — no browser evidence
   fabricated.
 - PRODUCTION AI: OFF. PRODUCTION DB: UNCHANGED. No regression.
+
+## Publishing Engine V2 2026-10-08 (branch `publishing-engine-v2` from main `00dcdfa`, UNMERGED — owner review required)
+
+- GOAL: one moderator safely reviews/publishes many more opportunities
+  without weakening trust. PERMANENT RULE KEPT: NO blind auto-publish;
+  final publish/approve remains a human action (new boundary invariant
+  pins it).
+- BASE: clean branch from `00dcdfa`; builds on the existing Assisted
+  Queue Approval (`c2bd0c2`) instead of replacing it — its 4 gates, 5
+  states, and "unknown never blocks readiness" semantics are preserved
+  (all 21 prior readiness tests pass unchanged).
+- PIPELINE GAPS FOUND AND CLOSED: (1) duplicate signals had no WHY and
+  ignored published rows; (2) no readiness filter / priority order /
+  per-state counts; (3) approve had no human-confirmation gate;
+  (4) reviewer workspace hid eligibility-access evidence, geography,
+  canonical URL, last-checked; (5) published-expired vs active and
+  expired-pending counts invisible to staff. NOT gaps (left alone):
+  discovery pending-only intake, RLS/auth, lifecycle derivation,
+  approval evidence requirements, AI OFF.
+- SHIPPED (14 files, no migration): duplicate WHY (matched row title +
+  status + rule + compare link, corpus = pending + published, never
+  auto-delete/mutate); `readiness` queue filter + tabs + counts per
+  state; priority order (ready → possible-duplicate → needs-evidence →
+  deadline-unclear → source-problem, oldest-first within state) shared
+  by queue render and next-in-queue navigation (oldest-only
+  `getQueueNavigation` removed as superseded); expired-pending
+  partition (counted, excluded from review work, still directly
+  reachable); published active/expired split + badges + counts;
+  Tanzania-access evidence line + geography + canonical URL +
+  last-checked in the review workspace; APPROVE_CONFIRM_TOKEN checkbox
+  enforced server-side on approve AND published re-review (reject path
+  unchanged: reason-bearing as before); new `publishing-engine-v2`
+  suite (53 tests) + new permanent boundary invariant (44/44).
+- DELIBERATE SEMANTIC (documented in code): unknown Tanzanian access
+  does NOT demote readiness — it is shown as "Check — verify on the
+  official page", and approval still requires evidenced eligibility.
+  Unknown can never become verified without the human evidence step.
+- GATES (branch HEAD, commit pending): full `npm run verify` green
+  (incl. new 53 + fixed 2 bulk-moderation deep-equal pins for the new
+  filter dimension), `npx tsc --noEmit` clean, `eslint` clean,
+  `verify:boundaries` 44/44, `verify:plan` build + moderation-auth
+  gates selected, `npm run build` green (30 pages),
+  `npm audit --omit=dev` 0 vulnerabilities, `git diff --check` clean.
+  Change-triggered production evidence (deployed moderation access
+  proof) is OWNER work — not performed here.
+- PRODUCTION: UNTOUCHED (no main push, no DB read/write, no env).
+  AI: OFF (no Groq/Gemini code, activation, or LLM authority).
+  MIGRATION: NONE (all derived from existing columns).
+- NEXT: owner reviews the branch diff → approves PR → merge to main
+  (auto-deploys Production) → staff-session smoke of
+  /moderation (readiness tabs, priority order, approve-confirmation
+  refusal without checkbox, duplicate compare links) +
+  /published-management (active/expired split) → then resume the
+  50–100 corpus growth path below (verify TZ-access evidence per
+  approval; do NOT chase counts).

@@ -27,6 +27,7 @@ import {
   BULK_REJECT_MAX_ITEMS,
   MODERATION_REASON_MAX_LENGTH,
   MODERATION_REASON_MIN_LENGTH,
+  isApproveConfirmed,
   normalizeModerationReason,
   type BulkRejectItemResult,
   type BulkRejectState,
@@ -182,6 +183,20 @@ export async function decideOpportunityAction(
       ...initial,
       status: "error",
       message: "Approval is paused until the owner activates the M31 trust schema.",
+    };
+  }
+  // Publishing Engine V2 — no blind publish: an approval is a human act and
+  // must carry the explicit source-verification confirmation. A missing or
+  // forged token fails closed before any authentication, parsing, or write.
+  if (
+    rawDecision === "approve" &&
+    !isApproveConfirmed(formData.get("confirm"))
+  ) {
+    return {
+      ...initial,
+      status: "error",
+      message:
+        "Confirm you verified this record against the official source before approving.",
     };
   }
 
@@ -446,6 +461,16 @@ export async function rereviewPublishedOpportunityAction(
       ...initial,
       status: "error",
       message: "Re-review is paused until the owner activates the M31 trust schema.",
+    };
+  }
+  // Same human-confirmation contract as initial approval: keeping a record
+  // published is a verified human act, never an implicit save.
+  if (!isApproveConfirmed(formData.get("confirm"))) {
+    return {
+      ...initial,
+      status: "error",
+      message:
+        "Confirm you re-checked this record against the official source before saving.",
     };
   }
 

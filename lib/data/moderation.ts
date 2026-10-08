@@ -12,6 +12,10 @@ import {
   type Sector,
 } from "../taxonomy";
 import {
+  parseReviewReadinessState,
+  type ReviewReadinessState,
+} from "../review-readiness";
+import {
   createSupabaseAuthServerClient,
   getAuthenticatedUser,
 } from "./supabase-auth";
@@ -140,6 +144,13 @@ export interface QueueFilter {
   geography?: Geography | null;
   /** Subject-area sector, independent from type (derived). View-only. */
   sector?: Sector | null;
+  /**
+   * Review-readiness state (derived by lib/review-readiness.ts, never
+   * stored). Optional so older filter literals keep compiling; absent ===
+   * null === "no readiness constraint". View-only: narrowing the visible
+   * list, never changing what is pending or how a decision is made.
+   */
+  readiness?: ReviewReadinessState | null;
 }
 
 export const EMPTY_QUEUE_FILTER: QueueFilter = {
@@ -149,6 +160,7 @@ export const EMPTY_QUEUE_FILTER: QueueFilter = {
   flag: null,
   geography: null,
   sector: null,
+  readiness: null,
 };
 
 const MAX_SOURCE_PARAM_LENGTH = 120;
@@ -191,7 +203,8 @@ export function parseQueueFilter(
   }
   const geography = parseGeography(firstParam(raw.geography));
   const sector = parseSector(firstParam(raw.sector));
-  return { bucket, sourceName, q, flag, geography, sector };
+  const readiness = parseReviewReadinessState(firstParam(raw.readiness));
+  return { bucket, sourceName, q, flag, geography, sector, readiness };
 }
 
 export function isQueueFilterEmpty(filter: QueueFilter): boolean {
@@ -201,7 +214,8 @@ export function isQueueFilterEmpty(filter: QueueFilter): boolean {
     filter.q === null &&
     filter.flag === null &&
     (filter.geography ?? null) === null &&
-    (filter.sector ?? null) === null
+    (filter.sector ?? null) === null &&
+    (filter.readiness ?? null) === null
   );
 }
 
@@ -211,7 +225,14 @@ export function matchesQueueFilter(
     Opportunity,
     "category" | "title" | "sourceName" | "description" | "location" | "trust"
   >,
-  filter: QueueFilter
+  filter: QueueFilter,
+  /**
+   * Classified readiness for this row (needs corpus context, so the caller
+   * supplies it — see lib/review-readiness.ts). Null/absent means "not
+   * classified"; a concrete readiness filter then matches nothing, failing
+   * closed rather than guessing.
+   */
+  readiness?: ReviewReadinessState | null
 ): boolean {
   if (
     filter.bucket !== null &&
@@ -238,16 +259,27 @@ export function matchesQueueFilter(
   if (filter.sector && sectorOf(opportunity) !== filter.sector) {
     return false;
   }
+  if ((filter.readiness ?? null) !== null && (readiness ?? null) !== filter.readiness) {
+    return false;
+  }
   return true;
 }
 
 /** Deterministic order preserved — filtering only removes rows. */
 export function filterPendingQueue(
   items: Opportunity[],
-  filter: QueueFilter
+  filter: QueueFilter,
+  /**
+   * Classified readiness by row id (corpus-derived). Only consulted when the
+   * filter carries a readiness constraint; existing two-argument callers are
+   * unaffected.
+   */
+  readinessById?: Map<string, ReviewReadinessState>
 ): Opportunity[] {
   if (isQueueFilterEmpty(filter)) return items;
-  return items.filter((item) => matchesQueueFilter(item, filter));
+  return items.filter((item) =>
+    matchesQueueFilter(item, filter, readinessById?.get(item.id) ?? null)
+  );
 }
 
 /** Query suffix ("" or "?a=b&c=d") to carry a filter across navigation. */
@@ -259,6 +291,7 @@ export function queueFilterQuery(filter: QueueFilter): string {
   if (filter.flag !== null) params.set("flag", filter.flag);
   if (filter.geography) params.set("geography", filter.geography);
   if (filter.sector) params.set("sector", filter.sector);
+  if (filter.readiness) params.set("readiness", filter.readiness);
   const query = params.toString();
   return query === "" ? "" : `?${query}`;
 }
@@ -300,7 +333,7 @@ export interface QueueNavigation {
   nextId: string | null;
 }
 
-/** Pure core of getQueueNavigation, over an already-ordered id list. */
+/** Pure core of queue navigation, over an already-ordered id list. */
 export function queueNavigationFromIds(
   pendingIds: string[],
   currentId: string
@@ -311,27 +344,6 @@ export function queueNavigationFromIds(
     total: pendingIds.length,
     nextId: nextPendingAfter(pendingIds, currentId),
   };
-}
-
-/**
- * One queue read serving both the position indicator and the next-in-queue
- * link (same deterministic order as the rendered queue). When a filter is
- * active, position and next are computed WITHIN the filtered view so the
- * moderator can finish a batch without leaving it. Read-only, staff-only;
- * a non-pending or unknown id yields position null.
- */
-export async function getQueueNavigation(
-  currentId: string,
-  filter: QueueFilter = EMPTY_QUEUE_FILTER
-): Promise<QueueNavigation> {
-  if (!isValidOpportunityId(currentId)) {
-    return { position: null, total: 0, nextId: null };
-  }
-  const pending = await listPendingOpportunities();
-  return queueNavigationFromIds(
-    filterPendingQueue(pending, filter).map((o) => o.id),
-    currentId
-  );
 }
 
 /**
@@ -349,6 +361,20 @@ export function isActivePendingOpportunity(
 }
 
 export async function listPendingOpportunities(): Promise<Opportunity[]> {
+  const now = new Date();
+  return (await listAllPendingForReview()).filter((opportunity) =>
+    isActivePendingOpportunity(opportunity, now)
+  );
+}
+
+/**
+ * All pending rows WITHOUT the active-lifecycle boundary: the active review
+ * workflow (listPendingOpportunities) plus the expired rows that must stay
+ * out of it but remain countable and referenceable. One staff-only query;
+ * callers partition in memory, so expired candidates are never mixed with
+ * active review work and no status is ever mutated.
+ */
+export async function listAllPendingForReview(): Promise<Opportunity[]> {
   const access = await getModerationAccess();
   if (!access.ok) return [];
 
@@ -376,10 +402,7 @@ export async function listPendingOpportunities(): Promise<Opportunity[]> {
     );
   }
 
-  const now = new Date();
-  return rows
-    .map((row) => mapOpportunityRow(row, "pending"))
-    .filter((opportunity) => isActivePendingOpportunity(opportunity, now));
+  return rows.map((row) => mapOpportunityRow(row, "pending"));
 }
 
 export async function getPendingOpportunityById(

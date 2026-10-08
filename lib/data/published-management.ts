@@ -18,6 +18,7 @@
  * existing moderation audit architecture.
  */
 import type { Opportunity, OpportunityStatus } from "../types";
+import { deriveLifecycleState } from "../lifecycle";
 import {
   getModerationAccess,
   isValidOpportunityId,
@@ -116,6 +117,39 @@ export function unpublishDenialMessage(denial: UnpublishDenial): string {
  */
 export function filterPublishedRecords(items: Opportunity[]): Opportunity[] {
   return items.filter((item) => item.status === "published");
+}
+
+export interface PublishedLifecycleSplit {
+  /** Still actionable: explicit future deadline, rolling, or honestly unknown. */
+  active: Opportunity[];
+  /**
+   * Explicit past deadline: stored, auditable, and already excluded from
+   * active public discovery by the browse boundary — shown here separately
+   * so expired publications stop looking like live work. No row is rewritten.
+   */
+  expired: Opportunity[];
+}
+
+/**
+ * Pure display partition of the published set by deterministic deadline
+ * truth. Unknown deadlines stay in `active` (absence of evidence is not
+ * expiry); only explicit past deadlines land in `expired`. Input order is
+ * preserved in both halves.
+ */
+export function partitionPublishedByLifecycle(
+  items: Opportunity[],
+  now: Date = new Date()
+): PublishedLifecycleSplit {
+  const active: Opportunity[] = [];
+  const expired: Opportunity[] = [];
+  for (const item of items) {
+    if (deriveLifecycleState(item.deadline, now) === "expired") {
+      expired.push(item);
+    } else {
+      active.push(item);
+    }
+  }
+  return { active, expired };
 }
 
 export type UnpublishRequest =

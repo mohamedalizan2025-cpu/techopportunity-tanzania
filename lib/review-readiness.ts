@@ -58,11 +58,49 @@ export interface ReadinessCheck {
 export interface ReviewReadiness {
   state: ReviewReadinessState;
   checks: ReadinessCheck[];
+  /**
+   * The duplicate explanation (WHY), when the not-duplicate gate fails.
+   * Read-only hint for the moderator: which row matched, by which identity
+   * rule, and where to compare. Never a verdict, never a deletion.
+   */
+  duplicate: DuplicateMatch | null;
+  /**
+   * Tanzanian-access evidence status (task checklist item
+   * "eligibility/access evidence"). Informational on purpose: unknown access
+   * does NOT demote readiness — the moderator verifies access on the
+   * official page and records it in the decision form, which is the sole
+   * enforcement point (approval requires evidenced Tanzanian eligibility).
+   * Unknown can never become verified without that human evidence step.
+   */
+  access: TanzaniaAccessEvidence;
+}
+
+export type DuplicateKind = "canonical-url" | "title-core";
+
+export interface DuplicateMatch {
+  id: string;
+  title: string;
+  status: Opportunity["status"];
+  slug: string | null;
+  kind: DuplicateKind;
+  /** True when both rows were found through the same discovery source. */
+  sameSource: boolean;
+}
+
+export type TanzaniaAccessDecision = "unknown" | "tanzanians_eligible" | "tanzanians_not_eligible";
+
+export interface TanzaniaAccessEvidence {
+  decision: TanzaniaAccessDecision;
+  evidence: string | null;
+  /** True only when stored evidence backs the decision (either direction). */
+  evidenced: boolean;
 }
 
 /**
- * Minimal row shape the checklist reads. Siblings are other pending rows
- * used ONLY for the duplicate-identity check — never mutated, never hidden.
+ * Minimal row shape the checklist reads. Siblings are the duplicate-identity
+ * context (other pending rows AND published rows) — read-only, never
+ * mutated, never hidden, never deleted. `status`/`slug` exist only so the
+ * duplicate WHY can name the matched row and link to it.
  */
 export interface ReadinessRow {
   id: string;
@@ -77,6 +115,8 @@ export interface ReadinessRow {
   deadlineEvidence?: string | null;
   location?: Opportunity["location"];
   trust?: Opportunity["trust"];
+  status?: Opportunity["status"];
+  slug?: string | null;
 }
 
 function validEvidenceUrl(value: string | null | undefined): boolean {
@@ -163,13 +203,13 @@ function sourceIdentity(row: ReadinessRow): string | null {
 function findDuplicate(
   row: ReadinessRow,
   siblings: ReadinessRow[]
-): ReadinessRow | null {
+): DuplicateMatch | null {
   const rowUrl = row.url?.trim() ?? "";
   for (const sibling of siblings) {
     if (sibling.id === row.id) continue;
     const siblingUrl = sibling.url?.trim() ?? "";
     if (rowUrl && siblingUrl && canonicalRowUrl(siblingUrl) === canonicalRowUrl(rowUrl)) {
-      return sibling;
+      return toMatch(sibling, "canonical-url", row);
     }
     const rowSource = sourceIdentity(row);
     const siblingSource = sourceIdentity(sibling);
@@ -181,10 +221,41 @@ function findDuplicate(
       sibling.title &&
       sameRowTitle(row.title, sibling.title)
     ) {
-      return sibling;
+      return toMatch(sibling, "title-core", row);
     }
   }
   return null;
+}
+
+function toMatch(
+  sibling: ReadinessRow,
+  kind: DuplicateKind,
+  row: ReadinessRow
+): DuplicateMatch {
+  const rowSource = sourceIdentity(row);
+  const siblingSource = sourceIdentity(sibling);
+  return {
+    id: sibling.id,
+    title: sibling.title,
+    status: sibling.status ?? "pending",
+    slug: sibling.slug ?? null,
+    kind,
+    sameSource:
+      rowSource !== null && rowSource !== undefined &&
+      siblingSource !== null && siblingSource !== undefined &&
+      rowSource === siblingSource,
+  };
+}
+
+/** Plain-language WHY for one duplicate match. Never a verdict. */
+export function duplicateWhy(match: DuplicateMatch): string {
+  const where = match.status === "published"
+    ? "the published corpus"
+    : "the pending queue";
+  const via = match.sameSource ? "the same discovery source" : "another source";
+  return match.kind === "canonical-url"
+    ? `Same canonical URL as “${match.title}” (${match.status}, ${where}) via ${via} — tracking parameters and fragments ignored, identity parameters kept.`
+    : `Same substantial title core and cohort year as “${match.title}” (${match.status}, ${where}) across sources — exact core-token equality plus a shared year, never fuzzy similarity.`;
 }
 
 function parseableDate(value: string | null): boolean {
@@ -223,8 +294,8 @@ export function reviewReadinessOf(
 
   const duplicate = sourcePass ? findDuplicate(row, siblings) : null;
   const duplicateDetail = duplicate
-    ? "Shares its canonical link — or cohort year plus exact title core — with another pending row."
-    : "No canonical-link or cross-source title-core match in the pending queue.";
+    ? duplicateWhy(duplicate)
+    : "No canonical-link or cross-source title-core match in the review corpus (pending + published).";
 
   const lifecycle = deriveLifecycleState(row.deadline ?? null, now);
   const consistentDeadline = hasConsistentDeadlineTruth({
@@ -254,6 +325,15 @@ export function reviewReadinessOf(
             : "Deadline value is malformed or contradicts its evidence.";
 
   const trust = row.trust;
+  const accessDecision = (trust?.eligibilityDecision ?? "unknown") as TanzaniaAccessDecision;
+  const accessEvidenceRaw = (trust?.eligibilityEvidence ?? "").trim();
+  const access: TanzaniaAccessEvidence = {
+    decision: accessDecision,
+    evidence: accessEvidenceRaw === "" ? null : trust?.eligibilityEvidence ?? null,
+    evidenced:
+      (accessDecision === "tanzanians_eligible" || accessDecision === "tanzanians_not_eligible") &&
+      accessEvidenceRaw !== "",
+  };
   const evidencePass =
     Boolean(trust) &&
     Boolean(trust?.relevanceEvidence && trust.relevanceEvidence.trim().length > 0) &&
@@ -295,5 +375,83 @@ export function reviewReadinessOf(
           ? "needs-evidence"
           : "ready-for-review";
 
-  return { state, checks };
+  return { state, checks, duplicate, access };
+}
+
+/**
+ * Queue priority for review work: READY items carry complete evidence for a
+ * fast human decision (approve or reject), so they come first; every other
+ * state needs more moderator work, ordered by how decisive that work is.
+ * Within a state the queue keeps oldest-submitted-first (created_at, id
+ * tie-break), so the order stays deterministic and navigation-stable. The
+ * queue page and next-in-queue navigation must both use this order.
+ */
+export const REVIEW_READINESS_PRIORITY: Record<ReviewReadinessState, number> = {
+  "ready-for-review": 0,
+  "possible-duplicate": 1,
+  "needs-evidence": 2,
+  "deadline-unclear": 3,
+  "source-problem": 4,
+};
+
+export function orderReviewQueue<
+  T extends { opportunity: { createdAt: string; id: string }; state: ReviewReadinessState }
+>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const rank = REVIEW_READINESS_PRIORITY[a.state] - REVIEW_READINESS_PRIORITY[b.state];
+    if (rank !== 0) return rank;
+    const time = Date.parse(a.opportunity.createdAt) - Date.parse(b.opportunity.createdAt);
+    if (Number.isFinite(time) && time !== 0) return time;
+    return a.opportunity.id.localeCompare(b.opportunity.id);
+  });
+}
+
+export interface ReviewReadinessCounts {
+  total: number;
+  ready: number;
+  needsEvidence: number;
+  possibleDuplicate: number;
+  sourceProblem: number;
+  deadlineUnclear: number;
+}
+
+/** Staff-visible operational counts, computed from already-loaded rows only. */
+export function countReviewQueue(
+  items: Array<{ state: ReviewReadinessState }>
+): ReviewReadinessCounts {
+  const counts: ReviewReadinessCounts = {
+    total: items.length,
+    ready: 0,
+    needsEvidence: 0,
+    possibleDuplicate: 0,
+    sourceProblem: 0,
+    deadlineUnclear: 0,
+  };
+  for (const item of items) {
+    switch (item.state) {
+      case "ready-for-review": counts.ready += 1; break;
+      case "needs-evidence": counts.needsEvidence += 1; break;
+      case "possible-duplicate": counts.possibleDuplicate += 1; break;
+      case "source-problem": counts.sourceProblem += 1; break;
+      case "deadline-unclear": counts.deadlineUnclear += 1; break;
+    }
+  }
+  return counts;
+}
+
+/**
+ * Hostile-input-safe parser for the `readiness` queue filter param. Accepts
+ * only the exact state slugs; anything else (including legacy values) maps
+ * to null — no constraint, never a guess.
+ */
+export function parseReviewReadinessState(
+  raw: string | null | undefined
+): ReviewReadinessState | null {
+  if (!raw) return null;
+  const slug = raw.trim().toLowerCase();
+  return (Object.keys(REVIEW_READINESS_LABEL) as ReviewReadinessState[]).includes(
+    slug as ReviewReadinessState
+  )
+    ? (slug as ReviewReadinessState)
+    : null;
 }

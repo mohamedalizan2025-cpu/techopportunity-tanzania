@@ -7,14 +7,13 @@ import {
   filterPendingQueue,
   getModerationAccess,
   isQueueFilterEmpty,
-  listPendingOpportunities,
   parseQueueFilter,
   queueFilterQuery,
 } from "@/lib/data/moderation";
+import { getReviewWorkspaceQueue } from "@/lib/data/review-workspace";
 import {
   TRIAGE_BUCKET_SHORT,
   TRIAGE_HEURISTIC_NOTE,
-  firstSuggestedReview,
   isFurnitureQueueItem,
   triageBucketOf,
   type TriageBucket,
@@ -22,7 +21,8 @@ import {
 import {
   REVIEW_READINESS_LABEL,
   REVIEW_READINESS_NOTE,
-  reviewReadinessOf,
+  duplicateWhy,
+  type ReviewReadinessState,
 } from "@/lib/review-readiness";
 import {
   GEOGRAPHY_GROUPS,
@@ -134,7 +134,12 @@ export default async function ModerationPage({
   }
 
   const { displayName, email } = access.staff;
-  const pending = await listPendingOpportunities();
+  // Publishing Engine V2 workspace: active pending classified against the
+  // full corpus (pending + published) and priority-ordered; expired pending
+  // partitioned out of review work; published split by lifecycle for
+  // operational counts. All from already-bounded staff reads — no new data.
+  const workspace = await getReviewWorkspaceQueue();
+  const pending = workspace.active;
   const signedInAs = displayName ?? email ?? "staff";
 
   // Triage hints are prioritization signals only (title + category
@@ -147,28 +152,24 @@ export default async function ModerationPage({
 
   // Assisted Queue Approval — deterministic review-readiness per row. Pure
   // hints for review order only: nothing here approves, rejects, or
-  // reclassifies; queue order and decision logic are untouched.
-  const readinessById = new Map(
-    pending.map((opportunity) => [
-      opportunity.id,
-      reviewReadinessOf(opportunity, pending).state,
-    ])
-  );
-  const readyCount = [...readinessById.values()].filter(
-    (state) => state === "ready-for-review"
-  ).length;
+  // reclassifies; decision logic is untouched. Render order is readiness
+  // priority (ready first), oldest submitted within a state.
+  const readinessById = workspace.readinessById;
 
-  // Server-side VIEW filters (Milestone 11): triage bucket + source. They
-  // only narrow what this page renders — pending status, ordering and
-  // decision logic are untouched, and the filter is always clearable.
+  // Server-side VIEW filters (Milestone 11 + readiness): triage bucket,
+  // source, readiness state, taxonomy, title search. They only narrow what
+  // this page renders — pending status and decision logic are untouched,
+  // and every filter is always clearable.
   const params = await searchParams;
   const filter = parseQueueFilter(params);
   const filtered = !isQueueFilterEmpty(filter);
   const query = queueFilterQuery(filter);
-  const visible = filterPendingQueue(pending, filter);
-  // The suggested entry point only makes sense in the unfiltered view —
-  // a filtered list already starts at the record type being batched.
-  const suggested = filtered ? null : firstSuggestedReview(triageItems);
+  const visiblePending = filterPendingQueue(pending, filter, readinessById);
+  const visibleIds = new Set(visiblePending.map((o) => o.id));
+  const visible = workspace.ordered.filter((item) => visibleIds.has(item.opportunity.id));
+  // The suggested entry point is the top-priority row of the unfiltered
+  // view — the fastest safe decision available.
+  const suggested = filtered ? null : (visible[0] ?? null);
 
   // Pagination: show up to `page * PAGE_SIZE` items with a "Load more" link.
   const rawPage = Array.isArray(params.page) ? params.page[0] : params.page;
@@ -181,9 +182,6 @@ export default async function ModerationPage({
   for (const item of triageItems) {
     bucketCounts.set(item.bucket, (bucketCounts.get(item.bucket) ?? 0) + 1);
   }
-  const missingDeadlineCount = pending.filter(
-    (opportunity) => !opportunity.deadline
-  ).length;
   // Frozen site-furniture REVIEW FLAG: exact reviewed titles only (hint, not
   // a verdict). Counted over the full pending list so the chip shows the
   // whole batch even inside another filtered view.
@@ -263,19 +261,19 @@ export default async function ModerationPage({
           </p>
         ) : (
           <>
-            {/* Operational summary — counts only, from the same pending list. */}
+            {/* Operational summary — counts only, from already-loaded rows. */}
             <dl
               aria-label="Queue summary"
-              className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-6"
+              className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
             >
               {(
                 [
-                  ["Pending", pending.length, "Awaiting a decision."],
-                  ["Ready for review", readyCount, "All readiness checks pass — verify."],
-                  ["High value", bucketCounts.get(2) ?? 0, "Scholarships, fellowships, grants, internships."],
-                  ["Actionable", (bucketCounts.get(1) ?? 0), "Title reads like an open call — verify."],
-                  ["Ambiguous", bucketCounts.get(7) ?? 0, "Needs closer reading."],
-                  ["No deadline", missingDeadlineCount, "No date found in evidence."],
+                  ["Pending", pending.length, "Active review work."],
+                  ["Ready for review", workspace.counts.ready, "Complete evidence — fast decide."],
+                  ["Needs evidence", workspace.counts.needsEvidence, "Verify on the official source."],
+                  ["Possible duplicates", workspace.counts.possibleDuplicate, "Check WHY, never auto-delete."],
+                  ["Published active", workspace.publishedActive, "Live and actionable."],
+                  ["Expired / closed", workspace.expiredPending.length + workspace.publishedExpired, "Kept out of active work."],
                 ] as const
               ).map(([label, count, hint]) => (
                 <div
@@ -295,9 +293,9 @@ export default async function ModerationPage({
               ))}
             </dl>
             <QueueBulkPanel
-              items={paginatedVisible.map((opportunity) => ({
-                id: opportunity.id,
-                title: opportunity.title,
+              items={paginatedVisible.map((entry) => ({
+                id: entry.opportunity.id,
+                title: entry.opportunity.title,
                 flagged: false,
               }))}
             />
@@ -318,6 +316,13 @@ export default async function ModerationPage({
                 ) : null}
                 {filter.sector ? (
                   <input type="hidden" name="sector" value={filter.sector} />
+                ) : null}
+                {(filter.readiness ?? null) ? (
+                  <input
+                    type="hidden"
+                    name="readiness"
+                    value={filter.readiness as ReviewReadinessState}
+                  />
                 ) : null}
                 <input
                   type="search"
@@ -369,6 +374,40 @@ export default async function ModerationPage({
                     Furniture · {furnitureCount}
                   </Link>
                 ) : null}
+              </div>
+              {/* Readiness lanes — deterministic publication fitness, derived
+                  from stored evidence only. View-only, always clearable. */}
+              <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Readiness review lanes">
+                <span className="text-xs font-medium text-[var(--muted)]">
+                  Readiness:
+                </span>
+                {(filter.readiness ?? null) ? (
+                  <Link
+                    href={`/moderation${queueFilterQuery({ ...filter, readiness: null })}`}
+                    className={filterChipClasses(false)}
+                  >
+                    Any state
+                  </Link>
+                ) : null}
+                {(
+                  [
+                    ["ready-for-review", workspace.counts.ready],
+                    ["needs-evidence", workspace.counts.needsEvidence],
+                    ["possible-duplicate", workspace.counts.possibleDuplicate],
+                    ["deadline-unclear", workspace.counts.deadlineUnclear],
+                    ["source-problem", workspace.counts.sourceProblem],
+                  ] as Array<[ReviewReadinessState, number]>
+                ).map(([state, count]) => (
+                  <Link
+                    key={state}
+                    role="tab"
+                    aria-selected={(filter.readiness ?? null) === state}
+                    href={`/moderation${queueFilterQuery({ ...filter, readiness: state })}`}
+                    className={filterChipClasses((filter.readiness ?? null) === state)}
+                  >
+                    {REVIEW_READINESS_LABEL[state]} · {count}
+                  </Link>
+                ))}
               </div>
               <details className="text-sm text-[var(--muted)]">
                 <summary className="cursor-pointer select-none text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
@@ -468,21 +507,23 @@ export default async function ModerationPage({
               <>
             {suggested ? (
               <Link
-                href={`/moderation/${suggested.id}`}
+                href={`/moderation/${suggested.opportunity.id}`}
                 className="mt-6 inline-flex h-11 items-center justify-center rounded-md bg-[var(--primary)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-deep)]"
               >
-                Start with a suggested high-value record →
+                Start with the top-priority record ({REVIEW_READINESS_LABEL[suggested.state]}) →
               </Link>
             ) : null}
             <p className="mt-4 text-xs text-[var(--muted)]" role="status">
               Showing {paginatedVisible.length} of {visible.length}{" "}
               {pending.length !== visible.length ? `(${pending.length} pending total)` : "pending"}
-              {filtered ? " · filtered view" : ""} · queue order: oldest submitted first
+              {filtered ? " · filtered view" : ""} · queue order: readiness priority, oldest first
+              {workspace.expiredPending.length > 0 ? ` · ${workspace.expiredPending.length} expired pending kept out of active review` : ""}
             </p>
             <ul className="mt-4 flex flex-col gap-2">
-              {paginatedVisible.map((opportunity) => {
+              {paginatedVisible.map((entry) => {
+                const opportunity = entry.opportunity;
                 const bucket = bucketById.get(opportunity.id);
-                const readiness = readinessById.get(opportunity.id);
+                const readiness = entry.state;
                 return (
                   <li key={opportunity.id}>
                     <Link
@@ -494,11 +535,9 @@ export default async function ModerationPage({
                           <span className={triageBadgeClasses(bucket)}>
                             {triageBadgeLabel(bucket)}
                           </span>
-                          {readiness ? (
-                            <span className="rounded-full border border-dashed border-[var(--line)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--muted)]">
-                              {REVIEW_READINESS_LABEL[readiness]}
-                            </span>
-                          ) : null}
+                          <span className="rounded-full border border-dashed border-[var(--line)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--muted)]">
+                            {REVIEW_READINESS_LABEL[readiness]}
+                          </span>
                           <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--subtle)]">
                             {categoryLabel(opportunity.category)}
                           </span>
@@ -506,6 +545,11 @@ export default async function ModerationPage({
                         <span className="mt-1.5 block break-words text-[15px] font-semibold leading-6 text-[var(--foreground)]">
                           {opportunity.title}
                         </span>
+                        {entry.readiness.duplicate ? (
+                          <span className="mt-1 block break-words text-xs leading-5 text-red-700 dark:text-red-300">
+                            Possible duplicate — {duplicateWhy(entry.readiness.duplicate)}
+                          </span>
+                        ) : null}
                         <span className="mt-1.5 grid gap-x-6 gap-y-1 text-xs leading-5 text-[var(--muted)] sm:grid-cols-3">
                           <span>
                             <span className="font-semibold text-[var(--subtle)]">Source </span>
