@@ -283,3 +283,43 @@ revenue, traction, or partnerships evidence that does not exist.
 - NEXT: 5–10 real-user pilot on live production per
   `docs/REAL_USER_PILOT_2026-10.md`; owner prod-AI decision stays a
   separate gate; youth/minor legal review rides with broader launch.
+
+## Code-only Ask/AI-behavior release 2026-10-08 (main `a5aec61` → `a0c08b6`, owner-approved, AI stays OFF)
+
+- SOURCE: `origin/main` `a5aec61` confirmed before the move; code
+  cherry-picked file-wise from `prod-ai-activation` @ `55e5010` onto
+  dedicated branch `prod-ai-release`, then fast-forwarded to main
+  (no force, no merge commit) and pushed — push-to-main auto-deploys
+  Production (Vercel deployment record for `a0c08b6` present; CI
+  monitor + verify checks success).
+- INCLUDED (10 files, +405/−59): conversational Ask routing
+  (`lib/ask/knowledge|contract|service`), Ask provider adapters +
+  identity system prompt (`lib/ask/providers`), Groq-first shared
+  chain (`lib/opportunity-intelligence/provider`), required tests
+  (`ask` 16/16, `ai-match` 8/8 incl. behavioral allowlist,
+  `intelligence` order pins Groq-first), behavior-matching doc
+  notes (`AI_OPPORTUNITY_INTELLIGENCE.md`,
+  `AI_FRONTEND_V1.md`). EXCLUDED: active-AI Privacy wording,
+  active trust pin, staging-runbook §N/F-wording, topology block —
+  main keeps the truthful OFF Privacy + OFF pins.
+- GATES on the release: `git diff --check` clean; full
+  `npm run verify` green (tsc/eslint/43-43 boundaries; plan
+  selected build + assistant-kill-switch); `npm run build` green
+  (30 pages); `npm audit --omit=dev` 0 vulnerabilities. No
+  migration/env/secret/RLS/Discovery/moderation change.
+- BEHAVIOR PROOF on release code, providers disabled (production
+  simulation): selector `disabled`, 0 providers; Groq-first in
+  code; "hello"/"Who are you?"/"What can you do?" →
+  `conversational` → deterministic Ask-AI identity fallback (NOT
+  the generic verified-information refusal); opportunity question
+  → deterministic grounded path; injection + private-data probes
+  → `refused`.
+- CANONICAL SMOKE (anonymous): `/` 200, `/ask` 200 (FAQ + sign-in
+  gate), `/privacy` 200 still truthfully OFF, anonymous
+  POST `/api/ask` → 401 (auth gate intact). Interactive Ask
+  response text is session-only by design (401 anonymous), so
+  greeting/opportunity replies on canonical await a signed-in
+  owner check; behavior above is proven on the identical deployed
+  code with providers disabled.
+- PRODUCTION AI: OFF (no env/config/key change; defaults
+  fail-closed). PRODUCTION DB: UNCHANGED. No regression observed.
