@@ -323,3 +323,45 @@ revenue, traction, or partnerships evidence that does not exist.
   code with providers disabled.
 - PRODUCTION AI: OFF (no env/config/key change; defaults
   fail-closed). PRODUCTION DB: UNCHANGED. No regression observed.
+
+## Ask AI chat UX release 2026-10-08 (main `0dc3f56` → `b8b1e49`, owner-approved, AI stays OFF)
+
+- SOURCE: `origin/main` `0dc3f56` confirmed pre-move; dedicated
+  branch `ask-chat-ux` fast-forwarded to main (no force, no merge)
+  and pushed — push-to-main auto-deploys Production (Vercel
+  Production deployment record for `b8b1e49` present; canonical
+  healthy).
+- SHIPPED (10 files): continuous chat transcript + sticky composer
+  (arrow send, Enter/Shift+Enter, sending state, autofocus,
+  auto-scroll, focus return), starter chips at empty state only,
+  ephemeral multi-turn context (≤8 turns, ≤240 chars each, ≤1200
+  total; prior refs server-re-resolved, never trusted), warm
+  conversational fallback ("how are you?" → "I'm doing well…"),
+  safe-unknown defaults to conversational, browser-native voice
+  input (editable composer, no audio upload/storage, clean
+  unsupported/denied fallback), compact FAQ accordions, light
+  conversational rendering (heavy report block only where
+  material). No sessionStorage (deliberate, pending privacy
+  review); refresh clears V1 chat. Groq → Gemini order untouched.
+- EXCLUDED/UNCHANGED: active-AI Privacy wording (canonical still
+  truthfully OFF), env/keys/flags, DB/schema/RLS/Discovery/
+  moderation, matching authority, sanitizers, validators.
+- GATES: full `npm run verify` green (incl. ask 21/21,
+  tsc/eslint/43-43 boundaries), `npm run build` green (30 pages),
+  `npm audit --omit=dev` 0 vulnerabilities, `git diff --check`
+  clean. One lint fix during work (voice probe moved to rAF
+  callback); one boundary-gate catch fixed honestly (credential
+  literal kept out of the blocklist via separator normalization).
+- MULTI-TURN PROOF on deployed code (providers disabled):
+  opportunity Q grounds refs; follow-up "What is the deadline?"
+  reuses them via history + re-resolved slugs; tampered slugs
+  (`../admin`) fail closed to `invalid_question`; unknown slugs
+  resolve to nothing.
+- CANONICAL SMOKE (anonymous): `/` 200, `/ask` 200 (chat sign-in
+  gate + compact FAQ intact), `/privacy` 200 truthfully OFF,
+  anonymous POST `/api/ask` → 401 (auth gate intact). Greeting +
+  opportunity reply text is session-only by design, so signed-in
+  rendering (transcript, composer, voice, 390px/keyboard, dark +
+  light) awaits owner browser checks — no browser evidence
+  fabricated.
+- PRODUCTION AI: OFF. PRODUCTION DB: UNCHANGED. No regression.
