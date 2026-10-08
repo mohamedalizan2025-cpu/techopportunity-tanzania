@@ -245,7 +245,7 @@ test("provider quota exhaustion degrades to deterministic guidance", async () =>
   assert.equal(result.availabilityReason, "quota_exhausted");
 });
 
-test("Gemini failure uses Groq once before deterministic fallback", async () => {
+test("Groq failure uses Gemini once before deterministic fallback", async () => {
   clearOpportunityInsightCacheForTests();
   const item = opportunity();
   const input = buildSanitizedOpportunityIntelligenceInput(item, matchingInput);
@@ -256,7 +256,7 @@ test("Gemini failure uses Groq once before deterministic fallback", async () => 
     cacheKey: "gemini:test",
     async generate() {
       geminiCalls += 1;
-      throw new ProviderQuotaError();
+      return validAssistance(input);
     },
   };
   const groq: OpportunityIntelligenceProvider = {
@@ -264,45 +264,45 @@ test("Gemini failure uses Groq once before deterministic fallback", async () => 
     cacheKey: "groq:test",
     async generate() {
       groqCalls += 1;
-      return validAssistance(input);
+      throw new ProviderQuotaError();
     },
   };
   const result = await generateOpportunityInsight(item, matchingInput, {
-    selection: { provider: gemini, providers: [gemini, groq], reason: null },
+    selection: { provider: groq, providers: [groq, gemini], reason: null },
   });
   assert.equal(result.mode, "ai");
-  assert.equal(result.provider, "groq");
-  assert.equal(geminiCalls, 1);
+  assert.equal(result.provider, "gemini");
   assert.equal(groqCalls, 1);
+  assert.equal(geminiCalls, 1);
 });
 
-test("invalid Gemini and unavailable Groq fail closed without retry loops", async () => {
+test("invalid Groq and unavailable Gemini fail closed without retry loops", async () => {
   clearOpportunityInsightCacheForTests();
   let geminiCalls = 0;
   let groqCalls = 0;
   const gemini: OpportunityIntelligenceProvider = {
     id: "gemini",
-    cacheKey: "gemini:invalid",
+    cacheKey: "gemini:unavailable",
     async generate() {
       geminiCalls += 1;
-      return { readiness: "invalid" };
+      throw new Error("unavailable");
     },
   };
   const groq: OpportunityIntelligenceProvider = {
     id: "groq",
-    cacheKey: "groq:unavailable",
+    cacheKey: "groq:invalid",
     async generate() {
       groqCalls += 1;
-      throw new Error("unavailable");
+      return { readiness: "invalid" };
     },
   };
   const result = await generateOpportunityInsight(opportunity(), matchingInput, {
-    selection: { provider: gemini, providers: [gemini, groq], reason: null },
+    selection: { provider: groq, providers: [groq, gemini], reason: null },
   });
   assert.equal(result.mode, "deterministic");
   assert.equal(result.availabilityReason, "provider_unavailable");
-  assert.equal(geminiCalls, 1);
   assert.equal(groqCalls, 1);
+  assert.equal(geminiCalls, 1);
 });
 
 test("identical sanitized insight reuses the bounded provider cache", async () => {
@@ -375,8 +375,8 @@ test("provider chain requires independent privacy, billing, credentials, and exa
     AI_OPPORTUNITY_INTELLIGENCE_GROQ_ZDR_CONFIRMED: "true",
     AI_OPPORTUNITY_INTELLIGENCE_GROQ_NO_BILLING_CONFIRMED: "true",
   }, fakeFetch);
-  assert.deepEqual(selected.providers?.map((provider) => provider.id), ["gemini", "groq"]);
-  assert.equal(selected.provider?.id, "gemini");
+  assert.deepEqual(selected.providers?.map((provider) => provider.id), ["groq", "gemini"]);
+  assert.equal(selected.provider?.id, "groq");
   assert.equal(calls, 0);
 });
 

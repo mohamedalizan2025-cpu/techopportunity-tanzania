@@ -42,9 +42,11 @@ refusals), `contract.ts` (question sanitizer 4–500 chars with
 identifier redaction, strict output validator, deterministic
 composers), `providers.ts` (Gemini/Groq adapters over the shared
 transport helpers from `provider.ts`, Ask strict schema),
-`service.ts` (sanitize → classify → deterministic fast paths with
-ZERO provider spend → grounded provider attempts, one per provider
-inside a shared 8s budget → fail-closed fallback), `telemetry.ts`
+`service.ts` (sanitize → safety-guard classify → grounding → provider
+attempts carrying FAQ/identity/opportunity context, one per provider
+inside a shared 8s budget → strict validation → fail-closed
+deterministic fallback; refusals, invalid input, and empty opportunity
+grounding stay deterministic with ZERO provider spend), `telemetry.ts`
 (aggregate counters only; raw conversations never persisted
 anywhere — no table exists).
 `app/api/ask/route.ts`: auth-required custom questions (401
@@ -58,7 +60,10 @@ AI Match sends the existing sanitized matching input only
 (level, field, sectors, types, skills, region, experience — no name,
 email, phone, UUIDs, saves, activity, goals, CVs). Ask sends NO
 profile data at all: sanitized question + grounded public opportunity
-facts + matched public FAQ text.
+facts + matched public FAQ text + the static assistant-identity string
+for conversational questions. FAQ entries and the identity string are
+grounding/context for the model and the deterministic fallback — the
+model writes the natural response; no intent-to-answer table exists.
 
 ## 5. Authority boundaries
 
@@ -81,9 +86,11 @@ deterministic without provider calls.
 
 ## 7. Provider chain, fallback, out-of-scope
 
-Gemini primary → Groq backup → deterministic fallback, reusing the
+Groq primary → Gemini backup → deterministic fallback, reusing the
 existing selection gate, error taxonomy, rate limiter, 8s budget
-split, and 64KiB ceiling. Ask adds no provider, no cache (fresh
+split, and 64KiB ceiling. The same order serves AI Match explanations
+and Ask answers — one chain, never Gemini-first on one surface and
+Groq-first on another. Ask adds no provider, no cache (fresh
 corpus reads; rate limit bounds cost — documented choice).
 Out-of-scope, injection, empty grounding, and invalid questions answer
 deterministically with no provider spend. V1 excludes submissions,

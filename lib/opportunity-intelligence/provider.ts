@@ -255,8 +255,11 @@ export function createGeminiProvider(
 /**
  * Exact, fail-closed provider-chain selection. Zero-spend is the default and
  * blocks every external request. The only supported production chain is
- * Gemini primary, Groq backup, and both providers require independent owner
- * attestations for privacy and billing state before either can be selected.
+ * Groq primary, Gemini backup, then deterministic fallback, and both
+ * providers require independent owner attestations for privacy and billing
+ * state before either can be selected. The `gemini,groq` chain value is
+ * the unchanged enablement identifier (existing owner-configured env keeps
+ * working); attempt order is Groq-first in code for every surface.
  */
 export function selectConfiguredOpportunityIntelligenceProvider(
   env: Readonly<Record<string, string | undefined>> = process.env,
@@ -300,8 +303,8 @@ export function selectConfiguredOpportunityIntelligenceProvider(
   const groqModel = env.AI_OPPORTUNITY_INTELLIGENCE_GROQ_MODEL?.trim()
     || "openai/gpt-oss-20b";
   const providers = [
-    createGeminiProvider(geminiKey, geminiModel, fetchImpl),
     createGroqProvider(groqKey, groqModel, fetchImpl),
+    createGeminiProvider(geminiKey, geminiModel, fetchImpl),
   ] as const;
   return { provider: providers[0], providers, reason: null };
 }

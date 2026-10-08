@@ -20,6 +20,7 @@ import {
 import type { Opportunity } from "../types";
 import {
   ASK_GROUNDED_LIMIT,
+  deterministicConversationalAnswer,
   deterministicFaqAnswer,
   deterministicOpportunityAnswer,
   deterministicRefusal,
@@ -31,7 +32,7 @@ import {
   type AskAvailabilityReason,
   type GroundedOpportunity,
 } from "./contract";
-import { classifyAskQuestion, faqEntryById } from "./knowledge";
+import { ASSISTANT_IDENTITY, classifyAskQuestion, faqEntryById } from "./knowledge";
 import {
   createMockAskProvider,
   selectAskProviders,
@@ -165,19 +166,29 @@ export async function answerAsk(
     recordAskOutcome("deterministic");
     return finish(deterministicRefusal(classification.reason));
   }
-  if (classification.kind === "faq") {
-    const answer = deterministicFaqAnswer(classification.entryId);
-    recordAskOutcome("deterministic");
-    return finish(answer ?? deterministicRefusal("out_of_scope"));
-  }
 
-  // Opportunity-grounded path: deterministic composition is the fallback
-  // baseline; the provider may only rephrase it.
+  // Routing model: safety/privacy guard (above) → grounding → AI provider
+  // → strict validation → deterministic fallback. FAQ entries and the
+  // assistant identity are grounding/context for the model and the
+  // deterministic fallback — never a hardcoded primary answer while a
+  // provider is configured.
   const facts = groundAskOpportunities(question, corpus);
-  const fallback = deterministicOpportunityAnswer(facts, question);
-  if (facts.length === 0) {
-    recordAskOutcome("deterministic");
-    return finish(fallback);
+  const usingPlatform = faqEntryById("using-platform");
+  let help: string | null = usingPlatform ? usingPlatform.body : null;
+  let fallback: AskAnswer;
+  if (classification.kind === "faq") {
+    const entry = faqEntryById(classification.entryId);
+    if (entry) help = entry.body;
+    fallback = deterministicFaqAnswer(classification.entryId) ?? deterministicRefusal("out_of_scope");
+  } else if (classification.kind === "conversational") {
+    help = `${ASSISTANT_IDENTITY} ${help ?? ""}`.trim();
+    fallback = deterministicConversationalAnswer(facts);
+  } else {
+    fallback = deterministicOpportunityAnswer(facts, question);
+    if (facts.length === 0) {
+      recordAskOutcome("deterministic");
+      return finish(fallback);
+    }
   }
 
   const selection = options.selection ?? selectAskProviders();
@@ -192,12 +203,12 @@ export async function answerAsk(
   );
   const deadline = Date.now() + timeoutMs;
   let lastFailure: AskAvailabilityReason = "provider_unavailable";
-  const faqEntry = faqEntryById("using-platform");
   const providerInput: AskProviderInput = {
     system: "ask",
     facts: JSON.stringify({
       question,
-      help: faqEntry ? faqEntry.body : null,
+      identity: classification.kind === "conversational" ? ASSISTANT_IDENTITY : null,
+      help,
       opportunities: facts.map((fact) => ({
         slug: fact.slug,
         title: fact.title,
