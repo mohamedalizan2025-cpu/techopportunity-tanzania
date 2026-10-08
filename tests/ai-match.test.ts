@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { hasVerifiedTanzanianAccess } from "../lib/opportunity-trust";
+import { buildSanitizedOpportunityIntelligenceInput } from "../lib/opportunity-intelligence/contract";
 import {
   buildMatchingInput,
   explainMatch,
@@ -204,6 +205,29 @@ test("matching context is the allowlisted profile only", () => {
   assert.match(data, /buildMatchingInput/);
   assert.doesNotMatch(data, /email|phone|displayName|goals/);
   assert.doesNotMatch(data, /saved|activity/i);
+});
+
+test("sanitized insight input carries only allowlisted profile fields", () => {
+  const input = buildMatchingInput({
+    careerLevel: "student",
+    fieldDiscipline: "Computer Science",
+    sectors: ["education"],
+    preferredTypes: ["fellowship"],
+    skills: ["Python"],
+    region: "Dar es Salaam",
+    experienceLevel: "entry",
+    goals: "Become a data scientist",
+  });
+  const sanitized = buildSanitizedOpportunityIntelligenceInput(opportunity("allowlist"), input);
+  assert.deepEqual(
+    Object.keys(sanitized.profile).sort(),
+    ["careerLevel", "experienceLevel", "fieldDiscipline", "preferredTypes", "region", "sectors", "skills"]
+  );
+  const serialized = JSON.stringify(sanitized);
+  assert.doesNotMatch(serialized, /email|phone|displayName|userId|databaseId/i);
+  assert.doesNotMatch(serialized, /goals/i);
+  assert.doesNotMatch(serialized, /saved|activity|reports|staff/i);
+  assert.doesNotMatch(serialized, /data scientist/i, "goals text never leaves the boundary");
 });
 
 console.log(`\n${passed} AI Match contract tests passed.`);

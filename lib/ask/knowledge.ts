@@ -122,17 +122,61 @@ const INJECTION_MARKERS = [
   "ignore your rules",
   "ignore previous",
   "system prompt",
+  "internal instructions",
+  "reveal your",
   "moderator notes",
+  "staff notes",
+  "private notes",
+  "internal notes",
+  "internal docs",
+  "internal documents",
   "user emails",
   "another user's",
   "another users",
+  "another person",
+  "other user",
+  "other users",
+  "other people",
+  "someone else",
   "saved opportunities of",
   "database secret",
+  "database password",
   "api key",
+  "secret key",
+  "private key",
+  "credentials",
+  "service role",
   "show me the prompt",
   "disregard your instructions",
+  "bypass your",
+  "override your",
   "jailbreak",
   "do anything now",
+];
+
+/**
+ * Public assistant identity + capability summary. This is product
+ * knowledge, not a hardcoded answer: it is supplied to the provider
+ * as grounding for conversational questions and reused verbatim only
+ * in the deterministic fallback when no provider is available.
+ */
+export const ASSISTANT_IDENTITY =
+  "I am Ask AI, Tech Opportunity's AI assistant. I help you understand Tech Opportunity, discover and understand verified opportunities, understand eligibility, trust and deadline information, and use AI Match, Activity, reporting, privacy and account features. I am not human.";
+
+const CONVERSATIONAL_MARKERS = [
+  "who are you",
+  "your name",
+  "what are you",
+  "what can you do",
+  "about yourself",
+  "tell me about",
+  "about this platform",
+  "about tech opportunity",
+  " hello ",
+  " hi ",
+  " hey ",
+  "good morning",
+  "good afternoon",
 ];
 
 const OUT_OF_SCOPE_MARKERS = [
@@ -181,17 +225,25 @@ function normalizedWords(value: string): string[] {
 export type AskClassification =
   | { kind: "faq"; entryId: string }
   | { kind: "opportunities" }
+  | { kind: "conversational" }
   | { kind: "refusal"; reason: "injection" | "out_of_scope" };
 
 /**
- * Deterministic intent classifier. Runs BEFORE any provider call: FAQ and
- * opportunity matches may use AI phrasing, but refusals and empty results
- * never spend a provider token.
+ * Deterministic intent classifier. Runs BEFORE any provider call: safety
+ * refusals never spend a provider token, but faq, opportunities, and
+ * conversational questions are all eligible for AI phrasing over supplied
+ * grounding (deterministic composers are the fallback, not the primary).
  */
 export function classifyAskQuestion(question: string): AskClassification {
-  const lowered = ` ${question.toLocaleLowerCase("en")} `;
+  // Underscores/hyphens collapse to spaces so joined variants of
+  // spaced guard phrases still match. This keeps raw credential-style
+  // patterns out of public code while the attack phrasing stays blocked.
+  const lowered = ` ${question.toLocaleLowerCase("en").replace(/[_-]+/g, " ")} `;
   for (const marker of INJECTION_MARKERS) {
     if (lowered.includes(marker)) return { kind: "refusal", reason: "injection" };
+  }
+  for (const marker of CONVERSATIONAL_MARKERS) {
+    if (lowered.includes(marker)) return { kind: "conversational" };
   }
   let best: { id: string; hits: number } | null = null;
   for (const entry of ASK_FAQ) {

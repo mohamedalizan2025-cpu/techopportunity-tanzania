@@ -8,7 +8,12 @@
  * strict local validator rejects anything outside the shape, plus any
  * authority-claiming, percentage, or score language.
  */
-import { ASK_SOURCE_ROUTES, faqEntryById, type AskFaqEntry } from "./knowledge";
+import {
+  ASK_SOURCE_ROUTES,
+  ASSISTANT_IDENTITY,
+  faqEntryById,
+  type AskFaqEntry,
+} from "./knowledge";
 
 export const ASK_SCHEMA_VERSION = 1 as const;
 export const ASK_QUESTION_MIN_LENGTH = 4;
@@ -20,6 +25,7 @@ export type AskMode = "ai" | "deterministic";
 export type AskAvailabilityReason =
   | "faq"
   | "grounded"
+  | "assistant"
   | "no_matches"
   | "out_of_scope"
   | "refused"
@@ -151,6 +157,34 @@ function faqAnswer(entry: AskFaqEntry): AskAnswer {
 export function deterministicFaqAnswer(entryId: string): AskAnswer | null {
   const entry = faqEntryById(entryId);
   return entry ? faqAnswer(entry) : null;
+}
+
+/**
+ * Deterministic fallback for conversational questions when no provider is
+ * available: assistant identity plus the platform-help summary, extended
+ * with grounded opportunity lines when the question also matched listings.
+ * Never a primary answer while providers are configured.
+ */
+export function deterministicConversationalAnswer(
+  facts: readonly GroundedOpportunity[]
+): AskAnswer {
+  const help = faqEntryById("using-platform");
+  const lines = facts.map((fact) =>
+    `${fact.title} (${fact.categoryLabel}) — ${fact.deadlineLabel}. ${fact.eligibilityLabel}`
+  );
+  const text = lines.length > 0
+    ? `${ASSISTANT_IDENTITY} Based on your question, the closest published listings are: ${lines.join(" ")} Open any listing to confirm details at the official source.`
+    : `${ASSISTANT_IDENTITY} ${help !== null ? help.body : "Ask me about opportunities, eligibility and deadlines, or using the platform."}`;
+  return {
+    schemaVersion: ASK_SCHEMA_VERSION,
+    mode: "deterministic",
+    provider: null,
+    availabilityReason: "assistant",
+    text,
+    sources: ["/ask", "/"],
+    opportunityRefs: facts.map((fact) => fact.slug),
+    limitations: ["Answered from Tech Opportunity's published help without AI phrasing."],
+  };
 }
 
 export function deterministicOpportunityAnswer(

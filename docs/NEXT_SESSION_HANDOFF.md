@@ -348,3 +348,53 @@ revenue, traction, or partnerships evidence that does not exist.
   grounding, privacy) → fill the decision template → on ANY
   deception/leakage set `AI_OPPORTUNITY_INTELLIGENCE_ENABLED=false`
   and redeploy immediately.
+
+## AI experience + Groq-first chain 2026-10-08 (branch `prod-ai-activation`; production OFF, main untouched)
+
+- CONTINUED FROM `dffdd53` — readiness/privacy work preserved, not
+  restarted. Canonical chain is now GROQ PRIMARY → GEMINI SECONDARY →
+  DETERMINISTIC FALLBACK, consistent on both surfaces (Ask V1 and AI
+  Match share one selection verdict + array order). No xAI/Grok
+  anywhere in code/env/docs — no provider mismatch to stop over. The
+  `gemini,groq` env value stays the unchanged enablement identifier
+  (owner-configured staging env keeps working); attempt order is
+  Groq-first in code. No model/chain-string/schema/RLS/Discovery/
+  moderation/authority change.
+- ASK ROUTING (corrected model: safety/privacy guard → grounding →
+  AI provider → strict validation → deterministic fallback): new
+  `conversational` classifier kind (identity/capability/greetings)
+  with the static `ASSISTANT_IDENTITY` ("Ask AI, Tech Opportunity's
+  AI assistant…", never human) as grounding — "Who are you?",
+  "What can you do?", "Tell me about this platform" reach the
+  provider instead of refusal. FAQ entries are grounding/context +
+  fallback, never hardcoded-primary (provider writes the response).
+  Safety refusals stay deterministic with zero spend: private-data
+  requests, secrets/credentials, system/internal instructions,
+  staff/private notes, prompt injection (incl. `_`/`-` joined
+  variants via normalization), out-of-scope — sanitization and
+  validators untouched. Empty opportunity grounding still falls
+  back without spend. No intent-to-answer table, no chat storage
+  (no new tables; aggregate telemetry only).
+- TESTS: ask 16/16 (conversational reachability, FAQ grounding/
+  fallback, Groq-first + Gemini-second + both-fail order proofs on
+  both surfaces, injection/private-data blocks with zero calls,
+  validator + authority + no-persistence pins kept); ai-match 8/8
+  (new behavioral allowlist proof: sanitized insight profile keys
+  exactly the 7 allowlisted, goals/identity/activity text absent);
+  intelligence 23/23 (order pins re-pointed Groq-first). Full
+  `npm run verify` green (tsc/eslint/43-43 boundaries; plan selected
+  build + assistant-kill-switch), `npm run build` green (30 pages),
+  `npm audit --omit=dev` 0 vulnerabilities, `git diff --check`
+  clean. One real finding fixed honestly: new `service_role`
+  marker literal tripped the service-role boundary gate — replaced
+  with word-separator normalization (same blocks, no literal).
+- STAGING: mock/static suites green (eval harness, staging-smoke
+  corpus, quota/invalid/timeout fallbacks). Authenticated Preview
+  provider smoke (Match explanation, Ask opportunity/product/
+  unsupported, fallback, latency, grounding) needs the owner
+  session + configured keys — NOT performed here, no PASS claimed.
+- PRODUCTION: OFF (no main push, no env/config change, active-AI
+  Privacy wording stays branch-only). REMAINING ACTIVATION
+  BLOCKERS (unchanged, owner-side): filled staging runbook §§B–K,
+  zero-deception evidence, fresh production attestations, rollback
+  rehearsal, signed decision template, dashboard config + redeploy.

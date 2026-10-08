@@ -91,6 +91,12 @@ The provider has no database client and no write path.
   deterministic-first, fail-closed, production OFF until separately approved.
   The legacy `app/api/assistant/ask` route remains behind its own
   `ASSISTANT_ENABLED` kill switch (default disabled) and is not the V1 path.
+- Conversational scope: in-scope identity/capability/platform questions
+  ("Who are you?", "What can you do?") are answered by the provider over
+  supplied identity + help grounding — never refused, never
+  hardcoded-primary. Safety refusals (private data, secrets, system
+  prompt, staff notes, injection, out-of-scope) stay deterministic with
+  zero provider spend.
 - Future **Application Copilot** (CV review, drafting, interview prep) is
   explicitly deferred: it needs a separate privacy/consent milestone before
   any CV, essay, or identifying content may leave the device boundary.
@@ -99,7 +105,8 @@ The provider has no database client and no write path.
 
 - **No general-purpose chatbot.** The insight surfaces answer ONLY from the
   moderated corpus plus the allowlisted profile (§6); Ask V1 answers ONLY
-  from published listing facts plus matched public FAQ text and sends NO
+  from published listing facts plus matched public FAQ text plus the static
+  assistant-identity string, and sends NO
   profile data at all. Open-web
   questions, news retrieval, memory of private data beyond the allowlist, and
   follow-up reasoning outside the fixed readiness task are out of scope —
@@ -134,9 +141,12 @@ V2 adds no new outbound field.
 ## 7. Provider architecture
 
 `OpportunityIntelligenceProvider.generate(input, signal)`; exact chain
-Gemini primary → Groq backup → deterministic fallback, selected ONLY when
+Groq primary → Gemini backup → deterministic fallback, selected ONLY when
 enabled + free-quota spend mode + exact `gemini,groq` chain string + both
-credentials + all four owner attestations. Partial config cannot promote the
+credentials + all four owner attestations. (The chain string is the
+unchanged enablement identifier; attempt order is Groq-first for every
+surface. Historical evaluation notes may still name the former
+Gemini-first order — the code order is authoritative.) Partial config cannot promote the
 backup: any missing link fails closed to the deterministic insight with a
 machine-readable `availabilityReason`. Azure is a
 reserved ID only; mock is code/test-injectable only, never env-selected.
