@@ -519,17 +519,6 @@ export async function getPublicBrowseData(
   };
 }
 
-/**
- * Distinct, non-null locations across published opportunities.
- * Deduplicated in memory — appropriate at current scale, no extra
- * database features required. The explicit 1,000-row select is a cap on
- * RAW rows scanned, not on the result: city/region values come from a
- * bounded taxonomy, so distinct coverage saturates long before the cap.
- */
-export async function listPublishedLocations(): Promise<PublishedLocations> {
-  return derivePublishedLocations(await fetchPublishedOpportunityCorpus());
-}
-
 export async function getOpportunityBySlug(
   slug: string
 ): Promise<Opportunity | null> {
