@@ -212,12 +212,6 @@ export function opportunityHref(slug: string, returnTo?: string): string {
   return `${pathname}?${params.toString()}`;
 }
 
-export function opportunityExcerpt(description: string, limit = 180): string {
-  const normalized = description.replace(/\s+/g, " ").trim();
-  if (normalized.length <= limit) return normalized;
-  return `${normalized.slice(0, limit - 1).trimEnd()}…`;
-}
-
 /**
  * Card excerpt: drops a leading "Deadline: …." boilerplate sentence when the
  * card already renders the deadline separately, then shortens. Never invents
