@@ -523,8 +523,9 @@ revenue, traction, or partnerships evidence that does not exist.
   (no migration in any converged branch). Canonical URL only:
   `https://techopportunity-tanzania.vercel.app`; Preview = internal QA;
   Production/Staging Supabase never crossed.
-- CONVERGENCE-BRANCH-ONLY (NOT live until owner merges to `main`):
-  hygiene removals (two dead helpers, empty gitkeep; Thumbs.db ignored);
+- RELEASED TO PRODUCTION (merged to `main` as `cd8bcf2`, live — see
+  the production release record at the end of this file): hygiene
+  removals (two dead helpers, empty gitkeep; Thumbs.db ignored);
   full offline experience per `docs/OFFLINE_PWA_STRATEGY.md` (bounded
   cache, recents, Saved/Activity preview + idempotent queue sync,
   stale-marked UI, account isolation, Ask offline gate, secondary
@@ -532,16 +533,15 @@ revenue, traction, or partnerships evidence that does not exist.
   (readiness states, duplicate WHY, filters/counts, approve-confirmation
   gate). No auto-publish anywhere: final publication stays a
   human-approved, reason-bearing action; unknown stays unknown.
-- OWNER QA STILL REQUIRED (nothing below is proven by local gates):
-  Preview QA of offline flows signed-in (cache seeding, offline Explore,
-  queued mutations + reconnect sync, Ask offline gate, game, 360–430px,
-  dark/light); staff-session moderation smoke (readiness tabs/counts,
-  priority order, approve refusal without checkbox, duplicate compare
-  links, published active/expired split); merge-to-main decision;
-  canonical smoke (`/`, `/ask`, `/offline`, `/privacy` OFF wording,
-  anonymous `/api/ask` → 401).
-- EXACT NEXT ROADMAP: 1) owner QA above → 2) merge to `main`
-  (auto-deploys Production) + canonical smoke → 3) 5–10 real-user pilot
+- OWNER QA (passed by owner before release): Preview QA of offline
+  flows signed-in (cache seeding, offline Explore, queued mutations +
+  reconnect sync, Ask offline gate, game, 360–430px, dark/light);
+  staff-session moderation smoke (readiness tabs/counts, priority
+  order, approve refusal without checkbox, duplicate compare links,
+  published active/expired split). Authenticated production behavior
+  is covered by that owner evidence — no production moderation action
+  was performed from here for proof, and none is fabricated below.
+- EXACT NEXT ROADMAP: 1) 5–10 real-user pilot on live production
   ("Can you find one opportunity you would genuinely apply for?") →
   4) fix only observed problems → 5) expand to 20–30 users → 6) first
   provider campaign pilot → 7) real aggregate report → 8) ask provider
@@ -551,3 +551,41 @@ revenue, traction, or partnerships evidence that does not exist.
   Publishing Engine V2, Ask chat UX. No redesign, no auto-publish, no
   chatbot rebuild, no model churn, no Production DB work, no secret
   rotation without new exposure.
+
+## Production release (main `00dcdfa` → `cd8bcf2`, owner QA passed, AI OFF)
+
+- SOURCE: `origin/main` `00dcdfa` confirmed before the move; dedicated
+  branch `pre-user-pilot-convergence` fast-forwarded to main (merges
+  `5415b49` hygiene, `678b043` offline, `9ae163a` publishing,
+  `cd8bcf2` SHA correction — no force, no merge commit beyond the
+  branch's own convergence merges) and pushed with plain
+  `git push origin main`. Push-to-main auto-deploys Production on the
+  single Vercel project. No env, dashboard, DB, or AI-config change;
+  no credentials handled.
+- PRE-PUSH GATES at `cd8bcf2`: `git diff --check` clean; full
+  `npm run verify` green (all suites incl. offline 55/55,
+  publishing-v2 53/53, review-readiness 21/21, ask 21/21, review 40/40,
+  published-management 53/53, accounts-saved 91; tsc, eslint,
+  boundaries 45/45); `npm run build` green
+  (`/offline` + `/api/offline-sync` present); `npm audit --omit=dev`
+  0 vulnerabilities. Diff review `00dcdfa..cd8bcf2`: 45 files, zero
+  `supabase/migrations` entries, zero `.env`/workflow/ops changes,
+  added-line secret scan clean, Privacy wording keeps truthful OFF.
+- CANONICAL SMOKE (anonymous,
+  `https://techopportunity-tanzania.vercel.app`, post-push): `/` 200
+  live shelf (11 opportunities, National/International + sector
+  taxonomy, evidence badges, real UDSM caption); `/ask` 200 (FAQ +
+  sign-in gate); `/offline` 200 NEW experience (cached browse, recent
+  details, Opportunity Run, stale honesty); `/privacy` 200 with
+  "Production AI is currently OFF" live; `/saved` + `/moderation`
+  behind the sign-in wall (staff UI unexposed); `/manifest.webmanifest`
+  200; `/robots.txt` production-allow. No staging refs in served
+  content; no DB-crossover indicators. Publishing V2 staff-gated
+  behavior is covered by the passed owner QA above — no authenticated
+  production evidence fabricated here.
+- PRODUCTION AI: OFF (no env/config/key change; fail-closed defaults;
+  Privacy text live). PRODUCTION DB: UNCHANGED (no migration, no
+  writes performed). No unexpected regression observed in smoke.
+- NEXT: 5–10 real-user pilot on live production per
+  `docs/REAL_USER_PILOT_2026-10.md`; owner prod-AI decision stays a
+  separate gate.

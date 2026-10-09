@@ -143,7 +143,7 @@ simulation, and the real-provider runs are recorded (not pending) with the
 results above. See
 [AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](docs/AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
 
-**Offline experience (converged into `pre-user-pilot-convergence`, unmerged to main):** after one online
+**Offline experience (live in Production since `cd8bcf2`):** after one online
 visit the app keeps a bounded cache (≤100 opportunities, ≤20 recents,
 per-account Saved/Activity snapshots) with visible stale warnings, an
 offline Explore, a queued Save/Activity sync (`POST /api/offline-sync`,
