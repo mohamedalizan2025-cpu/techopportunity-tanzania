@@ -544,7 +544,7 @@ boundary invariant locks this cache policy. Manifest screenshots are
 deliberately omitted (no committed localhost imagery); real-device
 install/standalone QA remains owner-side.
 
-Offline product layer (branch `offline-pwa`, full contract in
+Offline product layer (converged into `pre-user-pilot-convergence`, unmerged to main; full contract in
 [OFFLINE_PWA_STRATEGY.md](OFFLINE_PWA_STRATEGY.md)): after one online
 visit, `lib/offline-cache.ts` keeps a bounded localStorage cache (≤100
 public opportunities, ≤20 recents, per-account Saved/Activity snapshots)

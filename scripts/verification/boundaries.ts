@@ -59,8 +59,22 @@ const m31SourcePolicy = read("scripts/discovery/source-policy.ts");
 const opportunitiesData = read("lib/data/opportunities.ts");
 const moderationActions = read("lib/data/moderation-actions.ts");
 const moderationReview = read("lib/data/moderation-review.ts");
+const reviewWorkspace = read("lib/data/review-workspace.ts");
+const decisionForm = read("app/moderation/decision-form.tsx");
+const staffFormState = read("lib/staff-form-state.ts");
 const unpublishAttributionMigration = read("supabase/migrations/0015_published_unpublish_attribution.sql");
 const pendingRejectionMigration = read("supabase/migrations/0016_pending_rejection_attribution.sql");
+
+invariant("publishing engine v2 keeps publication human-gated and read-only", () => {
+  assert.match(staffFormState, /APPROVE_CONFIRM_TOKEN = "approve-verified"/);
+  assert.match(staffFormState, /export function isApproveConfirmed/);
+  assert.match(moderationActions, /isApproveConfirmed\(formData\.get\("confirm"\)\)/);
+  assert.match(decisionForm, /name="confirm"/);
+  assert.match(decisionForm, /APPROVE_CONFIRM_TOKEN/);
+  assert.match(reviewWorkspace, /getModerationAccess\(\)/);
+  assert.doesNotMatch(reviewWorkspace, /\.(insert|update|delete|upsert)\s*\(/);
+  assert.doesNotMatch(reviewWorkspace, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
+});
 
 invariant("all discovery network acquisition crosses fetchPage", () => {
   const directFetchFiles = filesBelow("scripts/discovery")

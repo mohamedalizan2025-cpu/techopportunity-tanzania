@@ -5,7 +5,11 @@ import { logOutAction } from "@/lib/data/auth-actions";
 import { categoryLabel } from "@/lib/category-labels";
 import { formatDeadlinePresentation } from "@/lib/opportunity-presentation";
 import { getModerationAccess } from "@/lib/data/moderation";
-import { listManagedPublishedOpportunities } from "@/lib/data/published-management";
+import {
+  listManagedPublishedOpportunities,
+  partitionPublishedByLifecycle,
+} from "@/lib/data/published-management";
+import { deriveLifecycleState } from "@/lib/lifecycle";
 import { UnpublishControl } from "./unpublish-control";
 import { StaffNav } from "@/components/staff-nav";
 
@@ -57,6 +61,10 @@ export default async function PublishedManagementPage() {
 
   const { displayName, email } = access.staff;
   const published = await listManagedPublishedOpportunities();
+  // Lifecycle split by deterministic deadline truth: expired publications
+  // stop appearing as active (public browse already excludes them) while
+  // staying stored and auditable here. Unknown deadlines stay active.
+  const lifecycle = partitionPublishedByLifecycle(published);
   const signedInAs = displayName ?? email ?? "staff";
 
   return (
@@ -112,8 +120,11 @@ export default async function PublishedManagementPage() {
         ) : (
           <>
             <p className="mt-8 text-sm text-[var(--muted)]">
-              Showing {published.length} live {published.length === 1 ? "record" : "records"}.
-              Unpublishing hides one record from the public site — it never
+              Showing {published.length} published {published.length === 1 ? "record" : "records"}
+              {" "}({lifecycle.active.length} active · {lifecycle.expired.length} expired).
+              Expired publications are hidden from active public discovery by
+              deadline truth but stay stored here for audit. Unpublishing hides
+              one record from the public site — it never
               deletes the row, and an unpublished record does not re-enter the
               pending queue. A required reason and the authenticated moderator,
               exact record, status transition and decision time are retained
@@ -121,6 +132,7 @@ export default async function PublishedManagementPage() {
             </p>
             <p className="mt-4 text-xs text-[var(--muted)]" role="status">
               Showing {published.length} of {published.length} published
+              {" "}· {lifecycle.active.length} active · {lifecycle.expired.length} expired/closed
             </p>
             {/* Desktop: compact operations table. */}
             <div className="mt-4 hidden overflow-x-auto rounded-md border border-[var(--line)] bg-[var(--surface)] md:block">
@@ -139,6 +151,7 @@ export default async function PublishedManagementPage() {
                 <tbody>
                   {published.map((opportunity) => {
                     const deadline = formatDeadlinePresentation(opportunity.deadline);
+                    const expired = deriveLifecycleState(opportunity.deadline) === "expired";
                     return (
                     <tr key={opportunity.id} className="border-b border-[var(--line)] align-top transition-colors last:border-b-0 hover:bg-[var(--hero)]">
                       <td className="max-w-[280px] px-4 py-3">
@@ -178,9 +191,15 @@ export default async function PublishedManagementPage() {
                         {formatPublished(opportunity.createdAt)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
-                        <span className="trust-badge trust-badge-verified">
-                          Live
-                        </span>
+                        {expired ? (
+                          <span className="trust-badge border border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                            Deadline passed
+                          </span>
+                        ) : (
+                          <span className="trust-badge trust-badge-verified">
+                            Live
+                          </span>
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
                         <div className="flex items-center gap-2">
@@ -204,15 +223,22 @@ export default async function PublishedManagementPage() {
             <ul className="mt-4 flex flex-col gap-2 md:hidden">
               {published.map((opportunity) => {
                 const deadline = formatDeadlinePresentation(opportunity.deadline);
+                const expired = deriveLifecycleState(opportunity.deadline) === "expired";
                 return (
                 <li
                   key={opportunity.id}
                   className="rounded-md border border-[var(--line)] bg-[var(--surface)] p-3"
                 >
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="trust-badge trust-badge-verified">
-                      Live
-                    </span>
+                    {expired ? (
+                      <span className="trust-badge border border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                        Deadline passed
+                      </span>
+                    ) : (
+                      <span className="trust-badge trust-badge-verified">
+                        Live
+                      </span>
+                    )}
                     <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--subtle)]">
                       {categoryLabel(opportunity.category)}
                     </span>

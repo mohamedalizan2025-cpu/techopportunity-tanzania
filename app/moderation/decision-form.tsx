@@ -8,6 +8,7 @@ import {
 } from "@/lib/data/moderation-actions";
 import type { ModerationCategoryOption } from "@/lib/data/moderation";
 import {
+  APPROVE_CONFIRM_TOKEN,
   initialDecisionState,
   MODERATION_REASON_MAX_LENGTH,
   MODERATION_REASON_MIN_LENGTH,
@@ -365,7 +366,25 @@ export function DecisionForm({
 
       {/* Decision controls stay reachable at the bottom of long records;
           they submit the same form (no duplicated state). */}
-      <div className="sticky bottom-0 -mx-6 mt-2 flex flex-wrap gap-3 border-t border-[var(--line)] bg-[var(--background)] px-6 py-4">
+      <div className="sticky bottom-0 -mx-6 mt-2 flex flex-col gap-3 border-t border-[var(--line)] bg-[var(--background)] px-6 py-4">
+        {/* Human confirmation — no blind publish. The server refuses any
+            approval without this exact token; rejecting ignores it. */}
+        <label className="flex cursor-pointer items-start gap-2.5 text-sm text-[var(--foreground)]">
+          <input
+            type="checkbox"
+            name="confirm"
+            value={APPROVE_CONFIRM_TOKEN}
+            className="mt-1 h-4 w-4 shrink-0 accent-[var(--accent)]"
+          />
+          <span>
+            I verified this record against the official source
+            {mode === "published"
+              ? " and it still satisfies the publication contract"
+              : " and every field above reflects that source"}
+            . Required before approving.
+          </span>
+        </label>
+        <div className="flex flex-wrap gap-3">
         <button
           type="submit"
           form="decision-form"
@@ -392,6 +411,7 @@ export function DecisionForm({
             Reject (keeps record as discovered)
           </button>
         ) : null}
+        </div>
       </div>
 
       <p className="text-xs text-[var(--muted)]">

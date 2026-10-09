@@ -59,6 +59,22 @@ export const initialDecisionState: DecisionState = {
  * auth server client) into the browser bundle.
  */
 export const UNPUBLISH_CONFIRM_TOKEN = "unpublish" as const;
+/**
+ * Publishing Engine V2 — human-approval confirmation token.
+ *
+ * Approving (or re-reviewing) a record requires the moderator to check an
+ * explicit "I verified this against the official source" box that submits
+ * this exact token. The server action refuses any approval without it, so a
+ * stray, crafted, or automated submission can never publish a record. There
+ * is intentionally no bulk approve: approval demands per-record evidence the
+ * batch form cannot supply.
+ */
+export const APPROVE_CONFIRM_TOKEN = "approve-verified" as const;
+
+/** Pure gate: true only when the moderator confirmed source verification. */
+export function isApproveConfirmed(value: unknown): boolean {
+  return value === APPROVE_CONFIRM_TOKEN;
+}
 export const MODERATION_REASON_MIN_LENGTH = 10;
 export const MODERATION_REASON_MAX_LENGTH = 1000;
 export const UNPUBLISH_REASON_MIN_LENGTH = MODERATION_REASON_MIN_LENGTH;

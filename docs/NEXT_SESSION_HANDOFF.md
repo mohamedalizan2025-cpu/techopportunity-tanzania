@@ -366,7 +366,46 @@ revenue, traction, or partnerships evidence that does not exist.
   fabricated.
 - PRODUCTION AI: OFF. PRODUCTION DB: UNCHANGED. No regression.
 
-## Offline Experience milestone 2026-10-09 (branch `offline-pwa` from `origin/main` `00dcdfa`, UNMERGED — owner review required)
+## Publishing Engine V2 2026-10-08 (branch `publishing-engine-v2` `9d60066`, converged into this branch; UNMERGED to main — owner review required)
+
+- GOAL: one moderator safely reviews/publishes many more opportunities
+  without weakening trust. PERMANENT RULE KEPT: NO blind auto-publish;
+  final publish/approve remains a human action (boundary invariant
+  `publishing engine v2 keeps publication human-gated and read-only`
+  pins it).
+- BASE: clean branch from `00dcdfa`; builds on the existing Assisted
+  Queue Approval (`c2bd0c2`) instead of replacing it — its 4 gates, 5
+  states, and "unknown never blocks readiness" semantics are preserved.
+- SHIPPED (no migration): duplicate WHY (matched row title + status +
+  rule + compare link, corpus = pending + published, never
+  auto-delete/mutate); `readiness` queue filter + tabs + counts per
+  state; priority order (ready → possible-duplicate → needs-evidence →
+  deadline-unclear → source-problem, oldest-first within state);
+  expired-pending partition (counted, excluded from review work, still
+  directly reachable); published active/expired split + badges + counts;
+  Tanzania-access evidence line + geography + canonical URL +
+  last-checked in the review workspace; APPROVE_CONFIRM_TOKEN checkbox
+  enforced server-side on approve AND published re-review (reject path
+  unchanged: reason-bearing as before); new `publishing-engine-v2`
+  suite (53 tests) + permanent boundary invariant.
+- DELIBERATE SEMANTIC (documented in code): unknown Tanzanian access
+  does NOT demote readiness — approval still requires evidenced
+  eligibility. Unknown can never become verified without the human
+  evidence step.
+- GATES on the branch (`9d60066`): full `npm run verify` green (incl.
+  new 53), tsc/eslint clean, boundaries green, `npm run build` green,
+  `npm audit --omit=dev` 0 vulnerabilities, `git diff --check` clean.
+  Change-triggered production evidence (deployed moderation access
+  proof) is OWNER work.
+- PRODUCTION: UNTOUCHED. AI: OFF. MIGRATION: NONE.
+- NEXT: owner reviews this convergence diff → merge to main
+  (auto-deploys Production) → staff-session smoke of /moderation
+  (readiness tabs, priority order, approve-confirmation refusal without
+  checkbox, duplicate compare links) + /published-management
+  (active/expired split) → resume the 50–100 corpus growth path (verify
+  TZ-access evidence per approval; do NOT chase counts).
+
+## Offline Experience milestone 2026-10-09 (branch `offline-pwa` `706b1d1`, converged into this branch; UNMERGED to main — owner review required)
 
 - GOAL: genuine usefulness under weak/no internet + durable handoff for a
   fresh session with repo access only. Permanent rule kept: cached
@@ -394,14 +433,15 @@ revenue, traction, or partnerships evidence that does not exist.
   AI doc Ask-offline note; new boundary invariant (bounded/account-scoped/
   stale-honest/chat-free + sync auth/idempotence + logout clear); new
   `tests/offline-cache.test.ts` 55/55 wired as `npm run test:offline`.
-- GATES (branch HEAD, commit pending): `npm run test:offline` 55/55;
-  full `npm run verify` + `npm run build` + `npm audit --omit=dev` to be
-  recorded before merge. No DB writes; production untouched; production AI
-  OFF. Signed-in browser + deployed-access proofs remain owner-side.
+- GATES on the branch (`706b1d1`): `npm run test:offline` 55/55;
+  full `npm run verify` + `npm run build` + `npm audit --omit=dev`
+  green. No DB writes; production untouched; production AI OFF.
+  Signed-in browser + deployed-access proofs remain owner-side.
 - PRODUCTION: UNTOUCHED (no main push, no deploy, no DB read/write).
-  Publishing Engine V2 stays on its own unmerged branch
-  (`publishing-engine-v2` `9d60066`, owner review required) — this branch
-  does not include, supersede, or merge it.
+  Repository hygiene (`repo-cleanup` `81c41e6`: two dead helpers, empty
+  gitkeep, Thumbs.db ignore) and Publishing Engine V2 (`9d60066`) are
+  converged into this branch alongside; all three remain unmerged to
+  main.
 
 ## Durable project handoff (repo-only continuation)
 
@@ -428,9 +468,11 @@ revenue, traction, or partnerships evidence that does not exist.
   never claim enabled without proof. See AI_OPPORTUNITY_INTELLIGENCE.md.
 - PUBLISHING: Assisted Queue Approval is live (READY FOR REVIEW / NEEDS
   EVIDENCE / POSSIBLE DUPLICATE / SOURCE PROBLEM / DEADLINE UNCLEAR,
-  display-only, human approve/reject preserved). Publishing Engine V2 is
-  NOT in main — unmerged branch `publishing-engine-v2`, owner review
-  required. Assisted ≠ auto-publish. See handoff §7 history + branch.
+  display-only, human approve/reject preserved). Publishing Engine V2
+  (duplicate WHY, readiness filter + counts, priority order,
+  approve-confirmation gate) is converged on this branch, unmerged to
+  main — see the sections above. Assisted ≠ auto-publish, and V2 adds
+  no auto-publish either: final publication stays human-approved.
 - CORPUS/USER PRIORITY: get real users; grow toward ~50–100 genuinely
   useful, active, Tanzania-relevant verified opportunities. Quality
   before quantity.
@@ -451,9 +493,9 @@ revenue, traction, or partnerships evidence that does not exist.
   Saved/Activity → queued mutations → reconnect → server reconciliation
   → refresh/reverification; always stale-marked. See
   OFFLINE_PWA_STRATEGY.md.
-- NEXT (in order): 1) finish/verify this offline milestone → 2) finish
-  Publishing Engine V2 review/merge → 3) grow corpus to 50–100 strong
-  active → 4) Groq/Gemini validation + activation only on owner decision
+- NEXT (in order): 1) owner QA of this convergence branch (see the
+  convergence section below) → 2) merge to `main` + canonical smoke →
+  3) grow corpus to 50–100 strong active → 4) Groq/Gemini validation + activation only on owner decision
   → 5) 5–10 user pilot → 6) fix observed problems only → 7) expand to
   20–30 users → 8) first provider campaign pilot → 9) real aggregate
   report → 10) ask provider to pay for the next run. Use repo evidence;
@@ -464,3 +506,47 @@ revenue, traction, or partnerships evidence that does not exist.
   provider/model churn; no Production DB experiments; no repeat secret
   rotation without new exposure; no hardware/IoT; no feature explosion
   before users.
+
+## Pre-user-pilot convergence (this branch `pre-user-pilot-convergence`)
+
+- SOURCES (all based on `origin/main` `00dcdfa`, one commit each,
+  source branches untouched): repository hygiene `81c41e6` → offline
+  experience `706b1d1` → Publishing Engine V2 `9d60066`, merged in that
+  order. Conflicts (3, all mechanical): `package.json` test chain (kept
+  both new suites in branch order), `scripts/verification/boundaries.ts`
+  (auto-merged: both new invariants kept), this handoff (both milestone
+  sections kept, ordered oldest-first, stale cross-references corrected).
+- LIVE PRODUCTION TRUTH (what `main` serves today): Ask chat UX release
+  `b8b1e49` (continuous ephemeral chat, Groq → Gemini → deterministic
+  fallback, mic enhancement). Production AI OFF. Production DB unchanged
+  (no migration in any converged branch). Canonical URL only:
+  `https://techopportunity-tanzania.vercel.app`; Preview = internal QA;
+  Production/Staging Supabase never crossed.
+- CONVERGENCE-BRANCH-ONLY (NOT live until owner merges to `main`):
+  hygiene removals (two dead helpers, empty gitkeep; Thumbs.db ignored);
+  full offline experience per `docs/OFFLINE_PWA_STRATEGY.md` (bounded
+  cache, recents, Saved/Activity preview + idempotent queue sync,
+  stale-marked UI, account isolation, Ask offline gate, secondary
+  Opportunity Run); Publishing Engine V2 per the section above
+  (readiness states, duplicate WHY, filters/counts, approve-confirmation
+  gate). No auto-publish anywhere: final publication stays a
+  human-approved, reason-bearing action; unknown stays unknown.
+- OWNER QA STILL REQUIRED (nothing below is proven by local gates):
+  Preview QA of offline flows signed-in (cache seeding, offline Explore,
+  queued mutations + reconnect sync, Ask offline gate, game, 360–430px,
+  dark/light); staff-session moderation smoke (readiness tabs/counts,
+  priority order, approve refusal without checkbox, duplicate compare
+  links, published active/expired split); merge-to-main decision;
+  canonical smoke (`/`, `/ask`, `/offline`, `/privacy` OFF wording,
+  anonymous `/api/ask` → 401).
+- EXACT NEXT ROADMAP: 1) owner QA above → 2) merge to `main`
+  (auto-deploys Production) + canonical smoke → 3) 5–10 real-user pilot
+  ("Can you find one opportunity you would genuinely apply for?") →
+  4) fix only observed problems → 5) expand to 20–30 users → 6) first
+  provider campaign pilot → 7) real aggregate report → 8) ask provider
+  to pay for the next run. Corpus target stays ~50–100 verified active;
+  Groq/Gemini activation only on separate owner decision.
+- COMPLETED — DO NOT RESTART: hygiene pass, offline milestone,
+  Publishing Engine V2, Ask chat UX. No redesign, no auto-publish, no
+  chatbot rebuild, no model churn, no Production DB work, no secret
+  rotation without new exposure.
