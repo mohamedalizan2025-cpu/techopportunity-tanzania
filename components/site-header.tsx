@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { logOutAction } from "@/lib/data/auth-actions";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 import { canSeeStaffNavigation } from "@/lib/staff-navigation";
+import { SignOutButton } from "@/components/sign-out-button";
 import { UiIcon } from "./ui-icon";
 import { NavigationLink } from "./navigation-link";
 import { MobileNavigation } from "./mobile-navigation";
@@ -49,11 +49,7 @@ export async function SiteHeader() {
                   </NavigationLink>
                 </>
               ) : null}
-              <form action={logOutAction}>
-                <button type="submit" className={linkClasses}>
-                  Sign out
-                </button>
-              </form>
+              <SignOutButton className={linkClasses} />
             </>
           ) : (
             <>
@@ -93,11 +89,7 @@ export async function SiteHeader() {
                   </NavigationLink>
                 </>
               ) : null}
-              <form action={logOutAction}>
-                <button type="submit" className={linkClasses}>
-                  Sign out
-                </button>
-              </form>
+              <SignOutButton className={linkClasses} />
             </>
           ) : (
             <Link href="/login?next=%2Fsaved" className={linkClasses}>

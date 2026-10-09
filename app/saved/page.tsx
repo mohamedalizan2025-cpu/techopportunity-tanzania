@@ -12,6 +12,10 @@ import {
 } from "@/lib/data/deadline-alerts";
 import { listSavedOpportunities } from "@/lib/data/saved-opportunities";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
+import {
+  OfflineAccountScope,
+  OfflineSavedSeed,
+} from "@/components/offline-seeds";
 import { formatDeadlinePresentation } from "@/lib/opportunity-presentation";
 import { formatSavedDate } from "@/lib/saved-opportunity-state";
 
@@ -38,6 +42,15 @@ export default async function SavedOpportunitiesPage() {
       tabIndex={-1}
       className="flex-1 bg-[var(--background)]"
     >
+      <OfflineAccountScope userId={user.userId} />
+      <OfflineSavedSeed
+        userId={user.userId}
+        entries={result.entries.map((e) => ({
+          opportunityId: e.opportunityId,
+          savedAt: e.savedAt,
+          opportunity: e.opportunity,
+        }))}
+      />
       <section className="border-b border-[var(--line)] bg-[var(--hero)]">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">

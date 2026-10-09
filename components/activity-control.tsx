@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { changeTalentActivityAction } from "@/lib/data/talent-activity-actions";
 import {
   ACTIVITY_STATUSES,
@@ -8,6 +8,8 @@ import {
   initialActivityMutationState,
   type ActivityStatus,
 } from "@/lib/talent-activity-state";
+import { OFFLINE_OWNER_KEY } from "@/lib/offline-cache";
+import { queueOfflineMutation } from "@/components/offline-queue-sync";
 
 export function ActivityControl({
   opportunityId,
@@ -26,6 +28,21 @@ export function ActivityControl({
     changeTalentActivityAction,
     initialActivityMutationState
   );
+  const [isOffline, setIsOffline] = useState(false);
+  const [queuedNote, setQueuedNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    const update = () =>
+      setIsOffline(typeof navigator !== "undefined" ? !navigator.onLine : false);
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
+
   const status = state.activity ?? currentStatus;
 
   if (!isAuthenticated) {
@@ -42,7 +59,40 @@ export function ActivityControl({
 
   return (
     <div className="relative z-10">
-      <form action={formAction}>
+      <form
+        action={formAction}
+        onSubmit={(event) => {
+          if (!isOffline) return;
+          event.preventDefault();
+          const data = new FormData(event.currentTarget);
+          const intent = data.get("intent");
+          if (
+            intent !== "interested" &&
+            intent !== "applying" &&
+            intent !== "applied" &&
+            intent !== "remove"
+          ) {
+            return;
+          }
+          let owner: string | null = null;
+          try {
+            owner = window.localStorage.getItem(OFFLINE_OWNER_KEY);
+          } catch {
+            owner = null;
+          }
+          if (!owner) {
+            setQueuedNote("You're offline — reconnect to update progress.");
+            return;
+          }
+          queueOfflineMutation(owner, {
+            type: intent === "remove" ? "remove-activity" : intent,
+            opportunityId,
+          });
+          setQueuedNote(
+            "Progress queued offline — will sync when reconnected. Never counted as a submitted application."
+          );
+        }}
+      >
         <input type="hidden" name="opportunityId" value={opportunityId} />
         <input type="hidden" name="returnTo" value={returnTo} />
         <label
@@ -79,7 +129,11 @@ export function ActivityControl({
           </button>
         </div>
       </form>
-      {state.message ? (
+      {queuedNote ? (
+        <p role="status" className="mt-2 max-w-xs text-xs leading-5 text-[var(--muted)]">
+          {queuedNote}
+        </p>
+      ) : state.message ? (
         <p
           role={state.status === "error" ? "alert" : "status"}
           className={`mt-2 max-w-xs text-xs leading-5 ${

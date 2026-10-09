@@ -410,7 +410,12 @@ test("navigation shows sign in to anonymous users", () => {
 });
 test("navigation exposes saved and sign out when authenticated", () => {
   assert.match(header, />\s*Saved\s*</);
-  assert.match(header, />\s*Sign out\s*</);
+  // Sign-out lives in SignOutButton (client) so it can clear private
+  // offline cache before the server action runs; the header must render it.
+  assert.match(header, /SignOutButton/);
+  const signOutButton = read("components/sign-out-button.tsx");
+  assert.match(signOutButton, />\s*Sign out\s*</);
+  assert.match(signOutButton, /clearAllPrivateOfflineCache/);
 });
 test("staff navigation is moderator-only (never admin-broadened)", () => {
   assert.match(header, /isModerator \?/);

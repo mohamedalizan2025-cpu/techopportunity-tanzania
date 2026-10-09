@@ -143,6 +143,15 @@ simulation, and the real-provider runs are recorded (not pending) with the
 results above. See
 [AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md](docs/AI_OPPORTUNITY_INTELLIGENCE_EVALUATION.md).
 
+**Offline experience (branch `offline-pwa`, unmerged):** after one online
+visit the app keeps a bounded cache (≤100 opportunities, ≤20 recents,
+per-account Saved/Activity snapshots) with visible stale warnings, an
+offline Explore, a queued Save/Activity sync (`POST /api/offline-sync`,
+idempotent, server truth wins), an honest Ask-offline gate (no queued
+prompts, no stored chat), and an optional offline mini-game inside
+`/offline`. The service worker stays static-only. See
+[OFFLINE_PWA_STRATEGY.md](docs/OFFLINE_PWA_STRATEGY.md).
+
 > _"A web platform for discovering opportunities all across Tanzania."_
 
 Discover hackathons, scholarships, competitions, conferences, workshops,

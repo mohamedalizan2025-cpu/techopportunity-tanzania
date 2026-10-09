@@ -12,6 +12,10 @@ import {
 } from "@/lib/data/talent-activities";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 import {
+  OfflineAccountScope,
+  OfflineActivitySeed,
+} from "@/components/offline-seeds";
+import {
   ACTIVITY_STATUSES,
   ACTIVITY_STATUS_DESCRIPTIONS,
   ACTIVITY_STATUS_LABELS,
@@ -55,6 +59,16 @@ export default async function ActivityPage() {
       tabIndex={-1}
       className="flex-1 bg-[var(--background)]"
     >
+      <OfflineAccountScope userId={user.userId} />
+      <OfflineActivitySeed
+        userId={user.userId}
+        entries={activity.entries.map((e) => ({
+          opportunityId: e.opportunityId,
+          status: e.activityStatus,
+          updatedAt: e.updatedAt,
+          opportunity: e.opportunity,
+        }))}
+      />
       <section className="border-b border-[var(--line)] bg-[var(--hero)]">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-strong)]">

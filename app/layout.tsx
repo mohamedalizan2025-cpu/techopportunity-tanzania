@@ -5,6 +5,9 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { PwaRegister } from "@/components/pwa-register";
+import { OfflineStatus } from "@/components/offline-status";
+import { OfflineQueueSync } from "@/components/offline-queue-sync";
+import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,7 +41,8 @@ interface RootLayoutProps {
   children: ReactNode;
 }
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const user = await getAuthenticatedUser();
   return (
     <html
       lang="en"
@@ -53,6 +57,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
           Skip to content
         </a>
         <SiteHeader />
+        <OfflineStatus />
+        <OfflineQueueSync userId={user?.userId ?? null} />
         {children}
         <footer className="border-t border-[var(--line)] bg-[var(--surface)]">
           <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 text-sm sm:grid-cols-2 sm:px-8 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">

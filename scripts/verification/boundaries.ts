@@ -303,6 +303,25 @@ invariant("service worker caches static assets only and never private or data re
   assert.doesNotMatch(worker, /https?:\/\/(?!location)/i);
 });
 
+invariant("offline cache is bounded, account-scoped, stale-honest and chat-free", () => {
+  const cache = read("lib/offline-cache.ts");
+  assert.match(cache, /OFFLINE_MAX_OPPORTUNITIES = 100/);
+  assert.match(cache, /OFFLINE_MAX_RECENT = 20/);
+  assert.match(cache, /queueMutationOnce/);
+  assert.match(cache, /foreignPrivateKeys/);
+  assert.match(cache, /never pretend to be/);
+  const askForm = read("components/ask-form.tsx");
+  assert.match(askForm, /needs a connection/);
+  assert.doesNotMatch(askForm, /localStorage|sessionStorage|indexedDB/i);
+  const syncRoute = read("app/api/offline-sync/route.ts");
+  assert.match(syncRoute, /getAuthenticatedUser\(\)/);
+  assert.match(syncRoute, /23505/);
+  assert.match(syncRoute, /private, no-store/);
+  assert.doesNotMatch(syncRoute, /AskAnswer|\/api\/ask/);
+  const signOut = read("components/sign-out-button.tsx");
+  assert.match(signOut, /clearAllPrivateOfflineCache/);
+});
+
 invariant("discovery uses one authoritative two-hour UTC schedule and the pending-only worker", () => {
   assert.match(discoveryWorkflow, /cron: ['"]17 \*\/2 \* \* \*['"]/);
   assert.doesNotMatch(discoveryWorkflow, /cron: ['"]0 \*\/2 \* \* \*['"]/);

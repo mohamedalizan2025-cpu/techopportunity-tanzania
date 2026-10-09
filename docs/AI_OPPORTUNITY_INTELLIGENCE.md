@@ -100,6 +100,10 @@ The provider has no database client and no write path.
   hardcoded-primary. Safety refusals (private data, secrets, system
   prompt, staff notes, injection, out-of-scope) stay deterministic with
   zero provider spend.
+- Offline posture: when the browser is offline the Ask composer is
+  disabled with an honest "needs a connection" state; prompts are never
+  queued and raw chat is never persisted — the existing transcript stays
+  visible only in live client memory. Reconnect restores normal behavior.
 - Future **Application Copilot** (CV review, drafting, interview prep) is
   explicitly deferred: it needs a separate privacy/consent milestone before
   any CV, essay, or identifying content may leave the device boundary.
