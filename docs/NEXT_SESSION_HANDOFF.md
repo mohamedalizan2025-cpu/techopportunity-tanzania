@@ -516,9 +516,10 @@ revenue, traction, or partnerships evidence that does not exist.
   both new suites in branch order), `scripts/verification/boundaries.ts`
   (auto-merged: both new invariants kept), this handoff (both milestone
   sections kept, ordered oldest-first, stale cross-references corrected).
-- LIVE PRODUCTION TRUTH (what `main` serves today): Ask chat UX release
-  `b8b1e49` (continuous ephemeral chat, Groq → Gemini → deterministic
-  fallback, mic enhancement). Production AI OFF. Production DB unchanged
+- LIVE PRODUCTION TRUTH (what `main` serves today, `00dcdfa`): Ask chat
+  UX code release `b8b1e49` as recorded deployed by the docs-only
+  production release record `00dcdfa` (continuous ephemeral chat,
+  Groq → Gemini → deterministic fallback, mic enhancement). Production AI OFF. Production DB unchanged
   (no migration in any converged branch). Canonical URL only:
   `https://techopportunity-tanzania.vercel.app`; Preview = internal QA;
   Production/Staging Supabase never crossed.
