@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OpportunityDetail } from "@/components/opportunity-detail";
+import { OfflineRecentRecorder } from "@/components/offline-seeds";
 import { getOpportunityBySlug } from "@/lib/data/opportunities";
 import { getUnifiedActivity } from "@/lib/data/talent-activities";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
@@ -79,6 +80,7 @@ export default async function OpportunityDetailPage({
         </Link>
 
         <div className="mt-5">
+          <OfflineRecentRecorder opportunity={opportunity} />
           <OpportunityDetail
             opportunity={opportunity}
             isSaved={detailState?.saved ?? false}

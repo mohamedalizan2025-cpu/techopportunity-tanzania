@@ -365,3 +365,102 @@ revenue, traction, or partnerships evidence that does not exist.
   light) awaits owner browser checks — no browser evidence
   fabricated.
 - PRODUCTION AI: OFF. PRODUCTION DB: UNCHANGED. No regression.
+
+## Offline Experience milestone 2026-10-09 (branch `offline-pwa` from `origin/main` `00dcdfa`, UNMERGED — owner review required)
+
+- GOAL: genuine usefulness under weak/no internet + durable handoff for a
+  fresh session with repo access only. Permanent rule kept: cached
+  information never pretends to be freshly verified.
+- SHIPPED (no migration, no env/secret, AI stays OFF, SW policy unchanged):
+  `lib/offline-cache.ts` (bounded ≤100 public / ≤20 recent, per-user
+  private keys, deduped queue, stale helpers); `components/offline-seeds.tsx`
+  (public/recent/Saved/Activity seeds + account-scope sweeper + logout
+  clear); `components/offline-explore.tsx` (local search/filter, stale
+  badges, last-sync); `components/offline-page-client.tsx` + upgraded
+  `app/offline/page.tsx` (offline state, stale honesty, last sync, cached
+  browse, inline cached recent details, private preview, reconnect status,
+  `OpportunityRun` game); `components/offline-status.tsx` (top-anchored
+  Offline/cached → updating → synced, quiet online, never covers bottom
+  nav); `components/offline-queue-sync.tsx` + `app/api/offline-sync/route.ts`
+  (idempotent Save/unsave + Interested/Applying/Applied sync, server truth
+  wins, unpublished drains, private no-store); Save/Activity controls queue
+  offline; Ask composer honestly gated (disabled offline, never queued,
+  no stored chat); `components/sign-out-button.tsx` clears private cache;
+  home/detail/saved/activity seed + scope wiring; `layout` hosts status +
+  queue sync. Game: keyboard + touch, pause/restart, reduced-motion aware,
+  zero network/analytics/deps, secondary by design.
+- DOCS: new `docs/OFFLINE_PWA_STRATEGY.md` (authoritative); README offline
+  note; `architecture.md` §10c extended; PRODUCT_STRATEGY Saved row +
+  AI doc Ask-offline note; new boundary invariant (bounded/account-scoped/
+  stale-honest/chat-free + sync auth/idempotence + logout clear); new
+  `tests/offline-cache.test.ts` 55/55 wired as `npm run test:offline`.
+- GATES (branch HEAD, commit pending): `npm run test:offline` 55/55;
+  full `npm run verify` + `npm run build` + `npm audit --omit=dev` to be
+  recorded before merge. No DB writes; production untouched; production AI
+  OFF. Signed-in browser + deployed-access proofs remain owner-side.
+- PRODUCTION: UNTOUCHED (no main push, no deploy, no DB read/write).
+  Publishing Engine V2 stays on its own unmerged branch
+  (`publishing-engine-v2` `9d60066`, owner review required) — this branch
+  does not include, supersede, or merge it.
+
+## Durable project handoff (repo-only continuation)
+
+- PRODUCT: "A trusted opportunity-intelligence and action platform for
+  Tanzania's emerging talent." Journey DISCOVER → VERIFY/UNDERSTAND →
+  PRIORITIZE → TRACK → APPLY. Talent surfaces: Explore (full universe,
+  never gated), AI Match (`/for-you`, alias `/ai-match`), Activity
+  (Saved separate from Interested/Applying/Applied), Ask AI (`/ask`).
+  See PRODUCT_STRATEGY.md + architecture.md §§1–3.
+- TRUST (permanent): organization-first; opportunity-only; discovery
+  source ≠ publication authority; human moderation is the final gate; NO
+  blind auto-publish; unknown stays unknown; eligibility/geography/
+  deadline/source truth is deterministic; AI explains but never decides;
+  paid promotion never bypasses verification. See ENGINEERING_RULES.md.
+- TOPOLOGY (canonical): ONE Vercel project, ONE public URL
+  `https://techopportunity-tanzania.vercel.app`, main = Production.
+  Previews are temporary internal QA only. Production Supabase ↔
+  Production only; staging Supabase ↔ Preview QA only; never cross.
+  See architecture.md §6.
+- AI STATE (repo truth): privacy/safety guard → verified grounding →
+  Groq → Gemini → strict validation → deterministic fallback; Ask V1
+  conversational ephemeral chat (≤8 turns, no raw persistence, mic
+  enhancement). Production AI OFF until the separate owner decision;
+  never claim enabled without proof. See AI_OPPORTUNITY_INTELLIGENCE.md.
+- PUBLISHING: Assisted Queue Approval is live (READY FOR REVIEW / NEEDS
+  EVIDENCE / POSSIBLE DUPLICATE / SOURCE PROBLEM / DEADLINE UNCLEAR,
+  display-only, human approve/reject preserved). Publishing Engine V2 is
+  NOT in main — unmerged branch `publishing-engine-v2`, owner review
+  required. Assisted ≠ auto-publish. See handoff §7 history + branch.
+- CORPUS/USER PRIORITY: get real users; grow toward ~50–100 genuinely
+  useful, active, Tanzania-relevant verified opportunities. Quality
+  before quantity.
+- PILOT: 5–10 real users first (university, advanced-level where fitting,
+  graduates, builders, non-tech, young professionals). Test question:
+  "Can you find one opportunity you would genuinely apply for?" Track
+  Visited → Saved → Interested → Applying → Applied. See pilot packs.
+- BUSINESS: talent core mostly free; first payer likely providers. First
+  offer: Managed Provider Campaign (verify → publish → distribute →
+  target → privacy-safe aggregate Saved/Interested/Applying/Applied
+  report; never sell private data; never promise "views" untracked).
+  Later: universities, hubs, NGOs, accelerators, companies, government
+  programs. Talent Plus stays a later hypothesis.
+- MOAT (to earn, not claimed): trusted TZ corpus + evidence system +
+  profiles + workflow + distribution + outcome data + institutional
+  relationships. LLMs are replaceable infrastructure.
+- OFFLINE: online visit → bounded cache → offline Explore/recents/
+  Saved/Activity → queued mutations → reconnect → server reconciliation
+  → refresh/reverification; always stale-marked. See
+  OFFLINE_PWA_STRATEGY.md.
+- NEXT (in order): 1) finish/verify this offline milestone → 2) finish
+  Publishing Engine V2 review/merge → 3) grow corpus to 50–100 strong
+  active → 4) Groq/Gemini validation + activation only on owner decision
+  → 5) 5–10 user pilot → 6) fix observed problems only → 7) expand to
+  20–30 users → 8) first provider campaign pilot → 9) real aggregate
+  report → 10) ask provider to pay for the next run. Use repo evidence;
+  never invent completion.
+- DO NOT RESTART: no random redesign; no AI-generated people; no blind
+  auto-publish; no schema-per-tenant rewrite; no selling private data; no
+  separate Vercel staging project; no generic chatbot rebuild; no
+  provider/model churn; no Production DB experiments; no repeat secret
+  rotation without new exposure; no hardware/IoT; no feature explosion
+  before users.

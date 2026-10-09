@@ -15,6 +15,10 @@ import { listLiveCategories } from "@/lib/data/categories";
 import { listSavedOpportunityIds } from "@/lib/data/saved-opportunities";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 import {
+  OfflineAccountScope,
+  OfflineCacheSeed,
+} from "@/components/offline-seeds";
+import {
   getPublicBrowseData,
   parseDeadlineFilter,
   parseOpportunityCategory,
@@ -102,6 +106,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <main id="main-content" tabIndex={-1} className="flex-1">
+      <OfflineCacheSeed
+        opportunities={opportunities.slice(0, 100)}
+        fetchedAt={new Date().toISOString()}
+      />
+      {user ? <OfflineAccountScope userId={user.userId} /> : null}
       <section className={`border-b border-[var(--line)] ${isFiltered ? "bg-[var(--hero)]" : "hero-dark"}`}>
         <div className={`page-shell ${isFiltered ? "py-5" : "py-8 sm:py-12"}`}>
           <p className={isFiltered ? "eyebrow" : "eyebrow-gold"}>For Tanzania’s emerging talent</p>

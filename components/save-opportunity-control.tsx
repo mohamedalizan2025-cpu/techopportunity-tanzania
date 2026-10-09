@@ -1,8 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { changeSavedOpportunityAction } from "@/lib/data/saved-opportunity-actions";
 import { initialSavedMutationState } from "@/lib/saved-opportunity-state";
+import { OFFLINE_OWNER_KEY } from "@/lib/offline-cache";
+import { queueOfflineMutation } from "@/components/offline-queue-sync";
 import { UiIcon } from "./ui-icon";
 
 export function SaveOpportunityControl({
@@ -24,6 +26,23 @@ export function SaveOpportunityControl({
     changeSavedOpportunityAction,
     initialSavedMutationState,
   );
+  const [isOffline, setIsOffline] = useState(false);
+  const [queuedNote, setQueuedNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    const update = () =>
+      setIsOffline(
+        typeof navigator !== "undefined" ? !navigator.onLine : false
+      );
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
+
   const saved = state.saved ?? isSaved;
   const actionLabel = saved ? "Saved" : compact ? "Save" : "Save opportunity";
   const accessibleLabel = saved
@@ -34,7 +53,32 @@ export function SaveOpportunityControl({
 
   return (
     <div className="relative z-10">
-      <form action={formAction}>
+      <form
+        action={formAction}
+        onSubmit={(event) => {
+          if (!isOffline || !isAuthenticated) return;
+          event.preventDefault();
+          let owner: string | null = null;
+          try {
+            owner = window.localStorage.getItem(OFFLINE_OWNER_KEY);
+          } catch {
+            owner = null;
+          }
+          if (!owner) {
+            setQueuedNote("You're offline — reconnect to save this opportunity.");
+            return;
+          }
+          queueOfflineMutation(owner, {
+            type: saved ? "unsave" : "save",
+            opportunityId,
+          });
+          setQueuedNote(
+            saved
+              ? "Queued removal — will sync when reconnected."
+              : "Saved offline — will sync when reconnected."
+          );
+        }}
+      >
         <input type="hidden" name="opportunityId" value={opportunityId} />
         <input type="hidden" name="intent" value={saved ? "remove" : "save"} />
         <input type="hidden" name="returnTo" value={returnTo} />
@@ -58,7 +102,11 @@ export function SaveOpportunityControl({
           {isPending ? "Working…" : actionLabel}
         </button>
       </form>
-      {state.message ? (
+      {queuedNote ? (
+        <p role="status" className="mt-2 max-w-xs text-xs leading-5 text-[var(--muted)]">
+          {queuedNote} Cached saves are marked stale until the server confirms them.
+        </p>
+      ) : state.message ? (
         <p
           role={state.status === "error" ? "alert" : "status"}
           className={`mt-2 max-w-xs text-xs leading-5 ${

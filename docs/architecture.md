@@ -523,7 +523,7 @@ explicitly out of redesign scope.
   trust/final-CTA) present live vs pilot vs future status honestly; no
   fake counts, testimonials, partners, or dashboards anywhere.
 
-## 10c. Installable PWA (authoritative as of 2026-10-04)
+## 10c. Installable PWA + offline experience (authoritative as of 2026-10-09)
 
 Web-only installability; no native app, no new dependency. Manifest
 (`app/manifest.ts` → `/manifest.webmanifest`) carries real product values:
@@ -543,6 +543,19 @@ network-only passthrough and never stored or served stale. A permanent
 boundary invariant locks this cache policy. Manifest screenshots are
 deliberately omitted (no committed localhost imagery); real-device
 install/standalone QA remains owner-side.
+
+Offline product layer (branch `offline-pwa`, full contract in
+[OFFLINE_PWA_STRATEGY.md](OFFLINE_PWA_STRATEGY.md)): after one online
+visit, `lib/offline-cache.ts` keeps a bounded localStorage cache (≤100
+public opportunities, ≤20 recents, per-account Saved/Activity snapshots)
+seeded by `components/offline-seeds.tsx`; `/offline` is a useful page
+(cached Explore with local search/filter, inline cached recent details,
+private preview, reconnect status, optional `OpportunityRun` game);
+`OfflineStatus` gives a quiet top-anchored connectivity indicator;
+Save/Activity controls queue offline (`POST /api/offline-sync`,
+idempotent, server truth wins); sign-out and account-switch sweep
+private keys; Ask AI is honestly gated offline (no queued prompts, no
+stored chat). Cached UI is always stale-marked with last-sync time.
 
 ---
 

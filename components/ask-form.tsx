@@ -60,6 +60,7 @@ export function AskForm({ isAuthenticated }: { isAuthenticated: boolean }) {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const [voiceNote, setVoiceNote] = useState<string | null>(null);
@@ -75,13 +76,22 @@ export function AskForm({ isAuthenticated }: { isAuthenticated: boolean }) {
     const frame = requestAnimationFrame(() => {
       setVoiceSupported(getSpeechRecognition() !== null);
     });
+    const updateOnline = () =>
+      setIsOffline(typeof navigator !== "undefined" ? !navigator.onLine : false);
+    updateOnline();
+    window.addEventListener("online", updateOnline);
+    window.addEventListener("offline", updateOnline);
     if (
       typeof window !== "undefined" &&
       window.matchMedia("(pointer: fine)").matches
     ) {
       composerRef.current?.focus();
     }
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("online", updateOnline);
+      window.removeEventListener("offline", updateOnline);
+    };
   }, []);
 
   useEffect(() => {
@@ -131,6 +141,12 @@ export function AskForm({ isAuthenticated }: { isAuthenticated: boolean }) {
   async function sendQuestion(raw: string) {
     const question = raw.trim();
     if (question.length < 4 || sending) return;
+    // Offline: never queue Ask prompts and never persist raw chat. The
+    // existing transcript stays visible only in live client memory.
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setError("Ask AI needs a connection — reconnect to ask. Your current transcript stays on this page only.");
+      return;
+    }
     setError(null);
     setSending(true);
     const userMessage: ChatMessage = { id: idRef.current++, role: "user", text: question };
@@ -235,17 +251,27 @@ export function AskForm({ isAuthenticated }: { isAuthenticated: boolean }) {
     );
   }
 
-  const canSend = draft.trim().length >= 4 && !sending;
+  const canSend = draft.trim().length >= 4 && !sending && !isOffline;
 
   return (
     <div className="mt-6 min-w-0">
+      {isOffline ? (
+        <p
+          role="status"
+          className="rounded-md border border-[var(--line-strong)] bg-[var(--warning-soft)] p-4 text-sm leading-6 text-[var(--warning)]"
+        >
+          You’re offline — Ask AI needs a connection. Your current transcript
+          stays visible on this page only; new questions aren’t queued or
+          kept. Reconnect to ask.
+        </p>
+      ) : null}
       {messages.length === 0 ? (
         <div className="flex flex-wrap gap-2" aria-label="Starter questions">
           {STARTER_QUESTIONS.map((suggestion) => (
             <button
               key={suggestion}
               type="button"
-              disabled={sending}
+              disabled={sending || isOffline}
               onClick={() => sendQuestion(suggestion)}
               className="inline-flex min-h-11 items-center rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent-strong)] disabled:opacity-60"
             >
@@ -324,8 +350,13 @@ export function AskForm({ isAuthenticated }: { isAuthenticated: boolean }) {
             }}
             rows={2}
             maxLength={500}
-            placeholder="Ask about opportunities or using Tech Opportunity…"
-            className="auth-input min-w-0 flex-1"
+            disabled={isOffline}
+            placeholder={
+              isOffline
+                ? "Offline — Ask AI needs a connection…"
+                : "Ask about opportunities or using Tech Opportunity…"
+            }
+            className="auth-input min-w-0 flex-1 disabled:opacity-60"
             aria-describedby="ask-composer-help"
           />
           {voiceSupported ? (
@@ -366,7 +397,9 @@ export function AskForm({ isAuthenticated }: { isAuthenticated: boolean }) {
           </button>
         </form>
         <p id="ask-composer-help" className="mt-2 text-xs leading-5 text-[var(--muted)]">
-          Enter sends · Shift+Enter adds a line · answers use verified information only.
+          {isOffline
+            ? "Offline — questions aren’t queued or kept. Reconnect to ask."
+            : "Enter sends · Shift+Enter adds a line · answers use verified information only."}
         </p>
       </div>
     </div>
