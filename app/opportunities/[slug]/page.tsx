@@ -11,6 +11,7 @@ import {
   sanitizeBrowseReturnHref,
 } from "@/lib/opportunity-presentation";
 import { isAiSearchableOpportunity } from "@/lib/opportunity-trust";
+import { CANONICAL_SITE_URL } from "@/lib/site";
 
 export const revalidate = 60;
 
@@ -25,9 +26,26 @@ export async function generateMetadata({
   const { slug } = await params;
   const opportunity = await getOpportunityBySlug(slug);
   if (!opportunity) return { title: "Opportunity not found" };
+  const description = opportunity.description.slice(0, 160);
+  const url = `${CANONICAL_SITE_URL}/opportunities/${opportunity.slug}`;
   return {
     title: `${opportunity.title} | Tech Opportunity`,
-    description: opportunity.description.slice(0, 160),
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      siteName: "Tech Opportunity",
+      title: `${opportunity.title} | Tech Opportunity`,
+      description,
+      url,
+      images: [{ url: "/icons/icon-512.png", width: 512, height: 512 }],
+    },
+    twitter: {
+      card: "summary",
+      title: `${opportunity.title} | Tech Opportunity`,
+      description,
+      images: ["/icons/icon-512.png"],
+    },
   };
 }
 
