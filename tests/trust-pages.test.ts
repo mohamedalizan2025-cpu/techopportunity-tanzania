@@ -144,10 +144,13 @@ test("contact uses the owner-approved WhatsApp channel with valid link", () => {
 });
 
 test("footer links the trust shell and invents nothing", () => {
+  // Metadata may declare Twitter cards; the claim applies to rendered footer links.
+  const footer = layout.match(/<footer\b[\s\S]*?<\/footer>/)?.[0];
+  assert.ok(footer, "rendered footer exists");
   for (const href of ['href="/privacy"', 'href="/terms"', 'href="/contact"', 'href="/#trust-heading"']) {
-    assert.ok(layout.includes(href), href);
+    assert.ok(footer.includes(href), href);
   }
-  assert.doesNotMatch(layout, /address|registration|partner|certification|twitter|x\.com|linkedin\.com|facebook\.com|instagram\.com/i, "footer fabrications");
+  assert.doesNotMatch(footer, /address|registration|partner|certification|twitter|x\.com|linkedin\.com|facebook\.com|instagram\.com/i, "footer fabrications");
 });
 
 test("auth and profile link the policies without behavior change", () => {
