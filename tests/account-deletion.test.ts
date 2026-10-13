@@ -138,6 +138,11 @@ test("deletion UI is deliberate, honest, and reversible-free of dark patterns", 
   assert.match(section, /disabled=\{isPending \|\| !confirmed\}/);
 });
 
+test("confirmed deletion clears private offline data before server redirect", () => {
+  assert.match(section, /if \(parseDeletionConfirmation\(formData\)\) clearAllPrivateOfflineCache\(\);\s*formAction\(formData\)/);
+  assert.doesNotMatch(read("lib/data/account-deletion-actions.ts"), /console\.error\([^;]*error\.message/);
+});
+
 test("profile hosts deletion and privacy stays truthful", () => {
   const profile = read("app/profile/page.tsx");
   assert.match(profile, /DeleteAccountSection/);

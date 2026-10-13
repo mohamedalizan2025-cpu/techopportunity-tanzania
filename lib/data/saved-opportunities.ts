@@ -82,7 +82,7 @@ export async function listSavedOpportunityIds(
     .limit(500);
   if (error) {
     if (!missingSavedSchema(error)) {
-      console.error("[lib/data] Failed to list saved opportunity ids:", error.message);
+      console.error("[lib/data] Failed to list saved opportunity ids:");
     }
     return new Set();
   }
@@ -106,7 +106,7 @@ export async function listSavedOpportunities(
 
   if (error) {
     if (!missingSavedSchema(error)) {
-      console.error("[lib/data] Failed to list saved opportunities:", error.message);
+      console.error("[lib/data] Failed to list saved opportunities:");
     }
     return { available: false, entries: [] };
   }

@@ -72,7 +72,7 @@ export async function listProviderCampaigns(
 
   if (error) {
     if (!missingCampaignSchema(error)) {
-      console.error("[lib/data] Failed to list provider campaigns:", error.message);
+      console.error("[lib/data] Failed to list provider campaigns:");
     }
     return { available: false, campaigns: [] };
   }
@@ -99,7 +99,7 @@ export async function getProviderCampaign(
 
   if (error) {
     if (!missingCampaignSchema(error)) {
-      console.error("[lib/data] Failed to read provider campaign:", error.message);
+      console.error("[lib/data] Failed to read provider campaign:");
     }
     return { available: false, campaign: null };
   }

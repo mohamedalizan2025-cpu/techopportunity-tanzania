@@ -129,7 +129,7 @@ produce deterministic, evidence-grounded fit/readiness guidance from the existin
 `MatchingInput`; For You links to the same detail insight without changing its
 ranking. A strict privacy allowlist excludes identity, contact, activity, goals,
 CVs, and database metadata. The swappable provider boundary implements the
-Gemini-primary → Groq-backup chain (test mock is code/test-injectable only).
+Groq-primary → Gemini-backup chain since code-only release `a0c08b6` (test mock is code/test-injectable only).
 Invalid/unavailable/quota-exhausted provider output fails closed
 to deterministic guidance. Measured 2026-10-04 on the fixed 16-case corpus:
 Gemini 14/16 valid AI responses, Groq 9/16 paced with zero quota errors, zero

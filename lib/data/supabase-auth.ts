@@ -81,10 +81,9 @@ export const getAuthenticatedUser = cache(
         displayName: row?.display_name?.trim() || null,
         role,
       };
-    } catch (error) {
+    } catch {
       console.error(
-        "[lib/data] authenticated user lookup failed; continuing anonymously.",
-        error instanceof Error ? error.message : error
+        "[lib/data] authenticated user lookup failed; continuing anonymously."
       );
       return null;
     }

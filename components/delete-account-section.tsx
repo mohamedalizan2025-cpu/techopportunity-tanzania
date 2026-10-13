@@ -1,9 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { clearAllPrivateOfflineCache } from "@/components/offline-seeds";
 import { deleteOwnAccountAction } from "@/lib/data/account-deletion-actions";
 import {
   ACCOUNT_DELETION_CONFIRMATION,
+  parseDeletionConfirmation,
   initialAccountDeletionState,
 } from "@/lib/account-deletion-state";
 
@@ -44,7 +46,12 @@ export function DeleteAccountSection() {
         </a>
         .
       </p>
-      <form action={formAction} className="mt-4 flex flex-col gap-3">
+      <form action={(formData) => {
+        // Clear before the server redirects: deletion must not leave private
+        // snapshots or queued writes on this device, even if navigation wins.
+        if (parseDeletionConfirmation(formData)) clearAllPrivateOfflineCache();
+        formAction(formData);
+      }} className="mt-4 flex flex-col gap-3">
         <div>
           <label
             htmlFor="delete-confirmation"

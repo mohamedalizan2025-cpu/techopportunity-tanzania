@@ -29,7 +29,7 @@ export async function changeDeadlineAlertPreferenceAction(
     { onConflict: "user_id" }
   );
   if (error) {
-    console.error("[lib/data] Failed to change deadline alert preference:", error.message);
+    console.error("[lib/data] Failed to change deadline alert preference:");
     return {
       status: "error",
       message: "Your deadline alert setting could not be changed. Please try again.",

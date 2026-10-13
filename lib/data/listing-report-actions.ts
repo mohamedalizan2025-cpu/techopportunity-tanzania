@@ -197,7 +197,7 @@ export async function listListingReportsForStaff(): Promise<{
     .limit(200);
   if (error) {
     if (!missingReportsSchema(error)) {
-      console.error("[lib/data] Failed to list listing reports:", error.message);
+      console.error("[lib/data] Failed to list listing reports:");
     }
     return { available: false, entries: [] };
   }

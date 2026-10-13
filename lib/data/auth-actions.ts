@@ -358,8 +358,7 @@ export async function logOutAction(): Promise<void> {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error(
-        "[auth] sign-out returned an error; verifying local session before redirect.",
-        error.message
+        "[auth] sign-out returned an error; verifying local session before redirect."
       );
     }
     const { data } = await supabase.auth.getSession();
@@ -368,10 +367,9 @@ export async function logOutAction(): Promise<void> {
         "[auth] session survived sign-out; redirecting to / anyway (retry surfaces as still-signed-in, never as an error page)."
       );
     }
-  } catch (error) {
+  } catch {
     console.error(
-      "[auth] sign-out failed before redirect; redirecting to / anonymously-failed-safe.",
-      error instanceof Error ? error.message : error
+      "[auth] sign-out failed before redirect; redirecting to / anonymously-failed-safe."
     );
   }
   redirect("/");

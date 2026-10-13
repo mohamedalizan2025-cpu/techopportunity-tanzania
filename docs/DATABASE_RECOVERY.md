@@ -4,6 +4,30 @@ Status: **RECOVERY BASELINE ESTABLISHED** on 2026-09-09. This document is a
 non-secret operating guide. The backup contents and raw security catalogs are not
 stored in Git.
 
+## Pre-launch recovery checks (2026-10-13 repo audit)
+
+The September baseline and bounded evidence below are historical recovery
+points, not proof of a fresh full backup after migrations 0018-0024. Their
+files, ACLs, checksums and off-device copies were not reverified this session.
+Before launch the owner should record a fresh, protected recovery point for
+the exact current production schema and data, timestamp, checksums, retention,
+RPO (acceptable data loss) and RTO (acceptable downtime). Do not store private
+artifacts or inventories in Git. Keep an encrypted off-device copy and prove
+recovery access from another computer within existing free resources.
+
+A full private-data restore drill remains unproven. Use a separately authorized,
+isolated recovery target, never application staging or production; validate
+catalog/grants, counts, auth and application behavior before declaring success.
+Account for intentional account deletions when restoring an older snapshot:
+do not resurrect deleted identities/private rows during recovery. Protect any
+deleted-account reconciliation record outside Git with minimal retention.
+
+Reconstruction also needs an owner-held inventory of provider accounts, MFA
+recovery, environment variable NAMES/scopes, auth URLs/SMTP templates, deployment
+and rollback IDs, DNS records, scheduler configuration and secret custody.
+Git does not restore secrets, provider settings or Storage object bytes.
+See [INCIDENT_RESPONSE_RUNBOOK.md](INCIDENT_RESPONSE_RUNBOOK.md).
+
 ## Protected location and handling
 
 The current recovery set is in the external local directory
