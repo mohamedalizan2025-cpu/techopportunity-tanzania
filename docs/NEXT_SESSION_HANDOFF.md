@@ -6,6 +6,92 @@ history (full log preserved in git: `main`, `ai-frontend-v1`,
 `pilot-ops-prep`, `docs-source-of-truth`). Read
 [ENGINEERING_RULES.md](ENGINEERING_RULES.md) before acting.
 
+## Current controller snapshot - 2026-10-13
+
+This snapshot takes precedence over dated status/next-task statements below.
+The earlier controller and release records remain historical evidence; permanent
+owner gates in ENGINEERING_RULES.md still apply. No live dashboard state was
+reverified during this continuation.
+
+- Local `main` and retained `origin/main`: `c3a03c5`, release record for code
+  `cd8bcf2`. Offline/PWA, Publishing Engine V2 and Ask chat UX are released,
+  not awaiting convergence. Earlier Preview-only/unmerged statements below
+  describe their original milestones. Production AI remains OFF.
+- Public URL remains `https://techopportunity-tanzania.vercel.app`.
+  `techopportunity.tech` DNS is propagating; HTTPS/live proof is required before
+  merging `chore/domain-migration-prep` (`648f36e`). Canonical metadata,
+  sitemap/robots and social previews are prepared there, not on main.
+  Verification exposed a footer-test false positive on social metadata;
+  follow-up `chore/domain-migration-verification-fix` (`927d66f`) preserves
+  Muse's commit and scopes that assertion to the rendered footer. Use the
+  follow-up for review; it remains held behind the same HTTPS owner gate.
+- Auth email copy/builders/tests and manual SMTP checklist are prepared on
+  `chore/auth-email-readiness` (`0918572`); SMTP activation and real delivery
+  are unproven. No dashboard/secret changes or test sends were made here.
+- Muse reported WS1-WS5 complete; preserve them. This checkout retains no new
+  dated WS1 corpus export/shortlist or WS2 live-run audit artifact from that
+  session. Do not invent their counts/results. The October 2 corpus review
+  and replenishment shortlist remain dated evidence, not a current inventory.
+  Recheck source/deadline/Tanzania evidence at each human moderation decision.
+- Scheduler: Cloudflare dispatch path is implemented and documented active;
+  the incident's 24-hour observation closure remains unproven in retained docs.
+  No cadence, workflow, registry or Cloudflare change is authorized here.
+- WS6/WS7 continuation: `chore/prelaunch-ops-closure`, based on Muse's
+  `chore/doc-source-of-truth-cleanup` (`7ec65b7`). Fixed deletion-device cache
+  cleanup and private-data/auth raw-error logging; strengthened recovery and
+  incident owner checklists; corrected stale offline status, provider order,
+  and runbook references. No DB, deployment, secret, provider or paid action.
+- Worktree hygiene: all seven initial worktrees were clean on inspection.
+  Keep occupied branches (`docs-source-of-truth`, `ask-chat-ux`, `pilot-ops-prep`,
+  `pre-pilot-convergence`, `prod-ai-activation`, `prod-ai-release`) untouched.
+  The new domain verification worktree is isolated in a temporary directory.
+  Many topic branches are ancestors of main; ancestry is not permission to
+  delete them. Owner should confirm session ownership and preserve needed
+  historical evidence before any separately authorized cleanup.
+
+**One next task:** owner verifies domain HTTPS/live readiness and reviews the
+held migration diff before authorizing cutover. Keep the old product URL until
+then. Remaining parallel owner checks: current backup/off-device custody/full
+restore drill, MFA/recovery access, scheduler observation closure, SMTP and
+signed-in device deletion/offline smoke. Pilot execution is still unproven;
+production AI activation remains a separate gate, never a launch prerequisite.
+
+### Continuation verification (2026-10-13)
+
+Operations changes: full `npm test` passed; corrected the new test's unsupported
+regex flag, then reran account deletion (13), trust pages (11), TypeScript,
+ESLint and boundary checks (45/45), all passed. Standard Turbopack production
+build passed. Public-data fetch warnings during the restricted build are not
+live service-health proof. Change plan against `c3a03c5` selects build,
+moderation/auth and deadline-alert coverage (included in the full suite);
+no migrations, registry or workflow changes. Deployed proof waits for owner
+review/release; local gates never authorize production mutation.
+
+Auth-email `0918572`: full suite including 6 email-copy checks, TypeScript,
+ESLint and 45 boundaries passed in a credential-free source snapshot. Snapshot
+Git planning was unavailable because an archive has no Git history. The default
+Turbopack build rejected the temporary dependency junction; a webpack production
+build passed with font-download network access. No product workaround committed.
+
+Domain follow-up `927d66f`: full `npm test`, TypeScript, ESLint, 45 boundaries,
+change plan against `c3a03c5`, and standard Turbopack production build passed.
+Font downloads required network access; no domain/DNS proof was inferred from
+that build. The plan selects discovery/acquisition/moderation-auth coverage
+(all included in the suite) plus build, and calls for exact-SHA discovery
+production evidence after an authorized release (User-Agent contact changed).
+Muse's original `648f36e` remains unchanged; the only follow-up code diff is
+the footer-test scope fix. No domain migration was merged or deployed.
+
+WS6/WS7 closure is repo-side only: local continuation commits remain unpushed.
+Eight worktrees now exist (seven original plus the isolated domain follow-up);
+no pre-existing branch/worktree was deleted or modified. Current primary
+continuation changes comprise deletion cache cleanup, fixed private-data/auth
+logs, the regression check, and seven existing docs (README, recovery, incident,
+handoff, offline strategy, roadmap, product strategy). All remaining live
+readiness checks require owner evidence; $0.00 spend and Production AI OFF.
+
+## Historical controller (2026-10-07; later release records supersede status)
+
 ## 1. Product in one paragraph
 
 Tech Opportunity is an opportunity-intelligence and action platform for

@@ -254,7 +254,17 @@ confer no uniqueness. Never present models or common UI features as the moat.
 - Numerical readiness scores, market-size extrapolation from student
   populations, and technical validation presented as customer validation.
 
-## Exact next milestone and immediate validation experiments
+## Current validation direction (2026-10-13)
+
+The public corpus review and replenishment review below were completed as dated
+October 2 evidence, with October 4 outcomes in
+[PILOT_REPLENISHMENT_SHORTLIST_2026-10-02.md](PILOT_REPLENISHMENT_SHORTLIST_2026-10-02.md).
+Do not restart them or treat their counts/deadlines as current. Follow
+[NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md) for the current pre-launch
+owner gates; the next product experiment remains the observed real-user pilot,
+with fresh source checks at moderation/use time. Pilot execution is unproven.
+
+### Historical review brief and validation sequence (2026-10-02)
 
 **Public corpus credibility review before the first adoption pilot:** read-only
 review of every currently visible listing against its authoritative source,

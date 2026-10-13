@@ -113,7 +113,7 @@ export async function listTalentActivityStatuses(
     .limit(500);
   if (error) {
     if (!missingActivitySchema(error)) {
-      console.error("[lib/data] Failed to list talent activity:", error.message);
+      console.error("[lib/data] Failed to list talent activity:");
     }
     return new Map();
   }
@@ -182,7 +182,7 @@ export async function listTalentActivities(
 
   if (error) {
     if (!missingActivitySchema(error)) {
-      console.error("[lib/data] Failed to list talent activities:", error.message);
+      console.error("[lib/data] Failed to list talent activities:");
     }
     return { available: false, entries: [] };
   }

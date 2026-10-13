@@ -13,6 +13,38 @@ migrations with a verified recovery point; application rollback is the
 previous Ready Vercel deployment. Secrets live in the Vercel dashboard
 and protected local files — never in Git, docs, chat, or logs.
 
+## Authorization and operational checklist (reviewed 2026-10-13)
+
+Playbooks describe owner-authorized responses, not permission for an agent to
+change dashboards, secrets, schedules, data, or deployments. Record the exact
+target and obtain bounded owner authorization before such actions. Production
+AI stays OFF; spend stays $0.00. DNS propagation is not cutover proof.
+
+Owner checks (not verified by this repo audit):
+- Confirm MFA for GitHub, Supabase, Vercel, Cloudflare, and the email provider
+  when configured; keep recovery codes outside Git in protected owner custody.
+  Check recovery access and least-privilege collaborators/tokens without
+  sharing credentials. No claim of application-level MFA is made.
+- Record primary incident owner and backup contact in protected operations
+  records; rehearse one auth/privacy failure and one application rollback.
+- For rollback, record current and previous Ready deployment IDs/SHAs and
+  environment compatibility; after an authorized rollback recheck public
+  routes, auth gates, privacy AI-OFF text, and discovery health. A code rollback
+  does not restore database rows or undo configuration/domain changes.
+- Follow [DATABASE_RECOVERY.md](DATABASE_RECOVERY.md) for backup freshness,
+  off-device custody, configuration reconstruction, and a separate restore drill.
+- Check private logs for retention/access limits. Repo private-data/auth paths
+  on `chore/prelaunch-ops-closure` log fixed operation messages rather than
+  raw provider/database errors (prepared, not deployed in this session);
+  do not add prompts, emails, tokens, private rows, or request bodies to logs.
+  Public ingestion/moderation diagnostics still need protected log access.
+- Offline QA: seed online, go offline, read stale-marked data, queue Save/Activity,
+  reconnect and reconcile; switch accounts/sign out; confirm deletion clears
+  private local cache (best-effort browser storage access). Invalid confirmation does not clear it. On a confirmed
+  but failed deletion the local cache is cleared conservatively and can reseed
+  online; server failure remains an error. Other devices/browser profiles retain
+  their own local snapshots until cleared; contact support for device guidance.
+
 ## 1. Severity model
 
 - SEV-0 / CRITICAL — immediate risk to private data, account security,
@@ -31,14 +63,14 @@ and protected local files — never in Git, docs, chat, or logs.
 ## 2. Universal flow (every incident, in order)
 
 1. DETECT — name what is observed, not assumed.
-2. RECORD — open an incident log (§12) with facts only.
+2. RECORD — open an incident log (§9) with facts only.
 3. CONTAIN — stop further harm first (unpublish, disable, rotate,
    pause — never investigate on a live exposure path).
 4. VERIFY SCOPE — confirm environment (production vs staging), affected
    rows/users/routes; do not rewrite history or evidence to do it.
 5. FIX / MITIGATE — smallest safe change through the normal gates.
 6. VERIFY RECOVERY — re-prove the exact failure is gone.
-7. COMMUNICATE IF APPROPRIATE — factual, minimal (§10).
+7. COMMUNICATE IF APPROPRIATE — factual, minimal (§7).
 8. DOCUMENT LESSONS — close the log with root cause + follow-up.
 
 ## 3. Playbooks (capability-grounded)
@@ -51,7 +83,7 @@ A. ACCOUNT COMPROMISE — force a password reset via the recovery flow;
 B. SECRET EXPOSURE — §4, always. Severity follows the secret's power
    (production DB/service-role = SEV-0; analytics-less staging key =
    SEV-1; committed-but-unpushed local value = SEV-2 after cleanup).
-C. PRIVACY INCIDENT — §7. Stop the exposure path (unpublish, gate, or
+C. PRIVACY INCIDENT — §5. Stop the exposure path (unpublish, gate, or
    disable the surface); scope rows/users; verify RLS/auth boundaries
    with the protected catalog (never disable RLS to debug, never
    broaden service-role access as a workaround); contact affected users

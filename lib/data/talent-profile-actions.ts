@@ -51,7 +51,7 @@ export async function saveTalentProfileAction(
           "Personalized profiles are not available yet. Explore is unaffected.",
       };
     }
-    console.error("[lib/data] Failed to save talent profile:", error.message);
+    console.error("[lib/data] Failed to save talent profile:");
     return {
       status: "error",
       message: "Your profile could not be saved. Please try again.",

@@ -1,7 +1,8 @@
 # Offline / PWA strategy (authoritative)
 
-Status: implemented on branch `offline-pwa` from `origin/main` `00dcdfa`;
-production unchanged until owner merge + deploy. This file is the
+Status: released to Production via `cd8bcf2` (release evidence in
+[NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md)). Originally implemented
+on `offline-pwa` from `00dcdfa`. This file is the
 authoritative offline contract. Permanent trust rule:
 **cached information must never pretend to be freshly verified.**
 
@@ -32,6 +33,8 @@ reconnect → server reconciliation → refresh / reverification.
 - Privacy: private keys are `…:<userId>`-scoped; `OfflineAccountScope`
   sweeps foreign accounts on authenticated pages; sign-out clears all
   private keys (`clearAllPrivateOfflineCache`); public cache may remain.
+  Confirmed deletion also attempts the same best-effort private-key clear in the prepared
+  `chore/prelaunch-ops-closure` fix (not deployed in this session).
   No raw Ask AI chat is persisted anywhere (transcript lives in live
   client memory only).
 - Ask AI: offline composer is disabled with "Ask AI needs a connection";

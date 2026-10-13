@@ -39,7 +39,7 @@ export async function deleteOwnAccountAction(
 
   const { error } = await user.client.rpc("request_own_account_deletion");
   if (error) {
-    console.error("[lib/data] Account deletion failed:", error.message);
+    console.error("[lib/data] Account deletion failed:");
     return {
       status: "error",
       message: "Your account could not be deleted. Please try again.",

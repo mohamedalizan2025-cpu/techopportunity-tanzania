@@ -82,7 +82,7 @@ export async function getCampaignEngagement(
   });
   if (error) {
     if (!missingEngagementSchema(error)) {
-      console.error("[lib/data] Failed to read campaign engagement:", error.message);
+      console.error("[lib/data] Failed to read campaign engagement:");
     }
     return { available: false, engagement: { ...EMPTY_ENGAGEMENT } };
   }
@@ -103,7 +103,7 @@ export async function getCampaignAudience(
   });
   if (error) {
     if (!missingEngagementSchema(error)) {
-      console.error("[lib/data] Failed to read campaign audience:", error.message);
+      console.error("[lib/data] Failed to read campaign audience:");
     }
     return { available: false, audience: 0 };
   }

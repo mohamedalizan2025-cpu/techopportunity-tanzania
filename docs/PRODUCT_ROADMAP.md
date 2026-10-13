@@ -1,13 +1,17 @@
 # Product roadmap
 
-## Current product priority — 2026-10-02
+## Current product priority - 2026-10-13
 
-[PRODUCT_STRATEGY.md](PRODUCT_STRATEGY.md) records the current audit, bounded
-presentation milestone and validation sequence. The exact next product milestone
-is a read-only source review of the currently visible public corpus, preparing
-specific moderation proposals before the first adoption pilot. This supersedes
-older “next” product items below; operational incidents remain separately open.
-The September 17 handoff records 0019/0020 production rollout; the pending-rollout
+The October 2 corpus review and October 4 moderation outcomes are recorded in
+[PUBLIC_CORPUS_REVIEW_2026-10-02.md](PUBLIC_CORPUS_REVIEW_2026-10-02.md) and
+[PILOT_REPLENISHMENT_SHORTLIST_2026-10-02.md](PILOT_REPLENISHMENT_SHORTLIST_2026-10-02.md).
+They are completed dated evidence, not a task to restart or a current inventory.
+Muse's WS1-WS5 pre-launch work is preserved; follow
+[NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md) for current readiness and
+owner gates. The next product validation remains the bounded real-user pilot,
+not new features or AI activation; launch/domain/email and operational owner
+checks remain separate. No pilot execution or demand is claimed.
+The September 17 handoff records 0019/0020 production rollout; pending-rollout
 descriptions later in this historical roadmap are not current deployment state.
 
 ## Vision

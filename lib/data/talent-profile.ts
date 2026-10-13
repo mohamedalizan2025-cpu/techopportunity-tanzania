@@ -77,7 +77,7 @@ export async function getTalentProfile(
 
   if (error) {
     if (!missingProfileSchema(error)) {
-      console.error("[lib/data] Failed to read talent profile:", error.message);
+      console.error("[lib/data] Failed to read talent profile:");
     }
     return { available: false, profile: EMPTY_TALENT_PROFILE };
   }

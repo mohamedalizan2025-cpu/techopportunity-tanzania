@@ -44,7 +44,7 @@ export async function getDeadlineAlertPreference(
     .maybeSingle();
   if (error) {
     if (!missingAlertSchema(error)) {
-      console.error("[lib/data] Failed to read deadline alert preference:", error.message);
+      console.error("[lib/data] Failed to read deadline alert preference:");
     }
     return { available: false, enabled: false };
   }
@@ -70,7 +70,7 @@ export async function listDeadlineAlertEvents(
     .limit(20);
   if (error) {
     if (!missingAlertSchema(error)) {
-      console.error("[lib/data] Failed to list deadline alerts:", error.message);
+      console.error("[lib/data] Failed to list deadline alerts:");
     }
     return { available: false, events: [] };
   }
