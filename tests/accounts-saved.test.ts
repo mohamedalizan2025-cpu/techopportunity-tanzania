@@ -63,9 +63,9 @@ test("redirect rejects excessive length", () => {
 });
 test("configured production site origin is normalized", () => {
   assert.equal(resolveSiteOrigin({
-    NEXT_PUBLIC_SITE_URL: "https://techopportunity-tanzania.vercel.app/",
+    NEXT_PUBLIC_SITE_URL: "https://techopportunity.tech/",
     NODE_ENV: "production",
-  }), "https://techopportunity-tanzania.vercel.app");
+  }), "https://techopportunity.tech");
 });
 test("Vercel production URL is a safe canonical fallback", () => {
   assert.equal(resolveSiteOrigin({
@@ -96,10 +96,10 @@ test("confirmation callback preserves a safe public return", () => {
   assert.equal(buildAuthCallbackUrl(
     "/opportunities/public-example?from=%2F%3Fq%3DAI",
     {
-      NEXT_PUBLIC_SITE_URL: "https://techopportunity-tanzania.vercel.app",
+      NEXT_PUBLIC_SITE_URL: "https://techopportunity.tech",
       NODE_ENV: "production",
     }
-  ), "https://techopportunity-tanzania.vercel.app/auth/callback?next=%2Fopportunities%2Fpublic-example%3Ffrom%3D%252F%253Fq%253DAI");
+  ), "https://techopportunity.tech/auth/callback?next=%2Fopportunities%2Fpublic-example%3Ffrom%3D%252F%253Fq%253DAI");
 });
 test("confirmation callback neutralizes an external return", () => {
   assert.equal(buildAuthCallbackUrl("https://evil.example", {
