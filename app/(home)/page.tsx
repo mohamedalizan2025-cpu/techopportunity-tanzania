@@ -1,3 +1,4 @@
+import { publicPageMetadata, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 import Link from "next/link";
 import { EditorialPhotograph } from "@/components/editorial-photograph";
 import { UiIcon } from "@/components/ui-icon";
@@ -34,6 +35,8 @@ import {
 import { parseGeography, parseSector } from "@/lib/taxonomy";
 
 export const revalidate = 60;
+
+export const metadata = publicPageMetadata("/", SITE_NAME, SITE_DESCRIPTION);
 
 const PAGE_SIZE = 24;
 

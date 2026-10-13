@@ -4,7 +4,7 @@ import { sanitizeNextPath } from "@/lib/staff-form-state";
 import { ResendConfirmationForm } from "./resend-confirmation-form";
 
 export const metadata: Metadata = {
-  title: "Resend confirmation email | Tech Opportunity",
+  title: "Resend confirmation email",
   robots: { index: false, follow: false },
 };
 

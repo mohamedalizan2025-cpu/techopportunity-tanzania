@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ForgotPasswordForm } from "./forgot-password-form";
 
 export const metadata: Metadata = {
-  title: "Forgot password | Tech Opportunity",
+  title: "Forgot password",
   robots: { index: false, follow: false },
 };
 

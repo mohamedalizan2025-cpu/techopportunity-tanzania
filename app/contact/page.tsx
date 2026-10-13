@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/site";
 import Link from "next/link";
 import { UiIcon } from "@/components/ui-icon";
 
-export const metadata: Metadata = {
-  title: "Contact | Tech Opportunity",
-  description:
-    "Reach Tech Opportunity for support, privacy requests, listing corrections, or provider enquiries.",
-};
+export const metadata: Metadata = publicPageMetadata(
+  "/contact",
+  "Contact",
+  "Reach Tech Opportunity for support, privacy requests, listing corrections, or provider enquiries."
+);
 
 const WHATSAPP_HREF = "https://wa.me/255624295705";
 const WHATSAPP_LABEL = "+255 624 295 705";

@@ -1,8 +1,9 @@
 # Custom domain migration — techopportunity.tech
 
-OWNER GATE: merge only after techopportunity.tech is verified live with HTTPS.
+MERGE BLOCKED until https://techopportunity.tech is publicly live with valid HTTPS.
 
-This branch (`chore/domain-migration-prep`) is UNMERGED preparation. DNS
+This PR branch (`chore/domain-migration-verification-fix`) preserves the original
+`chore/domain-migration-prep` work and remains UNMERGED preparation. DNS
 activation is still propagating and must NOT be assumed live. Production on
 `main` keeps serving `https://techopportunity-tanzania.vercel.app` until this
 branch merges.
@@ -11,11 +12,16 @@ branch merges.
 
 - `lib/site.ts` (new): single `CANONICAL_SITE_URL =
   https://techopportunity.tech` source plus `canonicalUrl()` helper.
-- `app/layout.tsx`: `metadataBase` → canonical, title template, canonical
-  alternates, Open Graph + Twitter summary cards (WhatsApp/LinkedIn previews).
-- `app/opportunities/[slug]/page.tsx`: per-opportunity canonical + OG/Twitter.
-- `app/sitemap.ts` (new): static public routes + best-effort published
-  detail URLs (fails closed to static list, never leaks unpublished rows).
+- `app/layout.tsx`: canonical `metadataBase` + global title template only;
+  homepage canonical/social identity belongs to `app/(home)/page.tsx`.
+- `lib/site.ts`: `publicPageMetadata()` gives each indexable public route its
+  own canonical, social URL/title/description and images. Page title inputs
+  are unbranded; the document title template supplies exactly one suffix.
+- `app/opportunities/[slug]/page.tsx`: route-specific article metadata and
+  canonical; unknown details do not inherit the homepage canonical.
+- `app/sitemap.ts`: seven public static routes plus the existing loader's
+  bounded active-published detail URLs, refreshed every 60 seconds. No synthetic
+  `lastModified` dates; generation time is not a content-modification date.
 - `app/robots.ts`: production allows `/` and advertises
   `https://techopportunity.tech/sitemap.xml`; non-production stays
   disallow-all.
@@ -26,6 +32,21 @@ branch merges.
   kept intact.
 
 No Supabase/Vercel dashboard change in this branch. No migration. AI OFF.
+
+## Public route / inheritance audit (PR #2 cleanup)
+
+| Route set | Metadata / sitemap behavior |
+|---|---|
+| `/` (including browse filter/query variants) | Homepage canonical `/`; homepage-only social identity; absolute brand title |
+| `/organizations`, `/ask`, `/contact`, `/privacy`, `/terms`, `/submit` | Self canonical + route-specific social identity; all seven static routes including home appear in sitemap |
+| `/opportunities/[slug]` | Self canonical + article metadata, one document title suffix; existing active-published loader supplies sitemap URLs |
+| Account/auth, activity/saved/matching, staff/campaign/report and offline pages | Existing noindex preserved; no inherited homepage canonical/social URL; omitted from sitemap |
+| `/ai-match`, auth callback/API routes, missing details | Redirect/handler/404 behavior preserved; omitted from sitemap |
+
+No UI, publication, matching, data-query, auth or AI behavior changes. Stored
+expired detail pages stay reachable under the existing lifecycle contract but
+remain outside the active sitemap. The loader's current 500-row bound is retained;
+this is not an unbounded corpus export. The owner gate is unchanged.
 
 ## Owner verification before merge
 

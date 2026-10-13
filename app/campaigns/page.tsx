@@ -13,7 +13,7 @@ import { logOutAction } from "@/lib/data/auth-actions";
 import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
-  title: "Provider Campaign Pilot · TechOpportunity Tanzania",
+  title: "Provider Campaign Pilot",
   description: "Internal staff-only campaign pilot with aggregate analytics.",
   robots: { index: false, follow: false },
 };

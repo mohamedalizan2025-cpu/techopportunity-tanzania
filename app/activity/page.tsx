@@ -25,7 +25,7 @@ import {
 } from "@/lib/talent-activity-state";
 
 export const metadata: Metadata = {
-  title: "Your activity | Tech Opportunity",
+  title: "Your activity",
   description:
     "Your private saved list and application progress in one place.",
   robots: { index: false, follow: false },

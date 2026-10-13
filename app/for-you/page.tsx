@@ -22,7 +22,7 @@ import { categoryLabel } from "@/lib/category-labels";
 import { SECTOR_LABELS } from "@/lib/taxonomy";
 
 export const metadata: Metadata = {
-  title: "AI Match | Tech Opportunity",
+  title: "AI Match",
   description:
     "Verified-eligible opportunities ordered for your profile, with AI explanations grounded in evidence. Unknown eligibility is never labeled eligible.",
   robots: { index: false, follow: false },

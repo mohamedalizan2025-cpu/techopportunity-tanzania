@@ -25,22 +25,6 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    siteName: SITE_NAME,
-    title: SITE_NAME,
-    description: SITE_DESCRIPTION,
-    url: CANONICAL_SITE_URL,
-    locale: "en",
-    images: [{ url: "/icons/icon-512.png", width: 512, height: 512 }],
-  },
-  twitter: {
-    card: "summary",
-    title: SITE_NAME,
-    description: SITE_DESCRIPTION,
-    images: ["/icons/icon-512.png"],
-  },
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Tech Opportunity" },
   icons: {
     icon: [

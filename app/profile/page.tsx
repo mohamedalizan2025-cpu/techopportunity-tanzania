@@ -6,7 +6,7 @@ import { getTalentProfile } from "@/lib/data/talent-profile";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 
 export const metadata: Metadata = {
-  title: "Your profile | Tech Opportunity",
+  title: "Your profile",
   description:
     "Add optional details to personalize your AI Match recommendations. Explore stays open to everyone.",
   robots: { index: false, follow: false },

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/site";
 import Link from "next/link";
 import { listLiveCategories } from "@/lib/data/categories";
 import { listOrganizationOptions } from "@/lib/data/opportunities";
@@ -6,11 +7,11 @@ import { SubmissionForm } from "./submission-form";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  title: "Submit an opportunity · TechOpportunity Tanzania",
-  description:
-    "Share a hackathon, scholarship, competition, internship, fellowship, grant or tech event with Tanzanian students and young innovators.",
-};
+export const metadata: Metadata = publicPageMetadata(
+  "/submit",
+  "Submit an opportunity",
+  "Share a hackathon, scholarship, competition, internship, fellowship, grant or tech event with Tanzanian students and young innovators."
+);
 
 export default async function SubmitPage() {
   const organizations = await listOrganizationOptions();
