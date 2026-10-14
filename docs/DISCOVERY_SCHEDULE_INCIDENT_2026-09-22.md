@@ -1,6 +1,47 @@
 # Discovery schedule incident — 2026-09-22
 
-## Status
+## Status — CLOSED 2026-10-14
+
+The incident is **CLOSED**. The preferred 24-hour observation window is now
+exceeded many times over by live evidence (see `2026-10-14 closure evidence`
+below); the September status paragraphs beneath this box are preserved
+unchanged as history. Discovery stays at a two-hour target cadence with a
+two-hour tolerance. All qualification, authority, dedupe, pending-only, and
+human-publication rules are unchanged.
+
+## 2026-10-14 closure evidence (read-only Actions inspection, no mutation)
+
+- **External dispatch cadence:** 23 consecutive successful Cloudflare-cron
+  `workflow_dispatch` runs on the nominal `:17` slots from `2026-10-12T10:17Z`
+  through `2026-10-14T06:17Z` (44+ unbroken hours, two-hour interval, zero
+  misses, zero duplicates, zero dispatch failures). Native `schedule` events
+  in the same window correctly report `skipped` (worker skipped by design
+  while external scheduling is owner-enabled).
+- **Latest dispatch proof:** run `38521373841` (`2026-10-14T06:17:47Z`,
+  actor `mohamedalizan2025-cpu` — the Worker-bound identity, head
+  `38ab31a` = production `main`): `discover` job success, full verification
+  gates green, health-history cache chain intact
+  (`discovery-health-38510652472-1` hit). One isolated
+  `[OpportunityDesk] detail fetch failed … unreachable` was contained by the
+  designed detail-failure isolation; the run still succeeded.
+- **Dispatch failure history:** zero failed/timed-out/cancelled Discovery
+  sync runs since `2026-09-23` (the documented pre-worker test incident) —
+  three clean weeks.
+- **Schedule-health monitor:** `success` continuously `2026-10-06` through
+  `2026-10-14` (9 days). The monitor exits non-zero while repeatability is
+  unproven, so this streak is the designed proof signal. The single
+  intervening failure (`37363065985`, `2026-10-05`) was GitHub
+  runner-acquisition infrastructure (`not acquired by Runner … hosted`,
+  job cancelled without running) — not a cadence miss or discovery failure.
+- **Deadline alerts:** `Deadline alert evaluation` daily schedule `success`
+  `2026-10-08` through `2026-10-14`, no failures.
+- **Spend/schedule unchanged:** no cadence, workflow, registry, secret, or
+  Cloudflare change was made for this closure; Workers Free cron
+  (`17 */2 * * *` UTC) and the native cron rollback (auto-skip) remain as
+  documented. Contingency item 5 (≥6 consecutive external observations,
+  preferably 24h) is satisfied.
+
+Prior status (history, superseded by the closure above):
 
 The native `:17` GitHub schedule experiment is **confirmed unreliable**. The
 no-cost external scheduler is activated and has established **INITIAL READINESS
@@ -281,3 +322,14 @@ scheduled readiness. Activation, the initial repeated-delivery gate, and the
 12-hour checkpoint (natural 10:17 UTC external slot plus its artifacts) are
 complete, while retaining the critical source-health findings; continue
 observation through 22:17 UTC before closing the incident.
+
+## 2026-10-14 closure
+
+Observation continued far past 22:17 UTC 2026-09-24: the closure evidence in
+the status box above (23 consecutive external slots over 44+ hours, 9-day
+monitor streak, 3-week dispatch record, daily deadline-alert success)
+satisfies contingency item 5 and the preferred 24-hour window. Incident
+CLOSED; the monitor streak and dispatch cadence remain the standing
+proof signals — reopen only on a new missed-slot or dispatch-failure
+finding, not on isolated per-source fetch timeouts that the designed
+failure isolation already contains.
