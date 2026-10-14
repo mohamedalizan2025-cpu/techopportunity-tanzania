@@ -41,11 +41,16 @@ export function OfflineQueueSync({ userId }: { userId: string | null }) {
     }
     setSyncing(true);
     setNotice(null);
+    // Bound the reconnect POST so a hung request degrades to the existing
+    // "Sync paused" path instead of holding the syncing state forever.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
     try {
       const response = await fetch("/api/offline-sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ops: queue }),
+        signal: controller.signal,
       });
       const payload = (await response.json().catch(() => null)) as {
         applied?: string[];
@@ -75,6 +80,7 @@ export function OfflineQueueSync({ userId }: { userId: string | null }) {
       setNotice("Sync paused — your queued changes are kept for the next reconnect.");
       setPending(readQueue().length);
     } finally {
+      clearTimeout(timeout);
       setSyncing(false);
     }
   }, [userId, syncing, readQueue]);

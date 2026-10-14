@@ -129,6 +129,7 @@ check(
 const queueSync = read("components/offline-queue-sync.tsx");
 check("queue sync shows sync state", /Syncing queued|waiting to sync|Queued changes synced/i.test(queueSync));
 check("queue sync replays on reconnect", queueSync.includes('"online"'));
+check("queue sync bounds the reconnect POST with a timeout", queueSync.includes("AbortController") && queueSync.includes("signal: controller.signal"));
 
 // --- account privacy ----------------------------------------------------------
 
@@ -184,6 +185,15 @@ check("status shows cached-information wording offline", /showing cached informa
 check("status shows updating wording on reconnect", /updating/i.test(status));
 check("status is quiet while online", status.includes('if (state === "online") return null'));
 check("status never covers the bottom nav (top-anchored)", status.includes("top-0"));
+check(
+  "status re-verifies a suspected-offline signal instead of sticking to it",
+  status.includes("reverifyOffline") && status.includes("visibilitychange") && status.includes('"load"')
+);
+check(
+  "status clears only on reachability evidence, never blindly",
+  /method: "HEAD"/.test(status) &&
+    status.includes('if (reachable && stateRef === "offline") handleOnline();')
+);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exitCode = failed > 0 ? 1 : 0;
