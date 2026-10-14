@@ -58,6 +58,10 @@ check(
   )
 );
 check("worker contains no remote URLs or secrets", !/https?:\/\//.test(worker) && !/supabase|service_role|NEXT_PUBLIC/i.test(worker));
+check(
+  "worker bounds hung navigations instead of stalling client routing",
+  worker.includes("NAVIGATION_TIMEOUT_MS") && /navigation-timeout/.test(worker) && worker.includes("fetchNavigationWithTimeout(request)")
+);
 
 // --- install UX: eligible-only, dismissible, standalone-aware ------------------
 
@@ -72,6 +76,10 @@ check("install posts no data anywhere", !/fetch\(/.test(install));
 const register = read("components/pwa-register.tsx");
 check("registration targets the local worker only", register.includes('"/sw.js"'));
 check("registration fails silently without breaking the product", register.includes(".catch("));
+check(
+  "registration still runs when hydration finishes after window load",
+  register.includes('document.readyState === "complete"')
+);
 
 // --- offline page honesty ------------------------------------------------------
 

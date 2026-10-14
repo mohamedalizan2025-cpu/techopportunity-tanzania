@@ -4,7 +4,9 @@
  * - PRECACHED: /offline shell + app icons only.
  * - CACHE-FIRST: same-origin static assets (/_next/static/*, /icons/*, font
  *   files). These are content-hashed or brand assets; never user data.
- * - NAVIGATIONS: network-first; on failure serve the /offline fallback.
+ * - NAVIGATIONS: network-first with a bounded wait; on failure OR timeout
+ *   serve the /offline fallback. A hung navigation fetch must never stall
+ *   client navigation forever while direct page loads still succeed.
  *   Cached opportunity pages are NEVER served as current data.
  * - EVERYTHING ELSE (APIs, auth, staff routes, account pages, POSTs):
  *   network-only passthrough, never cached, never served stale.
@@ -49,6 +51,19 @@ function isStaticAsset(pathname) {
   return STATIC_SUFFIXES.some((suffix) => pathname.endsWith(suffix));
 }
 
+// Bound the network-first wait so a hung navigation falls back instead of
+// stalling client-side routing forever. The fallback is unchanged.
+const NAVIGATION_TIMEOUT_MS = 10000;
+
+function fetchNavigationWithTimeout(request) {
+  return Promise.race([
+    fetch(request),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("navigation-timeout")), NAVIGATION_TIMEOUT_MS)
+    ),
+  ]);
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
@@ -62,7 +77,7 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() =>
+      fetchNavigationWithTimeout(request).catch(() =>
         caches.match("/offline").then(
           (fallback) =>
             fallback ||
