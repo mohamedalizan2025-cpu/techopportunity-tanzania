@@ -8,6 +8,19 @@ type NetState = "online" | "offline" | "reconnecting" | "synced";
  * Lightweight global connectivity indicator. Quiet while online; honest
  * while offline. Fixed to the top so it never covers the phone bottom nav.
  *
+ * Hydration safety: the initial render is ALWAYS "online" (null) on both
+ * server and client, so server HTML and the first client render match and
+ * React hydration (#418) cannot mismatch. Connectivity (`navigator.onLine`)
+ * is evaluated only inside the mount effect, after hydration. A genuine
+ * offline signal then appears via a normal post-hydration state update —
+ * honest, without a hydration error.
+ *
+ * The outer wrapper is non-interactive and must never steal pointer events:
+ * it carries `pointer-events-none` so header/nav clicks pass through the
+ * full-width top area. The inner pill keeps `pointer-events-auto` so its
+ * status text remains selectable/readable and assistive-technology safe
+ * (role="status", aria-live="polite" are preserved).
+ *
  * `navigator.onLine` is only a hint: browsers can report offline transiently
  * (slow TLS/DNS on a fresh domain, captive portals, VPN hiccups) even while
  * the product is reachable, and they do not always fire a later `online`
@@ -20,13 +33,12 @@ type NetState = "online" | "offline" | "reconnecting" | "synced";
  * the honest offline wording. Nothing here ever hides the banner blindly.
  */
 export function OfflineStatus() {
-  const [state, setState] = useState<NetState>(() =>
-    typeof navigator !== "undefined" && !navigator.onLine ? "offline" : "online"
-  );
+  // Deterministic initial state: matches the server render (null) so
+  // hydration is safe. Real connectivity is resolved in the effect below.
+  const [state, setState] = useState<NetState>("online");
 
   useEffect(() => {
-    let stateRef: NetState =
-      typeof navigator !== "undefined" && !navigator.onLine ? "offline" : "online";
+    let stateRef: NetState = "online";
     const setTracked = (next: NetState) => {
       stateRef = next;
       setState(next);
@@ -75,6 +87,11 @@ export function OfflineStatus() {
     const onVisible = () => {
       if (document.visibilityState === "visible") reverifyOffline();
     };
+    // Evaluate connectivity only after client mount (hydration-safe).
+    // A genuine offline signal appears here as a post-hydration update.
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setTracked("offline");
+    }
     window.addEventListener("offline", onOffline);
     window.addEventListener("online", handleOnline);
     window.addEventListener("load", reverifyOffline);
@@ -98,10 +115,10 @@ export function OfflineStatus() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-2"
+      className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-2"
     >
       <p
-        className={`inline-flex min-h-11 max-w-full items-center gap-2 rounded-md border px-4 py-2 text-xs font-semibold shadow-sm ${
+        className={`pointer-events-auto inline-flex min-h-11 max-w-full items-center gap-2 rounded-md border px-4 py-2 text-xs font-semibold shadow-sm ${
           state === "offline"
             ? "border-[var(--line-strong)] bg-[var(--surface)] text-[var(--foreground)]"
             : state === "reconnecting"
