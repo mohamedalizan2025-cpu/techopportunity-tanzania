@@ -34,7 +34,10 @@ reverified during this continuation.
   and replenishment shortlist remain dated evidence, not a current inventory.
   Recheck source/deadline/Tanzania evidence at each human moderation decision.
 - Scheduler: Cloudflare dispatch path is implemented and documented active;
-  the incident's 24-hour observation closure remains unproven in retained docs.
+  the 2026-09-22 schedule incident is CLOSED 2026-10-14 (23 consecutive
+  external `:17` slots over 44+ hours Oct 12–14, 9-day monitor streak, 3-week
+  clean dispatch record; evidence in
+  [DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md)).
   No cadence, workflow, registry or Cloudflare change is authorized here.
 - WS6/WS7 continuation: `chore/prelaunch-ops-closure`, based on Muse's
   `chore/doc-source-of-truth-cleanup` (`7ec65b7`). Fixed deletion-device cache
@@ -52,7 +55,7 @@ reverified during this continuation.
 **One next task:** owner verifies domain HTTPS/live readiness and reviews the
 held migration diff before authorizing cutover. Keep the old product URL until
 then. Remaining parallel owner checks: current backup/off-device custody/full
-restore drill, MFA/recovery access, scheduler observation closure, SMTP and
+restore drill, MFA/recovery access, SMTP and
 signed-in device deletion/offline smoke. Pilot execution is still unproven;
 production AI activation remains a separate gate, never a launch prerequisite.
 
@@ -136,8 +139,9 @@ Vercel-Authentication-gated, noindexed, never a product link. Canonical
 policy is authoritative in [architecture.md §6](architecture.md) and
 enforced by `app/robots.ts` (disallow-all off-production) plus hardcoded
 `metadataBase`. Never merge the Supabase projects. Discovery runs on the
-Cloudflare Workers Free cron (`17 */2 * * *`); scheduler 24h-observation
-incident remains separately open. Production = `origin/main` (`3928f7d`)
+Cloudflare Workers Free cron (`17 */2 * * *`); the 2026-09-22 scheduler
+24h-observation incident is CLOSED 2026-10-14 (see the snapshot above and
+[DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md](DISCOVERY_SCHEDULE_INCIDENT_2026-09-22.md)). Production = `origin/main` (`3928f7d`)
 with P0A–P0D live (`/privacy`, `/terms`, `/contact` + footer Trust links;
 `listing_reports` via 0023; self-service deletion via 0024 with report
 anonymization; incident runbook). Production migration record: 0023 then
