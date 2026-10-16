@@ -245,10 +245,10 @@ test("callback supports token-hash links without trusting hosts", () => {
 test("recovery callback builder targets the reset page only", () => {
   assert.equal(
     buildRecoveryCallbackUrl({
-      NEXT_PUBLIC_SITE_URL: "https://techopportunity-tanzania.vercel.app",
+      NEXT_PUBLIC_SITE_URL: "https://techopportunity.tech",
       NODE_ENV: "production",
     }),
-    "https://techopportunity-tanzania.vercel.app/auth/callback?next=%2Freset-password"
+    "https://techopportunity.tech/auth/callback?next=%2Freset-password"
   );
   assert.equal(
     buildRecoveryCallbackUrl({ NODE_ENV: "production" }),

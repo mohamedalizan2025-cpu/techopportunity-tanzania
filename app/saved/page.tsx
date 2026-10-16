@@ -20,7 +20,7 @@ import { formatDeadlinePresentation } from "@/lib/opportunity-presentation";
 import { formatSavedDate } from "@/lib/saved-opportunity-state";
 
 export const metadata: Metadata = {
-  title: "Saved opportunities | Tech Opportunity",
+  title: "Saved opportunities",
   description: "Your private list of saved opportunities.",
   robots: { index: false, follow: false },
 };

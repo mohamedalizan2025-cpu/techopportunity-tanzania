@@ -11,6 +11,7 @@ import {
   sanitizeBrowseReturnHref,
 } from "@/lib/opportunity-presentation";
 import { isAiSearchableOpportunity } from "@/lib/opportunity-trust";
+import { publicPageMetadata } from "@/lib/site";
 
 export const revalidate = 60;
 
@@ -25,10 +26,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const opportunity = await getOpportunityBySlug(slug);
   if (!opportunity) return { title: "Opportunity not found" };
-  return {
-    title: `${opportunity.title} | Tech Opportunity`,
-    description: opportunity.description.slice(0, 160),
-  };
+  return publicPageMetadata(
+    `/opportunities/${opportunity.slug}`,
+    opportunity.title,
+    opportunity.description.slice(0, 160),
+    "article"
+  );
 }
 
 export default async function OpportunityDetailPage({

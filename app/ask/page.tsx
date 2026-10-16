@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/site";
 import Link from "next/link";
 import { AskForm } from "@/components/ask-form";
 import { ASK_FAQ } from "@/lib/ask/knowledge";
 import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 
-export const metadata: Metadata = {
-  title: "Ask Tech Opportunity | Tech Opportunity",
-  description:
-    "Answers about opportunities, eligibility and trust information, application tracking, and using Tech Opportunity — grounded in verified information.",
-};
+export const metadata: Metadata = publicPageMetadata(
+  "/ask",
+  "Ask Tech Opportunity",
+  "Answers about opportunities, eligibility and trust information, application tracking, and using Tech Opportunity — grounded in verified information."
+);
 
 export default async function AskPage() {
   const user = await getAuthenticatedUser();

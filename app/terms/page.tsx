@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/site";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "Terms of Use | Tech Opportunity",
-  description:
-    "The rules for using Tech Opportunity: sources stay authoritative, no selection guarantees, acceptable use.",
-};
+export const metadata: Metadata = publicPageMetadata(
+  "/terms",
+  "Terms of Use",
+  "The rules for using Tech Opportunity: sources stay authoritative, no selection guarantees, acceptable use."
+);
 
 const EFFECTIVE_DATE = "6 October 2026";
 

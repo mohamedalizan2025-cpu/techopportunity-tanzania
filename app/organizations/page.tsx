@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/site";
 import Link from "next/link";
 import { UiIcon } from "@/components/ui-icon";
 import { EditorialPhotograph } from "@/components/editorial-photograph";
 
-export const metadata: Metadata = {
-  title: "For Organizations | Tech Opportunity",
-  description:
-    "How opportunity providers, universities, hubs and NGOs can reach Tanzanian talent through verified distribution and privacy-safe reporting.",
-};
+export const metadata: Metadata = publicPageMetadata(
+  "/organizations",
+  "For Organizations",
+  "How opportunity providers, universities, hubs and NGOs can reach Tanzanian talent through verified distribution and privacy-safe reporting."
+);
 
 export default function OrganizationsPage() {
   return (

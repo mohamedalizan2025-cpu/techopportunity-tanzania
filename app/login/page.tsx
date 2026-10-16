@@ -6,7 +6,7 @@ import { postLoginDestination, sanitizeNextPath } from "@/lib/staff-form-state";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
-  title: "Sign in | Tech Opportunity",
+  title: "Sign in",
   robots: { index: false, follow: false },
 };
 
