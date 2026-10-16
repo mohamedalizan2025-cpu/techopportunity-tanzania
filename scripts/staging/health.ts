@@ -145,6 +145,42 @@ export async function inspectStagingHealth(input: {
   }
 }
 
+/**
+ * Expected-pause policy (staging-only, synthetic QA).
+ *
+ * Staging runs on Supabase Free and is allowed to pause; the owner will not
+ * pay to keep it alive and no fake traffic is generated merely to prevent
+ * pausing. A paused project refuses connections, which surfaces here as the
+ * narrow connectivity case: state=failed, reasons=["staging_request_failed"],
+ * connectivity.state="failed", connectivity.httpStatus=null (no HTTP
+ * response was received at all).
+ *
+ * When the owner explicitly sets STAGING_EXPECTED_PAUSED=true, that one
+ * narrow case is tolerated (exit 0) so an intentional pause does not create
+ * misleading daily red runs. The JSON report is still written and uploaded
+ * unchanged, and the log still prints the failed report plus an explicit
+ * STAGING_EXPECTED_PAUSE_TOLERATED=true line — nothing is hidden.
+ *
+ * Every other non-healthy outcome still fails loudly, even when a pause is
+ * expected: RLS violations, any httpStatus-bearing failure, blocked identity
+ * or credential states, and any multi-reason report. Absent/false policy
+ * values also fail loudly. This keeps an expected-active staging environment
+ * failing loudly while an expected-paused one stays neutral with evidence.
+ */
+export function isExpectedPauseTolerated(
+  value: StagingHealthReport,
+  expectedPausedRaw: string | undefined
+): boolean {
+  if ((expectedPausedRaw ?? "").trim() !== "true") return false;
+  return (
+    value.state === "failed" &&
+    value.reasons.length === 1 &&
+    value.reasons[0] === "staging_request_failed" &&
+    value.connectivity.state === "failed" &&
+    value.connectivity.httpStatus === null
+  );
+}
+
 function writeReport(path: string, value: StagingHealthReport) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
@@ -158,7 +194,9 @@ async function main() {
   });
   writeReport(outputPath, value);
   console.log(`STAGING_HEALTH_REPORT_JSON=${JSON.stringify(value)}`);
-  if (value.state !== "healthy") process.exitCode = 1;
+  const tolerated = isExpectedPauseTolerated(value, process.env.STAGING_EXPECTED_PAUSED);
+  console.log(`STAGING_EXPECTED_PAUSE_TOLERATED=${tolerated ? "true" : "false"}`);
+  if (value.state !== "healthy" && !tolerated) process.exitCode = 1;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

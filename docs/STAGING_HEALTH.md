@@ -76,6 +76,30 @@ that visiting the project or API activity can prevent an announced pause. This
 workflow records meaningful connectivity/RLS evidence, but **does not guarantee
 exemption from pausing**. See [Supabase project pausing](https://supabase.com/docs/guides/platform/free-project-pausing).
 
+## Expected-pause policy (2026-10-16)
+
+Staging is synthetic QA only. Production (`jltuufukcwztugvojwjd`) and staging
+(`pumzofcwfjqswkiwfqty`) are independent. Staging is allowed to pause on the
+Free tier: the owner will not pay to keep staging alive and no fake traffic is
+generated merely to prevent pausing.
+
+- Daily runs 2026-10-13 through 2026-10-16 all failed with the narrow
+  connectivity signature `state=failed`, `reasons=["staging_request_failed"]`,
+  `connectivity.state="failed"`, `httpStatus=null` (no HTTP response). This is
+  the expected shape of a paused/unreachable Free project, not an RLS proof.
+- Repository variable `STAGING_EXPECTED_PAUSED=true` (owner-controlled,
+  absent/false by default) marks an intentional pause. When set, only that one
+  narrow connectivity-null signature exits neutrally; its failed JSON report
+  and 30-day artifact are still written, uploaded, and logged with an explicit
+  `STAGING_EXPECTED_PAUSE_TOLERATED=true` line.
+- Every other non-healthy outcome still fails loudly even when a pause is
+  expected: RLS violations, any failure carrying an HTTP status, blocked
+  identity/credential states, and multi-reason reports. An expected-active
+  staging environment therefore still fails loudly.
+- Owner actions: set `STAGING_EXPECTED_PAUSED=true` only while staging is
+  intentionally paused; delete it (or set `false`) as soon as staging is
+  expected active again. Never use it to silence an unexpected failure.
+
 ## Activation and rollback
 
 The owner approved activation on 2026-09-23. The existing staging project's
