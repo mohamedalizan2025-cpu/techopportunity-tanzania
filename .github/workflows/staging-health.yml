@@ -35,11 +35,19 @@ jobs:
       # The exact staging URL is non-secret and fixed here. The staging-only
       # anon key reaches only this read-only step; no production credential is
       # available to this workflow.
+      # Expected-pause policy: staging is synthetic QA on Supabase Free and is
+      # allowed to pause (no payment, no keep-alive traffic). When the owner
+      # explicitly sets repository variable STAGING_EXPECTED_PAUSED=true, the
+      # narrow connectivity-null pause signature (staging_request_failed with
+      # no HTTP status) exits neutrally with its failed report + artifact still
+      # preserved; every other failure (RLS, http-bearing, blocked) still
+      # fails loudly. Absent/false keeps today's fail-loud behavior.
       - name: Inspect staging connectivity and RLS
         env:
           STAGING_SUPABASE_URL: https://pumzofcwfjqswkiwfqty.supabase.co
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           STAGING_HEALTH_REPORT_PATH: staging-health/report.json
+          STAGING_EXPECTED_PAUSED: ${{ vars.STAGING_EXPECTED_PAUSED }}
         run: node --import tsx scripts/staging/health.ts
 
       - name: Upload staging health evidence
