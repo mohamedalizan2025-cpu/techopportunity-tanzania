@@ -18,7 +18,7 @@ import { logOutAction } from "@/lib/data/auth-actions";
 import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
-  title: "Campaign detail · TechOpportunity Tanzania",
+  title: "Campaign detail",
   robots: { index: false, follow: false },
 };
 

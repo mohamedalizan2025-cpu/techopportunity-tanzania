@@ -14,7 +14,7 @@ import { UnpublishControl } from "./unpublish-control";
 import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
-  title: "Published records · TechOpportunity Tanzania",
+  title: "Published records",
   robots: { index: false, follow: false },
 };
 

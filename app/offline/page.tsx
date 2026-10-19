@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { OfflinePageClient } from "@/components/offline-page-client";
 
 export const metadata: Metadata = {
-  title: "You are offline | Tech Opportunity",
+  title: "You are offline",
   robots: { index: false, follow: false },
 };
 

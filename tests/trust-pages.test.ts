@@ -8,7 +8,8 @@
  * banner, no fake deletion self-service, AI OFF stated honestly).
  */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { CANONICAL_SITE_URL, publicPageMetadata, SITE_NAME } from "../lib/site";
 import { join } from "node:path";
 
 function read(relative: string): string {
@@ -43,9 +44,9 @@ test("privacy/terms/contact are public pages with metadata", () => {
     assert.match(source, /id="main-content"/, `${label} main landmark`);
     assert.match(source, /<h1/, `${label} heading`);
   }
-  assert.match(privacy, /Privacy Policy \| Tech Opportunity/);
-  assert.match(terms, /Terms of Use \| Tech Opportunity/);
-  assert.match(contact, /Contact \| Tech Opportunity/);
+  assert.match(privacy, /"Privacy Policy"/);
+  assert.match(terms, /"Terms of Use"/);
+  assert.match(contact, /"Contact"/);
 });
 
 test("privacy documents actual data categories and controls", () => {
@@ -158,6 +159,60 @@ test("auth and profile link the policies without behavior change", () => {
   assert.ok(loginForm.includes('href="/privacy"'), "login privacy");
   assert.ok(profileForm.includes('href="/privacy"'), "profile privacy");
   assert.ok(loginForm.includes("By continuing you agree"), "consent-adjacent wording");
+});
+
+test("root layout never lends homepage identity to sibling routes", () => {
+  assert.doesNotMatch(layout, /alternates:|openGraph:|twitter:/);
+  assert.match(layout, /template: `%s \| \$\{SITE_NAME\}`/);
+  const home = read("app/(home)/page.tsx");
+  assert.ok(home.includes('publicPageMetadata("/", SITE_NAME, SITE_DESCRIPTION)'));
+  assert.deepEqual(publicPageMetadata("/", SITE_NAME, "Home").title, { absolute: SITE_NAME });
+});
+
+test("every indexable public static page owns its canonical and social identity", () => {
+  const routes = ["organizations", "ask", "contact", "privacy", "terms", "submit"];
+  const sitemap = read("app/sitemap.ts");
+  for (const route of routes) {
+    const source = read(`app/${route}/page.tsx`);
+    assert.ok(source.replaceAll("\r\n", "\n").includes(`publicPageMetadata(\n  "/${route}",`), route);
+    const metadata = publicPageMetadata(`/${route}`, "Page title", "Page description");
+    const url = `${CANONICAL_SITE_URL}/${route}`;
+    assert.equal(metadata.alternates?.canonical, url);
+    assert.equal((metadata.openGraph as { url: string }).url, url);
+    assert.equal(metadata.title, "Page title", "only the layout supplies the document brand suffix");
+    assert.equal((metadata.twitter as { title: string }).title, "Page title | Tech Opportunity");
+    assert.ok(sitemap.includes(`CANONICAL_SITE_URL}/${route}`), `${route} is in sitemap`);
+  }
+});
+
+test("metadata title literals do not already carry the layout brand suffix", () => {
+  function inspect(directory: string): void {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) inspect(path);
+      else if (entry.name === "page.tsx") {
+        const source = readFileSync(path, "utf8");
+        assert.doesNotMatch(source, /title: ["`][^\n]*(?:\| Tech Opportunity|TechOpportunity Tanzania)["`]/, path);
+      }
+    }
+  }
+  inspect(join(process.cwd(), "app"));
+});
+
+test("detail metadata stays route-specific and sitemap never invents modification times", () => {
+  const detail = read("app/opportunities/[slug]/page.tsx");
+  assert.match(detail, /publicPageMetadata\([\s\S]*?`\/opportunities\/\$\{opportunity\.slug\}`/);
+  const metadata = publicPageMetadata("/opportunities/example", "Example", "Description", "article");
+  assert.equal(metadata.title, "Example");
+  assert.equal(metadata.alternates?.canonical, `${CANONICAL_SITE_URL}/opportunities/example`);
+  assert.equal((metadata.openGraph as { type: string }).type, "article");
+  const sitemap = read("app/sitemap.ts");
+  assert.match(sitemap, /export const revalidate = 60/);
+  assert.doesNotMatch(sitemap, /lastModified:/);
+  assert.match(sitemap, /await listPublishedOpportunities\(\)/);
+  for (const excluded of ["login", "profile", "saved", "activity", "for-you", "ai-match", "offline", "moderation", "campaigns", "reports"]) {
+    assert.ok(!sitemap.includes(`CANONICAL_SITE_URL}/${excluded}`), `${excluded} excluded`);
+  }
 });
 
 console.log(`\n${passed} trust-page contract tests passed.`);

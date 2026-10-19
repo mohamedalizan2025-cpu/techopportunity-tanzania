@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/site";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy | Tech Opportunity",
-  description:
-    "How Tech Opportunity collects, uses, stores, and lets you control your personal data.",
-};
+export const metadata: Metadata = publicPageMetadata(
+  "/privacy",
+  "Privacy Policy",
+  "How Tech Opportunity collects, uses, stores, and lets you control your personal data."
+);
 
 const EFFECTIVE_DATE = "6 October 2026";
 

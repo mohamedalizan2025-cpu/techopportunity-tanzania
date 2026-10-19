@@ -4,7 +4,7 @@ import { getAuthenticatedUser } from "@/lib/data/supabase-auth";
 import { ResetPasswordForm } from "./reset-password-form";
 
 export const metadata: Metadata = {
-  title: "Reset password | Tech Opportunity",
+  title: "Reset password",
   robots: { index: false, follow: false },
 };
 

@@ -16,7 +16,7 @@ import {
 import { getModerationAccess } from "@/lib/data/moderation";
 
 export const metadata: Metadata = {
-  title: "Listing reports · TechOpportunity Tanzania",
+  title: "Listing reports",
   robots: { index: false, follow: false },
 };
 

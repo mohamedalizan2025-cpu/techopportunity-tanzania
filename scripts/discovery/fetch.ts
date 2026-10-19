@@ -37,7 +37,7 @@ const MAX_RESPONSE_BYTES = 2 * 1024 * 1024; // 2 MB
 const REQUEST_TIMEOUT_MS = 20_000;
 
 const USER_AGENT =
-  "TechOpportunityTanzaniaDiscovery/1.0 (+https://techopportunity-tanzania.vercel.app)";
+  "TechOpportunityTanzaniaDiscovery/1.0 (+https://techopportunity.tech)";
 
 /**
  * Validates a URL for safe acquisition. Pure and exported so the guard is

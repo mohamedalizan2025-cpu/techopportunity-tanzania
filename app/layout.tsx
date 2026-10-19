@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Geist } from "next/font/google";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { CANONICAL_SITE_URL, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { PwaRegister } from "@/components/pwa-register";
 import { OfflineStatus } from "@/components/offline-status";
@@ -16,10 +17,14 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://techopportunity-tanzania.vercel.app"),
-  title: "Tech Opportunity",
-  description:
-    "Opportunities worth acting on for Tanzania’s emerging talent. Check source evidence, find relevant opportunities and track your application progress.",
+  // OWNER GATE: points at the intended production domain. Merge only after
+  // https://techopportunity.tech is verified live with HTTPS.
+  metadataBase: new URL(CANONICAL_SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Tech Opportunity" },
   icons: {
     icon: [

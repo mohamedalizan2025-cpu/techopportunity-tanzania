@@ -37,7 +37,7 @@ import { QueueBulkPanel } from "./queue-bulk-panel";
 import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
-  title: "Moderation queue · TechOpportunity Tanzania",
+  title: "Moderation queue",
   robots: { index: false, follow: false },
 };
 

@@ -30,7 +30,7 @@ import { DecisionForm } from "../decision-form";
 import { StaffNav } from "@/components/staff-nav";
 
 export const metadata: Metadata = {
-  title: "Review submission · TechOpportunity Tanzania",
+  title: "Review submission",
   robots: { index: false, follow: false },
 };
 
