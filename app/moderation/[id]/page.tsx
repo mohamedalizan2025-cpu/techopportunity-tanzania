@@ -22,10 +22,10 @@ import { formatLocationDisplay } from "@/lib/opportunity-presentation";
 import { geographyOf } from "@/lib/taxonomy";
 import { TRIAGE_BUCKET_LABEL, triageBucketOf } from "@/lib/triage-bucket";
 import {
-  REVIEW_READINESS_LABEL,
-  REVIEW_READINESS_NOTE,
-  duplicateWhy,
-} from "@/lib/review-readiness";
+  APPROVAL_READINESS_LABEL,
+  APPROVAL_READINESS_NOTE,
+} from "@/lib/approval-readiness";
+import { duplicateWhy } from "@/lib/review-readiness";
 import { DecisionForm } from "../decision-form";
 import { StaffNav } from "@/components/staff-nav";
 
@@ -138,11 +138,11 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
   );
 
   const triageBucket = triageBucketOf(opportunity.category, opportunity.title);
-  // Assisted Queue Approval — per-row readiness checklist. Display-only:
-  // derived from stored evidence through the same deterministic gates, with
-  // the full corpus (pending + published) as duplicate context. Pending mode
-  // only; published re-review keeps its own evidence flow. Never a decision
-  // input.
+  // Assisted Approval — per-row readiness checklist. Display-only: derived
+  // from stored evidence through the existing deterministic gates and the
+  // exact approval parser, with the full corpus (pending + published) as
+  // duplicate context. Pending mode only; published re-review keeps its own
+  // evidence flow. Never a decision input.
   const readiness = workspaceItem?.readiness ?? null;
   const duplicate = readiness?.duplicate ?? null;
   // Compact reviewer workspace facts — every line derived from stored
@@ -242,15 +242,15 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
           </details>
         </section>
 
-        {/* Review readiness — deterministic checklist, hints only. The
+        {/* Approval readiness — deterministic checklist, hints only. The
             decision form aside remains the only path to any status change. */}
         {readiness ? (
           <section
-            aria-label="Review readiness"
+            aria-label="Approval readiness"
             className="mt-6 rounded-lg border border-dashed border-[var(--line)] bg-[var(--surface)] p-5"
           >
             <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              Review readiness · {REVIEW_READINESS_LABEL[readiness.state]}
+              Approval readiness · {APPROVAL_READINESS_LABEL[readiness.state]}
             </h2>
             <ul className="mt-3 flex flex-col gap-2 text-sm">
               {readiness.checks.map((check) => (
@@ -291,6 +291,28 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
                 </span>
               </li>
             </ul>
+            {readiness.ready ? (
+              <div
+                role="note"
+                className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50/60 p-3 text-sm leading-6 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-200"
+              >
+                All deterministic approval checks pass. Confirm every field
+                against the official source, then use the confirmed approve
+                action.
+              </div>
+            ) : (
+              <div
+                role="note"
+                className="mt-3 rounded-lg border border-amber-300 bg-amber-50/60 p-3 text-sm leading-6 text-amber-800 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-200"
+              >
+                <p className="font-medium">Not ready for approval</p>
+                <ul className="mt-1 list-disc pl-5">
+                  {readiness.blockers.map((blocker) => (
+                    <li key={blocker.code}>{blocker.label}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {duplicate ? (
               <div
                 role="note"
@@ -323,7 +345,7 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
               </a>
             </p>
             <p className="mt-3 text-xs text-[var(--muted)]">
-              {REVIEW_READINESS_NOTE}
+              {APPROVAL_READINESS_NOTE}
             </p>
           </section>
         ) : null}
@@ -410,6 +432,55 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
               edits will still be saved, but field-level changes will not be
               recorded. Apply migration 0003 to activate the audit trail.
             </p>
+          ) : null}
+          {readiness ? (
+            <section
+              aria-label="Approval readiness summary"
+              className={`mt-4 rounded-lg border p-3 text-xs leading-5 ${
+                readiness.ready
+                  ? "border-emerald-300 bg-emerald-50/60 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-200"
+                  : "border-amber-300 bg-amber-50/60 text-amber-800 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-200"
+              }`}
+            >
+              <p className="font-semibold">
+                {readiness.ready ? "Ready for approval" : "Not ready for approval"} ·{" "}
+                {APPROVAL_READINESS_LABEL[readiness.state]}
+              </p>
+              {readiness.ready ? (
+                <ul className="mt-1.5 flex flex-col gap-1">
+                  {readiness.checks
+                    .filter(
+                      (check) =>
+                        check.pass &&
+                        [
+                          "source-usable",
+                          "eligibility-verified",
+                          "eligibility-evidence",
+                          "deadline-current",
+                          "deadline-evidence",
+                        ].includes(check.id)
+                    )
+                    .map((check) => (
+                      <li key={check.id}>Pass — {check.label}</li>
+                    ))}
+                </ul>
+              ) : (
+                <ul className="mt-1.5 flex flex-col gap-1">
+                  {readiness.blockers.slice(0, 5).map((blocker) => (
+                    <li key={blocker.code}>Check — {blocker.label}</li>
+                  ))}
+                  {readiness.blockers.length > 5 ? (
+                    <li className="opacity-80">
+                      +{readiness.blockers.length - 5} more in the full checklist.
+                    </li>
+                  ) : null}
+                </ul>
+              )}
+              <p className="mt-2 text-[11px] opacity-90">
+                Hints only. Confirm on the official source; the button below is
+                the publication action.
+              </p>
+            </section>
           ) : null}
           <div className="mt-4">
             <DecisionForm

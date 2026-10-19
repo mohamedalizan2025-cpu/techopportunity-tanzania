@@ -684,6 +684,14 @@ The durable invariants distilled from them — and authoritative today — are:
   surfaced as queue badges/counts and a review-page checklist. Hints only:
   approve/reject/unpublish stay human buttons; no auto-mutation, no new
   visibility state, no schema change.
+- Approval readiness (`lib/approval-readiness.ts`): a stricter read-only
+  composition of the same review gates, `parseReviewInput`, and the trust
+  checks (pending-only, description, relevance, evidenced Tanzanian
+  eligibility, deadline, country, live category/organization references →
+  ready-for-approval / needs-evidence / possible-duplicate / source-problem /
+  deadline-unclear). It mirrors the approved form's stored values, orders the
+  queue ready-first by nearest deadline, and surfaces blockers/checklists;
+  publication still requires the moderator's confirmed approve action.
 
 When a historical subsection below conflicts with §§5–11 or live code, §§5–11
 and the code win; correct the stale record instead of following it.

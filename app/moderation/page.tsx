@@ -19,11 +19,11 @@ import {
   type TriageBucket,
 } from "@/lib/triage-bucket";
 import {
-  REVIEW_READINESS_LABEL,
-  REVIEW_READINESS_NOTE,
-  duplicateWhy,
-  type ReviewReadinessState,
-} from "@/lib/review-readiness";
+  APPROVAL_READINESS_LABEL,
+  APPROVAL_READINESS_NOTE,
+  type ApprovalReadinessState,
+} from "@/lib/approval-readiness";
+import { duplicateWhy } from "@/lib/review-readiness";
 import {
   GEOGRAPHY_GROUPS,
   GEOGRAPHY_LABELS,
@@ -150,10 +150,10 @@ export default async function ModerationPage({
   }));
   const bucketById = new Map(triageItems.map((item) => [item.id, item.bucket]));
 
-  // Assisted Queue Approval — deterministic review-readiness per row. Pure
-  // hints for review order only: nothing here approves, rejects, or
-  // reclassifies; decision logic is untouched. Render order is readiness
-  // priority (ready first), oldest submitted within a state.
+  // Assisted Approval — deterministic approval-readiness per row. Pure hints
+  // for review order only: nothing here approves, rejects, or reclassifies;
+  // decision logic is untouched. Ready records come first, nearest valid
+  // deadline first; every other state stays oldest-submitted-first.
   const readinessById = workspace.readinessById;
 
   // Server-side VIEW filters (Milestone 11 + readiness): triage bucket,
@@ -269,7 +269,7 @@ export default async function ModerationPage({
               {(
                 [
                   ["Pending", pending.length, "Active review work."],
-                  ["Ready for review", workspace.counts.ready, "Complete evidence — fast decide."],
+                  ["Ready for approval", workspace.counts.ready, "Complete evidence — human decides."],
                   ["Needs evidence", workspace.counts.needsEvidence, "Verify on the official source."],
                   ["Possible duplicates", workspace.counts.possibleDuplicate, "Check WHY, never auto-delete."],
                   ["Published active", workspace.publishedActive, "Live and actionable."],
@@ -321,7 +321,7 @@ export default async function ModerationPage({
                   <input
                     type="hidden"
                     name="readiness"
-                    value={filter.readiness as ReviewReadinessState}
+                    value={filter.readiness ?? ""}
                   />
                 ) : null}
                 <input
@@ -375,11 +375,12 @@ export default async function ModerationPage({
                   </Link>
                 ) : null}
               </div>
-              {/* Readiness lanes — deterministic publication fitness, derived
-                  from stored evidence only. View-only, always clearable. */}
-              <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Readiness review lanes">
+              {/* Approval-readiness lanes — deterministic publication
+                  fitness, derived from stored evidence only. View-only,
+                  always clearable; never an approval. */}
+              <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Approval readiness lanes">
                 <span className="text-xs font-medium text-[var(--muted)]">
-                  Readiness:
+                  Approval:
                 </span>
                 {(filter.readiness ?? null) ? (
                   <Link
@@ -391,12 +392,12 @@ export default async function ModerationPage({
                 ) : null}
                 {(
                   [
-                    ["ready-for-review", workspace.counts.ready],
+                    ["ready-for-approval", workspace.counts.ready],
                     ["needs-evidence", workspace.counts.needsEvidence],
                     ["possible-duplicate", workspace.counts.possibleDuplicate],
                     ["deadline-unclear", workspace.counts.deadlineUnclear],
                     ["source-problem", workspace.counts.sourceProblem],
-                  ] as Array<[ReviewReadinessState, number]>
+                  ] as Array<[ApprovalReadinessState, number]>
                 ).map(([state, count]) => (
                   <Link
                     key={state}
@@ -405,7 +406,7 @@ export default async function ModerationPage({
                     href={`/moderation${queueFilterQuery({ ...filter, readiness: state })}`}
                     className={filterChipClasses((filter.readiness ?? null) === state)}
                   >
-                    {REVIEW_READINESS_LABEL[state]} · {count}
+                    {APPROVAL_READINESS_LABEL[state]} · {count}
                   </Link>
                 ))}
               </div>
@@ -510,13 +511,13 @@ export default async function ModerationPage({
                 href={`/moderation/${suggested.opportunity.id}`}
                 className="mt-6 inline-flex h-11 items-center justify-center rounded-md bg-[var(--primary)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-deep)]"
               >
-                Start with the top-priority record ({REVIEW_READINESS_LABEL[suggested.state]}) →
+                Start with the top-priority record ({APPROVAL_READINESS_LABEL[suggested.state]}) →
               </Link>
             ) : null}
             <p className="mt-4 text-xs text-[var(--muted)]" role="status">
               Showing {paginatedVisible.length} of {visible.length}{" "}
               {pending.length !== visible.length ? `(${pending.length} pending total)` : "pending"}
-              {filtered ? " · filtered view" : ""} · queue order: readiness priority, oldest first
+              {filtered ? " · filtered view" : ""} · queue order: approval readiness, nearest deadline for ready records, oldest first otherwise
               {workspace.expiredPending.length > 0 ? ` · ${workspace.expiredPending.length} expired pending kept out of active review` : ""}
             </p>
             <ul className="mt-4 flex flex-col gap-2">
@@ -524,6 +525,24 @@ export default async function ModerationPage({
                 const opportunity = entry.opportunity;
                 const bucket = bucketById.get(opportunity.id);
                 const readiness = entry.state;
+                const blockers = entry.readiness.blockers.filter(
+                  (blocker) => blocker.code !== "possible-duplicate"
+                );
+                const eligibilityDecision =
+                  opportunity.trust?.eligibilityDecision ?? "unknown";
+                const eligibilityEvidenced = Boolean(
+                  opportunity.trust?.eligibilityEvidence?.trim()
+                );
+                const eligibilityLabel =
+                  eligibilityDecision === "tanzanians_eligible"
+                    ? eligibilityEvidenced
+                      ? "Verified — Tanzanians may apply"
+                      : "Eligible decision without evidence"
+                    : eligibilityDecision === "tanzanians_not_eligible"
+                      ? eligibilityEvidenced
+                        ? "Verified — Tanzanians may not apply"
+                        : "Not eligible (no evidence)"
+                      : "Not verified";
                 return (
                   <li key={opportunity.id}>
                     <Link
@@ -536,7 +555,7 @@ export default async function ModerationPage({
                             {triageBadgeLabel(bucket)}
                           </span>
                           <span className="rounded-full border border-dashed border-[var(--line)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--muted)]">
-                            {REVIEW_READINESS_LABEL[readiness]}
+                            {APPROVAL_READINESS_LABEL[readiness]}
                           </span>
                           <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--subtle)]">
                             {categoryLabel(opportunity.category)}
@@ -550,10 +569,24 @@ export default async function ModerationPage({
                             Possible duplicate — {duplicateWhy(entry.readiness.duplicate)}
                           </span>
                         ) : null}
+                        {blockers.length > 0 ? (
+                          <span className="mt-1 block break-words text-xs leading-5 text-amber-700 dark:text-amber-300">
+                            Blocked by — {blockers.slice(0, 3).map((blocker) => blocker.label).join(" · ")}
+                            {blockers.length > 3 ? ` · +${blockers.length - 3} more` : ""}
+                          </span>
+                        ) : null}
                         <span className="mt-1.5 grid gap-x-6 gap-y-1 text-xs leading-5 text-[var(--muted)] sm:grid-cols-3">
                           <span>
                             <span className="font-semibold text-[var(--subtle)]">Source </span>
                             {opportunity.sourceName ?? "Unlinked submission"}
+                          </span>
+                          <span>
+                            <span className="font-semibold text-[var(--subtle)]">Organization </span>
+                            {opportunity.organization ?? "Organizer unknown"}
+                          </span>
+                          <span>
+                            <span className="font-semibold text-[var(--subtle)]">Eligibility </span>
+                            {eligibilityLabel}
                           </span>
                           <span>
                             <span className="font-semibold text-[var(--subtle)]">Submitted </span>
@@ -594,7 +627,7 @@ export default async function ModerationPage({
             )}
             <p className="mt-4 text-xs text-[var(--muted)]">
               {TRIAGE_HEURISTIC_NOTE} Furniture lists only exact reviewed
-              site-furniture titles. {REVIEW_READINESS_NOTE}
+              site-furniture titles. {APPROVAL_READINESS_NOTE}
             </p>
           </>
         )}
