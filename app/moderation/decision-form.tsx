@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   decideOpportunityAction,
@@ -95,6 +95,19 @@ export function DecisionForm({
       : decideOpportunityAction,
     initialDecisionState
   );
+  // Mobile decision controls are sticky at the bottom of a long form, so a
+  // server-side refusal rendered only at the top would be off-screen: the
+  // moderator would see the Working… spinner end and nothing else. The
+  // authoritative alert stays at the top (single role="alert" for assistive
+  // technology) and receive focus without scrolling, while the sticky
+  // decision block echoes the same message so the reason is visible exactly
+  // where the decision was made.
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (state.status === "error") {
+      errorRef.current?.focus({ preventScroll: true });
+    }
+  }, [state]);
 
   if (state.status === "success") {
     return (
@@ -142,7 +155,9 @@ export function DecisionForm({
     <form id="decision-form" action={formAction} className="flex flex-col gap-5">
       {state.status === "error" && state.message !== null ? (
         <p
+          ref={errorRef}
           role="alert"
+          tabIndex={-1}
           className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
         >
           {state.message}
@@ -365,8 +380,22 @@ export function DecisionForm({
       ) : null}
 
       {/* Decision controls stay reachable at the bottom of long records;
-          they submit the same form (no duplicated state). */}
-      <div className="sticky bottom-0 -mx-6 mt-2 flex flex-col gap-3 border-t border-[var(--line)] bg-[var(--background)] px-6 py-4">
+          they submit the same form (no duplicated state). The server's
+          refusal is echoed here (visual duplicate; the top alert carries the
+          single role="alert") so a phone-sized moderator who just tapped a
+          decision immediately sees WHY it failed without scrolling. */}
+      <div
+        id="decision-controls"
+        className="sticky bottom-0 -mx-6 mt-2 flex flex-col gap-3 border-t border-[var(--line)] bg-[var(--background)] px-6 py-4"
+      >
+        {state.status === "error" && state.message !== null ? (
+          <p
+            aria-hidden="true"
+            className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+          >
+            {state.message}
+          </p>
+        ) : null}
         {/* Human confirmation — no blind publish. The server refuses any
             approval without this exact token; rejecting ignores it. */}
         <label className="flex cursor-pointer items-start gap-2.5 text-sm text-[var(--foreground)]">
