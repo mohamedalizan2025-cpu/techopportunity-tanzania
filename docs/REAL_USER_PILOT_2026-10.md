@@ -1,8 +1,10 @@
 # Real-user pilot execution package — October 2026
 
 Status: **PREPARED, NOT RUN.** Production is live at
-`https://techopportunity-tanzania.vercel.app` (release `d6b1a43`, Civic
-Hybrid complete, Next 16.3.8, AI OFF). This package is the runnable sheet
+`https://techopportunity.tech` (canonical, release `753d776`, domain/SEO
+migration merged, Next 16.3.8, AI OFF; the legacy
+`https://techopportunity-tanzania.vercel.app` URL remains reachable and
+declares the `.tech` canonical). This package is the runnable sheet
 for 5–10 observed sessions. It extends, not replaces,
 `docs/USER_VALIDATION_PILOT_2026-10-02.md` (recruiting mix, evidence bar,
 2-week check); where the two differ, this file governs execution and the
