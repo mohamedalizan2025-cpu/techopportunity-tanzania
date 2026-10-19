@@ -237,6 +237,25 @@ export function isQueueFilterEmpty(filter: QueueFilter): boolean {
   );
 }
 
+/**
+ * Legacy `ready-for-review` links are compatibility aliases for
+ * `ready-for-approval`. The parsed slug stays literal (old URLs keep working
+ * verbatim), but matching treats the two ready states as equivalent so a
+ * legacy filter still selects the approval-ready rows the workspace emits.
+ */
+function readinessStateMatches(
+  filterState: QueueReadinessState,
+  rowState: QueueReadinessState
+): boolean {
+  if (filterState === rowState) return true;
+  const filterReady =
+    filterState === "ready-for-review" ||
+    filterState === "ready-for-approval";
+  const rowReady =
+    rowState === "ready-for-review" || rowState === "ready-for-approval";
+  return filterReady && rowReady;
+}
+
 /** Pure predicate: all active conditions must match (AND). */
 export function matchesQueueFilter(
   opportunity: Pick<
@@ -277,7 +296,11 @@ export function matchesQueueFilter(
   if (filter.sector && sectorOf(opportunity) !== filter.sector) {
     return false;
   }
-  if ((filter.readiness ?? null) !== null && (readiness ?? null) !== filter.readiness) {
+  const readinessFilter = filter.readiness ?? null;
+  if (
+    readinessFilter !== null &&
+    (readiness == null || !readinessStateMatches(readinessFilter, readiness))
+  ) {
     return false;
   }
   return true;

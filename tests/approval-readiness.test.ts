@@ -21,7 +21,7 @@ import {
   parseApprovalReadinessState,
   type ApprovalReadinessRow,
 } from "../lib/approval-readiness";
-import { parseQueueFilter } from "../lib/data/moderation";
+import { filterPendingQueue, parseQueueFilter } from "../lib/data/moderation";
 import {
   parseReviewInput,
   reviewedOpportunityUpdate,
@@ -30,6 +30,7 @@ import {
   APPROVE_CONFIRM_TOKEN,
   isApproveConfirmed,
 } from "../lib/staff-form-state";
+import type { Opportunity } from "../lib/types";
 
 const NOW = new Date("2027-01-15T12:00:00.000Z");
 const ORG_ID = "33333333-3333-4333-8333-333333333333";
@@ -80,6 +81,31 @@ function withTrust(
   overrides: Partial<NonNullable<ApprovalReadinessRow["trust"]>>
 ): ApprovalReadinessRow["trust"] {
   return { ...baseRow().trust!, ...overrides };
+}
+
+function pendingOpportunity(): Opportunity {
+  const row = baseRow();
+  return {
+    id: row.id,
+    slug: "mandela-washington-fellowship-2027",
+    title: row.title,
+    category: row.category,
+    organization: null,
+    organizationId: row.organizationId ?? null,
+    sourceName: row.sourceName ?? null,
+    sourceUrl: row.sourceUrl ?? null,
+    discoveryMethod: row.discoveryMethod ?? null,
+    description: row.description,
+    url: row.url,
+    deadline: row.deadline,
+    deadlinePrecision: row.deadlinePrecision,
+    deadlineEvidence: row.deadlineEvidence,
+    location: row.location ?? null,
+    imageUrl: null,
+    status: "pending",
+    createdAt: "2026-12-01T00:00:00.000Z",
+    trust: row.trust,
+  };
 }
 
 let passed = 0;
@@ -520,6 +546,58 @@ check(
 check("filter parser accepts ready-for-approval", parseQueueFilter({ readiness: "ready-for-approval" }).readiness, "ready-for-approval");
 check("filter parser keeps legacy ready-for-review", parseQueueFilter({ readiness: "ready-for-review" }).readiness, "ready-for-review");
 check("filter parser rejects hostile approval slugs", parseQueueFilter({ readiness: "urgent" }).readiness, null);
+
+// Regression: legacy ?readiness=ready-for-review links must still select the
+// rows the workspace now classifies as ready-for-approval. The parsed slug
+// stays literal, but matching treats the two ready states as aliases.
+const legacyPending = pendingOpportunity();
+const legacyPendingState = approvalReadinessOf(
+  legacyPending,
+  [],
+  NOW,
+  CONTEXT
+).state;
+check(
+  "legacy filter regression fixture is approval-ready",
+  legacyPendingState,
+  "ready-for-approval"
+);
+const approvalReadinessById = new Map([
+  [legacyPending.id, legacyPendingState],
+]);
+const legacyReadyFilter = parseQueueFilter({ readiness: "ready-for-review" });
+check(
+  "legacy filter still parses literally",
+  legacyReadyFilter.readiness,
+  "ready-for-review"
+);
+check(
+  "legacy ready-for-review filter selects an approval-ready pending row",
+  filterPendingQueue(
+    [legacyPending],
+    legacyReadyFilter,
+    approvalReadinessById
+  ).map((row) => row.id),
+  [legacyPending.id]
+);
+check(
+  "legacy ready-for-review filter does not match non-ready rows",
+  filterPendingQueue(
+    [legacyPending],
+    legacyReadyFilter,
+    new Map([[legacyPending.id, "needs-evidence" as const]])
+  ).map((row) => row.id),
+  []
+);
+check(
+  "approval filter accepts a legacy ready-for-review classification",
+  filterPendingQueue(
+    [legacyPending],
+    parseQueueFilter({ readiness: "ready-for-approval" }),
+    new Map([[legacyPending.id, "ready-for-review" as const]])
+  ).map((row) => row.id),
+  [legacyPending.id]
+);
 check("approval state parser accepts the exact slug", parseApprovalReadinessState("ready-for-approval"), "ready-for-approval");
 check("approval state parser rejects legacy review slug", parseApprovalReadinessState("ready-for-review"), null);
 check(
