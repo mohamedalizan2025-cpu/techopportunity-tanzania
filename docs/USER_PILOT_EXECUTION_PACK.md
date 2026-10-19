@@ -1,15 +1,15 @@
 # User pilot execution pack (companion — protocol unchanged)
 
-Status 2026-10-05: **PREPARATION ONLY — NO TESTING HAS OCCURRED.**
+Status 2026-10-19: **PREPARATION ONLY — NO TESTING HAS OCCURRED.**
 `READY_FOR_USER_PILOT` = YES (protocol intact, execution deferred). The
 authoritative protocol is
 [USER_VALIDATION_PILOT_2026-10-02.md](USER_VALIDATION_PILOT_2026-10-02.md) —
-this pack only makes it easy to run. Do NOT run before the owner
-production-AI decision in the ordered sequence
-([NEXT_SESSION_HANDOFF.md](NEXT_SESSION_HANDOFF.md) §7). Testers must see
-the cleaned + replenished shelf (11 open evidence-backed records), never a
+this pack only makes it easy to run. Production AI stays OFF and is a
+separate owner gate, never a pilot prerequisite. Testers must see the
+current cleaned shelf (7 active evidence-backed records on 2026-10-19;
+expansion toward 12–20 via owner moderation before invitations), never a
 stale corpus. Brief testers that supply is fellowship-heavy with one
-student-competition anchor.
+internship and one competition anchor.
 
 Rules (from the protocol, repeated so nothing is improvised): real activity
 only — never invent saves, funnel states, profiles, or counts. Testers use
