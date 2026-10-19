@@ -15,13 +15,13 @@
 
 import type { Opportunity } from "../types";
 import {
-  countReviewQueue,
-  orderReviewQueue,
-  reviewReadinessOf,
-  type ReviewReadiness,
-  type ReviewReadinessCounts,
-  type ReviewReadinessState,
-} from "../review-readiness";
+  approvalReadinessOf,
+  countApprovalQueue,
+  orderApprovalQueue,
+  type ApprovalReadiness,
+  type ApprovalReadinessCounts,
+  type ApprovalReadinessState,
+} from "../approval-readiness";
 import {
   EMPTY_QUEUE_FILTER,
   filterPendingQueue,
@@ -32,7 +32,10 @@ import {
   queueNavigationFromIds,
   type QueueFilter,
   type QueueNavigation,
+  type QueueReadinessState,
 } from "./moderation";
+import { listLiveCategories } from "./categories";
+import { listOrganizationOptions } from "./opportunities";
 import {
   listManagedPublishedOpportunities,
   partitionPublishedByLifecycle,
@@ -40,16 +43,16 @@ import {
 
 export interface ClassifiedQueueItem {
   opportunity: Opportunity;
-  readiness: ReviewReadiness;
-  state: ReviewReadinessState;
+  readiness: ApprovalReadiness;
+  state: ApprovalReadinessState;
 }
 
 export interface ReviewWorkspaceQueue {
   /** Active pending candidates, classified + priority-ordered. */
   ordered: ClassifiedQueueItem[];
   /** Readiness lookup for filter predicates. */
-  readinessById: Map<string, ReviewReadinessState>;
-  counts: ReviewReadinessCounts;
+  readinessById: Map<string, QueueReadinessState>;
+  counts: ApprovalReadinessCounts;
   /** Active pending (oldest-first) — for consumers that keep queue order. */
   active: Opportunity[];
   /** Expired pending rows: stored, countable, excluded from review work. */
@@ -59,7 +62,7 @@ export interface ReviewWorkspaceQueue {
   publishedExpired: number;
 }
 
-const EMPTY_COUNTS: ReviewReadinessCounts = {
+const EMPTY_COUNTS: ApprovalReadinessCounts = {
   total: 0,
   ready: 0,
   needsEvidence: 0,
@@ -90,10 +93,19 @@ export async function getReviewWorkspaceQueue(
     };
   }
 
-  const [allPending, published] = await Promise.all([
-    listAllPendingForReview(),
-    listManagedPublishedOpportunities(),
-  ]);
+  const [allPending, published, liveCategories, organizations] =
+    await Promise.all([
+      listAllPendingForReview(),
+      listManagedPublishedOpportunities(),
+      listLiveCategories(),
+      listOrganizationOptions(),
+    ]);
+  const categorySlugs = new Set(
+    liveCategories.map((category) => category.slug)
+  );
+  const organizationIds = new Set(
+    organizations.map((organization) => organization.id)
+  );
 
   const active = allPending.filter((opportunity) =>
     isActivePendingOpportunity(opportunity, now)
@@ -104,12 +116,17 @@ export async function getReviewWorkspaceQueue(
 
   const corpus = [...allPending, ...published];
   const classified: ClassifiedQueueItem[] = active.map((opportunity) => {
-    const readiness = reviewReadinessOf(opportunity, corpus, now);
+    const readiness = approvalReadinessOf(opportunity, corpus, now, {
+      categorySlugs,
+      organizationIds,
+    });
     return { opportunity, readiness, state: readiness.state };
   });
-  const ordered = orderReviewQueue(classified);
-  const readinessById = new Map(ordered.map((item) => [item.opportunity.id, item.state]));
-  const counts = countReviewQueue(ordered);
+  const ordered = orderApprovalQueue(classified);
+  const readinessById = new Map<string, QueueReadinessState>(
+    ordered.map((item) => [item.opportunity.id, item.state])
+  );
+  const counts = countApprovalQueue(ordered);
 
   const publishedSplit = partitionPublishedByLifecycle(published, now);
 
@@ -151,9 +168,9 @@ export async function getReviewQueueNavigation(
 
 export interface ReviewWorkspaceItem {
   opportunity: Opportunity;
-  readiness: ReviewReadiness;
+  readiness: ApprovalReadiness;
   /** Correlation id of the duplicate match, when the gate fails. */
-  duplicate: ReviewReadiness["duplicate"];
+  duplicate: ApprovalReadiness["duplicate"];
   /** How many corpus rows were compared for duplicate signals. */
   corpusSize: number;
 }
@@ -172,14 +189,20 @@ export async function getReviewWorkspaceItem(
   const access = await getModerationAccess();
   if (!access.ok) return null;
 
-  const [allPending, published] = await Promise.all([
-    listAllPendingForReview(),
-    listManagedPublishedOpportunities(),
-  ]);
+  const [allPending, published, liveCategories, organizations] =
+    await Promise.all([
+      listAllPendingForReview(),
+      listManagedPublishedOpportunities(),
+      listLiveCategories(),
+      listOrganizationOptions(),
+    ]);
   const opportunity = allPending.find((row) => row.id === id) ?? null;
   if (!opportunity) return null;
 
   const corpus = [...allPending, ...published];
-  const readiness = reviewReadinessOf(opportunity, corpus, now);
+  const readiness = approvalReadinessOf(opportunity, corpus, now, {
+    categorySlugs: new Set(liveCategories.map((category) => category.slug)),
+    organizationIds: new Set(organizations.map((organization) => organization.id)),
+  });
   return { opportunity, readiness, duplicate: readiness.duplicate, corpusSize: corpus.length - 1 };
 }

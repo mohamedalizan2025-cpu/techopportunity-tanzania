@@ -16,6 +16,20 @@ import {
   type ReviewReadinessState,
 } from "../review-readiness";
 import {
+  parseApprovalReadinessState,
+  type ApprovalReadinessState,
+} from "../approval-readiness";
+
+/**
+ * Queue readiness filters accept both the existing review states and the
+ * assisted-approval states. They overlap on four slugs; `ready-for-review`
+ * and `ready-for-approval` stay distinct so existing links keep their literal
+ * meaning and the new queue can expose the stricter approval state.
+ */
+export type QueueReadinessState =
+  | ReviewReadinessState
+  | ApprovalReadinessState;
+import {
   createSupabaseAuthServerClient,
   getAuthenticatedUser,
 } from "./supabase-auth";
@@ -145,12 +159,13 @@ export interface QueueFilter {
   /** Subject-area sector, independent from type (derived). View-only. */
   sector?: Sector | null;
   /**
-   * Review-readiness state (derived by lib/review-readiness.ts, never
-   * stored). Optional so older filter literals keep compiling; absent ===
-   * null === "no readiness constraint". View-only: narrowing the visible
-   * list, never changing what is pending or how a decision is made.
+   * Readiness state (derived by lib/review-readiness.ts or the assisted
+   * lib/approval-readiness.ts evaluator, never stored). Optional so older
+   * filter literals keep compiling; absent === null === "no readiness
+   * constraint". View-only: narrowing the visible list, never changing what
+   * is pending or how a decision is made.
    */
-  readiness?: ReviewReadinessState | null;
+  readiness?: QueueReadinessState | null;
 }
 
 export const EMPTY_QUEUE_FILTER: QueueFilter = {
@@ -203,7 +218,10 @@ export function parseQueueFilter(
   }
   const geography = parseGeography(firstParam(raw.geography));
   const sector = parseSector(firstParam(raw.sector));
-  const readiness = parseReviewReadinessState(firstParam(raw.readiness));
+  const readinessRaw = firstParam(raw.readiness);
+  const readiness =
+    parseReviewReadinessState(readinessRaw) ??
+    parseApprovalReadinessState(readinessRaw);
   return { bucket, sourceName, q, flag, geography, sector, readiness };
 }
 
@@ -219,6 +237,25 @@ export function isQueueFilterEmpty(filter: QueueFilter): boolean {
   );
 }
 
+/**
+ * Legacy `ready-for-review` links are compatibility aliases for
+ * `ready-for-approval`. The parsed slug stays literal (old URLs keep working
+ * verbatim), but matching treats the two ready states as equivalent so a
+ * legacy filter still selects the approval-ready rows the workspace emits.
+ */
+function readinessStateMatches(
+  filterState: QueueReadinessState,
+  rowState: QueueReadinessState
+): boolean {
+  if (filterState === rowState) return true;
+  const filterReady =
+    filterState === "ready-for-review" ||
+    filterState === "ready-for-approval";
+  const rowReady =
+    rowState === "ready-for-review" || rowState === "ready-for-approval";
+  return filterReady && rowReady;
+}
+
 /** Pure predicate: all active conditions must match (AND). */
 export function matchesQueueFilter(
   opportunity: Pick<
@@ -228,11 +265,11 @@ export function matchesQueueFilter(
   filter: QueueFilter,
   /**
    * Classified readiness for this row (needs corpus context, so the caller
-   * supplies it — see lib/review-readiness.ts). Null/absent means "not
-   * classified"; a concrete readiness filter then matches nothing, failing
-   * closed rather than guessing.
+   * supplies it — see lib/review-readiness.ts and lib/approval-readiness.ts).
+   * Null/absent means "not classified"; a concrete readiness filter then
+   * matches nothing, failing closed rather than guessing.
    */
-  readiness?: ReviewReadinessState | null
+  readiness?: QueueReadinessState | null
 ): boolean {
   if (
     filter.bucket !== null &&
@@ -259,7 +296,11 @@ export function matchesQueueFilter(
   if (filter.sector && sectorOf(opportunity) !== filter.sector) {
     return false;
   }
-  if ((filter.readiness ?? null) !== null && (readiness ?? null) !== filter.readiness) {
+  const readinessFilter = filter.readiness ?? null;
+  if (
+    readinessFilter !== null &&
+    (readiness == null || !readinessStateMatches(readinessFilter, readiness))
+  ) {
     return false;
   }
   return true;
@@ -274,7 +315,7 @@ export function filterPendingQueue(
    * filter carries a readiness constraint; existing two-argument callers are
    * unaffected.
    */
-  readinessById?: Map<string, ReviewReadinessState>
+  readinessById?: ReadonlyMap<string, QueueReadinessState>
 ): Opportunity[] {
   if (isQueueFilterEmpty(filter)) return items;
   return items.filter((item) =>
