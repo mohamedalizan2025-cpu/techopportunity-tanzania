@@ -1,9 +1,17 @@
-# Auth email readiness (repo-side, SMTP not activated)
+# Auth email readiness (repo-side)
 
-ACTIVATION BLOCKED until domain/DNS + Supabase SMTP/Resend owner steps are complete.
+Status: SMTP CONFIGURED — Resend domain verified, Supabase Custom SMTP active, templates ready to paste.
 
-Status: PREPARED — copy, tests, and configuration documentation are ready.
-Sending is NOT configured. No credentials exist in this branch.
+Owner-completed infrastructure (DO NOT REPEAT):
+- Resend domain `auth.techopportunity.tech` created, DKIM verified, sending CNAMEs verified, sending enabled
+- Supabase Custom SMTP configured and saved (production project `jltuufukcwztugvojwjd`)
+- Sender: `Tech Opportunity <no-reply@auth.techopportunity.tech>`
+- Production Site URL set to `https://techopportunity.tech`; redirect allow-list includes `https://techopportunity.tech/auth/callback**`
+- DMARC added for `auth.techopportunity.tech`
+- Canonical domain `techopportunity.tech` live with HTTPS
+- PR #3 contains exact Confirm signup and Reset password templates (below)
+
+Remaining: live Supabase dashboard template application + acceptance test.
 
 ## What this branch contains
 
@@ -31,25 +39,20 @@ Sending is NOT configured. No credentials exist in this branch.
   do not invent any until a code-side mailer is separately approved
   (none is needed — Supabase sends the mail).
 
-## Owner activation steps (manual, dashboard — NOT done here)
+## Owner activation steps (dashboard — partially complete)
 
-1. DNS first: `techopportunity.tech` live with HTTPS; add the SPF/DKIM/DMARC
-   records the email provider requires for `auth.techopportunity.tech`.
-   Recommended: one Resend domain, free tier, $0.
-2. Supabase dashboard → Project (production `jltuufukcwztugvojwjd`) →
-   Authentication → Emails:
-   - Enable Custom SMTP; enter provider host/port/credentials.
-   - Sender address: `no-reply@auth.techopportunity.tech`, sender name:
-     `Tech Opportunity`.
-   - Set Auth URL Configuration Site URL to `https://techopportunity.tech`
-     (no trailing slash) only after the live HTTPS owner gate is satisfied.
-   - Paste the matching Subject and HTML Body blocks below into the
-     Confirm signup and Reset password templates. Do not paste TypeScript.
-   - Confirm the redirect allow-list includes
-     `https://techopportunity.tech/auth/callback**`.
-3. Send one test signup + one test reset to an owner mailbox; confirm links
-   land on the canonical domain and complete sign-in / password update.
-4. Never configure staging with production credentials; never commit secrets.
+**COMPLETED** (do not redo):
+1. ✅ DNS: `techopportunity.tech` live with HTTPS; SPF/DKIM/DMARC records added for `auth.techopportunity.tech` (Resend, free tier, $0)
+2. ✅ Supabase dashboard → Production project → Authentication → Emails:
+   - ✅ Custom SMTP enabled with provider host/port/credentials
+   - ✅ Sender: `no-reply@auth.techopportunity.tech`, name: `Tech Opportunity`
+   - ✅ Site URL: `https://techopportunity.tech` (no trailing slash)
+   - ✅ Redirect allow-list: `https://techopportunity.tech/auth/callback**`
+
+**REMAINING** (manual, dashboard):
+3. Paste the Subject and HTML Body blocks below into the Confirm signup and Reset password templates in the Supabase dashboard. Do not paste TypeScript.
+4. Send one test signup + one test reset to an owner mailbox; confirm links land on the canonical domain and complete sign-in / password update.
+5. Never configure staging with production credentials; never commit secrets.
 
 ## Copy/paste dashboard templates (prepared, NOT applied)
 
@@ -125,9 +128,10 @@ link through the existing generic UI. Verify the password update and normal
 sign-in afterward. These are manual acceptance steps, not completed evidence.
 No sending code, credentials, dashboard action or activation is added here.
 
-## Explicitly NOT done
+## Explicitly NOT done (repo-side)
 
-- No real credentials added. No Supabase custom SMTP configured.
-- No Resend dashboard configured. No production email sent.
+- No sending code, credentials, or dashboard action added in this branch.
+- Supabase dashboard templates not yet pasted (step 3 above).
+- No production email sent yet; live mailbox acceptance pending.
 - Production AI stays OFF; deadline-alert delivery stays `generated`-only
   (see boundary invariant — no email claim added).
