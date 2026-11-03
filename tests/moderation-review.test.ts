@@ -157,6 +157,95 @@ assert("country: moderator-verified value preserved", rC2.ok && rC2.review.count
 const rC3 = parseReviewInput(form({ ...BASE, country: "x".repeat(101) }));
 assert("country: over-long value rejected", !rC3.ok && rC3.message.includes("Country"));
 
+// minimal approval: publish the record with only the required listing fields;
+// missing trust evidence is stored honestly as unknown/unreviewed.
+const MINIMAL_BASE = {
+  title: BASE.title,
+  category: BASE.category,
+  description: BASE.description,
+  url: BASE.url,
+};
+const rM1 = parseReviewInput(form(MINIMAL_BASE), "minimal");
+assert("minimal approval: missing evidence accepted", rM1.ok);
+if (rM1.ok) {
+  assert(
+    "minimal approval: missing trust stays unknown/unreviewed",
+    rM1.review.relevanceDecision === "unreviewed" &&
+      rM1.review.relevanceEvidence === null &&
+      rM1.review.eligibilityDecision === "unknown" &&
+      rM1.review.eligibilityEvidence === null &&
+      rM1.review.country === null &&
+      rM1.review.countryVerification === "unknown"
+  );
+  const payload = reviewedOpportunityUpdate(
+    rM1.review,
+    "moderator-1",
+    "2026-09-12T12:00:00.000Z",
+    7
+  );
+  assert(
+    "minimal approval: payload publishes without claiming verified trust",
+    payload.status === "published" &&
+      payload.relevance_decision === "unreviewed" &&
+      payload.eligibility === "unknown" &&
+      payload.qualification_rule_version === null
+  );
+}
+const rM2 = parseReviewInput(
+  form({ ...MINIMAL_BASE, eligibility: "tanzanians_not_eligible" }),
+  "minimal"
+);
+assert("minimal approval: explicit ineligibility still rejected", !rM2.ok);
+const rM3 = parseReviewInput(
+  form({ ...MINIMAL_BASE, deadline: "2026-10-01", deadline_precision: "date" }),
+  "minimal"
+);
+assert(
+  "minimal approval: deadline without evidence accepted",
+  rM3.ok && rM3.review.deadline === "2026-10-01T00:00:00.000Z" && rM3.review.deadlineEvidence === null
+);
+if (rM3.ok) {
+  const payload = reviewedOpportunityUpdate(
+    rM3.review,
+    "moderator-1",
+    "2026-09-12T12:00:00.000Z",
+    7
+  );
+  assert(
+    "minimal approval: no qualification claim without deadline evidence (DB constraint safe)",
+    payload.deadline !== null &&
+      payload.deadline_evidence === null &&
+      payload.qualification_rule_version === null
+  );
+}
+const rM4 = parseReviewInput(
+  form({
+    ...MINIMAL_BASE,
+    eligibility: "tanzanians_eligible",
+    eligibility_evidence: "Open to Tanzanian nationals.",
+  }),
+  "minimal"
+);
+assert(
+  "minimal approval: supplied eligibility evidence is preserved",
+  rM4.ok &&
+    rM4.review.eligibilityDecision === "tanzanians_eligible" &&
+    rM4.review.eligibilityEvidence === "Open to Tanzanian nationals."
+);
+const rM5 = parseReviewInput(
+  form({ ...MINIMAL_BASE, description: "Too short" }),
+  "minimal"
+);
+assert("minimal approval: description still requires substance", !rM5.ok);
+const rM6 = parseReviewInput(
+  form({ ...MINIMAL_BASE, country: "Kenya", country_verification: "unknown" }),
+  "minimal"
+);
+assert(
+  "minimal approval: unverified country text stored as unknown",
+  rM6.ok && rM6.review.country === null && rM6.review.countryVerification === "unknown"
+);
+
 // queue navigation: "review next" must follow the rendered queue order and
 // never fabricate an id (null = end of queue / row no longer pending).
 const QUEUE = ["a", "b", "c"];

@@ -24,10 +24,13 @@ import { TRIAGE_BUCKET_LABEL, triageBucketOf } from "@/lib/triage-bucket";
 import {
   APPROVAL_READINESS_LABEL,
   APPROVAL_READINESS_NOTE,
+  approvalFormDataOf,
 } from "@/lib/approval-readiness";
 import { duplicateWhy } from "@/lib/review-readiness";
 import { DecisionForm } from "../decision-form";
+import { QuickApproveForm } from "../quick-approve-form";
 import { StaffNav } from "@/components/staff-nav";
+import { publicEvidenceUrl, eligibilityPresentation, formatDeadlinePresentation } from "@/lib/opportunity-presentation";
 
 export const metadata: Metadata = {
   title: "Review submission",
@@ -46,8 +49,6 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
     ? rawSearchParams.mode[0]
     : rawSearchParams.mode;
   const isPublishedReview = modeParam === "published";
-  // Queue view filter (bucket/source), carried forward from the queue link
-  // so "next in queue" stays inside the batch the moderator chose.
   const filter = parseQueueFilter(rawSearchParams);
   const filterQuery = queueFilterQuery(filter);
   const queueHref = isPublishedReview
@@ -138,16 +139,11 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
   );
 
   const triageBucket = triageBucketOf(opportunity.category, opportunity.title);
-  // Assisted Approval — per-row readiness checklist. Display-only: derived
-  // from stored evidence through the existing deterministic gates and the
-  // exact approval parser, with the full corpus (pending + published) as
-  // duplicate context. Pending mode only; published re-review keeps its own
-  // evidence flow. Never a decision input.
   const readiness = workspaceItem?.readiness ?? null;
   const duplicate = readiness?.duplicate ?? null;
-  // Compact reviewer workspace facts — every line derived from stored
-  // evidence, never inferred. Unknown stays unknown; the Discovery source is
-  // a lead, never publication authority.
+  const quickApproveFields = Object.fromEntries(
+    approvalFormDataOf(opportunity).entries()
+  ) as Record<string, string>;
   const canonicalUrl = opportunity.trust?.canonicalEvidenceUrl?.trim() || opportunity.url;
   const geography = geographyOf(opportunity);
   const geographyLabel =
@@ -176,6 +172,9 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
     opportunity.location === null
       ? ["Location not specified"]
       : formatLocationDisplay(opportunity.location);
+  const deadlinePresentation = formatDeadlinePresentation(opportunity.deadline, new Date());
+  const eligibility = eligibilityPresentation(opportunity);
+  const evidenceUrl = publicEvidenceUrl(opportunity);
 
   return (
     <div className="flex flex-1 flex-col bg-[var(--background)] font-sans">
@@ -206,293 +205,369 @@ export default async function ModerationReviewPage({ params, searchParams }: Rev
           </form>
         </div>
 
+        {/* Compact readiness summary card — shown for ALL records, but with
+            prominent "Approve & Publish" only when ready. */}
+        <section aria-label="Approval readiness summary" className="mt-6">
+          {readiness ? (
+            <div className={`rounded-lg border p-4 ${
+              readiness.ready
+                ? "border-emerald-300 bg-emerald-50/60 dark:border-emerald-900 dark:bg-emerald-950/20"
+                : "border-amber-300 bg-amber-50/60 dark:border-amber-800 dark:bg-amber-950/20"
+            }`}>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+                      {categoryLabel(opportunity.category)}
+                    </span>
+                    {readiness.ready && (
+                      <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+                        Ready for approval
+                      </span>
+                    )}
+                    {!readiness.ready && (
+                      <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                        {APPROVAL_READINESS_LABEL[readiness.state]}
+                      </span>
+                    )}
+                  </div>
+                  <h1 className="mt-2 break-words text-xl font-semibold leading-tight tracking-tight text-[var(--foreground)] sm:text-2xl">
+                    {opportunity.title}
+                  </h1>
+                  <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-[var(--muted)]">
+                    <span>{opportunity.organization ?? "Organizer unknown"}</span>
+                    {opportunity.deadline && (
+                      <span className="flex items-center gap-1">
+                        <span className={`status-label status-${deadlinePresentation.state}`}>{deadlinePresentation.label}</span>
+                        {deadlinePresentation.dateLabel}
+                      </span>
+                    )}
+                    {!opportunity.deadline && <span>No deadline</span>}
+                    <span>{geography === "national" ? "Tanzania" : geography === "international" ? "International" : "Location unknown"}</span>
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-4 text-sm">
+                    <span className="flex items-center gap-1.5">
+                      {eligibility.label}
+                      {eligibility.evidence && (
+                        <span className="text-[var(--verified)]">●</span>
+                      )}
+                    </span>
+                    <span>{locationLines.join(" · ") || "Location not specified"}</span>
+                    <span>Source: {opportunity.sourceName ?? "Unlinked"}</span>
+                  </div>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  <QuickApproveForm
+                    opportunityId={opportunity.id}
+                    fields={quickApproveFields}
+                    ready={readiness.ready}
+                  />
+                  {!readiness.ready ? (
+                    <p className="max-w-[260px] text-right text-[11px] leading-4 text-amber-700 dark:text-amber-300">
+                      Optional evidence missing —{" "}
+                      {readiness.blockers.slice(0, 3).map((blocker) => blocker.label).join(" · ")}
+                      {readiness.blockers.length > 3
+                        ? ` · +${readiness.blockers.length - 3} more`
+                        : ""}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+              {/* Expandable detail for non-ready records */}
+              {!readiness.ready && (
+                <details className="mt-4">
+                  <summary className="cursor-pointer select-none font-medium text-[var(--foreground)] text-sm">
+                    View all blockers ({readiness.blockers.length})
+                  </summary>
+                  <ul className="mt-3 list-disc pl-5 space-y-1 text-sm text-amber-700 dark:text-amber-300">
+                    {readiness.blockers.map((blocker) => (
+                      <li key={blocker.code}>{blocker.label}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-amber-300 bg-amber-50/60 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+              <p className="font-medium">Readiness not yet computed</p>
+              <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">Refresh after the next discovery run or check the queue.</p>
+            </div>
+          )}
+        </section>
+
+        {/* Duplicate warning — always visible when present */}
+        {duplicate ? (
+          <div
+            role="note"
+            className="mt-4 rounded-lg border border-red-300 bg-red-50/60 p-3 text-sm leading-6 text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300"
+          >
+            <span className="font-medium">Possible duplicate — </span>
+            {duplicateWhy(duplicate)}{" "}
+            {duplicateHref ? (
+              <Link
+                href={duplicateHref}
+                className="font-medium underline underline-offset-2"
+              >
+                Compare with “{duplicate.title}” →
+              </Link>
+            ) : (
+              <span>Compare with “{duplicate.title}”.</span>
+            )}{" "}
+            Never auto-deleted: keep, reject with a reason, or approve only if distinct.
+          </div>
+        ) : null}
+
         {/* Evidence left, decision right on desktop; stacked on mobile. */}
         <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="min-w-0">
-        {/* As discovered — the record under review (title first, evidence
-            after; the decision form aside is the only editable copy). */}
-        <section aria-label="As discovered" className="mt-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-              {categoryLabel(opportunity.category)}
-            </span>
-            <span className="rounded-full border border-dashed border-[var(--line)] px-3 py-1 text-xs text-[var(--muted)]">
-              Triage hint (heuristic — verify): {TRIAGE_BUCKET_LABEL[triageBucket]}
-            </span>
-          </div>
-          <h1 className="mt-3 break-words text-2xl font-semibold leading-tight tracking-tight text-[var(--foreground)] sm:text-3xl">
-            {opportunity.title}
-          </h1>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            {opportunity.organization ?? "Organizer unknown"} ·{" "}
-            {opportunity.deadline
-              ? `Deadline ${dateFormatter.format(new Date(opportunity.deadline))}`
-              : "No deadline listed"}
-          </p>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            {locationLines.join(" · ")}
-          </p>
-          <details className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 text-sm">
-            <summary className="cursor-pointer select-none font-medium text-[var(--foreground)]">
-              Discovered description
-            </summary>
-            <p className="mt-3 whitespace-pre-line leading-6 text-[var(--muted)]">
-              {opportunity.description}
-            </p>
-          </details>
-        </section>
+            {/* As discovered — the record under review */}
+            <section aria-label="As discovered" className="mt-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+                  {categoryLabel(opportunity.category)}
+                </span>
+                <span className="rounded-full border border-dashed border-[var(--line)] px-3 py-1 text-xs text-[var(--muted)]">
+                  Triage hint (heuristic — verify): {TRIAGE_BUCKET_LABEL[triageBucket]}
+                </span>
+              </div>
+              <details className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 text-sm">
+                <summary className="cursor-pointer select-none font-medium text-[var(--foreground)]">
+                  Discovered description
+                </summary>
+                <p className="mt-3 whitespace-pre-line leading-6 text-[var(--muted)]">
+                  {opportunity.description}
+                </p>
+              </details>
+            </section>
 
-        {/* Approval readiness — deterministic checklist, hints only. The
-            decision form aside remains the only path to any status change. */}
-        {readiness ? (
-          <section
-            aria-label="Approval readiness"
-            className="mt-6 rounded-lg border border-dashed border-[var(--line)] bg-[var(--surface)] p-5"
-          >
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              Approval readiness · {APPROVAL_READINESS_LABEL[readiness.state]}
-            </h2>
-            <ul className="mt-3 flex flex-col gap-2 text-sm">
-              {readiness.checks.map((check) => (
-                <li key={check.id} className="leading-6">
-                  <span className="font-medium text-[var(--foreground)]">
-                    {check.pass ? "Pass" : "Check"} — {check.label}:{" "}
-                  </span>
-                  <span className="text-[var(--muted)]">{check.detail}</span>
-                </li>
-              ))}
-              <li className="leading-6">
-                <span className="font-medium text-[var(--foreground)]">
-                  {accessEvidence ? "Pass" : "Check"} — Tanzania eligibility/access evidence:{" "}
-                </span>
-                <span className="text-[var(--muted)]">
-                  {accessDecision === "tanzanians_eligible"
-                    ? `Evidenced — Tanzanians may apply: ${accessEvidence}`
-                    : accessDecision === "tanzanians_not_eligible"
-                      ? `Evidenced — Tanzanians may NOT apply: ${accessEvidence} (fast path is a reasoned rejection)`
-                      : "Unknown — the Discovery source is not publication authority; verify on the official page before approving."}
-                </span>
-              </li>
-              <li className="leading-6">
-                <span className="font-medium text-[var(--foreground)]">
-                  Geography:{" "}
-                </span>
-                <span className="text-[var(--muted)]">{geographyLabel}</span>
-              </li>
-              <li className="leading-6">
-                <span className="font-medium text-[var(--foreground)]">
-                  Last checked:{" "}
-                </span>
-                <span className="text-[var(--muted)]">
-                  {lastVerified
-                    ? dateFormatter.format(new Date(lastVerified))
-                    : "Never verified — this review is the first check."}
-                  {opportunity.discoveredAt ? ` · Discovered ${dateFormatter.format(new Date(opportunity.discoveredAt))}` : ""}
-                </span>
-              </li>
-            </ul>
-            {readiness.ready ? (
-              <div
-                role="note"
-                className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50/60 p-3 text-sm leading-6 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-200"
-              >
-                All deterministic approval checks pass. Confirm every field
-                against the official source, then use the confirmed approve
-                action.
-              </div>
-            ) : (
-              <div
-                role="note"
-                className="mt-3 rounded-lg border border-amber-300 bg-amber-50/60 p-3 text-sm leading-6 text-amber-800 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-200"
-              >
-                <p className="font-medium">Not ready for approval</p>
-                <ul className="mt-1 list-disc pl-5">
-                  {readiness.blockers.map((blocker) => (
-                    <li key={blocker.code}>{blocker.label}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {duplicate ? (
-              <div
-                role="note"
-                className="mt-3 rounded-lg border border-red-300 bg-red-50/60 p-3 text-sm leading-6 text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300"
-              >
-                <span className="font-medium">Possible duplicate — </span>
-                {duplicateWhy(duplicate)}{" "}
-                {duplicateHref ? (
-                  <Link
-                    href={duplicateHref}
-                    className="font-medium underline underline-offset-2"
-                  >
-                    Compare with “{duplicate.title}” →
-                  </Link>
-                ) : (
-                  <span>Compare with “{duplicate.title}”.</span>
-                )}{" "}
-                Never auto-deleted: keep, reject with a reason, or approve only if distinct.
-              </div>
+            {/* Full approval readiness checklist — expandable */}
+            {readiness ? (
+              <details className="mt-6">
+                <summary className="cursor-pointer select-none font-medium text-[var(--foreground)]">
+                  Approval readiness checklist · {APPROVAL_READINESS_LABEL[readiness.state]}
+                </summary>
+                <div className="mt-3 rounded-lg border border-dashed border-[var(--line)] bg-[var(--surface)] p-5">
+                  <ul className="flex flex-col gap-2 text-sm">
+                    {readiness.checks.map((check) => (
+                      <li key={check.id} className="leading-6">
+                        <span className="font-medium text-[var(--foreground)]">
+                          {check.pass ? "Pass" : "Check"} — {check.label}:{" "}
+                        </span>
+                        <span className="text-[var(--muted)]">{check.detail}</span>
+                      </li>
+                    ))}
+                    <li className="leading-6">
+                      <span className="font-medium text-[var(--foreground)]">
+                        {accessEvidence ? "Pass" : "Check"} — Tanzania eligibility/access evidence:{" "}
+                      </span>
+                      <span className="text-[var(--muted)]">
+                        {accessDecision === "tanzanians_eligible"
+                          ? `Evidenced — Tanzanians may apply: ${accessEvidence}`
+                          : accessDecision === "tanzanians_not_eligible"
+                            ? `Evidenced — Tanzanians may NOT apply: ${accessEvidence} (fast path is a reasoned rejection)`
+                            : "Unknown — the Discovery source is not publication authority; verify on the official page before approving."}
+                      </span>
+                    </li>
+                    <li className="leading-6">
+                      <span className="font-medium text-[var(--foreground)]">
+                        Geography:{" "}
+                      </span>
+                      <span className="text-[var(--muted)]">{geographyLabel}</span>
+                    </li>
+                    <li className="leading-6">
+                      <span className="font-medium text-[var(--foreground)]">
+                        Last checked:{" "}
+                      </span>
+                      <span className="text-[var(--muted)]">
+                        {lastVerified
+                          ? dateFormatter.format(new Date(lastVerified))
+                          : "Never verified — this review is the first check."}
+                        {opportunity.discoveredAt ? ` · Discovered ${dateFormatter.format(new Date(opportunity.discoveredAt))}` : ""}
+                      </span>
+                    </li>
+                  </ul>
+                  {duplicate ? (
+                    <div
+                      role="note"
+                      className="mt-3 rounded-lg border border-red-300 bg-red-50/60 p-3 text-sm leading-6 text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300"
+                    >
+                      <span className="font-medium">Possible duplicate — </span>
+                      {duplicateWhy(duplicate)}{" "}
+                      {duplicateHref ? (
+                        <Link
+                          href={duplicateHref}
+                          className="font-medium underline underline-offset-2"
+                        >
+                          Compare with “{duplicate.title}” →
+                        </Link>
+                      ) : (
+                        <span>Compare with “{duplicate.title}”.</span>
+                      )}{" "}
+                      Never auto-deleted: keep, reject with a reason, or approve only if distinct.
+                    </div>
+                  ) : null}
+                  <p className="mt-3 text-xs text-[var(--muted)]">
+                    Official source for verification:{" "}
+                    <a
+                      href={canonicalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="break-all font-medium underline underline-offset-2"
+                    >
+                      {canonicalUrl}
+                    </a>
+                  </p>
+                  <p className="mt-3 text-xs text-[var(--muted)]">
+                    {APPROVAL_READINESS_NOTE}
+                  </p>
+                </div>
+              </details>
             ) : null}
-            <p className="mt-3 text-xs text-[var(--muted)]">
-              Official source for verification:{" "}
+
+            {/* Source evidence — the moderator's verification anchor. */}
+            <section
+              aria-label="Source evidence"
+              className="mt-6 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5"
+            >
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Source evidence
+              </h2>
               <a
-                href={canonicalUrl}
+                href={opportunity.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="break-all font-medium underline underline-offset-2"
+                className="mt-3 inline-flex h-11 items-center justify-center rounded-md bg-[var(--primary)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-deep)]"
               >
-                {canonicalUrl}
+                Open official page ↗
               </a>
-            </p>
-            <p className="mt-3 text-xs text-[var(--muted)]">
-              {APPROVAL_READINESS_NOTE}
-            </p>
-          </section>
-        ) : null}
-
-        {/* Source evidence — the moderator's verification anchor. */}
-        <section
-          aria-label="Source evidence"
-          className="mt-6 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5"
-        >
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Source evidence
-          </h2>
-          <a
-            href={opportunity.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex h-11 items-center justify-center rounded-md bg-[var(--primary)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-deep)]"
-          >
-            Open official page ↗
-          </a>
-          <dl className="mt-4 flex flex-col gap-1.5 text-sm text-[var(--muted)]">
-            <div>
-              <dt className="inline font-medium text-[var(--foreground)]">
-                Source:{" "}
-              </dt>
-              <dd className="inline">
-                {opportunity.sourceName ?? "Unlinked submission"}
-              </dd>
-            </div>
-            {opportunity.discoveryMethod ? (
-              <div>
-                <dt className="inline font-medium text-[var(--foreground)]">
-                  Format:{" "}
-                </dt>
-                <dd className="inline">
-                  {opportunity.discoveryMethod.trim().toLowerCase() === "html" ||
-                  opportunity.discoveryMethod.trim().toLowerCase() === "website"
-                    ? "Web page"
-                    : opportunity.discoveryMethod.trim().toLowerCase() === "rss"
-                      ? "Feed"
-                      : opportunity.discoveryMethod.trim().toLowerCase() === "json-ld"
-                        ? "Structured data"
-                        : opportunity.discoveryMethod.trim().toLowerCase() === "sitemap"
-                          ? "Sitemap"
-                          : opportunity.discoveryMethod.trim().toLowerCase() === "manual"
-                            ? "Manual entry"
-                            : opportunity.discoveryMethod}
-                </dd>
-              </div>
-            ) : null}
-            <div>
-              <dt className="inline font-medium text-[var(--foreground)]">
-                Discovered:{" "}
-              </dt>
-              <dd className="inline">
-                {dateFormatter.format(new Date(opportunity.discoveredAt ?? opportunity.createdAt))}
-              </dd>
-            </div>
-            <div>
-              <dt className="inline font-medium text-[var(--foreground)]">
-                Submitted:{" "}
-              </dt>
-              <dd className="inline">{dateFormatter.format(new Date(opportunity.createdAt))}</dd>
-            </div>
-          </dl>
-          <p className="mt-3 text-xs text-[var(--muted)]">
-              {isPublishedReview
-                ? "Re-check every trust field against current official evidence before keeping this record published."
-                : "Facts below were discovered automatically and may be wrong — verify them against the official page before approving."}
-          </p>
-        </section>
-          </div>
-          <aside aria-label="Review decision" className="min-w-0 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] p-5 lg:sticky lg:top-24">
-        <section className="mt-0 border-t-0 pt-0">
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">
-            {isPublishedReview ? "Published opportunity re-review" : "Decision"}
-          </h2>
-          {!auditStatus.active ? (
-            <p
-              role="status"
-              className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs leading-5 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
-            >
-              Enrichment audit trail is inactive ({auditStatus.reason}). Review
-              edits will still be saved, but field-level changes will not be
-              recorded. Apply migration 0003 to activate the audit trail.
-            </p>
-          ) : null}
-          {readiness ? (
-            <section
-              aria-label="Approval readiness summary"
-              className={`mt-4 rounded-lg border p-3 text-xs leading-5 ${
-                readiness.ready
-                  ? "border-emerald-300 bg-emerald-50/60 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-200"
-                  : "border-amber-300 bg-amber-50/60 text-amber-800 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-200"
-              }`}
-            >
-              <p className="font-semibold">
-                {readiness.ready ? "Ready for approval" : "Not ready for approval"} ·{" "}
-                {APPROVAL_READINESS_LABEL[readiness.state]}
-              </p>
-              {readiness.ready ? (
-                <ul className="mt-1.5 flex flex-col gap-1">
-                  {readiness.checks
-                    .filter(
-                      (check) =>
-                        check.pass &&
-                        [
-                          "source-usable",
-                          "eligibility-verified",
-                          "eligibility-evidence",
-                          "deadline-current",
-                          "deadline-evidence",
-                        ].includes(check.id)
-                    )
-                    .map((check) => (
-                      <li key={check.id}>Pass — {check.label}</li>
-                    ))}
-                </ul>
-              ) : (
-                <ul className="mt-1.5 flex flex-col gap-1">
-                  {readiness.blockers.slice(0, 5).map((blocker) => (
-                    <li key={blocker.code}>Check — {blocker.label}</li>
-                  ))}
-                  {readiness.blockers.length > 5 ? (
-                    <li className="opacity-80">
-                      +{readiness.blockers.length - 5} more in the full checklist.
-                    </li>
-                  ) : null}
-                </ul>
+              {evidenceUrl && (
+                <p className="mt-2 text-xs text-[var(--muted)]">
+                  Canonical evidence: <a href={evidenceUrl} target="_blank" rel="noopener noreferrer" className="underline">{evidenceUrl}</a>
+                </p>
               )}
-              <p className="mt-2 text-[11px] opacity-90">
-                Hints only. Confirm on the official source; the button below is
-                the publication action.
+              <dl className="mt-4 flex flex-col gap-1.5 text-sm text-[var(--muted)]">
+                <div>
+                  <dt className="inline font-medium text-[var(--foreground)]">
+                    Source:{" "}
+                  </dt>
+                  <dd className="inline">
+                    {opportunity.sourceName ?? "Unlinked submission"}
+                  </dd>
+                </div>
+                {opportunity.discoveryMethod ? (
+                  <div>
+                    <dt className="inline font-medium text-[var(--foreground)]">
+                      Format:{" "}
+                    </dt>
+                    <dd className="inline">
+                      {opportunity.discoveryMethod.trim().toLowerCase() === "html" ||
+                      opportunity.discoveryMethod.trim().toLowerCase() === "website"
+                        ? "Web page"
+                        : opportunity.discoveryMethod.trim().toLowerCase() === "rss"
+                          ? "Feed"
+                          : opportunity.discoveryMethod.trim().toLowerCase() === "json-ld"
+                            ? "Structured data"
+                            : opportunity.discoveryMethod.trim().toLowerCase() === "sitemap"
+                              ? "Sitemap"
+                              : opportunity.discoveryMethod.trim().toLowerCase() === "manual"
+                                ? "Manual entry"
+                                : opportunity.discoveryMethod}
+                    </dd>
+                  </div>
+                ) : null}
+                <div>
+                  <dt className="inline font-medium text-[var(--foreground)]">
+                    Discovered:{" "}
+                  </dt>
+                  <dd className="inline">
+                    {dateFormatter.format(new Date(opportunity.discoveredAt ?? opportunity.createdAt))}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="inline font-medium text-[var(--foreground)]">
+                    Submitted:{" "}
+                  </dt>
+                  <dd className="inline">{dateFormatter.format(new Date(opportunity.createdAt))}</dd>
+                </div>
+              </dl>
+              <p className="mt-3 text-xs text-[var(--muted)]">
+                  {isPublishedReview
+                    ? "Re-check every trust field against current official evidence before keeping this record published."
+                    : "Facts below were discovered automatically and may be wrong — verify them against the official page before approving."}
               </p>
             </section>
-          ) : null}
-          <div className="mt-4">
-            <DecisionForm
-              opportunity={opportunity}
-              organizations={organizations}
-              nextHref={nextHref}
-              queueHref={queueHref}
-              categoryOptions={categoryOptions}
-              mode={isPublishedReview ? "published" : "pending"}
-            />
           </div>
-        </section>
+          <aside aria-label="Review decision" className="min-w-0 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] p-5 lg:sticky lg:top-24">
+            <section className="mt-0 border-t-0 pt-0">
+              <h2 className="text-lg font-semibold text-[var(--foreground)]">
+                {isPublishedReview ? "Published opportunity re-review" : "Decision"}
+              </h2>
+              {!auditStatus.active ? (
+                <p
+                  role="status"
+                  className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs leading-5 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+                >
+                  Enrichment audit trail is inactive ({auditStatus.reason}). Review
+                  edits will still be saved, but field-level changes will not be
+                  recorded. Apply migration 0003 to activate the audit trail.
+                </p>
+              ) : null}
+              {readiness ? (
+                <div className={`mt-4 rounded-lg border p-3 text-xs leading-5 ${
+                  readiness.ready
+                    ? "border-emerald-300 bg-emerald-50/60 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-200"
+                    : "border-amber-300 bg-amber-50/60 text-amber-800 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-200"
+                }`}>
+                <p className="font-semibold">
+                  {readiness.ready ? "Ready for approval" : "Not ready for approval"} ·{" "}
+                  {APPROVAL_READINESS_LABEL[readiness.state]}
+                </p>
+                {readiness.ready ? (
+                  <ul className="mt-1.5 flex flex-col gap-1">
+                    {readiness.checks
+                      .filter(
+                        (check) =>
+                          check.pass &&
+                          [
+                            "source-usable",
+                            "eligibility-verified",
+                            "eligibility-evidence",
+                            "deadline-current",
+                            "deadline-evidence",
+                          ].includes(check.id)
+                      )
+                      .map((check) => (
+                        <li key={check.id}>Pass — {check.label}</li>
+                      ))}
+                  </ul>
+                ) : (
+                  <ul className="mt-1.5 flex flex-col gap-1">
+                    {readiness.blockers.slice(0, 5).map((blocker) => (
+                      <li key={blocker.code}>Check — {blocker.label}</li>
+                    ))}
+                    {readiness.blockers.length > 5 ? (
+                      <li className="opacity-80">
+                        +{readiness.blockers.length - 5} more in the full checklist above.
+                      </li>
+                    ) : null}
+                  </ul>
+                )}
+                <p className="mt-2 text-[11px] opacity-90">
+                  Hints only. Confirm on the official source; the final action publishes.
+                </p>
+              </div>
+              ) : null}
+              <div className="mt-4">
+                <DecisionForm
+                  opportunity={opportunity}
+                  organizations={organizations}
+                  nextHref={nextHref}
+                  queueHref={queueHref}
+                  categoryOptions={categoryOptions}
+                  mode={isPublishedReview ? "published" : "pending"}
+                />
+              </div>
+            </section>
           </aside>
         </div>
       </main>

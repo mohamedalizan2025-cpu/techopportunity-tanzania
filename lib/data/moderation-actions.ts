@@ -227,7 +227,7 @@ export async function decideOpportunityAction(
   // exactly as discovered (no organizer/location/deadline wipes).
   let review: ReviewInput | null = null;
   if (rawDecision === "approve") {
-    const parsed = parseReviewInput(formData);
+    const parsed = parseReviewInput(formData, "minimal");
     if (!parsed.ok) {
       return { ...initial, status: "error", message: parsed.message };
     }

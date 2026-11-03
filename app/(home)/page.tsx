@@ -99,6 +99,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     ? { closingSoon: [], recentlyAdded: [] }
     : buildHomepageSnapshot(opportunities, now);
   const featured = isFiltered ? [] : featuredOpportunities(opportunities, now, 3);
+  const sections = isFiltered ? [] : buildOpportunitySections(opportunities, now);
   const browseHref = `${buildHref(category, sort, { q, city, region, deadline, geography, sector })}#opportunities`;
   const visibleOpportunities = opportunities.slice(0, page * PAGE_SIZE);
   const hasMore = opportunities.length > visibleOpportunities.length;
@@ -404,49 +405,90 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </details>
           ) : null}
 
-            {opportunities.length === 0 ? (
-              <EmptyState
-                title={
-                  isFiltered
-                    ? "No matching opportunities"
-                    : "No current opportunities to show"
-                }
-                message={
-                  q !== null
-                    ? `No published opportunities match “${q}”. Try different keywords or clear the search.`
-                    : isFiltered
-                      ? "Try a different category or location, or clear your filters to explore more opportunities."
-                      : "New opportunities will appear here after review. Have one to share? Submit it for consideration."
-                }
-                actionHref={isFiltered ? "/#opportunities" : "/submit"}
-                actionLabel={
-                  isFiltered ? "Clear all filters" : "Submit an opportunity"
-                }
-                showBrowseAll={isFiltered}
-              />
+            {isFiltered ? (
+              // Filtered view: flat grid
+              opportunities.length === 0 ? (
+                <EmptyState
+                  title="No matching opportunities"
+                  message={
+                    q !== null
+                      ? `No published opportunities match “${q}”. Try different keywords or clear the search.`
+                      : "Try a different category or location, or clear your filters to explore more opportunities."
+                  }
+                  actionHref="/#opportunities"
+                  actionLabel="Clear all filters"
+                  showBrowseAll={true}
+                />
+              ) : (
+                <>
+                  <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {visibleOpportunities.map((opportunity) => (
+                      <li key={opportunity.id} className="min-w-0">
+                        <OpportunityCard
+                          opportunity={opportunity}
+                          now={now}
+                          returnHref={browseHref}
+                          isSaved={savedIds.has(opportunity.id)}
+                          isAuthenticated={user !== null}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                  {hasMore ? (
+                    <div className="mt-8 flex justify-center">
+                      <Link href={showMoreHref} className="button-secondary">
+                        Show more opportunities
+                      </Link>
+                    </div>
+                  ) : null}
+                </>
+              )
             ) : (
-              <>
-                <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {visibleOpportunities.map((opportunity) => (
-                    <li key={opportunity.id} className="min-w-0">
-                      <OpportunityCard
-                        opportunity={opportunity}
-                        now={now}
-                        returnHref={browseHref}
-                        isSaved={savedIds.has(opportunity.id)}
-                        isAuthenticated={user !== null}
-                      />
-                    </li>
+              // Unfiltered view: sectioned layout
+              sections.length === 0 ? (
+                <EmptyState
+                  title="No current opportunities to show"
+                  message="New opportunities will appear here after review. Have one to share? Submit it for consideration."
+                  actionHref="/submit"
+                  actionLabel="Submit an opportunity"
+                />
+              ) : (
+                <>
+                  {sections.map((section) => (
+                    <section key={section.id} aria-labelledby={`${section.id}-heading`} className="mt-10">
+                      <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+                        <div>
+                          <h2 id={`${section.id}-heading`} className="font-display text-xl font-semibold sm:text-2xl">
+                            {section.title}
+                          </h2>
+                          <p className="mt-1 text-sm text-[var(--muted)]">{section.description}</p>
+                        </div>
+                        {section.items.length > section.visibleCount && (
+                          <Link
+                            href={`${buildHref(section.categoryFilter as import("@/lib/types").OpportunityCategory | null, sort, { q, city, region, deadline, geography, sector })}#opportunities`}
+                            className="inline-flex min-h-10 items-center text-sm font-semibold text-[var(--accent-strong)] underline-offset-4 hover:underline"
+                          >
+                            View all {section.totalCount} →
+                          </Link>
+                        )}
+                      </div>
+                      <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        {section.items.slice(0, section.visibleCount).map((opportunity) => (
+                          <li key={opportunity.id} className="min-w-0">
+                            <OpportunityCard
+                              opportunity={opportunity}
+                              now={now}
+                              returnHref={browseHref}
+                              isSaved={savedIds.has(opportunity.id)}
+                              isAuthenticated={user !== null}
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
                   ))}
-                </ul>
-                {hasMore ? (
-                  <div className="mt-8 flex justify-center">
-                    <Link href={showMoreHref} className="button-secondary">
-                      Show more opportunities
-                    </Link>
-                  </div>
-                ) : null}
-              </>
+                </>
+              )
             )}
           </div>
         </div>
@@ -616,4 +658,132 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       </div>
     </main>
   );
+}
+
+interface OpportunitySection {
+  id: string;
+  title: string;
+  description: string;
+  categoryFilter: string | null;
+  items: Awaited<ReturnType<typeof import("@/lib/data/opportunities").getPublicBrowseData>>["opportunities"];
+  totalCount: number;
+  visibleCount: number;
+}
+
+function buildOpportunitySections(
+  opportunities: Awaited<ReturnType<typeof import("@/lib/data/opportunities").getPublicBrowseData>>["opportunities"],
+  now: Date
+): OpportunitySection[] {
+  const actionable = opportunities.filter(
+    (o) => o.status === "published" && o.deadline && new Date(o.deadline) >= now
+  );
+
+  const sections: OpportunitySection[] = [];
+
+  // 1. Closing soon (within 14 days)
+  const closingSoon = actionable
+    .filter((o) => {
+      if (!o.deadline) return false;
+      const days = (new Date(o.deadline).getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      return days >= 0 && days <= 14;
+    })
+    .sort((a, b) => new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime())
+    .slice(0, 6);
+  if (closingSoon.length > 0) {
+    sections.push({
+      id: "closing-soon",
+      title: "Closing soon",
+      description: "Deadlines within the next two weeks — act now.",
+      categoryFilter: null,
+      items: closingSoon,
+      totalCount: actionable.filter((o) => {
+        if (!o.deadline) return false;
+        const days = (new Date(o.deadline).getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+        return days >= 0 && days <= 14;
+      }).length,
+      visibleCount: 6,
+    });
+  }
+
+  // 2. Internships & jobs
+  const internshipsJobs = actionable
+    .filter((o) => o.category === "internship" || o.category === "jobs")
+    .slice(0, 6);
+  if (internshipsJobs.length > 0) {
+    sections.push({
+      id: "internships-jobs",
+      title: "Internships & jobs",
+      description: "Hands-on roles and entry-level positions.",
+      categoryFilter: null,
+      items: internshipsJobs,
+      totalCount: actionable.filter((o) => o.category === "internship" || o.category === "jobs").length,
+      visibleCount: 6,
+    });
+  }
+
+  // 3. Fellowships & scholarships
+  const fellowshipsScholarships = actionable
+    .filter((o) => o.category === "fellowship" || o.category === "scholarship")
+    .slice(0, 6);
+  if (fellowshipsScholarships.length > 0) {
+    sections.push({
+      id: "fellowships-scholarships",
+      title: "Fellowships & scholarships",
+      description: "Funded programs for study, research, and leadership.",
+      categoryFilter: null,
+      items: fellowshipsScholarships,
+      totalCount: actionable.filter((o) => o.category === "fellowship" || o.category === "scholarship").length,
+      visibleCount: 6,
+    });
+  }
+
+  // 4. Competitions & hackathons
+  const competitionsHackathons = actionable
+    .filter((o) => o.category === "competition" || o.category === "hackathon")
+    .slice(0, 6);
+  if (competitionsHackathons.length > 0) {
+    sections.push({
+      id: "competitions-hackathons",
+      title: "Competitions & hackathons",
+      description: "Challenges, prizes, and innovation sprints.",
+      categoryFilter: null,
+      items: competitionsHackathons,
+      totalCount: actionable.filter((o) => o.category === "competition" || o.category === "hackathon").length,
+      visibleCount: 6,
+    });
+  }
+
+  // 5. Grants & accelerators
+  const grantsAccelerators = actionable
+    .filter((o) => o.category === "grant" || o.category === "accelerator" || o.category === "research-call")
+    .slice(0, 6);
+  if (grantsAccelerators.length > 0) {
+    sections.push({
+      id: "grants-accelerators",
+      title: "Grants & accelerators",
+      description: "Funding and support for ventures and research.",
+      categoryFilter: null,
+      items: grantsAccelerators,
+      totalCount: actionable.filter((o) => o.category === "grant" || o.category === "accelerator" || o.category === "research-call").length,
+      visibleCount: 6,
+    });
+  }
+
+  // 6. Workshops & events
+  const workshopsEvents = actionable
+    .filter((o) => o.category === "workshop" || o.category === "conference" || o.category === "tech-event" || o.category === "public-challenge")
+    .slice(0, 6);
+  if (workshopsEvents.length > 0) {
+    sections.push({
+      id: "workshops-events",
+      title: "Workshops & events",
+      description: "Learning, networking, and community gatherings.",
+      categoryFilter: null,
+      items: workshopsEvents,
+      totalCount: actionable.filter((o) => o.category === "workshop" || o.category === "conference" || o.category === "tech-event" || o.category === "public-challenge").length,
+      visibleCount: 6,
+    });
+  }
+
+  return sections;
 }

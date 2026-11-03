@@ -118,6 +118,7 @@ export interface ApprovalReadinessRow {
   trust?: Opportunity["trust"];
   status?: Opportunity["status"];
   slug?: string | null;
+  imageUrl?: Opportunity["imageUrl"];
 }
 
 /**

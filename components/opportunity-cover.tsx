@@ -6,10 +6,12 @@ export function OpportunityCover({
   opportunity,
   className,
 }: {
-  opportunity: Pick<Opportunity, "category" | "slug"> & Partial<Opportunity>;
+  opportunity: Pick<Opportunity, "category" | "slug" | "imageUrl"> & Partial<Opportunity>;
   className?: string;
 }) {
   const asset = coverAssetFor(opportunity);
+  const isExternal = asset.startsWith("http");
+
   return (
     <Image
       src={asset}
@@ -18,6 +20,7 @@ export function OpportunityCover({
       fill
       sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 600px"
       className={`object-cover transition duration-500 group-hover:scale-[1.025] ${className ?? ""}`}
+      {...(isExternal ? { unoptimized: true } : {})}
     />
   );
 }

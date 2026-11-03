@@ -267,7 +267,7 @@ export function DecisionForm({
           </select>
         </label>
         <TextField
-          label="Country evidence"
+          label="Country evidence (optional unless verified)"
           name="country_evidence"
           defaultValue={opportunity.trust?.countryEvidence ?? ""}
         />
@@ -321,7 +321,11 @@ export function DecisionForm({
           </select>
         </label>
         <TextField
-          label="Deadline evidence"
+          label={
+            mode === "published"
+              ? "Deadline evidence (required for a known or rolling deadline)"
+              : "Deadline evidence (optional)"
+          }
           name="deadline_evidence"
           defaultValue={opportunity.deadlineEvidence ?? ""}
         />
@@ -329,10 +333,21 @@ export function DecisionForm({
 
       <fieldset className="flex flex-col gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-          Publication trust gate
+          {mode === "published"
+            ? "Publication trust gate — complete evidence required"
+            : "Publication trust gate — evidence optional"}
         </legend>
+        <p className="text-xs text-[var(--muted)]">
+          {mode === "published"
+            ? "Keeping this record published requires the complete current evidence contract. Missing evidence fails the re-review."
+            : "You can approve without these fields. Missing evidence is stored as unknown and keeps the record out of AI Match and other verified-only features."}
+        </p>
         <TextField
-          label="Why this is a technology/research opportunity"
+          label={
+            mode === "published"
+              ? "Why this is a technology/research opportunity"
+              : "Why this is a technology/research opportunity (optional)"
+          }
           name="relevance_evidence"
           defaultValue={opportunity.trust?.relevanceEvidence ?? ""}
         />
@@ -343,13 +358,21 @@ export function DecisionForm({
             defaultValue={opportunity.trust?.eligibilityDecision ?? "unknown"}
             className={`${selectClasses} mt-1.5`}
           >
-            <option value="unknown">Unknown — cannot approve</option>
+            <option value="unknown">
+              {mode === "published"
+                ? "Unknown — cannot keep this published"
+                : "Unknown — approve anyway (stored as unknown)"}
+            </option>
             <option value="tanzanians_eligible">Verified: Tanzanians may apply</option>
             <option value="tanzanians_not_eligible">Rejected: Tanzanians may not apply</option>
           </select>
         </label>
         <TextField
-          label="Exact eligibility evidence"
+          label={
+            mode === "published"
+              ? "Exact eligibility evidence"
+              : "Exact eligibility evidence (optional unless verified)"
+          }
           name="eligibility_evidence"
           defaultValue={opportunity.trust?.eligibilityEvidence ?? ""}
         />
@@ -446,7 +469,7 @@ export function DecisionForm({
       <p className="text-xs text-[var(--muted)]">
         {mode === "published"
           ? "This action keeps the record published only when the complete current trust contract passes. Use the separate unpublish control when evidence is insufficient."
-          : "Corrections are saved only when approving. Rejecting keeps the record exactly as discovered. Leave a field empty when the official source does not confirm it — unknown stays unknown."}
+          : "Approval requires only a title, category, description, and official URL. Other fields are optional — missing evidence is stored as unknown. Rejecting keeps the record exactly as discovered."}
       </p>
     </form>
   );

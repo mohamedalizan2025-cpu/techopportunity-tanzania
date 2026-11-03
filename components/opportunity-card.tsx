@@ -23,19 +23,12 @@ export function OpportunityCard({
   returnHref,
   isSaved = false,
   isAuthenticated = false,
-  showCover = false,
 }: {
   opportunity: Opportunity;
   now?: Date;
   returnHref?: string;
   isSaved?: boolean;
   isAuthenticated?: boolean;
-  /**
-   * Civic Hybrid P0: cards are information-first and image-free by
-   * default. A cover renders only when a caller explicitly passes a
-   * real, provenanced asset path via `showCover` in a future milestone.
-   */
-  showCover?: boolean;
 }) {
   const deadline = formatDeadlinePresentation(opportunity.deadline, now);
   const place = formatCardLocation(opportunity.location);
@@ -46,99 +39,99 @@ export function OpportunityCard({
 
   return (
     <article className="opportunity-card group">
-      {showCover ? (
-        <div className="opportunity-card-cover" aria-hidden="true">
-          <OpportunityCover opportunity={opportunity} />
-        </div>
-      ) : null}
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
-        {categoryLabel(opportunity.category)}
-        {geography ? (
-          <span className="font-medium normal-case tracking-normal text-[var(--muted)]">
-            {" "}· {geography === "national" ? "Tanzania" : "International"}
-          </span>
-        ) : null}
-      </p>
-      <h3 className="mt-2 text-lg font-semibold leading-6 tracking-tight text-[var(--foreground)]">
-        <Link
-          href={opportunityHref(opportunity.slug, returnHref)}
-          prefetch={false}
-          className="after:absolute after:inset-0 after:rounded-md hover:text-[var(--brand)]"
-        >
-          {opportunity.title}
-        </Link>
-      </h3>
-      <p className="mt-1.5 text-[0.8125rem] text-[var(--muted)]">
-        {opportunity.organization?.trim() || sourceHostname(opportunity.url) || sourcePresentation(opportunity)}
-      </p>
-      <p className="mt-2.5 text-sm leading-6 text-[var(--muted)]">
-        {opportunityCardExcerpt(opportunity.description)}
-      </p>
-      <ul className="mt-4 space-y-2 border-t border-[var(--line)] pt-3 text-[0.8125rem] leading-5 text-[var(--muted)]">
-        <li className="flex items-start gap-2">
-          <UiIcon
-            name="pin"
-            width="16"
-            height="16"
-            className="mt-0.5 shrink-0"
-            aria-hidden="true"
-          />
-          <span>{place ?? "Location not specified"}</span>
-        </li>
-        <li className="flex items-start gap-2">
-          <UiIcon
-            name="clock"
-            width="16"
-            height="16"
-            className="mt-0.5 shrink-0"
-            aria-hidden="true"
-          />
-          <span>
-            <span className={`status-label status-${deadline.state} mr-2`}>{deadline.label}</span>
-            {deadline.dateLabel ? deadline.dateLabel : null}
-          </span>
-        </li>
-        <li className="flex items-start gap-2">
-          {badge ? (
+      <div className="opportunity-card-cover relative aspect-video overflow-hidden rounded-t-lg bg-[var(--surface)]" aria-hidden="true">
+        <OpportunityCover opportunity={opportunity} />
+      </div>
+      <div className="p-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
+          {categoryLabel(opportunity.category)}
+          {geography ? (
+            <span className="font-medium normal-case tracking-normal text-[var(--muted)]">
+              {" "}· {geography === "national" ? "Tanzania" : "International"}
+            </span>
+          ) : null}
+        </p>
+        <h3 className="mt-2 text-lg font-semibold leading-6 tracking-tight text-[var(--foreground)]">
+          <Link
+            href={opportunityHref(opportunity.slug, returnHref)}
+            prefetch={false}
+            className="after:absolute after:inset-0 after:rounded-md hover:text-[var(--brand)] line-clamp-2"
+          >
+            {opportunity.title}
+          </Link>
+        </h3>
+        <p className="mt-1.5 text-sm text-[var(--muted)]">
+          {opportunity.organization?.trim() || sourceHostname(opportunity.url) || sourcePresentation(opportunity)}
+        </p>
+        <p className="mt-2.5 text-sm leading-6 text-[var(--muted)] line-clamp-3">
+          {opportunityCardExcerpt(opportunity.description)}
+        </p>
+        <ul className="mt-4 space-y-2 border-t border-[var(--line)] pt-3 text-sm leading-5 text-[var(--muted)]">
+          <li className="flex items-start gap-2">
             <UiIcon
-              name="shield"
-              width="16"
-              height="16"
-              className="mt-0.5 shrink-0 text-[var(--verified)]"
-              aria-hidden="true"
-            />
-          ) : (
-            <UiIcon
-              name="info"
+              name="pin"
               width="16"
               height="16"
               className="mt-0.5 shrink-0"
               aria-hidden="true"
             />
-          )}
-          <span>{badge ? `${badge.label} · ` : ""}{eligibility.label}</span>
-        </li>
-      </ul>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <span
-            aria-hidden="true"
-            className="flex items-center gap-2 text-sm font-semibold text-[var(--brand)]"
-          >
-            View details <UiIcon name="arrow" width="16" height="16" />
-          </span>
-          <span className="mt-1 block text-xs text-[var(--muted)]">
-            {added}
-          </span>
+            <span>{place ?? "Location not specified"}</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <UiIcon
+              name="clock"
+              width="16"
+              height="16"
+              className="mt-0.5 shrink-0"
+              aria-hidden="true"
+            />
+            <span>
+              <span className={`status-label status-${deadline.state} mr-2`}>{deadline.label}</span>
+              {deadline.dateLabel ? deadline.dateLabel : null}
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            {badge ? (
+              <UiIcon
+                name="shield"
+                width="16"
+                height="16"
+                className="mt-0.5 shrink-0 text-[var(--verified)]"
+                aria-hidden="true"
+              />
+            ) : (
+              <UiIcon
+                name="info"
+                width="16"
+                height="16"
+                className="mt-0.5 shrink-0"
+                aria-hidden="true"
+              />
+            )}
+            <span>{badge ? `${badge.label} · ` : ""}{eligibility.label}</span>
+          </li>
+        </ul>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <Link
+              href={opportunityHref(opportunity.slug, returnHref)}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--brand)] hover:underline"
+            >
+              View details <UiIcon name="arrow" width="16" height="16" />
+            </Link>
+            <span className="mt-1 block text-xs text-[var(--muted)]">
+              {added}
+            </span>
+          </div>
+          <SaveOpportunityControl
+            opportunityId={opportunity.id}
+            opportunityTitle={opportunity.title}
+            isSaved={isSaved}
+            isAuthenticated={isAuthenticated}
+            returnTo={returnHref ?? "/#opportunities"}
+            compact
+          />
         </div>
-        <SaveOpportunityControl
-          opportunityId={opportunity.id}
-          opportunityTitle={opportunity.title}
-          isSaved={isSaved}
-          isAuthenticated={isAuthenticated}
-          returnTo={returnHref ?? "/#opportunities"}
-          compact
-        />
       </div>
     </article>
   );
